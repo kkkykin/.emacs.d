@@ -1,0 +1,16 @@
+/.cache/
+/eln-cache/
+/elpa/
+/history
+/transient/
+/auto-save-list/
+/eshell/
+/projects
+/emacs-backup/
+/custom.el
+/newsticker/
+server/
+tree-sitter/
+url/
+recentf
+tramp

@@ -1,0 +1,2 @@
+* My Emacs Configuration
+Based on [[https://git.sr.ht/~ashton314/emacs-bedrock][~ashton314/emacs-bedrock]], thanks.
