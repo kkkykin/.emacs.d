@@ -54,6 +54,7 @@
   (newsticker-treeview-date-format "%y.%m.%d, %H:%M")
   (newsticker-url-list-defaults nil)
   (newsticker-automatically-mark-items-as-old nil)
+  (newsticker-hide-old-items-in-newsticker-buffer t "plainview only")
   (newsticker-retrieval-interval 1800)
   (newsticker-retrieval-method 'extern)
   :init (load "init-privacy.el.gpg" t t)
