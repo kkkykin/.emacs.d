@@ -190,7 +190,15 @@
                             archive-7z-program " x -aoa -si -ttar -o%o"))
                   ("\\.t\\(ar\\.\\)?zst\\'" #1# "zstd -dc %i | tar -xf -")
                   ("\\.zst\\'" #1# "zstd -d --rm"))
-                dired-compress-file-suffixes)))
+                dired-compress-file-suffixes))
+  )
+
+(use-package arc-mode
+  :config
+  ;; use 7z manipulate rar archive
+  (advice-add 'archive-rar-summarize :override #'archive-7z-summarize)
+  (advice-add 'archive-rar-extract :override #'archive-7z-extract)
+  )
 
 (use-package dictionary
   :bind
