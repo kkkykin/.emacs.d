@@ -10,6 +10,9 @@
        (require 'init-desk))
       ((eq system-type 'android) (require 'init-android)))
 
+(use-package sh-script
+  :hook (sh-mode . flymake-mode))
+
 (use-package ibuffer
   :bind (("C-x C-b" . ibuffer))
   :hook

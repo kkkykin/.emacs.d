@@ -9,9 +9,10 @@
 /emacs-backup/
 /custom.el
 /newsticker/
-server/
-tree-sitter/
-url/
-recentf
-tramp
-org-persist/
+/server/
+/tree-sitter/
+/url/
+/recentf
+/tramp
+/org-persist/
+/bookmarks
