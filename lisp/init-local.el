@@ -526,6 +526,8 @@
     :if (package-installed-p 'mpvi)
     :commands mpvi-open))
 
+(use-package disk-usage
+  :if (package-installed-p 'disk-usage))
 
 (use-package org-anki
   :if (package-installed-p 'org-anki)
