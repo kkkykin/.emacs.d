@@ -538,7 +538,9 @@
 
 (use-package ox-pandoc
   :if (package-installed-p 'ox-pandoc)
-  :after (org))
+  :after (org)
+  :custom
+  (org-pandoc-options-for-latex-pdf '((pdf-engine . "tectonic"))))
 
 (provide 'init-local)
 ;;; init-local.el ends here
