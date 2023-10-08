@@ -409,48 +409,54 @@
 (package-initialize)
 
 (use-package treesit
-  :custom
-  (treesit-language-source-alist
-   '((bash "https://github.com/tree-sitter/tree-sitter-bash")
-     (python "https://github.com/tree-sitter/tree-sitter-python")
-     (sql "https://github.com/DerekStride/tree-sitter-sql" "gh-pages")
-     ;; ini
-     (dockerfile "https://github.com/camdencheek/tree-sitter-dockerfile")
-     (nix "https://github.com/nix-community/tree-sitter-nix")
-     (yaml "https://github.com/ikatyang/tree-sitter-yaml")
-     ;; frontend
-     (html "https://github.com/tree-sitter/tree-sitter-html")
-     (css "https://github.com/tree-sitter/tree-sitter-css")
-     (javascript "https://github.com/tree-sitter/tree-sitter-javascript")
-     (tsx . ("https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src"))
-     ))
-
   :config
-  (use-package nix-ts-mode
-    :if (and
-	 (package-installed-p 'nix-ts-mode)
-	 (treesit-language-available-p 'nix))
-    :mode "\\.nix\\'")
+  (setq treesit-language-source-alist
+	'((bash "https://github.com/tree-sitter/tree-sitter-bash")
+	  (python "https://github.com/tree-sitter/tree-sitter-python")
+	  (lua "https://github.com/MunifTanjim/tree-sitter-lua")
+	  (sql "https://github.com/DerekStride/tree-sitter-sql" "gh-pages")
+	  ;; ini
+	  (dockerfile "https://github.com/camdencheek/tree-sitter-dockerfile")
+	  (nix "https://github.com/nix-community/tree-sitter-nix")
+	  (yaml "https://github.com/ikatyang/tree-sitter-yaml")
+	  ;; frontend
+	  (html "https://github.com/tree-sitter/tree-sitter-html")
+	  (css "https://github.com/tree-sitter/tree-sitter-css")
+	  (javascript "https://github.com/tree-sitter/tree-sitter-javascript")
+	  (tsx . ("https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src"))
+	  ))
+  )
 
-  ;; (package-vc-install "https://github.com/mickeynp/combobulate")
-  ;; (package-vc-install "https://github.com/mickeynp/html-ts-mode")
-  (use-package combobulate
-    :if (package-installed-p 'combobulate)
-    :preface
-    (setq combobulate-key-prefix "C-c m")
-    :hook
-    ((python-ts-mode . combobulate-mode)
-     (js-ts-mode . combobulate-mode)
-     (css-ts-mode . combobulate-mode)
-     (yaml-ts-mode . combobulate-mode)
-     (json-ts-mode . combobulate-mode)
-     (typescript-ts-mode . combobulate-mode)
-     (tsx-ts-mode . combobulate-mode))
-    :config
-    (when (package-installed-p 'html-ts-mode)
-      (add-to-list 'major-mode-remap-alist '(mhtml-mode . html-ts-mode))
-      (add-hook 'html-ts-mode-hook 'combobulate-mode)
-      )
+(use-package nix-ts-mode
+  :if (package-installed-p 'nix-ts-mode)
+  :mode "\\.nix\\'")
+
+(use-package lua-ts-mode
+  :mode "\\.lua\\'")
+
+(use-package html-ts-mode
+  :if (package-installed-p 'html-ts-mode)
+  :vc (:url "https://github.com/mickeynp/html-ts-mode")
+  :config
+  (add-to-list 'major-mode-remap-alist '(mhtml-mode . html-ts-mode))
+  )
+
+(use-package combobulate
+  :if (package-installed-p 'combobulate)
+  :vc (:url "https://github.com/mickeynp/combobulate")
+  :preface
+  (setq combobulate-key-prefix "C-c m")
+  :hook
+  ((python-ts-mode . combobulate-mode)
+   (js-ts-mode . combobulate-mode)
+   (css-ts-mode . combobulate-mode)
+   (yaml-ts-mode . combobulate-mode)
+   (json-ts-mode . combobulate-mode)
+   (typescript-ts-mode . combobulate-mode)
+   (tsx-ts-mode . combobulate-mode))
+  :config
+  (when (package-installed-p 'html-ts-mode)
+    (add-hook 'html-ts-mode-hook 'combobulate-mode)
     )
   )
 
