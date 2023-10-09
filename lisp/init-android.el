@@ -36,7 +36,7 @@ optional:
 (setenv "SSH_AUTH_SOCK"
         (string-trim-right
          (shell-command-to-string
-          "gpgconf --homedir /data/data/com.termux/files/home/.gnupg --list-dirs agent-ssh-socket"))
+          "gpgconf --homedir /data/data/com.termux/files/home/.gnupg --list-dirs agent-ssh-socket")))
 
 (set-face-attribute 'default nil :font "LXGW WenKai Mono" :height 200)
 
