@@ -2,6 +2,82 @@
 ;;; Commentary:
 ;;; Code:
 
+(use-package emacs
+  :init
+  (setq-default truncate-lines t
+		system-time-locale "C")
+  (fset 'yes-or-no-p 'y-or-n-p)
+  :hook
+  ((prog-mode . electric-pair-local-mode))
+  :bind-keymap
+  ("C-c k" . my-global-prefix-map)
+  :bind
+  (:map global-map
+	([remap eval-expression] . pp-eval-expression)
+	([remap eval-last-sexp] . pp-eval-last-sexp)
+	)
+  (:map my-global-prefix-map
+	("r" . 'my/rename-current-buffer-file)
+	("x" . 'my/delete-current-buffer-file)
+	)
+
+  :custom
+  (help-window-select t "Switch to help buffers automatically")
+  (bookmark-save-flag 1)
+  ;; (mouse-1-click-follows-link -450 "click set point, long press do action")
+  (reb-re-syntax 'string)
+  (sentence-end-double-space nil)
+  (eshell-scroll-to-bottom-on-input 'this)
+  (comint-scroll-to-bottom-on-input 'this)
+  (comint-scroll-to-bottom-on-output t)
+  :config
+  (setq major-mode-remap-alist
+        '((yaml-mode . yaml-ts-mode)
+          (bash-mode . bash-ts-mode)
+          (javascript-mode . js-ts-mode)
+          (typescript-mode . typescript-ts-mode)
+          (json-mode . json-ts-mode)
+          (css-mode . css-ts-mode)
+          (python-mode . python-ts-mode)))
+  (setq custom-file (locate-user-emacs-file "custom.el"))
+  (winner-mode)
+  (prefer-coding-system 'utf-8)
+  (scroll-bar-mode -1)
+
+  (defvar my-global-prefix-map (make-sparse-keymap)
+    "A keymap for myself.")
+
+  (defun my/rename-current-buffer-file ()
+    "Renames current buffer and file it is visiting."
+    (interactive)
+    (let ((name (buffer-name))
+          (filename (buffer-file-name)))
+      (if (not (and filename (file-exists-p filename)))
+          (error "Buffer '%s' is not visiting a file!" name)
+        (let ((new-name (read-file-name "New name: " filename)))
+          (if (get-buffer new-name)
+              (error "A buffer named '%s' already exists!" new-name)
+            (rename-file filename new-name 1)
+            (rename-buffer new-name)
+            (set-visited-file-name new-name)
+            (set-buffer-modified-p nil)
+            (message "File '%s' successfully renamed to '%s'"
+                     name (file-name-nondirectory new-name)))))))
+
+  (defun my/delete-current-buffer-file ()
+    "Removes file connected to current buffer and kills buffer."
+    (interactive)
+    (let ((filename (buffer-file-name))
+          (buffer (current-buffer))
+          (name (buffer-name)))
+      (if (not (and filename (file-exists-p filename)))
+          (ido-kill-buffer)
+        (when (yes-or-no-p "Are you sure you want to remove this file? ")
+          (delete-file filename)
+          (kill-buffer buffer)
+          (message "File '%s' successfully removed" filename)))))
+  )
+
 (cond ((eq system-type 'windows-nt)
        (require 'init-winnt)
        (require 'init-desk))
@@ -9,6 +85,13 @@
        (require 'init-linux)
        (require 'init-desk))
       ((eq system-type 'android) (require 'init-android)))
+
+(use-package desktop
+  :custom
+  (desktop-auto-save-timeout 600)
+  :config
+  (desktop-save-mode 1)
+)
 
 (use-package sh-script
   :hook (sh-mode . flymake-mode))
@@ -205,7 +288,9 @@
 
 (use-package dictionary
   :bind
-  ("C-c k d" . dictionary-search)
+  (:map my-global-prefix-map
+	("d" . dictionary-search)
+	)
   :custom
   (dictionary-server "dict.tw")
   (dictionary-use-single-buffer t))
@@ -347,41 +432,7 @@
   (ediff-keep-variants nil)
   (ediff-window-setup-function 'ediff-setup-windows-plain))
 
-(use-package emacs
-  :init
-  (setq-default truncate-lines t
-		system-time-locale "C")
-  (fset 'yes-or-no-p 'y-or-n-p)
-  :hook
-  ((prog-mode . electric-pair-local-mode))
-  :bind
-  (([remap eval-expression] . pp-eval-expression)
-   ([remap eval-last-sexp] . pp-eval-last-sexp))
-  :custom
-  (help-window-select t "Switch to help buffers automatically")
-  (bookmark-save-flag 1)
-  ;; (mouse-1-click-follows-link -450 "click set point, long press do action")
-  (reb-re-syntax 'string)
-  (sentence-end-double-space nil)
-  (desktop-auto-save-timeout 600)
-  (eshell-scroll-to-bottom-on-input 'this)
-  (comint-scroll-to-bottom-on-input 'this)
-  (comint-scroll-to-bottom-on-output t)
-  :config
-  (setq major-mode-remap-alist
-        '((yaml-mode . yaml-ts-mode)
-          (bash-mode . bash-ts-mode)
-          (javascript-mode . js-ts-mode)
-          (typescript-mode . typescript-ts-mode)
-          (json-mode . json-ts-mode)
-          (css-mode . css-ts-mode)
-          (python-mode . python-ts-mode)))
-  (setq custom-file (locate-user-emacs-file "custom.el"))
-  (winner-mode)
-  (desktop-save-mode 1)
-  (prefer-coding-system 'utf-8)
-  (scroll-bar-mode -1)
-  )
+
 
 (use-package gnus
   :custom
@@ -396,10 +447,6 @@
   :bind (("C-x C-<left>" . tab-bar-history-back)
 	 ("C-x C-<right>" . tab-bar-history-forward))
   )
-
-;; switch frame
-(global-set-key (kbd "A-q") (lambda () (interactive) (other-frame 1)))
-(global-set-key (kbd "A-e") (lambda () (interactive) (other-frame -1)))
 
 (use-package recentf
   :custom
