@@ -28,28 +28,21 @@ optional:
   )
 
 (defun my/run-fooview (cmd)
-  "运行 fooview 任务, 输出到 /sdcard/fooview.out，以后可以通过 emacs 自带的 httpd 回传"
+  "run fooview action"
   (shell-command
-   (concat "am broadcast -p com.fooview.android.fooview -a runcommand -e cmd '"
-           cmd " > /sdcard/fooview.out'"))
+   (concat "am start -a com.fooview.android.intent.RUN_WORKFLOW -e action " cmd " com.fooview.android.fooview/.ShortcutProxyActivity"))
   )
 
 (setenv "SSH_AUTH_SOCK"
-        (substring
+        (string-trim-right
          (shell-command-to-string
-          "gpgconf --homedir /data/data/com.termux/files/home/.gnupg --list-dirs agent-ssh-socket")
-         0 -1))
-
-(global-set-key (kbd "H-SPC") (kbd "<tab>"))
+          "gpgconf --homedir /data/data/com.termux/files/home/.gnupg --list-dirs agent-ssh-socket"))
 
 (set-face-attribute 'default nil :font "LXGW WenKai Mono" :height 200)
 
 (setq touch-screen-display-keyboard t
       newsticker-hide-old-items-in-newsticker-buffer t
-      archive-7z-program "7z"
-      initial-buffer-choice (lambda ()
-                              (org-agenda-list 1)
-                              (get-buffer "*Org Agenda*")))
+      archive-7z-program "7z")
 
 (use-package dired
   :hook
