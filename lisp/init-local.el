@@ -466,6 +466,7 @@
 	  (dockerfile "https://github.com/camdencheek/tree-sitter-dockerfile")
 	  (nix "https://github.com/nix-community/tree-sitter-nix")
 	  (yaml "https://github.com/ikatyang/tree-sitter-yaml")
+	  (json "https://github.com/tree-sitter/tree-sitter-json")
 	  ;; frontend
 	  (html "https://github.com/tree-sitter/tree-sitter-html")
 	  (css "https://github.com/tree-sitter/tree-sitter-css")
