@@ -453,6 +453,16 @@
   (recentf-max-saved-items 1000)
   (recentf-exclude `("/tmp/" "/ssh:" ,(concat package-user-dir "/.*-autoloads\\.el\\'"))))
 
+(use-package emacs-news-mode
+  :bind
+  (:map emacs-news-view-mode-map
+	("n" . outline-next-visible-heading)
+	("p" . outline-previous-visible-heading)
+	("f" . outline-forward-same-level)
+	("b" . outline-backward-same-level)
+	("u" . outline-up-heading)
+	))
+
 (package-initialize)
 
 (use-package treesit
