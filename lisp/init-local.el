@@ -265,6 +265,9 @@
                (concat archive-7z-program " x -aoa")))))
 
 (use-package dired-aux
+  :custom
+  (dired-compress-file-default-suffix ".zst")
+  (dired-compress-directory-default-suffix ".tar.zst")
   :config
   (push `("\\.\\(zip\\|7z\\)\\'" . ,(concat archive-7z-program " a -mx5 %o %i"))
         dired-compress-files-alist)
@@ -275,7 +278,7 @@
                    ,(concat archive-7z-program " x %i -so | "
                             archive-7z-program " x -aoa -si -ttar -o%o"))
                   ("\\.t\\(ar\\.\\)?zst\\'" #1# "zstd -dc %i | tar -xf -")
-                  ("\\.zst\\'" #1# "zstd -d --rm"))
+                  ("\\.zst\\'" #1# "zstd -d --rm %i"))
                 dired-compress-file-suffixes))
   )
 
