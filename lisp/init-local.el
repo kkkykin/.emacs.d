@@ -271,7 +271,9 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
   (setq dired-guess-shell-alist-user
         (list
          (list "\\.\\(rar\\|zip\\|7z\\)\\(\\.001\\)?$"
-               (concat archive-7z-program " x -aoa")))))
+               (concat archive-7z-program " x -aoa"))
+	 (list "\\(?:\\.t\\(?:\\(?:ar\\.\\)?zst\\)\\)\\'"
+	       "zstd -dc ? | tar -xf -"))))
 
 (use-package dired-aux
   :custom
