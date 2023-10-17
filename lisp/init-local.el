@@ -247,18 +247,26 @@
       default-directory "\"") "mpv" ))
 
   (defun my/dired-duplicate-file (arg)
-    "Duplicate the current file in Dired."
+    "Duplicate a file from dired with an incremented number.
+If ARG is provided, it sets the counter.
+https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-duplicate-thing-function/"
     (interactive "p")
-    (let ((filename (dired-get-filename)))
-      (setq target (concat (file-name-sans-extension filename)
-                           "-old"
-                           (if (> arg 1) (number-to-string arg))
-                           (file-name-extension filename t)))
-      (if (file-directory-p filename)
-          (copy-directory filename target)
-        (copy-file filename target))
-      )
-    )
+    (let* ((file (dired-get-file-for-visit))
+           (dir (file-name-directory file))
+           (name (file-name-nondirectory file))
+           (base-name (file-name-sans-extension name))
+           (extension (file-name-extension name t))
+           (counter (if arg (prefix-numeric-value arg) 1))
+           (new-file))
+      (while (and (setq new-file
+			(format "%s%s_%03d%s" dir base-name counter extension))
+		  (file-exists-p new-file))
+	(setq counter (1+ counter)))
+      (if (file-directory-p file)
+	  (copy-directory file new-file)
+	(copy-file file new-file))
+      (dired-revert)))
+  
   (setq dired-guess-shell-alist-user
         (list
          (list "\\.\\(rar\\|zip\\|7z\\)\\(\\.001\\)?$"
