@@ -19,6 +19,7 @@
   (:map my-global-prefix-map
 	("r" . 'my/rename-current-buffer-file)
 	("x" . 'my/delete-current-buffer-file)
+	("p" . 'delete-pair)
 	)
 
   :custom
