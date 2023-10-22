@@ -273,15 +273,23 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
          (list "\\.\\(rar\\|zip\\|7z\\)\\(\\.001\\)?$"
                (concat archive-7z-program " x -aoa"))
 	 (list "\\(?:\\.t\\(?:\\(?:ar\\.\\)?zst\\)\\)\\'"
-	       "zstd -dc ? | tar -xf -"))))
+	       "zstd -dc ? | tar -xf -")
+	 (list "\\.\\(mp4\\|mkv\\|avi\\|webm\\|flv\\|m4v\\|mov\\)\\'"
+	       "ffmpeg -hide_banner -y -strict 2 -hwaccel auto -i ? -vf \"scale='min(2560,iw)':-1\" -c:v hevc_nvenc -rc vbr -cq 19 -qmin 19 -qmax 19 -profile:v main10 -pix_fmt p010le -b:v 0K -bf:v 3 -b_ref_mode middle -temporal-aq 1 -rc-lookahead 32 -c:a libopus -b:a 128k -f mp4 ff-`?`")
+	 (list "\\.\\(png\\|jpe?g\\|gif\\|webp\\|bmp\\)\\'"
+	       "ffmpeg -hide_banner -y -i ? -vf \"scale='min(4096,iw)':-1\" -c:v libaom-av1 -cpu-used 6 -row-mt 1 -tiles 2x2 -still-picture 1 -crf 20 -f avif ff-`?`")))
+  )
 
 (use-package dired-aux
   :custom
   (dired-compress-file-default-suffix ".zst")
   (dired-compress-directory-default-suffix ".tar.zst")
   :config
-  (push `("\\.\\(zip\\|7z\\)\\'" . ,(concat archive-7z-program " a -mx5 %o %i"))
-        dired-compress-files-alist)
+  (setq dired-compress-files-alist
+        (append `(("\\.\\(tzst\\)\\'" . "tar -cf - %i | zstd -5 -o %o")
+		  ("\\.\\(zip\\|7z\\)\\'" . ,(concat archive-7z-program " a -mx5 %o %i"))
+                  )
+                dired-compress-files-alist))
   (setq dired-compress-file-suffixes
         (append `(("\\.\\(zip\\|rar\\)\\'" #1=""
                    ,(concat archive-7z-program " x -aoa -o%o %i"))
@@ -308,6 +316,27 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
   :custom
   (dictionary-server "dict.tw")
   (dictionary-use-single-buffer t))
+
+(use-package mpc
+  :bind-keymap
+  ("C-c m" . mpc-global-prefix-map)
+  :bind
+  (:map mpc-global-prefix-map
+	("s" . 'mpc-toggle-play)
+	("n" . 'mpc-next)
+	("p" . 'mpc-prev)
+	("b" . 'mpc-status-buffer-show)
+	("g" . 'mpc-seek-current)
+	("r" . 'mpc-toggle-repeat)
+	("z" . 'mpc-toggle-shuffle)
+	("a" . 'mpc-toggle-single)
+	("u" . 'mpc-update)
+	)
+  :custom
+  (mpc-host "127.0.0.1")
+  :config
+  (defvar mpc-global-prefix-map (make-sparse-keymap)
+    "A keymap for mpc."))
 
 (use-package org
   :hook
@@ -517,7 +546,7 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
   :if (package-installed-p 'combobulate)
   :vc (:url "https://github.com/mickeynp/combobulate")
   :preface
-  (setq combobulate-key-prefix "C-c m")
+  (setq combobulate-key-prefix "C-c j")
   :hook
   ((python-ts-mode . combobulate-mode)
    (js-ts-mode . combobulate-mode)
