@@ -623,6 +623,13 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
   :config
   (corfu-popupinfo-mode))
 
+(use-package sqlformat
+  :if (package-installed-p 'sqlformat)
+  :custom
+  (sqlformat-command 'sqlfluff)
+  ;; set sqlformat-args manually: '("-d" "mysql") or other
+  )
+
 (use-package envrc
   :if (package-installed-p 'envrc)
   :bind
