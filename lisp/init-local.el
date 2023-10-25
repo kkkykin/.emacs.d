@@ -506,8 +506,6 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
 	("u" . outline-up-heading)
 	))
 
-(package-initialize)
-
 (use-package treesit
   :config
   (setq treesit-language-source-alist
@@ -528,9 +526,34 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
 	  ))
   )
 
-(use-package nix-ts-mode
-  :if (package-installed-p 'nix-ts-mode)
-  :mode "\\.nix\\'")
+(use-package ox-org
+  :custom
+  (org-export-backends '(html latex md ascii icalendar))
+  (org-latex-pdf-process '("tectonic %f"))
+  (org-latex-default-class "ctexart")
+  (org-latex-packages-alist '(("margin=1in,a4paper" "geometry" nil)
+			      ("" "fvextra" nil)))
+  (org-latex-src-block-backend 'engraved)
+  :config
+  (use-package engrave-faces
+    :if (package-installed-p 'engrave-faces))
+
+  (add-to-list 'org-latex-classes
+	       '("ctexart" "\\documentclass[utf8]{ctexart}"
+		 ("\\section{%s}" . "\\section*{%s}")
+		 ("\\subsection{%s}" . "\\subsection*{%s}")
+		 ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+		 ("\\paragraph{%s}" . "\\paragraph*{%s}")
+		 ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
+  (add-to-list 'org-latex-classes
+	       '("ctexbook" "\\documentclass[utf8]{ctexbook}"
+		 ("\\part{%s}" . "\\part*{%s}")
+		 ("\\chapter{%s}" . "\\chapter*{%s}")
+		 ("\\section{%s}" . "\\section*{%s}")
+		 ("\\subsection{%s}" . "\\subsection*{%s}")
+		 ("\\subsubsection{%s}" . "\\subsubsection*{%s}"))))
+
+(package-initialize)
 
 (use-package lua-ts-mode
   :mode "\\.lua\\'")
@@ -560,6 +583,10 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
     (add-hook 'html-ts-mode-hook 'combobulate-mode)
     )
   )
+
+(use-package nix-ts-mode
+  :if (package-installed-p 'nix-ts-mode)
+  :mode "\\.nix\\'")
 
 (use-package which-key
   :if (package-installed-p 'which-key)
