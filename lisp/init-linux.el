@@ -2,8 +2,6 @@
 ;;; Commentary:
 ;;; Code:
 
-(setq archive-7z-program "7zz")
-
 (if (display-graphic-p)
     (set-face-attribute 'default nil :font "LXGW WenKai Mono" :height 108)
   (add-hook 'after-make-frame-functions

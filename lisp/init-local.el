@@ -33,11 +33,12 @@
   (comint-scroll-to-bottom-on-input 'this)
   (comint-scroll-to-bottom-on-output t)
 
-;; performance https://emacs-china.org/t/topic/25811/9
+;; long line performance https://emacs-china.org/t/topic/25811/9
   (bidi-inhibit-bpa t)
   (long-line-threshold 1000)
   (large-hscroll-threshold 1000)
   (syntax-wholeline-max 1000)
+
   :config
   (setq major-mode-remap-alist
         '((yaml-mode . yaml-ts-mode)
@@ -47,6 +48,13 @@
           (json-mode . json-ts-mode)
           (css-mode . css-ts-mode)
           (python-mode . python-ts-mode)))
+
+  (setq archive-7z-program (let ((7z (or (executable-find "7z")
+                                         (executable-find "7za")
+					 (executable-find "7zz"))))
+                             (when 7z
+                               (file-name-nondirectory 7z))))
+
   (setq custom-file (locate-user-emacs-file "custom.el"))
   (winner-mode)
   (prefer-coding-system 'utf-8)
