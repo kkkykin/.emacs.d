@@ -5,7 +5,7 @@
 (use-package emacs
   :init
   (setq-default truncate-lines t
-		system-time-locale "C")
+		bidi-display-reordering nil)
   (fset 'yes-or-no-p 'y-or-n-p)
   :hook
   ((prog-mode . electric-pair-local-mode))
@@ -24,6 +24,7 @@
 
   :custom
   (help-window-select t "Switch to help buffers automatically")
+  (system-time-locale "C")
   (bookmark-save-flag 1)
   ;; (mouse-1-click-follows-link -450 "click set point, long press do action")
   (reb-re-syntax 'string)
@@ -31,6 +32,12 @@
   (eshell-scroll-to-bottom-on-input 'this)
   (comint-scroll-to-bottom-on-input 'this)
   (comint-scroll-to-bottom-on-output t)
+
+;; performance https://emacs-china.org/t/topic/25811/9
+  (bidi-inhibit-bpa t)
+  (long-line-threshold 1000)
+  (large-hscroll-threshold 1000)
+  (syntax-wholeline-max 1000)
   :config
   (setq major-mode-remap-alist
         '((yaml-mode . yaml-ts-mode)
@@ -222,6 +229,7 @@
   :custom
   (dired-dwim-target t)
   (dired-listing-switches "-l")
+  (dired-mouse-drag-files t)
   (delete-by-moving-to-trash t)
   (wdired-allow-to-change-permissions 'advanced)
   (wdired-use-interactive-rename t)
@@ -673,9 +681,13 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
 (use-package disk-usage
   :if (package-installed-p 'disk-usage))
 
-(use-package org-anki
-  :if (package-installed-p 'org-anki)
-  :custom (org-anki-default-deck "org-anki"))
+(use-package anki-helper
+  :if (package-installed-p 'anki-helper)
+  :vc (:url "https://github.com/Elilif/emacs-anki-helper")
+  :custom (anki-helper-default-deck "anki-helper"))
+
+(use-package org-fc
+  :if (package-installed-p 'org-fc))
 
 (use-package ox-pandoc
   :if (package-installed-p 'ox-pandoc)
