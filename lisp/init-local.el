@@ -492,6 +492,10 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
 						     "-f" "mjpeg" "%t")))
 )
 
+(use-package doc-view
+  :custom
+  (doc-view-resolution 300))
+
 (use-package eglot
   :custom
   (eglot-report-progress nil)
