@@ -15,6 +15,7 @@
   (:map global-map
 	([remap eval-expression] . pp-eval-expression)
 	([remap eval-last-sexp] . pp-eval-last-sexp)
+	("C-c d" . 'duplicate-line)
 	)
   (:map my-global-prefix-map
 	("r" . 'my/rename-current-buffer-file)
@@ -108,6 +109,10 @@
   :config
   (desktop-save-mode 1)
 )
+
+(use-package project
+  :custom
+  (project-kill-buffers-display-buffer-list t))
 
 (use-package sh-script
   :hook (sh-mode . flymake-mode))
@@ -215,6 +220,8 @@
                 (setq-local shr-inhibit-images nil))))
 
 (use-package tramp
+  :custom
+  (tramp-use-scp-direct-remote-copying t)
   :config
   (connection-local-set-profile-variables
    'tramp-connection-local-termux-profile
@@ -232,6 +239,10 @@
    '(:application tramp :machine "termux-mi")
    'tramp-connection-local-termux-profile)
   )
+
+(use-package shell
+  :custom
+  (shell-kill-buffer-on-exit t))
 
 (use-package dired
   :custom
@@ -471,13 +482,15 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
 (use-package image
   :custom
   (image-use-external-converter t)
-  (image-dired-cmd-create-thumbnail-program "ffmpeg")
-  (image-dired-cmd-create-thumbnail-options '("-i" "%f"
-                                              "-map_metadata" "-1"
-                                              "-vf" "scale=%w:-1"
-                                              "-f" "mjpeg" "%t"))
   :config
-  (add-to-list 'image-file-name-extensions "avif"))
+  (add-to-list 'image-file-name-extensions "avif")
+  (unless (executable-find "gm")
+    (setq image-dired-cmd-create-thumbnail-program "ffmpeg"
+	  image-dired-cmd-create-thumbnail-options '("-i" "%f"
+						     "-map_metadata" "-1"
+						     "-vf" "scale=%w:-1"
+						     "-f" "mjpeg" "%t")))
+)
 
 (use-package eglot
   :custom
