@@ -26,6 +26,7 @@
   :custom
   (help-window-select t "Switch to help buffers automatically")
   (system-time-locale "C")
+  (what-cursor-show-names t)
   (bookmark-save-flag 1)
   ;; (mouse-1-click-follows-link -450 "click set point, long press do action")
   (reb-re-syntax 'string)
@@ -515,11 +516,10 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
   (gnus-home-directory "~/.emacs.d/gnus/")
   )
 
-;; tab-bar
 (use-package tab-bar
   :custom
   (tab-bar-history-mode t)
-  (tab-bar-select-tab-modifiers '(meta))
+  (tab-bar-select-tab-modifiers '(control))
   :bind (("C-x C-<left>" . tab-bar-history-back)
 	 ("C-x C-<right>" . tab-bar-history-forward))
   )
