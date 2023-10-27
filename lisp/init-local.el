@@ -107,7 +107,7 @@
                              "LXGW WenKai Mono" "PingFang SC" "Microsoft Yahei UI" "Simhei")
                when (font-installed-p font)
                return (progn
-			;; (setq face-font-rescale-alist `((,font . 1.3)))
+			(setq face-font-rescale-alist `((,font . 1.2)))
 			(set-fontset-font t 'han (font-spec :family font))))))
 
   (centaur-setup-fonts)
