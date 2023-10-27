@@ -100,8 +100,8 @@
 			    (delete ft fonts)
 			    until (find-font (font-spec :name ft))
 			    finally return ft))
-	     (height (cond ((string= font "LXGW WenKai Mono") '(200 108 140))
-			   ((string= font "Sarasa Mono SC") '(200 108 130))
+	     (height (cond ((string= font "LXGW WenKai Mono") '(198 108 140))
+			   ((string= font "Sarasa Mono SC") '(188 108 130))
 			   ((string= font "Unifont") '(200 108 142)))))
 	(set-face-attribute 'default nil :font font :height
 			    (cond ((< (display-pixel-width) 1920) (car height))
