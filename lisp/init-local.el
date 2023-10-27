@@ -66,53 +66,52 @@
   (defvar my-global-prefix-map (make-sparse-keymap)
     "A keymap for myself.")
 
+  (defvar my/fonts-list '("LXGW WenKai Mono" "Sarasa Mono SC")
+    "prefered fonts")
+
+  (defun setup-desk ()
+    "setup for desktop"
+    (tool-bar-mode -1)
+    (menu-bar-mode -1)
+
+    (require 'server)
+    (unless (server-running-p)
+      (server-start))
+
+    ;; Unifont not work on android
+    (add-to-list 'my/fonts-list "Unifont")
+    )
+
   (cond ((eq system-type 'windows-nt)
 	 (require 'init-winnt)
-	 (require 'init-desk))
+	 (setup-desk))
 	((eq system-type 'gnu/linux)
 	 (require 'init-linux)
-	 (require 'init-desk))
+	 (setup-desk))
 	((eq system-type 'android) (require 'init-android)))
 
   ;; Fonts: modify from centaur
-  (defun centaur-setup-fonts ()
+  (defun setup-fonts ()
     "Setup fonts."
-    (defun font-installed-p (font-name)
-      "Check if font with FONT-NAME is available."
-      (find-font (font-spec :name font-name)))
     (when (display-graphic-p)
       ;; Set default font
-      (cl-loop for font in '("Cascadia Code" "Fira Code" "Jetbrains Mono"
-                             "SF Mono" "Hack" "Source Code Pro" "Menlo"
-                             "Monaco" "DejaVu Sans Mono" "Consolas" "Droid Sans Mono")
-               when (font-installed-p font)
-               return (set-face-attribute 'default nil
-                                          :family font
-                                          :height (cond ((> (display-pixel-width) 1920) 140)
-							((< (display-pixel-width) 1920) 170)
-							(t 92))))
+      (let* ((fonts (remove (face-attribute 'default :family) my/fonts-list))
+	     (font (cl-loop do (setq ft (seq-random-elt fonts))
+			    (delete ft fonts)
+			    until (find-font (font-spec :name ft))
+			    finally return ft))
+	     (height (cond ((string= font "LXGW WenKai Mono") '(200 108 140))
+			   ((string= font "Sarasa Mono SC") '(200 108 130))
+			   ((string= font "Unifont") '(200 108 142)))))
+	(set-face-attribute 'default nil :font font :height
+			    (cond ((< (display-pixel-width) 1920) (car height))
+				  ((> (display-pixel-width) 1920) (car (last height)))
+				  (t (cadr height)))))
+      ))
 
-      ;; Specify font for all unicode characters
-      (cl-loop for font in '("Segoe UI Symbol" "Symbola" "Symbol")
-               when (font-installed-p font)
-               return (set-fontset-font t 'symbol (font-spec :family font) nil 'prepend))
-
-      ;; Emoji
-      (cl-loop for font in '("Noto Color Emoji" "Apple Color Emoji" "Segoe UI Emoji")
-               when (font-installed-p font)
-               return (set-fontset-font t 'emoji (font-spec :family font) nil 'prepend))
-
-      ;; Specify font for Chinese characters
-      (cl-loop for font in '("LXGW Neo Xihei" "WenQuanYi Micro Hei Mono" "LXGW WenKai Screen"
-                             "LXGW WenKai Mono" "PingFang SC" "Microsoft Yahei UI" "Simhei")
-               when (font-installed-p font)
-               return (progn
-			(setq face-font-rescale-alist `((,font . 1.2)))
-			(set-fontset-font t 'han (font-spec :family font))))))
-
-  (centaur-setup-fonts)
-  (add-hook 'window-setup-hook #'centaur-setup-fonts)
-  (add-hook 'server-after-make-frame-hook #'centaur-setup-fonts)
+  (setup-fonts)
+  (add-hook 'window-setup-hook #'setup-fonts)
+  (add-hook 'server-after-make-frame-hook #'setup-fonts)
   )
 
 (use-package desktop
