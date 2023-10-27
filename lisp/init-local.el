@@ -18,9 +18,9 @@
 	("C-c d" . 'duplicate-line)
 	)
   (:map my-global-prefix-map
-	("r" . 'my/rename-current-buffer-file)
-	("x" . 'my/delete-current-buffer-file)
+	("r" . 'rename-visited-file)
 	("p" . 'delete-pair)
+	("u" . 'raise-sexp)
 	)
 
   :custom
@@ -65,35 +65,6 @@
   (defvar my-global-prefix-map (make-sparse-keymap)
     "A keymap for myself.")
 
-  (defun my/rename-current-buffer-file ()
-    "Renames current buffer and file it is visiting."
-    (interactive)
-    (let ((name (buffer-name))
-          (filename (buffer-file-name)))
-      (if (not (and filename (file-exists-p filename)))
-          (error "Buffer '%s' is not visiting a file!" name)
-        (let ((new-name (read-file-name "New name: " filename)))
-          (if (get-buffer new-name)
-              (error "A buffer named '%s' already exists!" new-name)
-            (rename-file filename new-name 1)
-            (rename-buffer new-name)
-            (set-visited-file-name new-name)
-            (set-buffer-modified-p nil)
-            (message "File '%s' successfully renamed to '%s'"
-                     name (file-name-nondirectory new-name)))))))
-
-  (defun my/delete-current-buffer-file ()
-    "Removes file connected to current buffer and kills buffer."
-    (interactive)
-    (let ((filename (buffer-file-name))
-          (buffer (current-buffer))
-          (name (buffer-name)))
-      (if (not (and filename (file-exists-p filename)))
-          (ido-kill-buffer)
-        (when (yes-or-no-p "Are you sure you want to remove this file? ")
-          (delete-file filename)
-          (kill-buffer buffer)
-          (message "File '%s' successfully removed" filename)))))
   )
 
 (cond ((eq system-type 'windows-nt)
@@ -167,18 +138,6 @@
   (newsticker-retrieval-method 'extern)
   :init (load "init-privacy.el.gpg" t t)
   :config
-  (defun newsticker-treeview-eww-browse-url ()
-    "Call `eww-browse-url' for the link of the item at point."
-    (interactive)
-    (with-current-buffer (newsticker--treeview-list-buffer)
-      (let ((url (get-text-property (point) :nt-link)))
-	(when url
-          (eww-browse-url url)
-          (if newsticker-automatically-mark-visited-items-as-old
-              (newsticker-treeview-mark-item-old))
-	  (switch-to-buffer-other-window "*eww*" t)
-	  ))))
-  (define-key newsticker-treeview-mode-map "e" 'newsticker-treeview-eww-browse-url)
 
   (defun my/newsticker-start (&optional _do-not-complain-if-running)
     (let ((running (newsticker-running-p)))
@@ -193,21 +152,11 @@
         (run-hooks 'newsticker-start-hook)
         (message "Newsticker started!"))))
   ;; with interval
-  (advice-add 'newsticker-start :override #'my/newsticker-start)
-  (defun my/newsticker--image-sentinel (process _event)
-    (let* ((p-status (process-status process))
-           (exit-status (process-exit-status process))
-           (feed-name (process-get process 'nt-feed-name))
-           (directory (process-get process 'nt-directory))
-           (filename (process-get process 'nt-filename)))
-      (catch 'oops
-        (unless (and (eq p-status 'exit)
-                     (= exit-status 0))
-          (newsticker--image-remove directory feed-name)
-          (throw 'oops nil))
-        (newsticker--image-save (process-buffer process) directory filename))))
+  (advice-add 'newsticker-start :before-until #'my/newsticker-start)
   ;; remove message: "Error while retrieving image"
-  (advice-add 'newsticker--image-sentinel :override #'my/newsticker--image-sentinel)
+  (advice-add 'newsticker--image-sentinel :around (lambda (oldfun &rest args)
+						    (let ((inhibit-message t))
+						      (apply oldfun args))))
   (newsticker-start t)
   )
 
