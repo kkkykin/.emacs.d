@@ -84,13 +84,13 @@
       ;; Set default font
       (cl-loop for font in '("Cascadia Code" "Fira Code" "Jetbrains Mono"
                              "SF Mono" "Hack" "Source Code Pro" "Menlo"
-                             "Monaco" "DejaVu Sans Mono" "Consolas")
+                             "Monaco" "DejaVu Sans Mono" "Consolas" "Droid Sans Mono")
                when (font-installed-p font)
                return (set-face-attribute 'default nil
                                           :family font
                                           :height (cond ((> (display-pixel-width) 1920) 140)
-							((< (display-pixel-width) 1920) 200)
-							(t 100))))
+							((< (display-pixel-width) 1920) 170)
+							(t 92))))
 
       ;; Specify font for all unicode characters
       (cl-loop for font in '("Segoe UI Symbol" "Symbola" "Symbol")
@@ -107,7 +107,7 @@
                              "LXGW WenKai Mono" "PingFang SC" "Microsoft Yahei UI" "Simhei")
                when (font-installed-p font)
                return (progn
-			(setq face-font-rescale-alist `((,font . 1.3)))
+			;; (setq face-font-rescale-alist `((,font . 1.3)))
 			(set-fontset-font t 'han (font-spec :family font))))))
 
   (centaur-setup-fonts)

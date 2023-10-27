@@ -66,6 +66,7 @@ optional:
 (use-package tool-bar
   :custom
   (tool-bar-mode t)
+  (tool-bar-button-margin 12)
   (modifier-bar-mode t)
   (tool-bar-position 'bottom))
 
