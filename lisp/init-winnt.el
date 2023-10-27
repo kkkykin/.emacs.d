@@ -11,11 +11,6 @@
       w32-use-native-image-API t
       find-program "ind")
 
-;; font
-(if (eq (display-pixel-width) 1920)
-    (set-face-attribute 'default nil :font "LXGW WenKai Mono" :height 108)
-  (set-face-attribute 'default nil :font "LXGW WenKai Mono" :height 140))
-
 (add-to-list 'exec-suffixes ".ps1")
 
 (defun run-bash ()

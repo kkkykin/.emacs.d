@@ -38,8 +38,6 @@ optional:
          (shell-command-to-string
           "gpgconf --homedir /data/data/com.termux/files/home/.gnupg --list-dirs agent-ssh-socket")))
 
-(set-face-attribute 'default nil :font "LXGW WenKai Mono" :height 200)
-
 (setq touch-screen-display-keyboard t
       newsticker-hide-old-items-in-newsticker-buffer t
       archive-7z-program "7z")

@@ -42,6 +42,7 @@
   (syntax-wholeline-max 1000)
 
   :config
+
   (setq major-mode-remap-alist
         '((yaml-mode . yaml-ts-mode)
           (bash-mode . bash-ts-mode)
@@ -65,15 +66,54 @@
   (defvar my-global-prefix-map (make-sparse-keymap)
     "A keymap for myself.")
 
-  )
+  (cond ((eq system-type 'windows-nt)
+	 (require 'init-winnt)
+	 (require 'init-desk))
+	((eq system-type 'gnu/linux)
+	 (require 'init-linux)
+	 (require 'init-desk))
+	((eq system-type 'android) (require 'init-android)))
 
-(cond ((eq system-type 'windows-nt)
-       (require 'init-winnt)
-       (require 'init-desk))
-      ((eq system-type 'gnu/linux)
-       (require 'init-linux)
-       (require 'init-desk))
-      ((eq system-type 'android) (require 'init-android)))
+  ;; Fonts: modify from centaur
+  (defun centaur-setup-fonts ()
+    "Setup fonts."
+    (defun font-installed-p (font-name)
+      "Check if font with FONT-NAME is available."
+      (find-font (font-spec :name font-name)))
+    (when (display-graphic-p)
+      ;; Set default font
+      (cl-loop for font in '("Cascadia Code" "Fira Code" "Jetbrains Mono"
+                             "SF Mono" "Hack" "Source Code Pro" "Menlo"
+                             "Monaco" "DejaVu Sans Mono" "Consolas")
+               when (font-installed-p font)
+               return (set-face-attribute 'default nil
+                                          :family font
+                                          :height (cond ((> (display-pixel-width) 1920) 140)
+							((< (display-pixel-width) 1920) 200)
+							(t 100))))
+
+      ;; Specify font for all unicode characters
+      (cl-loop for font in '("Segoe UI Symbol" "Symbola" "Symbol")
+               when (font-installed-p font)
+               return (set-fontset-font t 'symbol (font-spec :family font) nil 'prepend))
+
+      ;; Emoji
+      (cl-loop for font in '("Noto Color Emoji" "Apple Color Emoji" "Segoe UI Emoji")
+               when (font-installed-p font)
+               return (set-fontset-font t 'emoji (font-spec :family font) nil 'prepend))
+
+      ;; Specify font for Chinese characters
+      (cl-loop for font in '("LXGW Neo Xihei" "WenQuanYi Micro Hei Mono" "LXGW WenKai Screen"
+                             "LXGW WenKai Mono" "PingFang SC" "Microsoft Yahei UI" "Simhei")
+               when (font-installed-p font)
+               return (progn
+			(setq face-font-rescale-alist `((,font . 1.3)))
+			(set-fontset-font t 'han (font-spec :family font))))))
+
+  (centaur-setup-fonts)
+  (add-hook 'window-setup-hook #'centaur-setup-fonts)
+  (add-hook 'server-after-make-frame-hook #'centaur-setup-fonts)
+  )
 
 (use-package desktop
   :custom
@@ -439,8 +479,18 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
 	  image-dired-cmd-create-thumbnail-options '("-i" "%f"
 						     "-map_metadata" "-1"
 						     "-vf" "scale=%w:-1"
-						     "-f" "mjpeg" "%t")))
-)
+						     "-f" "mjpeg" "%t"))
+    
+    (defun my/image-dired-create-thumb-maybe-gs (oldfun &rest args)
+      (when (string= (file-name-extension (car args)) "pdf")
+    	(let ((image-dired-cmd-create-thumbnail-program "gs")
+    	      (image-dired-cmd-create-thumbnail-options '("-sDEVICE=jpeg" "-dSAFER" "-r20" "-o" "%t" "%f")))
+    	  (apply oldfun args))
+    	)
+      )
+    (advice-add 'image-dired-create-thumb-1 :around #'my/image-dired-create-thumb-maybe-gs)
+    )
+  )
 
 (use-package doc-view
   :custom
