@@ -110,6 +110,11 @@
   ;; this hook run when client reuse frame
   )
 
+(use-package minibuffer
+  :custom
+  (minibuffer-electric-default-mode t)
+  (insert-default-directory nil))
+
 (use-package desktop
   :custom
   (desktop-auto-save-timeout 600)
