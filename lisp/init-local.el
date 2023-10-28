@@ -66,7 +66,7 @@
   (defvar my-global-prefix-map (make-sparse-keymap)
     "A keymap for myself.")
 
-  (defvar my/fonts-list '("LXGW WenKai Mono" "Sarasa Mono SC" "Unifont")
+  (defvar my/fonts-list '("LXGW WenKai Mono" "Sarasa Mono SC" "Unifont-JP" "UnifontExMono")
     "prefered fonts")
 
   (defun setup-desk ()
@@ -87,19 +87,18 @@
 	 (setup-desk))
 	((eq system-type 'android) (require 'init-android)))
 
-  ;; Fonts: modify from centaur
   (defun setup-fonts ()
-    "Setup fonts."
+    "Randomize setup fonts."
     (when (display-graphic-p)
-      ;; Set default font
       (let* ((fonts (remove (face-attribute 'default :family) my/fonts-list))
-	     (font (cl-loop do (setq ft (seq-random-elt fonts))
-			    (delete ft fonts)
-			    until (find-font (font-spec :name ft))
-			    finally return ft))
+	     (font (cl-loop for ft = (seq-random-elt fonts)
+			    always fonts
+			    do (delete ft fonts)
+			    when (find-font (font-spec :name ft))
+			    return ft))
 	     (height (cond ((string= font "LXGW WenKai Mono") '(198 108 140))
 			   ((string= font "Sarasa Mono SC") '(188 108 130))
-			   ((string= font "Unifont") '(198 108 142)))))
+			   ((string-match-p "Unifont.+" font) '(198 108 142)))))
 	(set-face-attribute 'default nil :font font :height
 			    (cond ((< (display-pixel-width) 1920) (car height))
 				  ((> (display-pixel-width) 1920) (car (last height)))
