@@ -66,7 +66,7 @@
   (defvar my-global-prefix-map (make-sparse-keymap)
     "A keymap for myself.")
 
-  (defvar my/fonts-list '("LXGW WenKai Mono" "Sarasa Mono SC")
+  (defvar my/fonts-list '("LXGW WenKai Mono" "Sarasa Mono SC" "Unifont")
     "prefered fonts")
 
   (defun setup-desk ()
@@ -77,9 +77,6 @@
     (require 'server)
     (unless (server-running-p)
       (server-start))
-
-    ;; Unifont not work on android
-    (add-to-list 'my/fonts-list "Unifont")
     )
 
   (cond ((eq system-type 'windows-nt)
@@ -102,16 +99,16 @@
 			    finally return ft))
 	     (height (cond ((string= font "LXGW WenKai Mono") '(198 108 140))
 			   ((string= font "Sarasa Mono SC") '(188 108 130))
-			   ((string= font "Unifont") '(200 108 142)))))
+			   ((string= font "Unifont") '(198 108 142)))))
 	(set-face-attribute 'default nil :font font :height
 			    (cond ((< (display-pixel-width) 1920) (car height))
 				  ((> (display-pixel-width) 1920) (car (last height)))
 				  (t (cadr height)))))
       ))
 
-  (setup-fonts)
   (add-hook 'window-setup-hook #'setup-fonts)
-  (add-hook 'server-after-make-frame-hook #'setup-fonts)
+  ;; (add-hook 'server-after-make-frame-hook #'setup-fonts)
+  ;; this hook run when client reuse frame
   )
 
 (use-package desktop
@@ -564,10 +561,12 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
   (org-latex-default-class "ctexart")
   (org-latex-packages-alist '(("margin=1in,a4paper" "geometry" nil)
 			      ("" "fvextra" nil)))
-  (org-latex-src-block-backend 'engraved)
   :config
   (use-package engrave-faces
-    :if (package-installed-p 'engrave-faces))
+    :if (package-installed-p 'engrave-faces)
+    :custom
+    (org-latex-src-block-backend 'engraved)
+    )
 
   (add-to-list 'org-latex-classes
 	       '("ctexart" "\\documentclass[utf8]{ctexart}"
