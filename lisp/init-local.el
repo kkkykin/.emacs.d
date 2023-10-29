@@ -124,12 +124,15 @@
   (apropos-sort-by-scores t)
   :bind
   (:map help-map
-	("A" . 'apropos-variable)
-	("V" . 'apropos-value)
+	("A" . 'apropos-function)
+	("V" . 'apropos-variable)
+	("B" . 'apropos-value)
 	("j" . 'apropos-local-variable)
 	("J" . 'apropos-local-value)
+	("D" . 'info-apropos)
 	("M" . 'describe-keymap)
-	("D" . 'shortdoc)
+	("z" . 'shortdoc)
+	("Z" . 'apropos-library)
 	)
   )
 
