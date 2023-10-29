@@ -25,6 +25,8 @@
 
   :custom
   (system-time-locale "C")
+  (scroll-bar-mode nil)
+  (custom-file "~/.emacs.d/custom.el")
   (what-cursor-show-names t)
   (bookmark-save-flag 1)
   ;; (mouse-1-click-follows-link -450 "click set point, long press do action")
@@ -57,10 +59,8 @@
                              (when 7z
                                (file-name-base 7z))))
 
-  (setq custom-file (locate-user-emacs-file "custom.el"))
   (winner-mode)
   (prefer-coding-system 'utf-8)
-  (scroll-bar-mode -1)
 
   (defvar my-global-prefix-map (make-sparse-keymap)
     "A keymap for myself.")
@@ -129,6 +129,7 @@
 	("j" . 'apropos-local-variable)
 	("J" . 'apropos-local-value)
 	("M" . 'describe-keymap)
+	("D" . 'shortdoc)
 	)
   )
 
