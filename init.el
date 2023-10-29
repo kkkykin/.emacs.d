@@ -48,20 +48,6 @@
 (setq initial-major-mode 'fundamental-mode)  ; default mode for the *scratch* buffer
 (setq display-time-default-load-average nil) ; this information is useless for most
 
-;; Automatically reread from disk if the underlying file changes
-;; (setq auto-revert-interval 1)
-;; (setq auto-revert-check-vc-info t)
-;; (global-auto-revert-mode)
-
-;; Save history of minibuffer
-(savehist-mode)
-
-;; Move through windows with Ctrl-<arrow keys>
-(windmove-default-keybindings 'control) ; You can use other modifiers here
-
-;; Fix archaic defaults
-(setq sentence-end-double-space nil)
-
 ;; Make right-click do something sensible
 ;; (when (display-graphic-p)
 ;;   (context-menu-mode))
@@ -86,7 +72,6 @@ If the new path's directories does not exist, create them."
 
 ;; For help, see: https://www.masteringemacs.org/article/understanding-minibuffer-completion
 
-(setq enable-recursive-minibuffers t)                ; Use the minibuffer whilst in the minibuffer
 (setq completion-cycle-threshold 1)                  ; TAB cycles candidates
 (setq completions-detailed t)                        ; Show annotations
 (setq tab-always-indent 'complete)                   ; When I hit TAB, try to complete, otherwise, indent
@@ -105,7 +90,6 @@ If the new path's directories does not exist, create them."
 ;; For a fancier built-in completion option, try ido-mode or fido-mode. See also
 ;; the file extras/base.el
 ;(fido-vertical-mode)
-(fido-mode)
 (setq icomplete-delay-completions-threshold 4000)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -115,18 +99,18 @@ If the new path's directories does not exist, create them."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Mode line information
-(setq line-number-mode t)                        ; Show current line in modeline
-(setq column-number-mode t)                      ; Show column as well
+;; (setq line-number-mode t)                        ; Show current line in modeline
+;; (setq column-number-mode t)                      ; Show column as well
 
-(setq x-underline-at-descent-line nil)           ; Prettier underlines
-(setq switch-to-buffer-obey-display-actions t)   ; Make switching buffers more consistent
+;; (setq x-underline-at-descent-line nil)           ; Prettier underlines
+;; (setq switch-to-buffer-obey-display-actions t)   ; Make switching buffers more consistent
 
-(setq-default show-trailing-whitespace nil)      ; By default, don't underline trailing spaces
-(setq-default indicate-buffer-boundaries 'left)  ; Show buffer top and bottom in the margin
+;; (setq-default show-trailing-whitespace nil)      ; By default, don't underline trailing spaces
+;; (setq-default indicate-buffer-boundaries 'left)  ; Show buffer top and bottom in the margin
 
 ;; Enable horizontal scrolling
-(setq mouse-wheel-tilt-scroll t)
-(setq mouse-wheel-flip-direction t)
+;; (setq mouse-wheel-tilt-scroll t)
+;; (setq mouse-wheel-flip-direction t)
 
 ;; We won't set these, but they're good to know about
 ;;
@@ -134,22 +118,22 @@ If the new path's directories does not exist, create them."
 ;; (setq-default tab-width 4)
 
 ;; Misc. UI tweaks
-(blink-cursor-mode -1)                                ; Steady cursor
-(pixel-scroll-precision-mode)                         ; Smooth scrolling
+;; (blink-cursor-mode -1)                                ; Steady cursor
+;; (pixel-scroll-precision-mode)                         ; Smooth scrolling
 
 ;; Use common keystrokes by default
 ;; (cua-mode)
 
 ;; Display line numbers in programming mode
-(add-hook 'prog-mode-hook 'display-line-numbers-mode)
-(setq-default display-line-numbers-width 3)           ; Set a minimum width
+;; (add-hook 'prog-mode-hook 'display-line-numbers-mode)
+;; (setq-default display-line-numbers-width 3)           ; Set a minimum width
 
 ;; Nice line wrapping when working with text
-(add-hook 'text-mode-hook 'visual-line-mode)
+;; (add-hook 'text-mode-hook 'visual-line-mode)
 
 ;; Modes to highlight the current line with
-(let ((hl-line-hooks '(text-mode-hook prog-mode-hook)))
-  (mapc (lambda (hook) (add-hook hook 'hl-line-mode)) hl-line-hooks))
+;; (let ((hl-line-hooks '(text-mode-hook prog-mode-hook)))
+;;   (mapc (lambda (hook) (add-hook hook 'hl-line-mode)) hl-line-hooks))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -157,28 +141,13 @@ If the new path's directories does not exist, create them."
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; Show the tab-bar as soon as tab-bar functions are invoked
-(setq tab-bar-show 1)
-
 ;; Add the time to the tab-bar, if visible
-(add-to-list 'tab-bar-format 'tab-bar-format-align-right 'append)
-(add-to-list 'tab-bar-format 'tab-bar-format-global 'append)
-(setq display-time-format "%a %F %T")
-(setq display-time-interval 1)
+;; (add-to-list 'tab-bar-format 'tab-bar-format-align-right 'append)
+;; (add-to-list 'tab-bar-format 'tab-bar-format-global 'append)
+;; (setq display-time-format "%a %F %T")
+;; (setq display-time-interval 1)
 ;; (display-time-mode)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
-;;;   Theme
-;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(use-package emacs
-  :config
-  (add-hook 'server-after-make-frame-hook
-            (lambda ()
-              (load-theme 'leuven)))
-  (load-theme 'leuven))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;

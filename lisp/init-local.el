@@ -3,12 +3,10 @@
 ;;; Code:
 
 (use-package emacs
-  :init
-  (setq-default truncate-lines t
-		bidi-display-reordering nil)
-  (fset 'yes-or-no-p 'y-or-n-p)
   :hook
-  ((prog-mode . electric-pair-local-mode))
+  ((prog-mode . electric-pair-local-mode)
+   (prog-mode . display-line-numbers-mode)
+   )
   :bind-keymap
   ("C-c k" . my-global-prefix-map)
   :bind
@@ -25,18 +23,30 @@
 
   :custom
   (system-time-locale "C")
+  (use-package-always-defer t)
+  (truncate-lines t)
   (scroll-bar-mode nil)
+  (tool-bar-mode nil)
+  (menu-bar-mode nil)
+  (blink-cursor-mode nil)
+  (column-number-mode t)
+  (fido-mode t)
+  (use-short-answers t)
+  (word-wrap-by-category t)
   (custom-file "~/.emacs.d/custom.el")
   (what-cursor-show-names t)
+  (tab-width 4)
+  (switch-to-buffer-obey-display-actions t)
   (bookmark-save-flag 1)
   ;; (mouse-1-click-follows-link -450 "click set point, long press do action")
   (reb-re-syntax 'string)
-  (sentence-end-double-space nil)
+  (sentence-end-double-space nil "Fix archaic defaults")
   (eshell-scroll-to-bottom-on-input 'this)
   (comint-scroll-to-bottom-on-input 'this)
   (comint-scroll-to-bottom-on-output t)
 
-;; long line performance https://emacs-china.org/t/topic/25811/9
+  ;; long line performance https://emacs-china.org/t/topic/25811/9
+  (bidi-display-reordering nil)
   (bidi-inhibit-bpa t)
   (long-line-threshold 1000)
   (large-hscroll-threshold 1000)
@@ -59,7 +69,6 @@
                              (when 7z
                                (file-name-base 7z))))
 
-  (winner-mode)
   (prefer-coding-system 'utf-8)
 
   (defvar my-global-prefix-map (make-sparse-keymap)
@@ -70,13 +79,21 @@
 
   (defun setup-desk ()
     "setup for desktop"
-    (tool-bar-mode -1)
-    (menu-bar-mode -1)
 
-    (require 'server)
-    (unless (server-running-p)
-      (server-start))
+    (windmove-default-keybindings 'control)
+
+    (use-package server :defer 5
+      :config
+      (unless (server-running-p)
+	(server-start))
+      )
+    
     )
+
+  (add-hook 'text-mode-hook 'visual-line-mode)
+
+  (let ((hl-line-hooks '(text-mode-hook prog-mode-hook)))
+	(mapc (lambda (hook) (add-hook hook 'hl-line-mode)) hl-line-hooks))
 
   (cond ((eq system-type 'windows-nt)
 	 (require 'init-winnt)
@@ -97,7 +114,7 @@
 			    return ft))
 	     (height (cond ((string= font "LXGW WenKai Mono") '(198 108 140))
 			   ((string= font "Sarasa Mono SC") '(188 108 130))
-			   ((string-match-p "Unifont.+" font) '(198 108 142)))))
+			   ((string-prefix-p "Unifont" font) '(198 108 142)))))
 	(set-face-attribute 'default nil :font font :height
 			    (cond ((< (display-pixel-width) 1920) (car height))
 				  ((> (display-pixel-width) 1920) (car (last height)))
@@ -105,16 +122,25 @@
       ))
 
   (add-hook 'window-setup-hook #'setup-fonts)
+  (add-hook 'window-setup-hook
+            (lambda ()
+              (load-theme 'leuven)))
   ;; (add-hook 'server-after-make-frame-hook #'setup-fonts)
   ;; this hook run when client reuse frame
   )
 
+(use-package abbrev
+  :custom
+  (abbrev-suggest t))
+
 (use-package minibuffer
   :custom
   (minibuffer-electric-default-mode t)
-  (insert-default-directory nil)
+  (enable-recursive-minibuffers t)
+  ;; (insert-default-directory nil)
   (resize-mini-windows t)
   (history-delete-duplicates t)
+  (savehist-mode t)
   :hook
   ((minibuffer-mode . electric-pair-local-mode)))
 
@@ -136,6 +162,10 @@
 	)
   )
 
+(use-package xref
+  :custom
+  (xref-history-storage 'xref-window-local-history))
+
 (use-package desktop
   :custom
   (desktop-auto-save-timeout 600)
@@ -145,6 +175,10 @@
 (use-package project
   :custom
   (project-kill-buffers-display-buffer-list t))
+
+(use-package python
+  :custom
+  (python-shell-dedicated t))
 
 (use-package sh-script
   :hook (sh-mode . flymake-mode))
@@ -187,7 +221,7 @@
             (name . "^\\*Newsticker")))))
   )
 
-(use-package newsticker :defer 60
+(use-package newsticker :defer 20
   :custom
   (newsticker-obsolete-item-max-age 864000)
   (newsticker-treeview-date-format "%y.%m.%d, %H:%M")
@@ -196,8 +230,10 @@
   (newsticker-hide-old-items-in-newsticker-buffer t "plainview only")
   (newsticker-retrieval-interval 1800)
   (newsticker-retrieval-method 'extern)
-  :init (load "init-privacy.el.gpg" t t)
+  (newsticker-wget-name "curl")
+  (newsticker-wget-arguments '("-qsLm30"))
   :config
+  (load "init-rss.el.gpg" t t)
 
   (defun my/newsticker-start (&optional _do-not-complain-if-running)
     (let ((running (newsticker-running-p)))
@@ -224,10 +260,61 @@
   :custom
   (url-cookie-trusted-urls '())
   (url-cookie-untrusted-urls '(".*"))
+  (eww-auto-rename-buffer 'title)
   (shr-inhibit-images t "images maybe hang in newsticker")
   :hook
   (eww-mode . (lambda ()
-                (setq-local shr-inhibit-images nil))))
+                (setq-local shr-inhibit-images nil)))
+  :config
+
+  ;; refine github experience: from https://emacstalk.codeberg.page/post/018/
+  (setq my/url-redirect-list `(("^https://github.com/\\(.+\\)/commit/\\(\\w+\\)$" .
+				;; 针对单个 commit
+				(lambda (url)
+                                  (format "https://github.com/%s/commit/%s.patch"
+                                          (match-string 1 url)
+                                          (match-string 2 url))))
+                               ("^https://github.com/\\(.+\\)/pull/\\([[:digit:]]+\\)$" .
+				;; 针对单个 Pull Request
+				(lambda (url)
+                                  (format "https://github.com/%s/pull/%s.patch"
+                                          (match-string 1 url)
+                                          (match-string 2 url))))
+                               ("^https://github.com/\\(.+\\)/blob/\\(.+\\)" .
+				;; 针对单个文件
+				(lambda (url)
+                                  (format "https://github.com/%s/raw/%s"
+                                          (match-string 1 url)
+                                          (match-string 2 url))))))
+
+  (defun my/url-redirect (fn url &rest args)
+    (catch 'ret
+      (dolist (redirect-rule my/url-redirect-list)
+	(let* ((regexp (car redirect-rule))
+               (redirect-fn (cdr redirect-rule))
+               (inhibit-message t))
+          (when-let* ((matched-groups (string-match regexp url)))
+            (setq url (funcall redirect-fn url))
+            (message "Redirect URL to %s" url)
+            (throw 'ret url)))))
+    (apply fn url args))
+
+  (advice-add 'eww :around 'my/url-redirect)
+
+  (defun my/eww-render-hook()
+    (let ((url (plist-get eww-data :url)))
+      (cond
+       ((string-suffix-p ".patch" url) (diff-mode))
+       ((string-suffix-p ".el" url) (emacs-lisp-mode))
+       ((string-suffix-p ".rs" url) (rust-mode))
+       ((string-suffix-p ".go" url) (go-mode))
+       (t (when (and (plist-get eww-data :source)
+                     ;; 排除微信公众号内的文章
+                     (not (string-match-p "weixin\\.qq\\.com" url)))
+            (eww-readable))))))
+
+  (add-hook 'eww-after-render-hook 'my/eww-render-hook)
+  )
 
 (use-package tramp
   :custom
@@ -246,7 +333,7 @@
                (list (regexp-quote "termux")
                      "tmpdir" "/data/data/com.termux/files/home/tmp"))
   (connection-local-set-profiles
-   '(:application tramp :machine "termux-mi")
+   '(:application tramp :user "termux")
    'tramp-connection-local-termux-profile)
   )
 
@@ -528,22 +615,19 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
   (ediff-keep-variants nil)
   (ediff-window-setup-function 'ediff-setup-windows-plain))
 
-
-
 (use-package gnus
   :custom
   (gnus-home-directory "~/.emacs.d/gnus/")
   )
 
-(use-package tab-bar
+(use-package tab-bar :defer 2
   :custom
   (tab-bar-history-mode t)
   (tab-bar-select-tab-modifiers '(control))
-  :bind (("C-x C-<left>" . tab-bar-history-back)
-	 ("C-x C-<right>" . tab-bar-history-forward))
+  (tab-bar-show 1)
   )
 
-(use-package recentf
+(use-package recentf :defer 1
   :custom
   (recentf-max-saved-items 1000)
   (recentf-exclude `("/tmp/" "/ssh:" ,(concat package-user-dir "/.*-autoloads\\.el\\'"))))
@@ -557,6 +641,86 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
 	("b" . outline-backward-same-level)
 	("u" . outline-up-heading)
 	))
+
+(use-package url
+  :config
+  ;; Network Proxy: from centaur
+  (defcustom centaur-proxy "127.0.0.1:10807"
+    "Set HTTP/HTTPS proxy."
+    :group 'centaur
+    :type 'string)
+
+  (defcustom centaur-socks-proxy "127.0.0.1:10808"
+    "Set SOCKS proxy."
+    :group 'centaur
+    :type 'string)
+
+  (defun proxy-http-show ()
+    "Show HTTP/HTTPS proxy."
+    (interactive)
+    (if url-proxy-services
+	(message "Current HTTP proxy is `%s'" centaur-proxy)
+      (message "No HTTP proxy")))
+
+  (defun proxy-http-enable ()
+    "Enable HTTP/HTTPS proxy."
+    (interactive)
+    (setq url-proxy-services
+          `(("http" . ,centaur-proxy)
+            ("https" . ,centaur-proxy)
+            ("no_proxy" . "^\\(localhost\\|192.168.*\\|10.*\\)")))
+    (proxy-http-show))
+
+  (defun proxy-http-disable ()
+    "Disable HTTP/HTTPS proxy."
+    (interactive)
+    (setq url-proxy-services nil)
+    (proxy-http-show))
+
+  (defun proxy-http-toggle ()
+    "Toggle HTTP/HTTPS proxy."
+    (interactive)
+    (if (bound-and-true-p url-proxy-services)
+	(proxy-http-disable)
+      (proxy-http-enable)))
+
+  (defun proxy-socks-show ()
+    "Show SOCKS proxy."
+    (interactive)
+    (if (bound-and-true-p socks-noproxy)
+	(message "Current SOCKS%d proxy is %s:%s"
+		 (cadddr socks-server) (cadr socks-server) (caddr socks-server))
+      (message "No SOCKS proxy")))
+
+  (defun proxy-socks-enable ()
+    "Enable SOCKS proxy."
+    (interactive)
+    (require 'socks)
+    (setq url-gateway-method 'socks
+          socks-noproxy '("localhost"))
+    (let* ((proxy (split-string centaur-socks-proxy ":"))
+           (host (car proxy))
+           (port (string-to-number (cadr proxy))))
+      (setq socks-server `("Default server" ,host ,port 5)))
+    (setenv "all_proxy" (concat "socks5://" centaur-socks-proxy))
+    (proxy-socks-show))
+
+  (defun proxy-socks-disable ()
+    "Disable SOCKS proxy."
+    (interactive)
+    (setq url-gateway-method 'native
+          socks-noproxy nil
+          socks-server nil)
+    (setenv "all_proxy" "")
+    (proxy-socks-show))
+
+  (defun proxy-socks-toggle ()
+    "Toggle SOCKS proxy."
+    (interactive)
+    (if (bound-and-true-p socks-noproxy)
+	(proxy-socks-disable)
+      (proxy-socks-enable)))
+)
 
 (use-package treesit
   :config
@@ -588,6 +752,7 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
   :config
   (use-package engrave-faces
     :if (package-installed-p 'engrave-faces)
+    :mode "\\.org\\'"
     :custom
     (org-latex-src-block-backend 'engraved)
     )
@@ -685,9 +850,8 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
 ;; Popup completion-at-point
 (use-package corfu
   :if (package-installed-p 'corfu)
-  :init
-  (require 'corfu)
-  (global-corfu-mode)
+  :hook
+  ((prog-mode . corfu-mode))
   :bind
   (:map corfu-map
         ("SPC" . corfu-insert-separator)
@@ -706,6 +870,7 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
 
 (use-package sqlformat
   :if (package-installed-p 'sqlformat)
+  :mode "\\.sql\\'"
   :custom
   (sqlformat-command 'sqlfluff)
   ;; set sqlformat-args manually: '("-d" "mysql") or other
@@ -740,6 +905,8 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
   :after (org)
   :custom
   (org-pandoc-options-for-latex-pdf '((pdf-engine . "tectonic"))))
+
+(setq gc-cons-threshold (* 2 1000 1000))
 
 (provide 'init-local)
 ;;; init-local.el ends here
