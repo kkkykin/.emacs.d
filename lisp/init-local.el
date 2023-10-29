@@ -113,7 +113,11 @@
 (use-package minibuffer
   :custom
   (minibuffer-electric-default-mode t)
-  (insert-default-directory nil))
+  (insert-default-directory nil)
+  (resize-mini-windows t)
+  (history-delete-duplicates t)
+  :hook
+  ((minibuffer-mode . electric-pair-local-mode)))
 
 (use-package desktop
   :custom
