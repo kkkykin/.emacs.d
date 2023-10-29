@@ -15,7 +15,7 @@
   (:map global-map
 	([remap eval-expression] . pp-eval-expression)
 	([remap eval-last-sexp] . pp-eval-last-sexp)
-	("C-c d" . 'duplicate-line)
+	("C-c d" . 'duplicate-dwim)
 	)
   (:map my-global-prefix-map
 	("r" . 'rename-visited-file)
@@ -24,7 +24,6 @@
 	)
 
   :custom
-  (help-window-select t "Switch to help buffers automatically")
   (system-time-locale "C")
   (what-cursor-show-names t)
   (bookmark-save-flag 1)
@@ -56,7 +55,7 @@
                                          (executable-find "7za")
 					 (executable-find "7zz"))))
                              (when 7z
-                               (file-name-nondirectory 7z))))
+                               (file-name-base 7z))))
 
   (setq custom-file (locate-user-emacs-file "custom.el"))
   (winner-mode)
@@ -119,12 +118,25 @@
   :hook
   ((minibuffer-mode . electric-pair-local-mode)))
 
+(use-package help
+  :custom
+  (help-window-select t "Switch to help buffers automatically")
+  (apropos-sort-by-scores t)
+  :bind
+  (:map help-map
+	("A" . 'apropos-variable)
+	("V" . 'apropos-value)
+	("j" . 'apropos-local-variable)
+	("J" . 'apropos-local-value)
+	("M" . 'describe-keymap)
+	)
+  )
+
 (use-package desktop
   :custom
   (desktop-auto-save-timeout 600)
-  :config
-  (desktop-save-mode 1)
-)
+  (desktop-save-mode t)
+  )
 
 (use-package project
   :custom
