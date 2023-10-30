@@ -152,11 +152,29 @@ optional:
         ))
     )
 
-  (defun my/run-fooview (cmd)
+  (defun my/fooview-run (cmd)
     "run fooview action"
     (shell-command
      (concat "am start -a com.fooview.android.intent.RUN_WORKFLOW -e action " cmd " com.fooview.android.fooview/.ShortcutProxyActivity"))
     )
+
+  (defun my/rish-run (cmd)
+    "Run command with rish permission."
+    (start-process-shell-command "" nil
+                                 (concat "rish -c \"" cmd "\"")))
+
+  (defun my/normal-keyboard ()
+    "Enable normal keyboard on android."
+    (my/rish-run "ime set com.samsung.android.honeyboard/.service.HoneyBoardService")
+    )
+
+  (defun my/bare-keyboard ()
+    "Enable bare keyboard on android."
+    (my/rish-run "ime set keepass2android.keepass2android/keepass2android.softkeyboard.KP2AKeyboard")
+    )
+
+  (add-hook 'focus-in-hook 'my/bare-keyboard)
+  (add-hook 'focus-out-hook 'my/normal-keyboard)
 
   (setenv "SSH_AUTH_SOCK"
           (string-trim-right
