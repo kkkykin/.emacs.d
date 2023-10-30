@@ -534,11 +534,10 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
   (dictionary-use-single-buffer t))
 
 (use-package epg
-  :custom
-  ;; (epg-pinentry-mode 'loopback)
   :config
   (when (eq system-type 'android)
-    (setq epg-gpg-home-directory "/data/data/com.termux/files/home/.gnupg")
+    (setq epg-gpg-home-directory "/data/data/com.termux/files/home/.gnupg"
+          epg-pinentry-mode 'loopback)
     ;; fix gnupg hang
     (fset 'epg-wait-for-status 'ignore))
   )
