@@ -193,7 +193,6 @@ optional:
   (setq touch-screen-display-keyboard t)
 
   (keymap-global-set "C-z" 'window-swap-states)
-  (keymap-global-set "à" "~")
   )
 
 (use-package menu-bar
