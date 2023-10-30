@@ -180,8 +180,10 @@ optional:
     (my/rish-run "ime set keepass2android.keepass2android/keepass2android.softkeyboard.KP2AKeyboard")
     )
 
-  (add-hook 'focus-in-hook 'my/bare-keyboard)
-  (add-hook 'focus-out-hook 'my/normal-keyboard)
+  (dolist (hook '(focus-in-hook after-init-hook))
+    (add-hook hook 'my/bare-keyboard))
+  (dolist (hook '(focus-out-hook kill-emacs-hook))
+    (add-hook hook 'my/normal-keyboard))
 
   (setenv "SSH_AUTH_SOCK"
           (string-trim-right
@@ -357,8 +359,8 @@ optional:
   ;; with interval
   (advice-add 'newsticker-start :before-until #'my/advice-newsticker-start)
   ;; remove message: Error while retrieving image | news from feeds
-  (dolist (fn '(newsticker--image-sentinel newsticker--sentinel-work)
-              (advice-add fn :around #'my/advice-silence-messages)))
+  (dolist (fn '(newsticker--image-sentinel newsticker--sentinel-work))
+    (advice-add fn :around #'my/advice-silence-messages))
   
   (newsticker-start t)
   )
