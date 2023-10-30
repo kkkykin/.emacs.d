@@ -358,7 +358,7 @@ optional:
   (advice-add 'newsticker-start :before-until #'my/advice-newsticker-start)
   ;; remove message: Error while retrieving image | news from feeds
   (dolist (fn '(newsticker--image-sentinel newsticker--sentinel-work)
-              (advice-add fn :around #'my/advice-silence-messages))
+              (advice-add fn :around #'my/advice-silence-messages)))
   
   (newsticker-start t)
   )
