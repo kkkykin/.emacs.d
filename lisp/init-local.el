@@ -92,6 +92,13 @@
 
   (add-hook 'window-setup-hook #'setup-faces)
 
+  (defun my/advice-silence-messages (orig-fun &rest args)
+    "Advice function that silences all messages in ORIG-FUN.
+https://scripter.co/using-emacs-advice-to-silence-messages-from-functions"
+    (let ((inhibit-message t)    ;Don't show the messages in Echo area
+          (message-log-max nil)) ;Don't show the messages in the *Messages* buffer
+      (apply orig-fun args)))
+
   )
 
 (when (eq system-type 'windows-nt)
@@ -335,7 +342,7 @@ optional:
   :config
   (load "init-rss.el.gpg" t t)
 
-  (defun my/newsticker-start (&optional _do-not-complain-if-running)
+  (defun my/advice-newsticker-start (&optional _do-not-complain-if-running)
     (let ((running (newsticker-running-p)))
       (unless running
         (newsticker--cache-read))
@@ -348,11 +355,11 @@ optional:
         (run-hooks 'newsticker-start-hook)
         (message "Newsticker started!"))))
   ;; with interval
-  (advice-add 'newsticker-start :before-until #'my/newsticker-start)
-  ;; remove message: "Error while retrieving image"
-  (advice-add 'newsticker--image-sentinel :around (lambda (oldfun &rest args)
-						    (let ((inhibit-message t))
-						      (apply oldfun args))))
+  (advice-add 'newsticker-start :before-until #'my/advice-newsticker-start)
+  ;; remove message: Error while retrieving image | news from feeds
+  (dolist (fn '(newsticker--image-sentinel newsticker--sentinel-work)
+              (advice-add fn :around #'my/advice-silence-messages))
+  
   (newsticker-start t)
   )
 
@@ -387,7 +394,7 @@ optional:
                                           (match-string 1 url)
                                           (match-string 2 url))))))
 
-  (defun my/url-redirect (fn url &rest args)
+  (defun my/advice-url-redirect (fn url &rest args)
     (catch 'ret
       (dolist (redirect-rule my/url-redirect-list)
 	(let* ((regexp (car redirect-rule))
@@ -399,7 +406,7 @@ optional:
             (throw 'ret url)))))
     (apply fn url args))
 
-  (advice-add 'eww :around 'my/url-redirect)
+  (advice-add 'eww :around 'my/advice-url-redirect)
 
   (defun my/eww-render-hook()
     (let ((url (plist-get eww-data :url)))
@@ -707,14 +714,14 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
 						     "-vf" "scale=%w:-1"
 						     "-f" "mjpeg" "%t"))
     
-    (defun my/image-dired-create-thumb-maybe-gs (oldfun &rest args)
+    (defun my/advice-image-dired-create-thumb-maybe-gs (oldfun &rest args)
       (when (string= (file-name-extension (car args)) "pdf")
     	(let ((image-dired-cmd-create-thumbnail-program "gs")
     	      (image-dired-cmd-create-thumbnail-options '("-sDEVICE=jpeg" "-dSAFER" "-r20" "-o" "%t" "%f")))
     	  (apply oldfun args))
     	)
       )
-    (advice-add 'image-dired-create-thumb-1 :around #'my/image-dired-create-thumb-maybe-gs)
+    (advice-add 'image-dired-create-thumb-1 :around #'my/advice-image-dired-create-thumb-maybe-gs)
     )
   )
 
