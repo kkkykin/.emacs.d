@@ -4,11 +4,10 @@
 
 (use-package emacs
   :hook
-  ((prog-mode . electric-pair-local-mode)
-   (prog-mode . display-line-numbers-mode)
-   )
+  ((prog-mode . display-line-numbers-mode)
+   (text-mode . visual-line-mode))
   :bind-keymap
-  ("C-c k" . my-global-prefix-map)
+  ("C-c j" . my-global-prefix-map)
   :bind
   (:map global-map
 	([remap eval-expression] . pp-eval-expression)
@@ -25,16 +24,16 @@
   (system-time-locale "C")
   (use-package-always-defer t)
   (truncate-lines t)
+  (set-mark-command-repeat-pop t)
   (scroll-bar-mode nil)
-  (tool-bar-mode nil)
-  (menu-bar-mode nil)
   (blink-cursor-mode nil)
+  (shift-select-mode nil)
   (column-number-mode t)
-  (fido-mode t)
   (use-short-answers t)
   (word-wrap-by-category t)
   (custom-file "~/.emacs.d/custom.el")
   (what-cursor-show-names t)
+  (indent-tabs-mode nil)
   (tab-width 4)
   (switch-to-buffer-obey-display-actions t)
   (bookmark-save-flag 1)
@@ -54,6 +53,8 @@
 
   :config
 
+  (prefer-coding-system 'utf-8)
+
   (setq major-mode-remap-alist
         '((yaml-mode . yaml-ts-mode)
           (bash-mode . bash-ts-mode)
@@ -63,48 +64,14 @@
           (css-mode . css-ts-mode)
           (python-mode . python-ts-mode)))
 
-  (setq archive-7z-program (let ((7z (or (executable-find "7z")
-                                         (executable-find "7za")
-					 (executable-find "7zz"))))
-                             (when 7z
-                               (file-name-base 7z))))
-
-  (prefer-coding-system 'utf-8)
-
   (defvar my-global-prefix-map (make-sparse-keymap)
     "A keymap for myself.")
 
   (defvar my/fonts-list '("LXGW WenKai Mono" "Sarasa Mono SC" "Unifont-JP" "UnifontExMono")
     "prefered fonts")
 
-  (defun setup-desk ()
-    "setup for desktop"
-
-    (windmove-default-keybindings 'control)
-
-    (use-package server :defer 5
-      :config
-      (unless (server-running-p)
-	(server-start))
-      )
-    
-    )
-
-  (add-hook 'text-mode-hook 'visual-line-mode)
-
-  (let ((hl-line-hooks '(text-mode-hook prog-mode-hook)))
-	(mapc (lambda (hook) (add-hook hook 'hl-line-mode)) hl-line-hooks))
-
-  (cond ((eq system-type 'windows-nt)
-	 (require 'init-winnt)
-	 (setup-desk))
-	((eq system-type 'gnu/linux)
-	 (require 'init-linux)
-	 (setup-desk))
-	((eq system-type 'android) (require 'init-android)))
-
-  (defun setup-fonts ()
-    "Randomize setup fonts."
+  (defun setup-faces ()
+    "Randomize setup faces."
     (when (display-graphic-p)
       (let* ((fonts (remove (face-attribute 'default :family) my/fonts-list))
 	     (font (cl-loop for ft = (seq-random-elt fonts)
@@ -119,34 +86,149 @@
 			    (cond ((< (display-pixel-width) 1920) (car height))
 				  ((> (display-pixel-width) 1920) (car (last height)))
 				  (t (cadr height)))))
+
+      (load-theme 'leuven)
       ))
 
-  (add-hook 'window-setup-hook #'setup-fonts)
-  (add-hook 'window-setup-hook
-            (lambda ()
-              (load-theme 'leuven)))
-  ;; (add-hook 'server-after-make-frame-hook #'setup-fonts)
-  ;; this hook run when client reuse frame
+  (add-hook 'window-setup-hook #'setup-faces)
+
+  )
+
+(when (eq system-type 'windows-nt)
+  "setup for windowsNT"
+  (setq shr-use-fonts nil
+        w32-use-native-image-API t
+        find-program "ind")
+
+  (add-to-list 'exec-suffixes ".ps1")
+
+  (defun my/run-bash ()
+    (interactive)
+    (let ((shell-file-name "C:\\Windows\\system32\\bash.exe"))
+	  (shell "*bash*")))
+  (defun my/toggle-shell ()
+    "Toggle shell between wsl bash and cmd"
+    (interactive)
+    (if (string= shell-file-name "C:\\Windows\\system32\\bash.exe")
+	    (setq shell-file-name my/vanilla-shell)
+	  (setq my/vanilla-shell shell-file-name
+            shell-file-name "C:\\Windows\\system32\\bash.exe")))
+  )
+
+(when (eq system-type 'gnu/linux)
+  "setup for linux"
+  (defun my/transparency (value)
+    "Sets the transparency of the frame window. 0=transparent/100=opaque"
+    (interactive "nTransparency Value 0 - 100 opaque:")
+    (set-frame-parameter nil 'alpha-background value))
+
+  (add-hook 'server-after-make-frame-hook #'setup-faces)
+  )
+
+(when (eq system-type 'android)
+  (defvar my/termux
+    "/data/data/com.termux/files"
+    "termux root path")
+
+  ;; todo
+  (defun my/mpv-intent (scheme &optional sub)
+    "http://mpv-android.github.io/mpv-android/intent.html
+am: [-e|--es <EXTRA_KEY> <EXTRA_STRING_VALUE> ...]
+filepath scheme: rtmp, rtmps, rtp, rtsp, mms, mmst, mmsh, tcp, udp,
+          content, file, http, https
+example: am start -n is.xyz.mpv/is.xyz.mpv.MPVActivity -e filepath file:///sdcard/Music/local
+
+optional:
+- decode_mode (Byte): if set to 2, hardware decoding will be disabled
+- subs (ParcelableArray of Uri): list of subtitle URIs to be added as additional tracks
+- subs.enable (ParcelableArray of Uri): specifies which of the subtitles should be selected by default, subset of previous array
+- position (Int): starting point of video playback in milliseconds "
+    (when (file-exists-p scheme)
+      (let ((url (concat "file://" scheme)))
+        (start-process "" nil "am" "start" "-n"
+                       "is.xyz.mpv/is.xyz.mpv.MPVActivity"
+                       "-e" "filepath" url
+                       )
+        ))
+    )
+
+  (defun my/run-fooview (cmd)
+    "run fooview action"
+    (shell-command
+     (concat "am start -a com.fooview.android.intent.RUN_WORKFLOW -e action " cmd " com.fooview.android.fooview/.ShortcutProxyActivity"))
+    )
+
+  (setenv "SSH_AUTH_SOCK"
+          (string-trim-right
+           (shell-command-to-string
+            "gpgconf --homedir /data/data/com.termux/files/home/.gnupg --list-dirs agent-ssh-socket")))
+
+  (setq touch-screen-display-keyboard t)
+  )
+
+(use-package menu-bar
+  :config
+  (unless (eq system-type 'android)
+    (menu-bar-mode -1)
+    )
+  )
+
+(use-package tool-bar
+  :custom
+  (tool-bar-button-margin 12)
+  (modifier-bar-mode t)
+  (tool-bar-position 'bottom)
+  :config
+  (unless (eq system-type 'android)
+    (tool-bar-mode -1)
+    )
+  )
+
+(use-package elec-pair
+  :hook (((prog-mode minibuffer-mode inferior-emacs-lisp-mode) . electric-pair-local-mode))
+  )
+
+(use-package windmove
+  :if (not (eq system-type 'android))
+  :hook icomplete-minibuffer-setup
+  :config
+  (windmove-default-keybindings 'control)
+  (windmove-swap-states-default-keybindings '(shift control)))
+
+(use-package server :defer 5
+  :if (not (eq system-type 'android))
+  :config
+  (unless (server-running-p)
+	(server-start))
   )
 
 (use-package abbrev
   :custom
   (abbrev-suggest t))
 
+(use-package hl-line
+  :hook
+  ((text-mode prog-mode) . hl-line-mode))
+
 (use-package minibuffer
   :custom
-  (minibuffer-electric-default-mode t)
   (enable-recursive-minibuffers t)
-  ;; (insert-default-directory nil)
+  (insert-default-directory nil)
   (resize-mini-windows t)
   (history-delete-duplicates t)
-  (savehist-mode t)
   :hook
-  ((minibuffer-mode . electric-pair-local-mode)))
+  ((minibuffer-setup . minibuffer-electric-default-mode)
+   (minibuffer-setup . savehist-mode))
+  )
+
+(use-package icomplete
+  :hook ((window-setup . fido-mode))
+  )
 
 (use-package help
   :custom
   (help-window-select t "Switch to help buffers automatically")
+  (help-window-keep-selected t)
   (apropos-sort-by-scores t)
   :bind
   (:map help-map
@@ -167,9 +249,9 @@
   (xref-history-storage 'xref-window-local-history))
 
 (use-package desktop
+  :hook ((icomplete-minibuffer-setup . desktop-save-mode))
   :custom
   (desktop-auto-save-timeout 600)
-  (desktop-save-mode t)
   )
 
 (use-package project
@@ -349,12 +431,16 @@
   (delete-by-moving-to-trash t)
   (wdired-allow-to-change-permissions 'advanced)
   (wdired-use-interactive-rename t)
+  :init
+  (when (eq system-type 'android)
+    (add-hook 'dired-mode-hook 'dired-hide-details-mode))
   :bind (:map dired-mode-map
               ("× μ" . my/mpv-image)
               ("C-c d" . my/dired-duplicate-file)
-              ("e" . my/dired-process))
+              ("e" . my/dired-dwim)
+              ("<mouse-2>" . dired-mouse-find-file))
   :config
-  (defun my/dired-process ()
+  (defun my/dired-dwim ()
     "start process with current file"
     (interactive)
     (let ((filename (dired-get-filename nil t)))
@@ -391,11 +477,17 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
 	  (copy-directory file new-file)
 	(copy-file file new-file))
       (dired-revert)))
-  
+
+  (setq archive-7z-program (let ((7z (or (executable-find "7z")
+                                         (executable-find "7za")
+					 (executable-find "7zz"))))
+                             (when 7z
+                               (file-name-base 7z))))
   (setq dired-guess-shell-alist-user
         (list
          (list "\\.\\(rar\\|zip\\|7z\\)\\(\\.001\\)?$"
                (concat archive-7z-program " x -aoa"))
+		 (list "\\.apk$" "adb install")
 	 (list "\\(?:\\.t\\(?:\\(?:ar\\.\\)?zst\\)\\)\\'"
 	       "zstd -dc ? | tar -xf -")
 	 (list "\\.\\(mp4\\|mkv\\|avi\\|webm\\|flv\\|m4v\\|mov\\)\\'"
@@ -441,6 +533,16 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
   (dictionary-server "dict.tw")
   (dictionary-use-single-buffer t))
 
+(use-package epg
+  :custom
+  ;; (epg-pinentry-mode 'loopback)
+  :config
+  (when (eq system-type 'android)
+    (setq epg-gpg-home-directory "/data/data/com.termux/files/home/.gnupg")
+    ;; fix gnupg hang
+    (fset 'epg-wait-for-status 'ignore))
+  )
+
 (use-package mpc
   :bind-keymap
   ("C-c m" . mpc-global-prefix-map)
@@ -464,8 +566,7 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
 
 (use-package org
   :hook
-  ((org-mode . visual-line-mode)  ; wrap lines at word breaks
-   (org-mode . flyspell-mode)) ; spell checking!
+  ((org-mode . visual-line-mode))  ; wrap lines at word breaks
   :bind-keymap
   ("C-c o" . org-global-prefix-map)
   :bind
@@ -481,14 +582,12 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
 	("o" . 'org-clock-out))
   :custom
   (org-use-speed-commands t)
-  (org-directory "~/org/")
   (org-default-notes-file "~/org/inbox.org")
   (org-agenda-files `(,org-default-notes-file
                       "~/org/todo"))
   (org-refile-use-cache nil)
   (org-archive-mark-done nil)
   (org-archive-location "%s_archive::* Archive")
-  (ispell-program-name "aspell")
   (org-export-coding-system 'utf-8)
   :config
   (defvar org-global-prefix-map (make-sparse-keymap)
@@ -536,7 +635,7 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
 			("review")
 			("reading")))
 
-  (require 'oc-csl)                     ; citation support
+  ;; (require 'oc-csl)                     ; citation support
 
   ;; Make org-open-at-point follow file links in the same window
   (setf (cdr (assoc 'file org-link-frame-setup)) 'find-file)
@@ -571,6 +670,9 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
           ("w" "Work" agenda ""
            ((org-agenda-files '("work.org"))))))
   )
+
+(use-package flyspell
+  :hook (((text-mode org-mode) . flyspell-mode)))
 
 (use-package calendar
   :custom
@@ -622,15 +724,17 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
 
 (use-package tab-bar :defer 2
   :custom
-  (tab-bar-history-mode t)
   (tab-bar-select-tab-modifiers '(control))
   (tab-bar-show 1)
+  :config
+  (tab-bar-history-mode)
   )
 
 (use-package recentf :defer 1
   :custom
   (recentf-max-saved-items 1000)
-  (recentf-exclude `("/tmp/" "/ssh:" ,(concat package-user-dir "/.*-autoloads\\.el\\'"))))
+  (recentf-exclude `("/data/data/com.termux/files/home/tmp"
+                     "/tmp/" "/ssh:" ,(concat package-user-dir "/.*-autoloads\\.el\\'"))))
 
 (use-package emacs-news-mode
   :bind
@@ -779,6 +883,7 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
 
 (use-package html-ts-mode
   :if (package-installed-p 'html-ts-mode)
+  :mode "\\.html\\'"
   :vc (:url "https://github.com/mickeynp/html-ts-mode")
   :config
   (add-to-list 'major-mode-remap-alist '(mhtml-mode . html-ts-mode))
@@ -788,16 +893,10 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
   :if (package-installed-p 'combobulate)
   :vc (:url "https://github.com/mickeynp/combobulate")
   :preface
-  (setq combobulate-key-prefix "C-c j")
+  (setq combobulate-key-prefix "C-c k")
   :hook
-  ((python-ts-mode . combobulate-mode)
-   (js-ts-mode . combobulate-mode)
-   (css-ts-mode . combobulate-mode)
-   (yaml-ts-mode . combobulate-mode)
-   (json-ts-mode . combobulate-mode)
-   (typescript-ts-mode . combobulate-mode)
-   (tsx-ts-mode . combobulate-mode))
-  :config
+  (((tsx-ts-mode typescript-ts-mode json-ts-mode yaml-ts-mode css-ts-mode js-ts-mode python-ts-mode) . combobulate-mode))
+  :init
   (when (package-installed-p 'html-ts-mode)
     (add-hook 'html-ts-mode-hook 'combobulate-mode)
     )
@@ -807,7 +906,7 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
   :if (package-installed-p 'nix-ts-mode)
   :mode "\\.nix\\'")
 
-(use-package which-key
+(use-package which-key :defer 3
   :if (package-installed-p 'which-key)
   :config
   (which-key-mode))
@@ -894,6 +993,7 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
 
 (use-package anki-helper
   :if (package-installed-p 'anki-helper)
+  :mode "\\.org\\'"
   :vc (:url "https://github.com/Elilif/emacs-anki-helper")
   :custom (anki-helper-default-deck "anki-helper"))
 
@@ -902,7 +1002,6 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
 
 (use-package ox-pandoc
   :if (package-installed-p 'ox-pandoc)
-  :after (org)
   :custom
   (org-pandoc-options-for-latex-pdf '((pdf-engine . "tectonic"))))
 
