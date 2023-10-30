@@ -33,6 +33,8 @@
   (word-wrap-by-category t)
   (custom-file "~/.emacs.d/custom.el")
   (what-cursor-show-names t)
+  (kill-read-only-ok t)
+  (kill-do-not-save-duplicates t)
   (indent-tabs-mode nil)
   (tab-width 4)
   (switch-to-buffer-obey-display-actions t)
