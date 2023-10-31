@@ -107,7 +107,8 @@ https://scripter.co/using-emacs-advice-to-silence-messages-from-functions"
   "setup for windowsNT"
   (setq shr-use-fonts nil
         w32-use-native-image-API t
-        find-program "ind")
+        find-program "ind"
+        grep-program "ug")
 
   (add-to-list 'exec-suffixes ".ps1")
 
@@ -184,17 +185,23 @@ optional:
 
   (dolist (hook '(focus-in-hook after-init-hook))
     (add-hook hook 'my/bare-keyboard))
-  (dolist (hook '(focus-out-hook kill-emacs-hook))
-    (add-hook hook 'my/normal-keyboard))
+  (add-hook 'focus-out-hook 'my/normal-keyboard)
 
   (setenv "SSH_AUTH_SOCK"
           (string-trim-right
            (shell-command-to-string
             "gpgconf --homedir /data/data/com.termux/files/home/.gnupg --list-dirs agent-ssh-socket")))
 
-  (setq touch-screen-display-keyboard t)
+  (use-package touch-screen
+    :custom
+    (touch-screen-display-keyboard t)
+    )
+
+  (setq select-enable-clipboard nil)
 
   (keymap-global-set "C-z" 'window-swap-states)
+  (keymap-global-set "ý" 'clipboard-kill-ring-save)
+  (keymap-global-set "ÿ" 'clipboard-yank)
   )
 
 (use-package menu-bar
@@ -235,6 +242,18 @@ optional:
   :config
   (unless (server-running-p)
 	(server-start))
+  )
+
+(use-package xref
+  :config
+  (when (string= grep-program "ug")
+    (setq xref-search-program 'ugrep))
+  )
+
+(use-package grep
+  :custom
+  (grep-use-null-device nil "fix bug on windows")
+  (grep-highlight-matches t "fix blank output on windows")
   )
 
 (use-package abbrev
@@ -505,30 +524,30 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
            (counter (if arg (prefix-numeric-value arg) 1))
            (new-file))
       (while (and (setq new-file
-			(format "%s%s_%03d%s" dir base-name counter extension))
-		  (file-exists-p new-file))
-	(setq counter (1+ counter)))
+                        (format "%s%s_%03d%s" dir base-name counter extension))
+                  (file-exists-p new-file))
+        (setq counter (1+ counter)))
       (if (file-directory-p file)
-	  (copy-directory file new-file)
-	(copy-file file new-file))
+          (copy-directory file new-file)
+        (copy-file file new-file))
       (dired-revert)))
 
   (setq archive-7z-program (let ((7z (or (executable-find "7z")
                                          (executable-find "7za")
-					 (executable-find "7zz"))))
+                                         (executable-find "7zz"))))
                              (when 7z
                                (file-name-base 7z))))
   (setq dired-guess-shell-alist-user
         (list
          (list "\\.\\(rar\\|zip\\|7z\\)\\(\\.001\\)?$"
                (concat archive-7z-program " x -aoa"))
-		 (list "\\.apk$" "adb install")
-	 (list "\\(?:\\.t\\(?:\\(?:ar\\.\\)?zst\\)\\)\\'"
-	       "zstd -dc ? | tar -xf -")
-	 (list "\\.\\(mp4\\|mkv\\|avi\\|webm\\|flv\\|m4v\\|mov\\)\\'"
-	       "ffmpeg -hide_banner -y -strict 2 -hwaccel auto -i ? -vf \"scale='min(2560,iw)':-1\" -c:v hevc_nvenc -rc vbr -cq 19 -qmin 19 -qmax 19 -profile:v main10 -pix_fmt p010le -b:v 0K -bf:v 3 -b_ref_mode middle -temporal-aq 1 -rc-lookahead 32 -c:a libopus -b:a 128k -f mp4 ff-`?`")
-	 (list "\\.\\(png\\|jpe?g\\|gif\\|webp\\|bmp\\)\\'"
-	       "ffmpeg -hide_banner -y -i ? -vf \"scale='min(4096,iw)':-1\" -c:v libaom-av1 -cpu-used 6 -row-mt 1 -tiles 2x2 -still-picture 1 -crf 20 -f avif ff-`?`")))
+         (list "\\.apk$" "adb install")
+         (list "\\(?:\\.t\\(?:\\(?:ar\\.\\)?zst\\)\\)\\'"
+               "zstd -dc ? | tar -xf -")
+         (list "\\.\\(mp4\\|mkv\\|avi\\|webm\\|flv\\|m4v\\|mov\\)\\'"
+               "ffmpeg -hide_banner -y -strict 2 -hwaccel auto -i ? -vf \"scale='min(2560,iw)':-1\" -c:v hevc_nvenc -rc vbr -cq 19 -qmin 19 -qmax 19 -profile:v main10 -pix_fmt p010le -b:v 0K -bf:v 3 -b_ref_mode middle -temporal-aq 1 -rc-lookahead 32 -c:a libopus -b:a 128k -f mp4 ff-`?`")
+         (list "\\.\\(png\\|jpe?g\\|gif\\|webp\\|bmp\\)\\'"
+               "ffmpeg -hide_banner -y -i ? -vf \"scale='min(4096,iw)':-1\" -c:v libaom-av1 -cpu-used 6 -row-mt 1 -tiles 2x2 -still-picture 1 -crf 20 -f avif ff-`?`")))
   )
 
 (use-package dired-aux
@@ -538,7 +557,7 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
   :config
   (setq dired-compress-files-alist
         (append `(("\\.\\(tzst\\)\\'" . "tar -cf - %i | zstd -5 -o %o")
-		  ("\\.\\(zip\\|7z\\)\\'" . ,(concat archive-7z-program " a -mx5 %o %i"))
+                  ("\\.\\(zip\\|7z\\)\\'" . ,(concat archive-7z-program " a -mx5 %o %i"))
                   )
                 dired-compress-files-alist))
   (setq dired-compress-file-suffixes
