@@ -200,8 +200,28 @@ optional:
   (setq select-enable-clipboard nil)
 
   (keymap-global-set "C-z" 'window-swap-states)
-  (keymap-global-set "ý" 'clipboard-kill-ring-save)
-  (keymap-global-set "ÿ" 'clipboard-yank)
+
+  (keymap-global-set "§" 'clipboard-kill-region)
+  (keymap-global-set "ß" 'clipboard-kill-ring-save)
+  (keymap-global-set "ç" 'clipboard-yank)
+
+  (keymap-global-set "ò" "~")
+  (keymap-global-set "ó" "`")
+  (keymap-global-set "ô" "|")
+  (keymap-global-set "õ" "^")
+  (keymap-global-set "ö" "_")
+  (keymap-global-set "ō" "=")
+  (keymap-global-set "œ" "\\")
+  (keymap-global-set "ø" "#")
+
+  (keymap-global-set "à" "{")
+  (keymap-global-set "á" "}")
+  (keymap-global-set "â" "[")
+  (keymap-global-set "ã" "]")
+  (keymap-global-set "ä" "<")
+  (keymap-global-set "å" ">")
+  (keymap-global-set "ā" "$")
+  (keymap-global-set "æ" "%")
   )
 
 (use-package menu-bar
