@@ -1038,6 +1038,22 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
     :if (package-installed-p 'mpvi)
     :commands mpvi-open))
 
+(use-package devdocs
+  :if (package-installed-p 'devdocs)
+  :bind
+  (:map help-map
+        ("u" . 'devdocs-lookup)
+        )
+  :hook
+  ((python-mode . (lambda () (setq-local devdocs-current-docs '("python~3.10")))))
+  )
+
+(use-package xeft
+  :if (package-installed-p 'xeft))
+
+(use-package khoj
+  :if (package-installed-p 'khoj))
+
 (use-package disk-usage
   :if (package-installed-p 'disk-usage))
 
