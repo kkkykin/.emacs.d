@@ -5,7 +5,7 @@
 (use-package emacs
   :hook
   ((prog-mode . display-line-numbers-mode)
-   (text-mode . visual-line-mode))
+   ((text-mode org-mode) . visual-line-mode))
   :bind-keymap
   ("C-c j" . my-global-prefix-map)
   :bind
@@ -215,13 +215,17 @@ optional:
     )
   )
 
+(use-package delsel
+  :hook (emacs-startup . delete-selection-mode)
+  )
+
 (use-package elec-pair
-  :hook (((prog-mode minibuffer-mode inferior-emacs-lisp-mode) . electric-pair-local-mode))
+  :hook ((prog-mode minibuffer-mode inferior-emacs-lisp-mode) . electric-pair-local-mode)
   )
 
 (use-package windmove
   :if (not (eq system-type 'android))
-  :hook icomplete-minibuffer-setup
+  :hook emacs-startup
   :config
   (windmove-default-keybindings 'control)
   (windmove-swap-states-default-keybindings '(shift control)))
@@ -248,12 +252,12 @@ optional:
   (resize-mini-windows t)
   (history-delete-duplicates t)
   :hook
-  ((minibuffer-setup . minibuffer-electric-default-mode)
-   (minibuffer-setup . savehist-mode))
+  ((emacs-startup . minibuffer-electric-default-mode)
+   (emacs-startup . savehist-mode))
   )
 
 (use-package icomplete
-  :hook ((window-setup . fido-mode))
+  :hook (emacs-startup . fido-mode)
   )
 
 (use-package help
@@ -280,7 +284,7 @@ optional:
   (xref-history-storage 'xref-window-local-history))
 
 (use-package desktop
-  :hook ((icomplete-minibuffer-setup . desktop-save-mode))
+  :hook (emacs-startup . desktop-save-mode)
   :custom
   (desktop-auto-save-timeout 600)
   )
@@ -293,8 +297,8 @@ optional:
   :custom
   (python-shell-dedicated t))
 
-(use-package sh-script
-  :hook (sh-mode . flymake-mode))
+(use-package flymake
+  :hook sh-mode)
 
 (use-package ibuffer
   :bind (("C-x C-b" . ibuffer))
@@ -595,8 +599,6 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
     "A keymap for mpc."))
 
 (use-package org
-  :hook
-  ((org-mode . visual-line-mode))  ; wrap lines at word breaks
   :bind-keymap
   ("C-c o" . org-global-prefix-map)
   :bind
@@ -702,7 +704,7 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
   )
 
 (use-package flyspell
-  :hook (((text-mode org-mode) . flyspell-mode)))
+  :hook ((text-mode org-mode) . flyspell-mode))
 
 (use-package calendar
   :custom
@@ -876,37 +878,37 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
 	  ))
   )
 
-(use-package ox-org
+(use-package ox-latex
   :custom
   (org-export-backends '(html latex md ascii icalendar))
   (org-latex-pdf-process '("tectonic %f"))
   (org-latex-default-class "ctexart")
   (org-latex-packages-alist '(("margin=1in,a4paper" "geometry" nil)
-			      ("" "fvextra" nil)))
+                              ("" "fvextra" nil)))
   :config
-  (use-package engrave-faces
-    :if (package-installed-p 'engrave-faces)
-    :mode "\\.org\\'"
-    :custom
-    (org-latex-src-block-backend 'engraved)
-    )
-
   (add-to-list 'org-latex-classes
 	       '("ctexart" "\\documentclass[utf8]{ctexart}"
-		 ("\\section{%s}" . "\\section*{%s}")
-		 ("\\subsection{%s}" . "\\subsection*{%s}")
-		 ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
-		 ("\\paragraph{%s}" . "\\paragraph*{%s}")
-		 ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
+             ("\\section{%s}" . "\\section*{%s}")
+             ("\\subsection{%s}" . "\\subsection*{%s}")
+             ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+             ("\\paragraph{%s}" . "\\paragraph*{%s}")
+             ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
   (add-to-list 'org-latex-classes
 	       '("ctexbook" "\\documentclass[utf8]{ctexbook}"
-		 ("\\part{%s}" . "\\part*{%s}")
-		 ("\\chapter{%s}" . "\\chapter*{%s}")
-		 ("\\section{%s}" . "\\section*{%s}")
-		 ("\\subsection{%s}" . "\\subsection*{%s}")
-		 ("\\subsubsection{%s}" . "\\subsubsection*{%s}"))))
+             ("\\part{%s}" . "\\part*{%s}")
+             ("\\chapter{%s}" . "\\chapter*{%s}")
+             ("\\section{%s}" . "\\section*{%s}")
+             ("\\subsection{%s}" . "\\subsection*{%s}")
+             ("\\subsubsection{%s}" . "\\subsubsection*{%s}"))))
 
 (package-initialize)
+
+(use-package engrave-faces :defer nil
+  :if (package-installed-p 'engrave-faces)
+  :after org
+  :config
+  (setq org-latex-src-block-backend 'engraved)
+  )
 
 (use-package lua-ts-mode
   :mode "\\.lua\\'")
@@ -925,7 +927,7 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
   :preface
   (setq combobulate-key-prefix "C-c k")
   :hook
-  (((tsx-ts-mode typescript-ts-mode json-ts-mode yaml-ts-mode css-ts-mode js-ts-mode python-ts-mode) . combobulate-mode))
+  ((tsx-ts-mode typescript-ts-mode json-ts-mode yaml-ts-mode css-ts-mode js-ts-mode python-ts-mode) . combobulate-mode)
   :init
   (when (package-installed-p 'html-ts-mode)
     (add-hook 'html-ts-mode-hook 'combobulate-mode)
@@ -979,8 +981,7 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
 ;; Popup completion-at-point
 (use-package corfu
   :if (package-installed-p 'corfu)
-  :hook
-  ((prog-mode . corfu-mode))
+  :hook prog-mode
   :bind
   (:map corfu-map
         ("SPC" . corfu-insert-separator)
@@ -990,7 +991,7 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
 ;; Part of corfu
 (use-package corfu-popupinfo
   :after corfu
-  :hook (corfu-mode . corfu-popupinfo-mode)
+  :hook corfu-mode
   :custom
   (corfu-popupinfo-delay '(0.25 . 0.1))
   (corfu-popupinfo-hide nil)
@@ -1030,8 +1031,9 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
 (use-package org-fc
   :if (package-installed-p 'org-fc))
 
-(use-package ox-pandoc
+(use-package ox-pandoc :defer 2
   :if (package-installed-p 'ox-pandoc)
+  :after org
   :custom
   (org-pandoc-options-for-latex-pdf '((pdf-engine . "tectonic"))))
 
