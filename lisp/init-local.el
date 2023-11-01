@@ -5,9 +5,9 @@
 (use-package emacs
   :hook
   ((prog-mode . display-line-numbers-mode)
-   ((text-mode org-mode) . visual-line-mode))
+   (text-mode . visual-line-mode))
   :bind-keymap
-  ("C-c j" . my-global-prefix-map)
+  ("C-x j" . my-global-prefix-map)
   :bind
   (:map global-map
 	([remap eval-expression] . pp-eval-expression)
@@ -35,6 +35,7 @@
   (what-cursor-show-names t)
   (kill-read-only-ok t)
   (kill-do-not-save-duplicates t)
+  (duplicate-region-final-position 1)
   (indent-tabs-mode nil)
   (tab-width 4)
   (switch-to-buffer-obey-display-actions t)
@@ -107,8 +108,7 @@ https://scripter.co/using-emacs-advice-to-silence-messages-from-functions"
   "setup for windowsNT"
   (setq shr-use-fonts nil
         w32-use-native-image-API t
-        find-program "ind"
-        grep-program "ug")
+        find-program "ind")
 
   (add-to-list 'exec-suffixes ".ps1")
 
@@ -242,9 +242,9 @@ optional:
     )
   )
 
-(use-package delsel
-  :hook (emacs-startup . delete-selection-mode)
-  )
+;; (use-package delsel
+;;   :hook (emacs-startup . delete-selection-mode)
+;;   )
 
 (use-package elec-pair
   :hook ((prog-mode minibuffer-mode inferior-emacs-lisp-mode) . electric-pair-local-mode)
@@ -264,25 +264,27 @@ optional:
 	(server-start))
   )
 
-(use-package xref
+(use-package grep
   :config
-  (when (string= grep-program "ug")
-    (setq xref-search-program 'ugrep))
+  (when (eq system-type 'windows-nt)
+    (setq grep-program "ug"
+          grep-use-null-device nil
+          grep-highlight-matches t))
   )
 
-(use-package grep
+(use-package xref
   :custom
-  (grep-use-null-device nil "fix bug on windows")
-  (grep-highlight-matches t "fix blank output on windows")
-  )
+  (xref-history-storage 'xref-window-local-history)
+  :config
+  (when (string= grep-program "ug")
+    (setq xref-search-program 'ugrep)))
 
 (use-package abbrev
   :custom
   (abbrev-suggest t))
 
 (use-package hl-line
-  :hook
-  ((text-mode prog-mode) . hl-line-mode))
+  :hook (text-mode prog-mode))
 
 (use-package minibuffer
   :custom
@@ -317,10 +319,6 @@ optional:
 	("Z" . 'apropos-library)
 	)
   )
-
-(use-package xref
-  :custom
-  (xref-history-storage 'xref-window-local-history))
 
 (use-package desktop
   :hook (emacs-startup . desktop-save-mode)
@@ -601,8 +599,7 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
 (use-package dictionary
   :bind
   (:map my-global-prefix-map
-	("d" . dictionary-search)
-	)
+        ("d" . dictionary-search))
   :custom
   (dictionary-server "dict.tw")
   (dictionary-use-single-buffer t))
@@ -621,16 +618,15 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
   ("C-c m" . mpc-global-prefix-map)
   :bind
   (:map mpc-global-prefix-map
-	("s" . 'mpc-toggle-play)
-	("n" . 'mpc-next)
-	("p" . 'mpc-prev)
-	("b" . 'mpc-status-buffer-show)
-	("g" . 'mpc-seek-current)
-	("r" . 'mpc-toggle-repeat)
-	("z" . 'mpc-toggle-shuffle)
-	("a" . 'mpc-toggle-single)
-	("u" . 'mpc-update)
-	)
+        ("s" . 'mpc-toggle-play)
+        ("n" . 'mpc-next)
+        ("p" . 'mpc-prev)
+        ("b" . 'mpc-status-buffer-show)
+        ("g" . 'mpc-seek-current)
+        ("r" . 'mpc-toggle-repeat)
+        ("z" . 'mpc-toggle-shuffle)
+        ("a" . 'mpc-toggle-single)
+        ("u" . 'mpc-update))
   :custom
   (mpc-host "127.0.0.1")
   :config
@@ -642,15 +638,15 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
   ("C-c o" . org-global-prefix-map)
   :bind
   (:map global-map
-	("C-c a" . org-agenda)
-	("C-c c" . org-capture))
+        ("C-c a" . org-agenda)
+        ("C-c c" . org-capture))
   (:map org-global-prefix-map
-	("s" . org-store-link)
-	("y" . org-insert-link-global)
-	("j" . 'org-clock-goto)
-	("l" . 'org-clock-in-last)
-	("i" . 'org-clock-in)
-	("o" . 'org-clock-out))
+        ("s" . org-store-link)
+        ("y" . org-insert-link-global)
+        ("j" . 'org-clock-goto)
+        ("l" . 'org-clock-in-last)
+        ("i" . 'org-clock-in)
+        ("o" . 'org-clock-out))
   :custom
   (org-use-speed-commands t)
   (org-default-notes-file "~/org/inbox.org")
@@ -689,22 +685,22 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
       (sqlite . t))))
 
   (setq org-tag-alist '(
-			;; locale
-			(:startgroup)
-			("home" . ?h)
-			("work" . ?w)
-			(:endgroup)
-			(:newline)
-			;; scale
-			(:startgroup)
-			("one-shot" . ?o)
-			("project" . ?j)
-			("tiny" . ?t)
-			(:endgroup)
-			;; misc
-			("meta")
-			("review")
-			("reading")))
+            ;; locale
+            (:startgroup)
+            ("home" . ?h)
+            ("work" . ?w)
+            (:endgroup)
+            (:newline)
+            ;; scale
+            (:startgroup)
+            ("one-shot" . ?o)
+            ("project" . ?j)
+            ("tiny" . ?t)
+            (:endgroup)
+            ;; misc
+            ("meta")
+            ("review")
+            ("reading")))
 
   ;; (require 'oc-csl)                     ; citation support
 
@@ -743,7 +739,7 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
   )
 
 (use-package flyspell
-  :hook ((text-mode org-mode) . flyspell-mode))
+  :hook text-mode)
 
 (use-package calendar
   :custom
@@ -756,17 +752,17 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
   (add-to-list 'image-file-name-extensions "avif")
   (unless (executable-find "gm")
     (setq image-dired-cmd-create-thumbnail-program "ffmpeg"
-	  image-dired-cmd-create-thumbnail-options '("-i" "%f"
-						     "-map_metadata" "-1"
-						     "-vf" "scale=%w:-1"
-						     "-f" "mjpeg" "%t"))
+          image-dired-cmd-create-thumbnail-options '("-i" "%f"
+                                                     "-map_metadata" "-1"
+                                                     "-vf" "scale=%w:-1"
+                                                     "-f" "mjpeg" "%t"))
     
     (defun my/advice-image-dired-create-thumb-maybe-gs (oldfun &rest args)
       (when (string= (file-name-extension (car args)) "pdf")
-    	(let ((image-dired-cmd-create-thumbnail-program "gs")
-    	      (image-dired-cmd-create-thumbnail-options '("-sDEVICE=jpeg" "-dSAFER" "-r20" "-o" "%t" "%f")))
-    	  (apply oldfun args))
-    	)
+        (let ((image-dired-cmd-create-thumbnail-program "gs")
+              (image-dired-cmd-create-thumbnail-options '("-sDEVICE=jpeg" "-dSAFER" "-r20" "-o" "%t" "%f")))
+          (apply oldfun args))
+        )
       )
     (advice-add 'image-dired-create-thumb-1 :around #'my/advice-image-dired-create-thumb-maybe-gs)
     )
@@ -810,12 +806,11 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
 (use-package emacs-news-mode
   :bind
   (:map emacs-news-view-mode-map
-	("n" . outline-next-visible-heading)
-	("p" . outline-previous-visible-heading)
-	("f" . outline-forward-same-level)
-	("b" . outline-backward-same-level)
-	("u" . outline-up-heading)
-	))
+        ("n" . outline-next-visible-heading)
+        ("p" . outline-previous-visible-heading)
+        ("f" . outline-forward-same-level)
+        ("b" . outline-backward-same-level)
+        ("u" . outline-up-heading)))
 
 (use-package url
   :config
@@ -834,7 +829,7 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
     "Show HTTP/HTTPS proxy."
     (interactive)
     (if url-proxy-services
-	(message "Current HTTP proxy is `%s'" centaur-proxy)
+        (message "Current HTTP proxy is `%s'" centaur-proxy)
       (message "No HTTP proxy")))
 
   (defun proxy-http-enable ()
@@ -856,15 +851,15 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
     "Toggle HTTP/HTTPS proxy."
     (interactive)
     (if (bound-and-true-p url-proxy-services)
-	(proxy-http-disable)
+        (proxy-http-disable)
       (proxy-http-enable)))
 
   (defun proxy-socks-show ()
     "Show SOCKS proxy."
     (interactive)
     (if (bound-and-true-p socks-noproxy)
-	(message "Current SOCKS%d proxy is %s:%s"
-		 (cadddr socks-server) (cadr socks-server) (caddr socks-server))
+        (message "Current SOCKS%d proxy is %s:%s"
+                 (cadddr socks-server) (cadr socks-server) (caddr socks-server))
       (message "No SOCKS proxy")))
 
   (defun proxy-socks-enable ()
@@ -893,29 +888,27 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
     "Toggle SOCKS proxy."
     (interactive)
     (if (bound-and-true-p socks-noproxy)
-	(proxy-socks-disable)
-      (proxy-socks-enable)))
-)
+        (proxy-socks-disable)
+      (proxy-socks-enable))))
 
 (use-package treesit
   :config
   (setq treesit-language-source-alist
-	'((bash "https://github.com/tree-sitter/tree-sitter-bash")
-	  (python "https://github.com/tree-sitter/tree-sitter-python")
-	  (lua "https://github.com/MunifTanjim/tree-sitter-lua")
-	  (sql "https://github.com/DerekStride/tree-sitter-sql" "gh-pages")
-	  ;; ini
-	  (dockerfile "https://github.com/camdencheek/tree-sitter-dockerfile")
-	  (nix "https://github.com/nix-community/tree-sitter-nix")
-	  (yaml "https://github.com/ikatyang/tree-sitter-yaml")
-	  (json "https://github.com/tree-sitter/tree-sitter-json")
-	  ;; frontend
-	  (html "https://github.com/tree-sitter/tree-sitter-html")
-	  (css "https://github.com/tree-sitter/tree-sitter-css")
-	  (javascript "https://github.com/tree-sitter/tree-sitter-javascript")
-	  (tsx . ("https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src"))
-	  ))
-  )
+        '((bash "https://github.com/tree-sitter/tree-sitter-bash")
+          (python "https://github.com/tree-sitter/tree-sitter-python")
+          (lua "https://github.com/MunifTanjim/tree-sitter-lua")
+          (sql "https://github.com/DerekStride/tree-sitter-sql" "gh-pages")
+          ;; ini
+          (dockerfile "https://github.com/camdencheek/tree-sitter-dockerfile")
+          (nix "https://github.com/nix-community/tree-sitter-nix")
+          (yaml "https://github.com/ikatyang/tree-sitter-yaml")
+          (json "https://github.com/tree-sitter/tree-sitter-json")
+          ;; frontend
+          (html "https://github.com/tree-sitter/tree-sitter-html")
+          (css "https://github.com/tree-sitter/tree-sitter-css")
+          (javascript "https://github.com/tree-sitter/tree-sitter-javascript")
+          (tsx . ("https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src"))
+          )))
 
 (use-package ox-latex
   :custom
@@ -926,19 +919,19 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
                               ("" "fvextra" nil)))
   :config
   (add-to-list 'org-latex-classes
-	       '("ctexart" "\\documentclass[utf8]{ctexart}"
-             ("\\section{%s}" . "\\section*{%s}")
-             ("\\subsection{%s}" . "\\subsection*{%s}")
-             ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
-             ("\\paragraph{%s}" . "\\paragraph*{%s}")
-             ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
+               '("ctexart" "\\documentclass[utf8]{ctexart}"
+                 ("\\section{%s}" . "\\section*{%s}")
+                 ("\\subsection{%s}" . "\\subsection*{%s}")
+                 ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+                 ("\\paragraph{%s}" . "\\paragraph*{%s}")
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
   (add-to-list 'org-latex-classes
-	       '("ctexbook" "\\documentclass[utf8]{ctexbook}"
-             ("\\part{%s}" . "\\part*{%s}")
-             ("\\chapter{%s}" . "\\chapter*{%s}")
-             ("\\section{%s}" . "\\section*{%s}")
-             ("\\subsection{%s}" . "\\subsection*{%s}")
-             ("\\subsubsection{%s}" . "\\subsubsection*{%s}"))))
+               '("ctexbook" "\\documentclass[utf8]{ctexbook}"
+                 ("\\part{%s}" . "\\part*{%s}")
+                 ("\\chapter{%s}" . "\\chapter*{%s}")
+                 ("\\section{%s}" . "\\section*{%s}")
+                 ("\\subsection{%s}" . "\\subsection*{%s}")
+                 ("\\subsubsection{%s}" . "\\subsubsection*{%s}"))))
 
 (package-initialize)
 
@@ -960,11 +953,15 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
   (add-to-list 'major-mode-remap-alist '(mhtml-mode . html-ts-mode))
   )
 
+(use-package nix-ts-mode
+  :if (package-installed-p 'nix-ts-mode)
+  :mode "\\.nix\\'")
+
 (use-package combobulate
   :if (package-installed-p 'combobulate)
   :vc (:url "https://github.com/mickeynp/combobulate")
   :preface
-  (setq combobulate-key-prefix "C-c k")
+  (setq combobulate-key-prefix "C-c j")
   :hook
   ((tsx-ts-mode typescript-ts-mode json-ts-mode yaml-ts-mode css-ts-mode js-ts-mode python-ts-mode) . combobulate-mode)
   :init
@@ -972,10 +969,6 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
     (add-hook 'html-ts-mode-hook 'combobulate-mode)
     )
   )
-
-(use-package nix-ts-mode
-  :if (package-installed-p 'nix-ts-mode)
-  :mode "\\.nix\\'")
 
 (use-package which-key :defer 3
   :if (package-installed-p 'which-key)
@@ -1049,7 +1042,7 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
   :if (package-installed-p 'envrc)
   :bind
   (:map envrc-mode-map
-	("C-c e" . envrc-command-map)))
+        ("C-c e" . envrc-command-map)))
 
 (use-package emms
   :if (package-installed-p 'emms)
