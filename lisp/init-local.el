@@ -27,7 +27,6 @@
   (set-mark-command-repeat-pop t)
   (scroll-bar-mode nil)
   (blink-cursor-mode nil)
-  (shift-select-mode nil)
   (column-number-mode t)
   (use-short-answers t)
   (word-wrap-by-category t)
@@ -242,9 +241,11 @@ optional:
     )
   )
 
-;; (use-package delsel
-;;   :hook (emacs-startup . delete-selection-mode)
-;;   )
+(use-package cua-base
+  :hook (emacs-startup . cua-mode)
+  :custom
+  (cua-enable-cua-keys 'shift)
+  (cua-delete-selection nil))
 
 (use-package elec-pair
   :hook ((prog-mode minibuffer-mode inferior-emacs-lisp-mode) . electric-pair-local-mode)
