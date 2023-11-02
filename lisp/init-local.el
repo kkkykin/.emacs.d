@@ -32,6 +32,7 @@
   (word-wrap-by-category t)
   (custom-file "~/.emacs.d/custom.el")
   (what-cursor-show-names t)
+  (redisplay-skip-fontification-on-input t)
   (kill-read-only-ok t)
   (kill-do-not-save-duplicates t)
   (duplicate-region-final-position 1)
