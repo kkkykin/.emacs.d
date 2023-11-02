@@ -1033,7 +1033,6 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
 
 (use-package sqlformat
   :if (package-installed-p 'sqlformat)
-  :mode "\\.sql\\'"
   :custom
   (sqlformat-command 'sqlfluff)
   ;; set sqlformat-args manually: '("-d" "mysql") or other
