@@ -245,6 +245,8 @@ optional:
   :hook (emacs-startup . cua-mode)
   :custom
   (cua-enable-cua-keys 'shift)
+  (cua-rectangle-mark-key [(control ^)])
+  (cua-prefix-override-inhibit-delay 0.3)
   (cua-delete-selection nil))
 
 (use-package elec-pair
@@ -649,6 +651,7 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
         ("i" . 'org-clock-in)
         ("o" . 'org-clock-out))
   :custom
+  (org-replace-disputed-keys t "see `'org-disputed-keys'")
   (org-use-speed-commands t)
   (org-default-notes-file "~/org/inbox.org")
   (org-agenda-files `(,org-default-notes-file
