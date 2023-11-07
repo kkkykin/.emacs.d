@@ -245,7 +245,7 @@ optional:
 (use-package cua-base
   :hook (emacs-startup . cua-mode)
   :custom
-  (cua-enable-cua-keys 'shift)
+  (cua-enable-cua-keys nil "cua-selection-mode")
   (cua-rectangle-mark-key [(control ^)])
   (cua-prefix-override-inhibit-delay 0.3)
   (cua-delete-selection nil))
@@ -293,7 +293,7 @@ optional:
 (use-package minibuffer
   :custom
   (enable-recursive-minibuffers t)
-  (insert-default-directory nil)
+  ;; (insert-default-directory nil "Affect fido shortcut, and dired-dwim default")
   (resize-mini-windows t)
   (history-delete-duplicates t)
   :hook
@@ -331,6 +331,10 @@ optional:
   )
 
 (use-package project
+  ;; Dispatch menu not available on android sometimes.
+  ;; :config
+  ;; (when (eq system-type 'android)
+  ;;   (setq project-switch-commands 'project-find-file))
   :custom
   (project-kill-buffers-display-buffer-list t))
 
@@ -915,28 +919,30 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
           (tsx . ("https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src"))
           )))
 
-(use-package ox-latex
+(use-package ox
   :custom
-  (org-export-backends '(html latex md ascii icalendar))
+  (org-export-backends '(org html latex md ascii icalendar))
+  (org-html-table-default-attributes '(:border "2" :cellspacing "0" :cellpadding "6" :rules "all" :frame "border"))
   (org-latex-pdf-process '("tectonic %f"))
   (org-latex-default-class "ctexart")
   (org-latex-packages-alist '(("margin=1in,a4paper" "geometry" nil)
                               ("" "fvextra" nil)))
   :config
-  (add-to-list 'org-latex-classes
-               '("ctexart" "\\documentclass[utf8]{ctexart}"
-                 ("\\section{%s}" . "\\section*{%s}")
-                 ("\\subsection{%s}" . "\\subsection*{%s}")
-                 ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
-                 ("\\paragraph{%s}" . "\\paragraph*{%s}")
-                 ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
-  (add-to-list 'org-latex-classes
-               '("ctexbook" "\\documentclass[utf8]{ctexbook}"
-                 ("\\part{%s}" . "\\part*{%s}")
-                 ("\\chapter{%s}" . "\\chapter*{%s}")
-                 ("\\section{%s}" . "\\section*{%s}")
-                 ("\\subsection{%s}" . "\\subsection*{%s}")
-                 ("\\subsubsection{%s}" . "\\subsubsection*{%s}"))))
+  (with-eval-after-load 'ox-latex
+    (add-to-list 'org-latex-classes
+                 '("ctexart" "\\documentclass[utf8]{ctexart}"
+                   ("\\section{%s}" . "\\section*{%s}")
+                   ("\\subsection{%s}" . "\\subsection*{%s}")
+                   ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+                   ("\\paragraph{%s}" . "\\paragraph*{%s}")
+                   ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
+    (add-to-list 'org-latex-classes
+                 '("ctexbook" "\\documentclass[utf8]{ctexbook}"
+                   ("\\part{%s}" . "\\part*{%s}")
+                   ("\\chapter{%s}" . "\\chapter*{%s}")
+                   ("\\section{%s}" . "\\section*{%s}")
+                   ("\\subsection{%s}" . "\\subsection*{%s}")
+                   ("\\subsubsection{%s}" . "\\subsubsection*{%s}")))))
 
 (package-initialize)
 
@@ -944,8 +950,10 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
   :if (package-installed-p 'engrave-faces)
   :after org
   :config
-  (setq org-latex-src-block-backend 'engraved)
-  )
+  (setq org-latex-src-block-backend 'engraved))
+
+(use-package htmlize
+  :if (package-installed-p 'htmlize))
 
 (use-package lua-ts-mode
   :mode "\\.lua\\'")
