@@ -224,6 +224,72 @@ optional:
   (keymap-global-set "æ" "%")
   )
 
+(use-package minibuffer
+  :custom
+  (enable-recursive-minibuffers t)
+  ;; (insert-default-directory nil "Affect fido shortcut, and dired-dwim default")
+  (resize-mini-windows t)
+  (history-delete-duplicates t)
+  :hook
+  ((emacs-startup . minibuffer-electric-default-mode)
+   (emacs-startup . savehist-mode)))
+
+(use-package icomplete
+  :hook (emacs-startup . fido-mode))
+
+(use-package help
+  :custom
+  (help-window-select t "Switch to help buffers automatically")
+  (help-window-keep-selected t)
+  (apropos-sort-by-scores t)
+  :bind
+  (:map help-map
+	("A" . 'apropos-function)
+	("V" . 'apropos-variable)
+	("B" . 'apropos-value)
+	("j" . 'apropos-local-variable)
+	("J" . 'apropos-local-value)
+	("D" . 'info-apropos)
+	("M" . 'describe-keymap)
+	("z" . 'shortdoc)
+	("Z" . 'apropos-library)
+	))
+
+(use-package cua-base
+  :hook (emacs-startup . cua-mode)
+  :custom
+  (cua-enable-cua-keys nil "cua-selection-mode")
+  (cua-rectangle-mark-key [(control ^)])
+  (cua-prefix-override-inhibit-delay 0.3)
+  (cua-delete-selection nil))
+
+(use-package display-fill-column-indicator
+  :if (not (eq system-type 'android))
+  :hook prog-mode
+  :custom
+  (indicate-buffer-boundaries 'left)
+  (display-fill-column-indicator-character ?\u254e))
+
+(use-package time :defer 10
+  :if (not (eq system-type 'android))
+  :custom
+  (display-time-24hr-format t)
+  (display-time-use-mail-icon t)
+  :config
+  (display-time))
+
+(use-package battery :defer 10
+  :if (not (eq system-type 'android))
+  :config
+  (when (and battery-status-function
+             (not (string-match-p "N/A" 
+                                  (battery-format "%B"
+                                                  (funcall battery-status-function)))))
+    (display-battery-mode 1)))
+
+(use-package hl-line
+  :hook (text-mode prog-mode))
+
 (use-package menu-bar
   :config
   (unless (eq system-type 'android)
@@ -241,14 +307,6 @@ optional:
     (tool-bar-mode -1)
     )
   )
-
-(use-package cua-base
-  :hook (emacs-startup . cua-mode)
-  :custom
-  (cua-enable-cua-keys nil "cua-selection-mode")
-  (cua-rectangle-mark-key [(control ^)])
-  (cua-prefix-override-inhibit-delay 0.3)
-  (cua-delete-selection nil))
 
 (use-package elec-pair
   :hook ((prog-mode minibuffer-mode inferior-emacs-lisp-mode) . electric-pair-local-mode)
@@ -286,43 +344,6 @@ optional:
 (use-package abbrev
   :custom
   (abbrev-suggest t))
-
-(use-package hl-line
-  :hook (text-mode prog-mode))
-
-(use-package minibuffer
-  :custom
-  (enable-recursive-minibuffers t)
-  ;; (insert-default-directory nil "Affect fido shortcut, and dired-dwim default")
-  (resize-mini-windows t)
-  (history-delete-duplicates t)
-  :hook
-  ((emacs-startup . minibuffer-electric-default-mode)
-   (emacs-startup . savehist-mode))
-  )
-
-(use-package icomplete
-  :hook (emacs-startup . fido-mode)
-  )
-
-(use-package help
-  :custom
-  (help-window-select t "Switch to help buffers automatically")
-  (help-window-keep-selected t)
-  (apropos-sort-by-scores t)
-  :bind
-  (:map help-map
-	("A" . 'apropos-function)
-	("V" . 'apropos-variable)
-	("B" . 'apropos-value)
-	("j" . 'apropos-local-variable)
-	("J" . 'apropos-local-value)
-	("D" . 'info-apropos)
-	("M" . 'describe-keymap)
-	("z" . 'shortdoc)
-	("Z" . 'apropos-library)
-	)
-  )
 
 (use-package desktop
   :hook (emacs-startup . desktop-save-mode)
