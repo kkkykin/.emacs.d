@@ -282,13 +282,17 @@ optional:
   :if (not (eq system-type 'android))
   :config
   (when (and battery-status-function
-             (not (string-match-p "N/A" 
+             (not (string-match-p "unknown" 
                                   (battery-format "%B"
                                                   (funcall battery-status-function)))))
     (display-battery-mode 1)))
 
 (use-package hl-line
   :hook (text-mode prog-mode))
+
+(use-package isearch
+  :custom
+  (isearch-repeat-on-direction-change t))
 
 (use-package menu-bar
   :config
