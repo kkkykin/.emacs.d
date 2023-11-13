@@ -292,6 +292,8 @@ optional:
 
 (use-package isearch
   :custom
+  (isearch-allow-scroll t)
+  (isearch-yank-on-move 'shift)
   (isearch-repeat-on-direction-change t))
 
 (use-package menu-bar
