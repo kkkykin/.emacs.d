@@ -381,7 +381,7 @@ optional:
   (ibuffer-show-empty-filter-groups nil)
   :config
   (setq ibuffer-saved-filter-groups
-	'(("default"
+        '(("default"
            ("dired"
             (mode . dired-mode))
            ("perl"
@@ -1041,6 +1041,7 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
   (denote-prompts '(title keywords))
   (denote-date-format nil)
   (denote-dired-rename-expert nil)
+  (denote-rename-buffer-format "[D] %t")
   :hook
   ((dired-mode . denote-dired-mode)
    (find-file . denote-link-buttonize-buffer))
@@ -1048,7 +1049,7 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
   (setq denote-directory (expand-file-name "~/org/"))
   (unless (file-exists-p denote-directory)
     (make-directory denote-directory))
-  )
+  (denote-rename-buffer-mode 1))
 
 ;; Popup completion-at-point
 (use-package corfu
