@@ -678,6 +678,7 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
   (:map org-global-prefix-map
         ("s" . org-store-link)
         ("y" . org-insert-link-global)
+        ("b" . org-hide-block-toggle)
         ("j" . 'org-clock-goto)
         ("l" . 'org-clock-in-last)
         ("i" . 'org-clock-in)
