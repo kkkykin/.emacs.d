@@ -449,6 +449,7 @@ optional:
   :custom
   (url-cookie-trusted-urls '())
   (url-cookie-untrusted-urls '(".*"))
+  (eww-search-prefix "https://www.mojeek.com/search?q=" "or https://wiby.org/?q=")
   (eww-auto-rename-buffer 'title)
   (shr-inhibit-images t "images maybe hang in newsticker")
   :hook
