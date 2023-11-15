@@ -698,30 +698,6 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
   (defvar org-global-prefix-map (make-sparse-keymap)
     "A keymap for handy global access to org helpers, particularly clocking.")
 
-  (org-babel-do-load-languages
-   'org-babel-load-languages
-   (seq-filter
-    (lambda (pair)
-      (locate-library (concat "ob-" (symbol-name (car pair)))))
-    '((R . t)
-      (ditaa . t)
-      (dot . t)
-      (emacs-lisp . t)
-      (gnuplot . t)
-      (haskell . nil)
-      (latex . t)
-      (ledger . t)
-      (ocaml . nil)
-      (octave . t)
-      (plantuml . t)
-      (python . t)
-      (ruby . t)
-      (screen . nil)
-      (sh . t) ;; obsolete
-      (shell . t)
-      (sql . t)
-      (sqlite . t))))
-
   (setq org-tag-alist '(
             ;; locale
             (:startgroup)
@@ -775,6 +751,34 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
           ("w" "Work" agenda ""
            ((org-agenda-files '("work.org"))))))
   )
+
+(use-package ob
+  :custom
+  (org-plantuml-exec-mode 'plantuml)
+  :config
+    (org-babel-do-load-languages
+     'org-babel-load-languages
+     (seq-filter
+      (lambda (pair)
+        (locate-library (concat "ob-" (symbol-name (car pair)))))
+      '((R . t)
+        (ditaa . t)
+        (dot . t)
+        (emacs-lisp . t)
+        (gnuplot . t)
+        (haskell . nil)
+        (latex . t)
+        (ledger . t)
+        (ocaml . nil)
+        (octave . t)
+        (plantuml . t)
+        (python . t)
+        (ruby . t)
+        (screen . nil)
+        (sh . t) ;; obsolete
+        (shell . t)
+        (sql . t)
+        (sqlite . t)))))
 
 (use-package flyspell
   :hook text-mode)
