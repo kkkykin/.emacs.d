@@ -24,6 +24,8 @@
   (system-time-locale "C")
   (use-package-always-defer t)
   (truncate-lines t)
+  (mark-ring-max 6)
+  (global-mark-ring-max 8)
   (set-mark-command-repeat-pop t)
   (scroll-bar-mode nil)
   (blink-cursor-mode nil)
@@ -824,7 +826,10 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
 (use-package ediff
   :custom
   (ediff-keep-variants nil)
-  (ediff-window-setup-function 'ediff-setup-windows-plain))
+  (ediff-window-setup-function 'ediff-setup-windows-plain)
+  :config
+  (unless (eq system-type 'android)
+    (setq ediff-split-window-function 'split-window-horizontally)))
 
 (use-package gnus
   :custom
