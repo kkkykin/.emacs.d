@@ -203,10 +203,6 @@ optional:
 
   (keymap-global-set "C-z" 'window-swap-states)
 
-  (keymap-global-set "§" 'clipboard-kill-region)
-  (keymap-global-set "ß" 'clipboard-kill-ring-save)
-  (keymap-global-set "ç" 'clipboard-yank)
-
   (keymap-global-set "ò" "~")
   (keymap-global-set "ó" "`")
   (keymap-global-set "ô" "|")
@@ -222,9 +218,9 @@ optional:
   (keymap-global-set "ã" "]")
   (keymap-global-set "ä" "<")
   (keymap-global-set "å" ">")
-  (keymap-global-set "ā" "$")
-  (keymap-global-set "æ" "%")
-  )
+  (keymap-global-set "ā" 'clipboard-kill-region)
+  (keymap-global-set "æ" 'clipboard-kill-ring-save)
+  (keymap-global-set "§" 'clipboard-yank))
 
 (use-package minibuffer
   :custom
@@ -272,7 +268,7 @@ optional:
   (indicate-buffer-boundaries 'left)
   (display-fill-column-indicator-character ?\u254e))
 
-(use-package time :defer 10
+(use-package time :defer 9
   :if (not (eq system-type 'android))
   :custom
   (display-time-24hr-format t)
@@ -714,6 +710,7 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
             ("tiny" . ?t)
             (:endgroup)
             ;; misc
+            ("noexport")
             ("meta")
             ("review")
             ("reading")))
