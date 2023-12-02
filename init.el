@@ -433,7 +433,7 @@ optional:
   (newsticker-wget-name "curl")
   (newsticker-wget-arguments '("-qsLm30"))
   :config
-  (load "init-rss.el.gpg" t t)
+  (load-file (file-name-concat user-emacs-directory "init-rss.el.gpg"))
 
   (defun my/advice-newsticker-start (&optional _do-not-complain-if-running)
     (let ((running (newsticker-running-p)))
@@ -469,20 +469,20 @@ optional:
 
   ;; refine github experience: from https://emacstalk.codeberg.page/post/018/
   (setq my/url-redirect-list `(("^https://github.com/\\(.+\\)/commit/\\(\\w+\\)$" .
-				;; 针对单个 commit
-				(lambda (url)
+                                ;; 针对单个 commit
+                                (lambda (url)
                                   (format "https://github.com/%s/commit/%s.patch"
                                           (match-string 1 url)
                                           (match-string 2 url))))
                                ("^https://github.com/\\(.+\\)/pull/\\([[:digit:]]+\\)$" .
-				;; 针对单个 Pull Request
-				(lambda (url)
+                                ;; 针对单个 Pull Request
+                                (lambda (url)
                                   (format "https://github.com/%s/pull/%s.patch"
                                           (match-string 1 url)
                                           (match-string 2 url))))
                                ("^https://github.com/\\(.+\\)/blob/\\(.+\\)" .
-				;; 针对单个文件
-				(lambda (url)
+                                ;; 针对单个文件
+                                (lambda (url)
                                   (format "https://github.com/%s/raw/%s"
                                           (match-string 1 url)
                                           (match-string 2 url))))))
@@ -490,7 +490,7 @@ optional:
   (defun my/advice-url-redirect (fn url &rest args)
     (catch 'ret
       (dolist (redirect-rule my/url-redirect-list)
-	(let* ((regexp (car redirect-rule))
+        (let* ((regexp (car redirect-rule))
                (redirect-fn (cdr redirect-rule))
                (inhibit-message t))
           (when-let* ((matched-groups (string-match regexp url)))
