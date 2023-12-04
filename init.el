@@ -784,7 +784,8 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
         (sqlite . t)))))
 
 (use-package flyspell
-  :hook text-mode)
+  :hook (text-mode
+         (prog-mode . flyspell-prog-mode)))
 
 (use-package calendar
   :custom
