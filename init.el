@@ -955,6 +955,7 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
   :custom
   (org-export-backends '(org html latex md ascii icalendar))
   (org-html-table-default-attributes '(:border "2" :cellspacing "0" :cellpadding "6" :rules "all" :frame "border"))
+  (org-html-postamble nil)
   (org-latex-pdf-process '("tectonic %f"))
   (org-latex-default-class "ctexart")
   (org-latex-packages-alist '(("margin=1in,a4paper" "geometry" nil)
