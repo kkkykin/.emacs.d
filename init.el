@@ -338,13 +338,13 @@ optional:
      (json-mode . json-ts-mode)
      (css-mode . css-ts-mode)
      (python-mode . python-ts-mode)))
+  ;; (kept-new-versions 3)
+  ;; (kept-old-versions 1)
+  ;; (version-control t)
   (backup-directory-alist
    `((".*" . ,temporary-file-directory)))
   (auto-save-file-name-transforms
-   `((".*" ,temporary-file-directory t)))
-  (kept-new-versions 3)
-  (kept-old-versions 1)
-  (version-control t))
+   `((".*" ,temporary-file-directory t))))
 
 (use-package grep
   :config
@@ -689,6 +689,7 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
         ("o" . 'org-clock-out))
   :custom
   (org-replace-disputed-keys t "see `'org-disputed-keys'")
+  (org-special-ctrl-k t)
   (org-use-speed-commands t)
   (org-default-notes-file "~/org/inbox.org")
   (org-agenda-files `(,org-default-notes-file
