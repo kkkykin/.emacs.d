@@ -7,19 +7,19 @@
   ((prog-mode . display-line-numbers-mode)
    (text-mode . visual-line-mode))
   :bind-keymap
-  ("C-x j" . my-global-prefix-map)
+  ("C-x j" . my/global-prefix-map)
   :bind
   (:map global-map
 	([remap eval-expression] . pp-eval-expression)
 	([remap eval-last-sexp] . pp-eval-last-sexp)
 	("C-c d" . 'duplicate-dwim))
-  (:map my-global-prefix-map
+  (:map my/global-prefix-map
 	("r" . 'rename-visited-file)
 	("p" . 'delete-pair)
 	("u" . 'raise-sexp)
-    ("'" . 'insert-quotations)
-    ("\"" . 'insert-quotes)
-    ("{" . 'insert-curlybracket))
+    ("'" . 'my/insert-quotations)
+    ("\"" . 'my/insert-quotes)
+    ("{" . 'my/insert-curlybracket))
   :custom
   (inhibit-splash-screen t)
   (initial-major-mode 'fundamental-mode)
@@ -63,13 +63,13 @@
 
   (prefer-coding-system 'utf-8)
 
-  (defvar my-global-prefix-map (make-sparse-keymap)
+  (defvar my/global-prefix-map (make-sparse-keymap)
     "A keymap for myself.")
 
   (defvar my/fonts-list '("LXGW WenKai Mono" "Sarasa Mono SC" "Unifont-JP" "UnifontExMono")
     "prefered fonts")
 
-  (defun setup-faces ()
+  (defun my/setup-faces ()
     "Randomize setup faces."
     (when (display-graphic-p)
       (let* ((fonts (remove (face-attribute 'default :family) my/fonts-list))
@@ -83,12 +83,12 @@
 			   ((string-prefix-p "Unifont" font) '(198 108 142)))))
 	(set-face-attribute 'default nil :font font :height
 			    (cond ((< (display-pixel-width) 1920) (car height))
-				  ((> (display-pixel-width) 1920) (car (last height)))
+				  ((> (display-pixel-width) 1920) (caddr height))
 				  (t (cadr height)))))
 
       (load-theme 'leuven)))
 
-  (add-hook 'window-setup-hook #'setup-faces)
+  (add-hook 'window-setup-hook #'my/setup-faces)
 
   (defun my/advice-silence-messages (orig-fun &rest args)
     "Advice function that silences all messages in ORIG-FUN.
@@ -97,19 +97,19 @@ https://scripter.co/using-emacs-advice-to-silence-messages-from-functions"
           (message-log-max nil)) ;Don't show the messages in the *Messages* buffer
       (apply orig-fun args)))
 
-  (defun insert-quotations (&optional arg)
+  (defun my/insert-quotations (&optional arg)
     "Enclose following ARG sexps in quotation marks.
 Leave point after open-paren."
     (interactive "P")
     (insert-pair arg ?\' ?\'))
 
-  (defun insert-quotes (&optional arg)
+  (defun my/insert-quotes (&optional arg)
     "Enclose following ARG sexps in quotes.
 Leave point after open-quote."
     (interactive "P")
     (insert-pair arg ?\" ?\"))
 
-  (defun insert-curlybracket (&optional arg)
+  (defun my/insert-curlybracket (&optional arg)
     "Enclose following ARG sexps in curlybracket.
 Leave point after open-bracket."
     (interactive "P")
@@ -142,7 +142,7 @@ Leave point after open-bracket."
     (interactive "nTransparency Value 0 - 100 opaque:")
     (set-frame-parameter nil 'alpha-background value))
 
-  (add-hook 'server-after-make-frame-hook #'setup-faces))
+  (add-hook 'server-after-make-frame-hook #'my/setup-faces))
 
 (when (eq system-type 'android)
   (defvar my/termux
@@ -654,9 +654,9 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
 
 (use-package mpc
   :bind-keymap
-  ("C-c m" . mpc-global-prefix-map)
+  ("C-c m" . my/mpc-prefix-map)
   :bind
-  (:map mpc-global-prefix-map
+  (:map my/mpc-prefix-map
         ("s" . 'mpc-toggle-play)
         ("n" . 'mpc-next)
         ("p" . 'mpc-prev)
@@ -669,17 +669,17 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
   :custom
   (mpc-host "127.0.0.1")
   :config
-  (defvar mpc-global-prefix-map (make-sparse-keymap)
+  (defvar my/mpc-prefix-map (make-sparse-keymap)
     "A keymap for mpc."))
 
 (use-package org
   :bind-keymap
-  ("C-c o" . org-global-prefix-map)
+  ("C-c o" . my/org-prefix-map)
   :bind
   (:map global-map
         ("C-c a" . org-agenda)
         ("C-c c" . org-capture))
-  (:map org-global-prefix-map
+  (:map my/org-prefix-map
         ("s" . org-store-link)
         ("y" . org-insert-link-global)
         ("b" . org-hide-block-toggle)
@@ -698,7 +698,7 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
   (org-archive-location "%s_archive::* Archive")
   (org-export-coding-system 'utf-8)
   :config
-  (defvar org-global-prefix-map (make-sparse-keymap)
+  (defvar my/org-prefix-map (make-sparse-keymap)
     "A keymap for handy global access to org helpers, particularly clocking.")
 
   (setq org-tag-alist '(
@@ -858,46 +858,46 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
 (use-package url
   :config
   ;; Network Proxy: from centaur
-  (defcustom centaur-proxy "127.0.0.1:10807"
+  (defcustom my/centaur-proxy "127.0.0.1:10807"
     "Set HTTP/HTTPS proxy."
     :group 'centaur
     :type 'string)
 
-  (defcustom centaur-socks-proxy "127.0.0.1:10808"
+  (defcustom my/centaur-socks-proxy "127.0.0.1:10808"
     "Set SOCKS proxy."
     :group 'centaur
     :type 'string)
 
-  (defun proxy-http-show ()
+  (defun my/proxy-http-show ()
     "Show HTTP/HTTPS proxy."
     (interactive)
     (if url-proxy-services
-        (message "Current HTTP proxy is `%s'" centaur-proxy)
+        (message "Current HTTP proxy is `%s'" my/centaur-proxy)
       (message "No HTTP proxy")))
 
-  (defun proxy-http-enable ()
+  (defun my/proxy-http-enable ()
     "Enable HTTP/HTTPS proxy."
     (interactive)
     (setq url-proxy-services
-          `(("http" . ,centaur-proxy)
-            ("https" . ,centaur-proxy)
+          `(("http" . ,my/centaur-proxy)
+            ("https" . ,my/centaur-proxy)
             ("no_proxy" . "^\\(localhost\\|192.168.*\\|10.*\\)")))
-    (proxy-http-show))
+    (my/proxy-http-show))
 
-  (defun proxy-http-disable ()
+  (defun my/proxy-http-disable ()
     "Disable HTTP/HTTPS proxy."
     (interactive)
     (setq url-proxy-services nil)
-    (proxy-http-show))
+    (my/proxy-http-show))
 
-  (defun proxy-http-toggle ()
+  (defun my/proxy-http-toggle ()
     "Toggle HTTP/HTTPS proxy."
     (interactive)
     (if (bound-and-true-p url-proxy-services)
-        (proxy-http-disable)
-      (proxy-http-enable)))
+        (my/proxy-http-disable)
+      (my/proxy-http-enable)))
 
-  (defun proxy-socks-show ()
+  (defun my/proxy-socks-show ()
     "Show SOCKS proxy."
     (interactive)
     (if (bound-and-true-p socks-noproxy)
@@ -905,18 +905,18 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
                  (cadddr socks-server) (cadr socks-server) (caddr socks-server))
       (message "No SOCKS proxy")))
 
-  (defun proxy-socks-enable ()
+  (defun my/proxy-socks-enable ()
     "Enable SOCKS proxy."
     (interactive)
     (require 'socks)
     (setq url-gateway-method 'socks
           socks-noproxy '("localhost"))
-    (let* ((proxy (split-string centaur-socks-proxy ":"))
+    (let* ((proxy (split-string my/centaur-socks-proxy ":"))
            (host (car proxy))
            (port (string-to-number (cadr proxy))))
       (setq socks-server `("Default server" ,host ,port 5)))
-    (setenv "all_proxy" (concat "socks5://" centaur-socks-proxy))
-    (proxy-socks-show))
+    (setenv "all_proxy" (concat "socks5://" my/centaur-socks-proxy))
+    (my/proxy-socks-show))
 
   (defun proxy-socks-disable ()
     "Disable SOCKS proxy."
@@ -925,14 +925,14 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
           socks-noproxy nil
           socks-server nil)
     (setenv "all_proxy" "")
-    (proxy-socks-show))
+    (my/proxy-socks-show))
 
   (defun proxy-socks-toggle ()
     "Toggle SOCKS proxy."
     (interactive)
     (if (bound-and-true-p socks-noproxy)
         (proxy-socks-disable)
-      (proxy-socks-enable))))
+      (my/proxy-socks-enable))))
 
 (use-package treesit
   :config
