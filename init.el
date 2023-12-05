@@ -313,7 +313,7 @@ optional:
     (tool-bar-mode -1)))
 
 (use-package elec-pair
-  :hook ((prog-mode minibuffer-mode inferior-emacs-lisp-mode) . electric-pair-local-mode))
+  :hook ((prog-mode minibuffer-mode inferior-emacs-lisp-mode sql-interactive-mode) . electric-pair-local-mode))
 
 (use-package windmove
   :if (not (eq system-type 'android))
