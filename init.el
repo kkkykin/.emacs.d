@@ -298,6 +298,25 @@ optional:
   (isearch-yank-on-move 'shift)
   (isearch-repeat-on-direction-change t))
 
+(use-package files
+  :custom
+  (major-mode-remap-alist
+   '((yaml-mode . yaml-ts-mode)
+     (bash-mode . bash-ts-mode)
+     (javascript-mode . js-ts-mode)
+     (typescript-mode . typescript-ts-mode)
+     (json-mode . json-ts-mode)
+     (css-mode . css-ts-mode)
+     (python-mode . python-ts-mode)))
+  (kept-new-versions 3)
+  (kept-old-versions 1)
+  (version-control t)
+  (delete-old-versions t)
+  (backup-directory-alist
+   `((".*" . ,temporary-file-directory)))
+  (auto-save-file-name-transforms
+   `((".*" ,temporary-file-directory t))))
+
 (use-package menu-bar
   :config
   (unless (eq system-type 'android)
@@ -327,24 +346,6 @@ optional:
   :config
   (unless (server-running-p)
 	(server-start)))
-
-(use-package files
-  :custom
-  (major-mode-remap-alist
-   '((yaml-mode . yaml-ts-mode)
-     (bash-mode . bash-ts-mode)
-     (javascript-mode . js-ts-mode)
-     (typescript-mode . typescript-ts-mode)
-     (json-mode . json-ts-mode)
-     (css-mode . css-ts-mode)
-     (python-mode . python-ts-mode)))
-  ;; (kept-new-versions 3)
-  ;; (kept-old-versions 1)
-  ;; (version-control t)
-  (backup-directory-alist
-   `((".*" . ,temporary-file-directory)))
-  (auto-save-file-name-transforms
-   `((".*" ,temporary-file-directory t))))
 
 (use-package grep
   :config
