@@ -361,6 +361,9 @@ optional:
   (when (string= grep-program "ug")
     (setq xref-search-program 'ugrep)))
 
+(use-package cc-defs
+  :autoload c-concat-separated)
+
 (use-package abbrev
   :custom
   (abbrev-suggest t))
@@ -458,8 +461,6 @@ optional:
 
 (use-package eww
   :custom
-  (url-cookie-trusted-urls '())
-  (url-cookie-untrusted-urls '(".*"))
   (eww-search-prefix "https://www.mojeek.com/search?q=" "or https://wiby.org/?q=")
   (eww-auto-rename-buffer 'title)
   (shr-inhibit-images t "images maybe hang in newsticker")
@@ -858,6 +859,10 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
         ("u" . outline-up-heading)))
 
 (use-package url
+  :custom
+  (url-privacy-level 'high)
+  (url-cookie-trusted-urls '())
+  (url-cookie-untrusted-urls '(".*"))
   :config
   ;; Network Proxy: from centaur
   (defcustom my/centaur-proxy "127.0.0.1:10807"
