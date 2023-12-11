@@ -199,7 +199,8 @@ optional:
     :custom
     (touch-screen-display-keyboard t))
 
-  (setq select-enable-clipboard nil)
+  (setq select-enable-clipboard nil
+        android-pass-multimedia-buttons-to-system t)
 
   (keymap-global-set "C-z" 'window-swap-states)
 
