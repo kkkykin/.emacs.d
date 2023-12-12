@@ -1116,6 +1116,9 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
 
 (use-package sqlformat
   :if (package-installed-p 'sqlformat)
+  :bind
+  (:map sql-mode-map
+        ("C-c C-f" . sqlformat))
   :custom
   ;; set sqlformat-args manually: '("-d" "mysql") or other
   (sqlformat-command 'sqlfluff))
