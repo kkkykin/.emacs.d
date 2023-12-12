@@ -457,7 +457,25 @@ optional:
   ;; remove message: Error while retrieving image | news from feeds
   (dolist (fn '(newsticker--image-sentinel newsticker--sentinel-work))
     (advice-add fn :around #'my/advice-silence-messages))
-  
+
+  (defun my/advice-newsticker--get-news-by-wget (args)
+    (let ((host (url-host (url-generic-parse-url (cadr args))))
+          (domains my/proxy-domain)
+          (wget-arguments (caddr args)))
+      (catch 'aaa
+        (while domains
+          (if (string-match-p (car domains) host)
+              (progn
+                (setf (caddr args)
+                      (append wget-arguments
+                              `("-x"
+                                ,(concat "http://emacs@"
+                                         my/centaur-proxy))))
+                (throw 'aaa "a"))
+            (setq domains (cdr domains))))))
+    args)
+  (advice-add 'newsticker--get-news-by-wget :filter-args #'my/advice-newsticker--get-news-by-wget)
+
   (newsticker-start t))
 
 (use-package eww
@@ -845,6 +863,8 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
   (tab-bar-history-mode))
 
 (use-package recentf :defer 1
+  :config
+  (recentf-mode)
   :custom
   (recentf-max-saved-items 1000)
   (recentf-exclude `("/data/data/com.termux/files/home/tmp"
@@ -865,6 +885,13 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
   (url-cookie-trusted-urls '())
   (url-cookie-untrusted-urls '(".*"))
   :config
+
+  (defcustom my/proxy-domain '("\\(\\.\\|^\\)google.com$"
+                               "\\(\\.\\|^\\)ycombinator.com$")
+    "Domain through proxy."
+    :group 'centaur
+    :type '(repeat regexp))
+
   ;; Network Proxy: from centaur
   (defcustom my/centaur-proxy "127.0.0.1:10807"
     "Set HTTP/HTTPS proxy."
