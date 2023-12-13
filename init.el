@@ -969,6 +969,10 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
         (proxy-socks-disable)
       (my/proxy-socks-enable))))
 
+(use-package filesets :defer 10
+  :config
+  (filesets-init))
+
 (use-package treesit
   :config
   (setq treesit-language-source-alist
