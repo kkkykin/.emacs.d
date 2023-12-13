@@ -48,9 +48,6 @@
   ;; (mouse-1-click-follows-link -450 "click set point, long press do action")
   (reb-re-syntax 'string)
   (sentence-end-double-space nil "Fix archaic defaults")
-  (eshell-scroll-to-bottom-on-input 'this)
-  (comint-scroll-to-bottom-on-input 'this)
-  (comint-scroll-to-bottom-on-output t)
 
   ;; long line performance https://emacs-china.org/t/topic/25811/9
   (bidi-display-reordering nil)
@@ -869,6 +866,14 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
   (recentf-max-saved-items 1000)
   (recentf-exclude `("/data/data/com.termux/files/home/tmp"
                      "/tmp/" "/ssh:" ,(concat package-user-dir "/.*-autoloads\\.el\\'"))))
+
+(use-package esh-mode
+  :custom
+  (eshell-scroll-to-bottom-on-output 'others))
+
+(use-package comint
+  :custom
+  (comint-scroll-to-bottom-on-output 'others))
 
 (use-package emacs-news-mode
   :bind
