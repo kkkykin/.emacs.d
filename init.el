@@ -371,6 +371,13 @@ optional:
   :custom
   (desktop-auto-save-timeout 600))
 
+(use-package midnight :defer 60
+  :if (eq system-type 'android)
+  :custom
+  (midnight-delay 14400)
+  :config
+  (midnight-mode))
+
 (use-package project
   ;; Dispatch menu not available on android sometimes.
   ;; :config
@@ -435,6 +442,29 @@ optional:
   (newsticker-wget-name "curl")
   (newsticker-wget-arguments '("-qsLm30"))
   :config
+
+  (defcustom my/rss-bridge-server "https://rss-bridge.org/bridge01"
+    "RSS bridge default server."
+    :type 'string)
+
+  (defun my/rss-bridge-bridge (bridge)
+    "Generate atom feed via rss-bridge."
+    (concat my/rss-bridge-server
+            "/?action=display&format=Atom&bridge=" bridge))
+
+  (defun my/rss-bridge-reducer (url percentage)
+    "Generate atom feed via rss-bridge."
+    (concat (my/rss-bridge-bridge "FeedReducerBridge")
+            "&percentage=" percentage
+            "&url=" (url-hexify-string url)))
+
+  (defun my/rss-bridge-css-expander (url limit selector)
+    "Generate atom feed via rss-bridge."
+    (concat (my/rss-bridge-bridge "CssSelectorFeedExpanderBridge")
+            "&limit=" limit
+            "&feed=" (url-hexify-string url)
+            "&content_selector=" (url-hexify-string selector)))
+
   (load-file (file-name-concat user-emacs-directory "init-rss.el.gpg"))
 
   (defun my/advice-newsticker-start (&optional _do-not-complain-if-running)
