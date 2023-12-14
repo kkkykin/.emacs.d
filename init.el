@@ -14,7 +14,6 @@
 	([remap eval-last-sexp] . pp-eval-last-sexp)
 	("C-c d" . 'duplicate-dwim))
   (:map my/global-prefix-map
-	("r" . 'rename-visited-file)
 	("p" . 'delete-pair)
 	("u" . 'raise-sexp)
     ("'" . 'my/insert-quotations)
@@ -364,9 +363,6 @@ optional:
   (when (string= grep-program "ug")
     (setq xref-search-program 'ugrep)))
 
-(use-package cc-defs
-  :autoload c-concat-separated)
-
 (use-package abbrev
   :custom
   (abbrev-suggest t))
@@ -454,43 +450,118 @@ optional:
   (newsticker-retrieval-interval 1800)
   (newsticker-retrieval-method 'extern)
   (newsticker-wget-name "curl")
-  (newsticker-wget-arguments '("-qsLm30"))
+  (newsticker-wget-arguments '("-kqsLm30"))
   :config
 
-  (defcustom my/rss-bridge-server "https://rss-bridge.org/bridge01"
+  (defcustom my/rss-bridge-server "https://rss-bridge.org/bridge01/"
     "RSS bridge default server."
     :type 'string)
 
-  (defun my/rss-bridge-bridge (bridge)
+  (defcustom my/rss-hub-server "https://rsshub.rssforever.com/"
+    "RSS hub default server."
+    :type 'string)
+
+  (defun my/rss-bridge-generator (bridge)
     "Generate atom feed via rss-bridge."
     (concat my/rss-bridge-server
-            "/?action=display&format=Atom&bridge=" bridge))
+            "?action=display&format=Atom&bridge=" bridge))
 
-  (defun my/rss-bridge-reducer (url percentage)
-    "Reduce rss feed via rss-bridge."
-    (concat (my/rss-bridge-bridge "FeedReducerBridge")
-            "&percentage=" percentage
-            "&url=" (url-hexify-string url)))
+  (defun my/rss-bridge-reducer (feed percentage)
+    "Choose a percentage of a feed you want to see."
+    (concat (my/rss-bridge-generator "FeedReducerBridge")
+            "&url=" (url-hexify-string feed)
+            "&percentage=" (number-to-string percentage)))
 
-  (defun my/rss-bridge-css-expander (url limit selector)
-    "Expand rss feed via rss-bridge."
-    (concat (my/rss-bridge-bridge "CssSelectorFeedExpanderBridge")
-            "&limit=" limit
-            "&feed=" (url-hexify-string url)
-            "&content_selector=" (url-hexify-string selector)))
+  (defun my/rss-bridge-css-expander (feed limit content &optional
+                                          content-cleanup
+                                          dont-expand-metadata
+                                          discard-thumbnail)
+    "Expand any site RSS feed using CSS selectors."
+    (concat (my/rss-bridge-generator "CssSelectorFeedExpanderBridge")
+            "&feed=" (url-hexify-string feed)
+            "&limit=" (number-to-string limit)
+            "&content_selector=" (url-hexify-string content)
+            (when content-cleanup
+              (concat "&content_cleanup="
+                      (url-hexify-string content-cleanup)))
+            (concat "&dont_expand_metadata="
+                    (when dont-expand-metadata "on"))
+            (concat "&discard_thumbnail="
+                    (when discard-thumbnail "on"))))
 
   (defun my/rss-bridge-merger (feeds limit name)
-    "Merge rss feed via rss-bridge."
-    (concat (my/rss-bridge-bridge "FeedMergeBridge")
-            "&feed_name=" name
-            "&limit=" limit
-            (let ((m 48))
+    "This bridge merges two or more feeds into a single feed. Max 10
+items are fetched from each feed."
+    (concat (my/rss-bridge-generator "FeedMergeBridge")
+            (let ((m 0))
               (mapconcat
                (lambda (feed)
                  (setq m (+ m 1))
-                 (concat "&feed_" (string m) "="
+                 (concat "&feed_" (number-to-string m) "="
                          (url-hexify-string feed)))
-               feeds))))
+               feeds))
+            "&limit=" (number-to-string limit)
+            "&feed_name=" (url-hexify-string name)))
+
+  (defun my/rss-bridge-css-selector (home limit entry use-article-pages
+                                          &optional content title
+                                          time time-format url
+                                          url-pattern title-cleanup
+                                          content-cleanup cookie author 
+                                          category remove-styling)
+    "Convert any site to RSS feed using CSS selectors. The bridge first
+selects the element describing the article entries. It then extracts
+the links to the articles from these elements. It then, depending on
+the setting 'use_article_pages', either parses the selected elements,
+or downloads the page for each article and parses those. Parsing the
+elements or page is done using the provided selectors."
+    (concat (my/rss-bridge-generator "CssSelectorComplexBridge")
+            "&home_page=" (url-hexify-string home)
+            "&limit=" (number-to-string limit)
+            "&entry_element_selector=" (url-hexify-string entry)
+            "&use_article_pages=" (when use-article-pages "on")
+            (when content
+              (concat "&article_page_content_selector="
+                      (url-hexify-string content)))
+            (when title
+              (concat "&title_selector=" (url-hexify-string title)))
+            (when time
+              (concat "&time_selector=" (url-hexify-string time)))
+            (when time-format
+              (concat "&time_format=" (url-hexify-string time-format)))
+            (when url
+              (concat "&url_selector=" (url-hexify-string url)))
+            (when url-pattern
+              (concat "&url_pattern=" (url-hexify-string url-pattern)))
+            (when title-cleanup
+              (concat "&title_cleanup=" (url-hexify-string title-cleanup)))
+            (when content-cleanup
+              (concat "&content_cleanup=" (url-hexify-string content-cleanup)))
+            (when cookie
+              (concat "&cookie=" (url-hexify-string cookie)))
+            (when author
+              (concat "&author_selector=" (url-hexify-string author)))
+            (when category
+              (concat "&category_selector=" (url-hexify-string category)))
+            (concat "&remove_styling=" (when remove-styling "on"))))
+
+  (defun my/rss-hub-generator (router &optional limit fulltext brief
+                                      disable-sorted opencc scihub
+                                      filter-case-sensitive filter
+                                      filter-title filter-description
+                                      filter-author filter-category
+                                      filter-time filterout filterout-title
+                                      filterout-description filterout-author
+                                      filterout-category)
+    "Generate feed via RSSHub."
+    (concat my/rss-hub-server router
+            (if (seq-contains-p router ??) "&" "?")
+            (string-join
+             `(,(when limit
+                  (concat "limit=" (number-to-string limit)))
+               ,(when fulltext "mode=fulltext")
+               )
+             "&")))
 
   (load-file (file-name-concat user-emacs-directory "init-rss.el.gpg"))
 
@@ -713,7 +784,7 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
 
 (use-package dictionary
   :bind
-  (:map my-global-prefix-map
+  (:map my/global-prefix-map
         ("d" . dictionary-search))
   :custom
   (dictionary-server "dict.tw")
@@ -746,6 +817,11 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
   :config
   (defvar my/mpc-prefix-map (make-sparse-keymap)
     "A keymap for mpc."))
+
+(use-package avoid :defer 15
+  :if (not (eq system-type 'android))
+  :config
+  (mouse-avoidance-mode 'exile))
 
 (use-package org
   :bind-keymap
