@@ -208,24 +208,9 @@ optional:
 
   (keymap-global-set "C-z" 'window-swap-states)
 
-  (keymap-global-set "ò" "~")
-  (keymap-global-set "ó" "`")
-  (keymap-global-set "ô" "|")
-  (keymap-global-set "õ" "^")
-  (keymap-global-set "ö" "_")
-  (keymap-global-set "ō" "=")
-  (keymap-global-set "œ" "\\")
-  (keymap-global-set "ø" "#")
-
-  (keymap-global-set "à" "{")
-  (keymap-global-set "á" "}")
-  (keymap-global-set "â" "[")
-  (keymap-global-set "ã" "]")
-  (keymap-global-set "ä" "<")
-  (keymap-global-set "å" ">")
-  (keymap-global-set "ā" 'clipboard-kill-region)
-  (keymap-global-set "æ" 'clipboard-kill-ring-save)
-  (keymap-global-set "§" 'clipboard-yank))
+  (keymap-global-set "H-x" 'clipboard-kill-region)
+  (keymap-global-set "H-c" 'clipboard-kill-ring-save)
+  (keymap-global-set "H-v" 'clipboard-yank))
 
 (use-package minibuffer
   :custom
@@ -304,6 +289,9 @@ optional:
   (isearch-repeat-on-direction-change t))
 
 (use-package files
+  :bind
+  (:map my/global-prefix-map
+	("r" . 'rename-visited-file))
   :custom
   (major-mode-remap-alist
    '((yaml-mode . yaml-ts-mode)
@@ -336,6 +324,11 @@ optional:
   (unless (eq system-type 'android)
     (tool-bar-mode -1)))
 
+(use-package speedbar
+  :bind
+  (:map my/global-prefix-map
+	("b" . 'speedbar)))
+
 (use-package elec-pair
   :hook ((prog-mode minibuffer-mode inferior-emacs-lisp-mode sql-interactive-mode) . electric-pair-local-mode))
 
@@ -344,6 +337,7 @@ optional:
   :hook emacs-startup
   :custom
   (windmove-create-window t)
+  (windmove-wrap-around t)
   :config
   (windmove-default-keybindings)
   (windmove-display-default-keybindings)
@@ -383,9 +377,18 @@ optional:
   (desktop-auto-save-timeout 600))
 
 (use-package midnight :defer 60
-  :if (eq system-type 'android)
   :custom
   (midnight-delay 14400)
+  (clean-buffer-list-kill-buffer-gnames
+   '("*Help*" "*Apropos*"
+     "*Ibuffer*" "*Buffer List*"
+     "*Compile-Log*" "*Pp Eval Output*"
+     "*Async Shell Command*" "*Shell Command Output*"
+     "*Directory*" "*Calculator*" "*Calc Trail*"
+     "*vc*" "*vc-diff*" "*diff*"))
+  :bind
+  (:map my/global-prefix-map
+	("k" . 'clean-buffer-list))
   :config
   (midnight-mode))
 
@@ -464,17 +467,30 @@ optional:
             "/?action=display&format=Atom&bridge=" bridge))
 
   (defun my/rss-bridge-reducer (url percentage)
-    "Generate atom feed via rss-bridge."
+    "Reduce rss feed via rss-bridge."
     (concat (my/rss-bridge-bridge "FeedReducerBridge")
             "&percentage=" percentage
             "&url=" (url-hexify-string url)))
 
   (defun my/rss-bridge-css-expander (url limit selector)
-    "Generate atom feed via rss-bridge."
+    "Expand rss feed via rss-bridge."
     (concat (my/rss-bridge-bridge "CssSelectorFeedExpanderBridge")
             "&limit=" limit
             "&feed=" (url-hexify-string url)
             "&content_selector=" (url-hexify-string selector)))
+
+  (defun my/rss-bridge-merger (feeds limit name)
+    "Merge rss feed via rss-bridge."
+    (concat (my/rss-bridge-bridge "FeedMergeBridge")
+            "&feed_name=" name
+            "&limit=" limit
+            (let ((m 48))
+              (mapconcat
+               (lambda (feed)
+                 (setq m (+ m 1))
+                 (concat "&feed_" (string m) "="
+                         (url-hexify-string feed)))
+               feeds))))
 
   (load-file (file-name-concat user-emacs-directory "init-rss.el.gpg"))
 
