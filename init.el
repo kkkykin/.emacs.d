@@ -70,18 +70,25 @@
     "Randomize setup faces."
     (when (display-graphic-p)
       (let* ((fonts (remove (face-attribute 'default :family) my/fonts-list))
-	     (font (cl-loop for ft = (seq-random-elt fonts)
-			    always fonts
-			    do (delete ft fonts)
-			    when (find-font (font-spec :name ft))
-			    return ft))
-	     (height (cond ((string= font "LXGW WenKai Mono") '(198 108 140))
-			   ((string= font "Sarasa Mono SC") '(188 108 130))
-			   ((string-prefix-p "Unifont" font) '(198 108 142)))))
-	(set-face-attribute 'default nil :font font :height
-			    (cond ((< (display-pixel-width) 1920) (car height))
-				  ((> (display-pixel-width) 1920) (caddr height))
-				  (t (cadr height)))))
+             (font (cl-loop for ft = (seq-random-elt fonts)
+                            always fonts
+                            do (delete ft fonts)
+                            when (find-font (font-spec :name ft))
+                            return ft))
+             (size (cond ((string= font "LXGW WenKai Mono") '("26" "14" "18"))
+                         ((string= font "Sarasa Mono SC") '("24" "14" "17"))
+                         ((string-prefix-p "Unifont" font) '("26" "14" "18"))))
+             (height (cond ((string= font "LXGW WenKai Mono") '(198 108 140))
+                           ((string= font "Sarasa Mono SC") '(188 108 130))
+                           ((string-prefix-p "Unifont" font) '(198 108 142)))))
+        ;; (add-to-list 'default-frame-alist
+        ;;              `(font . ,(cond ((< (display-pixel-width) 1920) (concat font "-" (car size)))
+        ;;                              ((> (display-pixel-width) 1920) (concat font "-" (caddr size)))
+        ;;                              (t (concat font "-" (cadr size))))))
+        (set-face-attribute 'default nil :font font :height
+                            (cond ((< (display-pixel-width) 1920) (car height))
+                                  ((> (display-pixel-width) 1920) (caddr height))
+                                  (t (cadr height)))))
 
       (load-theme 'leuven)))
 
@@ -335,8 +342,12 @@ optional:
 (use-package windmove
   :if (not (eq system-type 'android))
   :hook emacs-startup
+  :custom
+  (windmove-create-window t)
   :config
-  (windmove-default-keybindings 'control)
+  (windmove-default-keybindings)
+  (windmove-display-default-keybindings)
+  (windmove-delete-default-keybindings)
   (windmove-swap-states-default-keybindings '(shift control)))
 
 (use-package server :defer 5
