@@ -31,6 +31,7 @@
   (scroll-bar-mode nil)
   (blink-cursor-mode nil)
   (column-number-mode t)
+  (global-prettify-symbols-mode t)
   (display-line-numbers-width 3)
   (use-short-answers t)
   (word-wrap-by-category t)
@@ -328,8 +329,10 @@ optional:
   (:map my/global-prefix-map
 	("b" . 'speedbar)))
 
-(use-package elec-pair
-  :hook ((prog-mode minibuffer-mode inferior-emacs-lisp-mode sql-interactive-mode) . electric-pair-local-mode))
+(use-package electric
+  :custom
+  (electric-pair-mode t)
+  :hook ((text-mode fundamental-mode) . (lambda () (electric-pair-local-mode -1))))
 
 (use-package windmove
   :if (not (eq system-type 'android))
@@ -371,6 +374,10 @@ optional:
   :hook (emacs-startup . desktop-save-mode)
   :custom
   (desktop-auto-save-timeout 600))
+
+(use-package hideshow
+  :hook ((prog-mode . hs-minor-mode)
+         ((ediff-prepare-buffer vc-before-checkin) . turn-off-hideshow)))
 
 (use-package midnight :defer 60
   :custom
@@ -1001,6 +1008,9 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
                      "/tmp/" "/ssh:" ,(concat package-user-dir "/.*-autoloads\\.el\\'"))))
 
 (use-package esh-mode
+  :bind
+  (:map my/global-prefix-map
+        ("e" . eshell))
   :custom
   (eshell-scroll-to-bottom-on-output 'others))
 
