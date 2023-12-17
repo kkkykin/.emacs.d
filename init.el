@@ -10,15 +10,15 @@
   ("C-x j" . my/global-prefix-map)
   :bind
   (:map global-map
-	([remap eval-expression] . pp-eval-expression)
-	([remap eval-last-sexp] . pp-eval-last-sexp)
-	("C-c d" . 'duplicate-dwim))
+        ([remap eval-expression] . pp-eval-expression)
+        ([remap eval-last-sexp] . pp-eval-last-sexp)
+        ("C-c d" . 'duplicate-dwim))
   (:map my/global-prefix-map
-	("p" . 'delete-pair)
-	("u" . 'raise-sexp)
-    ("'" . 'my/insert-quotations)
-    ("\"" . 'my/insert-quotes)
-    ("{" . 'my/insert-curlybracket))
+        ("p" . 'delete-pair)
+        ("u" . 'raise-sexp)
+        ("'" . 'my/insert-quotations)
+        ("\"" . 'my/insert-quotes)
+        ("{" . 'my/insert-curlybracket))
   :custom
   (inhibit-splash-screen t)
   (initial-major-mode 'fundamental-mode)
@@ -47,7 +47,6 @@
   (bookmark-save-flag 1)
   ;; (mouse-1-click-follows-link -450 "click set point, long press do action")
   (reb-re-syntax 'string)
-  (sentence-end-double-space nil "Fix archaic defaults")
 
   ;; long line performance https://emacs-china.org/t/topic/25811/9
   (bidi-display-reordering nil)
@@ -153,6 +152,8 @@ Leave point after open-bracket."
     "/data/data/com.termux/files"
     "termux root path")
 
+  (setenv "SSH_AUTH_SOCK" (string-trim-right (shell-command-to-string "gpgconf --homedir /data/data/com.termux/files/home/.gnupg --list-dirs agent-ssh-socket")))
+
   ;; todo
   (defun my/mpv-intent (scheme &optional sub)
     "http://mpv-android.github.io/mpv-android/intent.html
@@ -194,11 +195,6 @@ optional:
     (add-hook hook 'my/bare-keyboard))
   (add-hook 'focus-out-hook 'my/normal-keyboard)
 
-  (setenv "SSH_AUTH_SOCK"
-          (string-trim-right
-           (shell-command-to-string
-            "gpgconf --homedir /data/data/com.termux/files/home/.gnupg --list-dirs agent-ssh-socket")))
-
   (use-package touch-screen
     :custom
     (touch-screen-display-keyboard t))
@@ -215,18 +211,25 @@ optional:
 (use-package minibuffer
   :custom
   (enable-recursive-minibuffers t)
-  ;; (insert-default-directory nil "Affect fido shortcut, and dired-dwim default")
   (resize-mini-windows t)
   (history-delete-duplicates t)
   (completions-max-height 20)
   (completions-detailed t)
   (completions-group t)
+
+  ;; ver 30
+  (minibuffer-visible-completions t)
+  (minibuffer-regexp-mode t)
   :hook
   ((emacs-startup . minibuffer-electric-default-mode)
    (emacs-startup . savehist-mode)))
 
 (use-package icomplete
   :hook (emacs-startup . fido-mode))
+
+(use-package completion-preview
+  :if (package-installed-p 'completion-preview)
+  :hook (prog-mode eshell-mode inferior-emacs-lisp-mode))
 
 (use-package help
   :custom
@@ -254,14 +257,14 @@ optional:
   (cua-delete-selection nil))
 
 (use-package display-fill-column-indicator
-  :if (not (eq system-type 'android))
+  :unless (eq system-type 'android)
   :hook prog-mode
   :custom
   (indicate-buffer-boundaries 'left)
   (display-fill-column-indicator-character ?\u254e))
 
 (use-package time :defer 9
-  :if (not (eq system-type 'android))
+  :unless (eq system-type 'android)
   :custom
   (display-time-24hr-format t)
   (display-time-use-mail-icon t)
@@ -270,7 +273,7 @@ optional:
   (display-time))
 
 (use-package battery :defer 10
-  :if (not (eq system-type 'android))
+  :unless (eq system-type 'android)
   :config
   (when (and battery-status-function
              (not (string= "unknown" 
@@ -291,7 +294,7 @@ optional:
 (use-package files
   :bind
   (:map my/global-prefix-map
-	("r" . 'rename-visited-file))
+	    ("r" . 'rename-visited-file))
   :custom
   (major-mode-remap-alist
    '((yaml-mode . yaml-ts-mode)
@@ -327,7 +330,7 @@ optional:
 (use-package speedbar
   :bind
   (:map my/global-prefix-map
-	("b" . 'speedbar)))
+	    ("b" . 'speedbar)))
 
 (use-package electric
   :custom
@@ -335,7 +338,7 @@ optional:
   :hook ((text-mode fundamental-mode) . (lambda () (electric-pair-local-mode -1))))
 
 (use-package windmove
-  :if (not (eq system-type 'android))
+  :unless (eq system-type 'android)
   :hook emacs-startup
   :custom
   (windmove-create-window t)
@@ -347,7 +350,7 @@ optional:
   (windmove-swap-states-default-keybindings '(shift control)))
 
 (use-package server :defer 5
-  :if (not (eq system-type 'android))
+  :unless (eq system-type 'android)
   :config
   (unless (server-running-p)
 	(server-start)))
@@ -363,8 +366,9 @@ optional:
   :custom
   (xref-history-storage 'xref-window-local-history)
   :config
-  (when (string= grep-program "ug")
-    (setq xref-search-program 'ugrep)))
+  (with-eval-after-load 'grep
+    (when (string= grep-program "ug")
+      (setq xref-search-program 'ugrep))))
 
 (use-package abbrev
   :custom
@@ -383,15 +387,18 @@ optional:
   :custom
   (midnight-delay 14400)
   (clean-buffer-list-kill-buffer-gnames
-   '("*Help*" "*Apropos*"
-     "*Ibuffer*" "*Buffer List*"
-     "*Compile-Log*" "*Pp Eval Output*"
+   '("*Help*" "*Apropos*" "*Completions*"
+     "*Ibuffer*" "*Buffer List*" "*buffer-selection*" "*timer-list*"
+     "*Compile-Log*" "*Pp Eval Output*" "*Async-native-compile-log*"
      "*Async Shell Command*" "*Shell Command Output*"
      "*Directory*" "*Calculator*" "*Calc Trail*"
-     "*vc*" "*vc-diff*" "*diff*"))
+     "*vc*" "*vc-diff*" "*diff*" "*xref*"))
+  (clean-buffer-list-kill-regexps
+   '("\\`\\*Man " "\\`\\*Shortdoc "
+     "\\`\\*Newsticker " "\\`\\*newsticker-wget-image-"))
   :bind
   (:map my/global-prefix-map
-	("k" . 'clean-buffer-list))
+	    ("k" . 'clean-buffer-list))
   :config
   (midnight-mode))
 
@@ -400,11 +407,18 @@ optional:
   ;; :config
   ;; (when (eq system-type 'android)
   ;;   (setq project-switch-commands 'project-find-file))
+  ;;   (setopt project-switch-commands #'project-prefix-or-any-command)
   :custom
   (project-kill-buffers-display-buffer-list t))
 
+(use-package vc
+  :custom
+  (vc-display-status 'no-backend)
+  (vc-handled-backends '(SVN Git)))
+
 (use-package python
   :custom
+  (python-indent-block-paren-deeper t)
   (python-shell-dedicated t))
 
 (use-package flymake
@@ -448,6 +462,9 @@ optional:
             (name . "^\\*Newsticker"))))))
 
 (use-package newsticker :defer 20
+  :bind
+  (:map newsticker-treeview-mode-map
+        ("DEL" . 'my/newsticker-treeview-prev-page))
   :custom
   (newsticker-obsolete-item-max-age 864000)
   (newsticker-treeview-date-format "%y.%m.%d, %H:%M")
@@ -460,18 +477,40 @@ optional:
   (newsticker-wget-arguments '("-kqsLm30"))
   :config
 
-  (defcustom my/rss-bridge-server "https://rss-bridge.org/bridge01/"
+  (defcustom my/rss-bridge-server "https://rss-bridge.lewd.tech/"
     "RSS bridge default server."
+    :group 'my
     :type 'string)
 
-  (defcustom my/rss-hub-server "https://rsshub.rssforever.com/"
+  (defcustom my/rss-hub-server "https://rsshub.zzzr.eu.org/"
     "RSS hub default server."
+    :group 'my
+    :type 'string)
+
+  (defcustom my/img-cdn-server-list '("https://images.weserv.nl?url=${href_ue}"
+                                      "https://imageproxy.pimg.tw/resize?url=${href_ue}")
+    "Public Image CDN server."
+    :group 'my
+    :type '(repeat string))
+
+  (defcustom my/img-cdn-server "https://images.weserv.nl?url=${href_ue}"
+    "Default Image CDN server."
+    :group 'my
     :type 'string)
 
   (defun my/rss-bridge-generator (bridge)
     "Generate atom feed via rss-bridge."
     (concat my/rss-bridge-server
             "?action=display&format=Atom&bridge=" bridge))
+
+  (defun my/rss-bridge-wp (blog limit &optional content)
+    "Returns the newest full posts of a WordPress powered website."
+    (concat (my/rss-bridge-generator "WordPressBridge")
+            "&url=" (url-hexify-string blog)
+            "&limit=" (number-to-string limit)
+            (when content (concat "&content_selector=" (url-hexify-string content)))))
+  ;; todo
+  ;; (defun my/rss-bridge-filter ())
 
   (defun my/rss-bridge-reducer (feed percentage)
     "Choose a percentage of a feed you want to see."
@@ -488,13 +527,46 @@ optional:
             "&feed=" (url-hexify-string feed)
             "&limit=" (number-to-string limit)
             "&content_selector=" (url-hexify-string content)
-            (when content-cleanup
-              (concat "&content_cleanup="
-                      (url-hexify-string content-cleanup)))
-            (concat "&dont_expand_metadata="
-                    (when dont-expand-metadata "on"))
-            (concat "&discard_thumbnail="
-                    (when discard-thumbnail "on"))))
+            (when content-cleanup (concat "&content_cleanup=" (url-hexify-string content-cleanup)))
+            (concat "&dont_expand_metadata=" (when dont-expand-metadata "on"))
+            (concat "&discard_thumbnail=" (when discard-thumbnail "on"))))
+
+  (defun my/rss-bridge-css-selector (home limit entry load-pages &rest args)
+    "Convert any site to RSS feed using CSS selectors. The bridge first
+selects the element describing the article entries. It then extracts
+the links to the articles from these elements. It then, depending on
+the setting 'load_pages', either parses the selected elements,
+or downloads the page for each article and parses those. Parsing the
+elements or page is done using the provided selectors."
+(let ((content (plist-get args :content))
+      (title (plist-get args :title))
+      (time (plist-get args :time))
+      (time-fmt (plist-get args :time-fmt))
+      (url (plist-get args :url))
+      (url-pattern (plist-get args :url-pattern))
+      (title-cleanup (plist-get args :title-cleanup))
+      (content-cleanup (plist-get args :content-cleanup))
+      (cookie (plist-get args :cookie))
+      (author (plist-get args :author))
+      (cat (plist-get args :cat))
+      (rm-style (plist-get args :rm-style)))
+  (concat (my/rss-bridge-generator "CssSelectorComplexBridge")
+          "&home_page=" (url-hexify-string home)
+          "&limit=" (number-to-string limit)
+          "&entry_element_selector=" (url-hexify-string entry)
+          "&use_article_pages=" (when load-pages "on")
+          (when content (concat "&article_page_content_selector=" (url-hexify-string content)))
+          (when title (concat "&title_selector=" (url-hexify-string title)))
+          (when time (concat "&time_selector=" (url-hexify-string time)))
+          (when time-fmt (concat "&time_format=" (url-hexify-string time-fmt)))
+          (when url (concat "&url_selector=" (url-hexify-string url)))
+          (when url-pattern (concat "&url_pattern=" (url-hexify-string url-pattern)))
+          (when title-cleanup (concat "&title_cleanup=" (url-hexify-string title-cleanup)))
+          (when content-cleanup (concat "&content_cleanup=" (url-hexify-string content-cleanup)))
+          (when cookie (concat "&cookie=" (url-hexify-string cookie)))
+          (when author (concat "&author_selector=" (url-hexify-string author)))
+          (when cat (concat "&category_selector=" (url-hexify-string cat)))
+          (concat "&remove_styling=" (when rm-style "on")))))
 
   (defun my/rss-bridge-merger (feeds limit name)
     "This bridge merges two or more feeds into a single feed. Max 10
@@ -510,65 +582,94 @@ items are fetched from each feed."
             "&limit=" (number-to-string limit)
             "&feed_name=" (url-hexify-string name)))
 
-  (defun my/rss-bridge-css-selector (home limit entry use-article-pages
-                                          &optional content title
-                                          time time-format url
-                                          url-pattern title-cleanup
-                                          content-cleanup cookie author 
-                                          category remove-styling)
-    "Convert any site to RSS feed using CSS selectors. The bridge first
-selects the element describing the article entries. It then extracts
-the links to the articles from these elements. It then, depending on
-the setting 'use_article_pages', either parses the selected elements,
-or downloads the page for each article and parses those. Parsing the
-elements or page is done using the provided selectors."
-    (concat (my/rss-bridge-generator "CssSelectorComplexBridge")
-            "&home_page=" (url-hexify-string home)
-            "&limit=" (number-to-string limit)
-            "&entry_element_selector=" (url-hexify-string entry)
-            "&use_article_pages=" (when use-article-pages "on")
-            (when content
-              (concat "&article_page_content_selector="
-                      (url-hexify-string content)))
-            (when title
-              (concat "&title_selector=" (url-hexify-string title)))
-            (when time
-              (concat "&time_selector=" (url-hexify-string time)))
-            (when time-format
-              (concat "&time_format=" (url-hexify-string time-format)))
-            (when url
-              (concat "&url_selector=" (url-hexify-string url)))
-            (when url-pattern
-              (concat "&url_pattern=" (url-hexify-string url-pattern)))
-            (when title-cleanup
-              (concat "&title_cleanup=" (url-hexify-string title-cleanup)))
-            (when content-cleanup
-              (concat "&content_cleanup=" (url-hexify-string content-cleanup)))
-            (when cookie
-              (concat "&cookie=" (url-hexify-string cookie)))
-            (when author
-              (concat "&author_selector=" (url-hexify-string author)))
-            (when category
-              (concat "&category_selector=" (url-hexify-string category)))
-            (concat "&remove_styling=" (when remove-styling "on"))))
-
-  (defun my/rss-hub-generator (router &optional limit fulltext brief
-                                      disable-sorted opencc scihub
-                                      filter-case-sensitive filter
-                                      filter-title filter-description
-                                      filter-author filter-category
-                                      filter-time filterout filterout-title
-                                      filterout-description filterout-author
-                                      filterout-category)
+  (defun my/rss-hub-generator (router &rest args)
     "Generate feed via RSSHub."
-    (concat my/rss-hub-server router
-            (if (seq-contains-p router ??) "&" "?")
-            (string-join
-             `(,(when limit
-                  (concat "limit=" (number-to-string limit)))
-               ,(when fulltext "mode=fulltext")
-               )
-             "&")))
+    (let* ((fmt (plist-get args :fmt))
+           (main (concat my/rss-hub-server router
+                         (when fmt (concat "." fmt))))
+           (url (url-generic-parse-url main))
+           (limit (plist-get args :limit))
+           (full (plist-get args :full))
+           (brief (plist-get args :brief))
+           (unsort (plist-get args :unsort))
+           (opencc (plist-get args :opencc))
+           (scihub (plist-get args :scihub))
+           (f-uncase (plist-get args :f-uncase))
+           (f (plist-get args :f))
+           (f-title (plist-get args :f-title))
+           (f-desc (plist-get args :f-desc))
+           (f-author (plist-get args :f-author))
+           (f-cat (plist-get args :f-cat))
+           (f-time (plist-get args :f-time))
+           (fo (plist-get args :fo))
+           (fo-title (plist-get args :fo-title))
+           (fo-desc (plist-get args :fo-desc))
+           (fo-author (plist-get args :fo-author))
+           (fo-cat (plist-get args :fo-cat))
+           (img-tp (plist-get args :img-tp))
+           (domain (plist-get args :domain))
+           (code (auth-source-pick-first-password :host (url-host url))))
+      (concat main "?"
+              (string-join
+               (delq
+                nil
+                `(,(when limit (concat "limit=" (number-to-string limit)))
+                  ,(when full "mode=fulltext")
+                  ,(when brief (concat "brief=" (number-to-string brief)))
+                  ,(when unsort "sorted=false")
+                  ,(when opencc (concat "opencc=" opencc))
+                  ,(when scihub "scihub=1")
+                  ,(when f-uncase "filter_case_sensitive=false")
+                  ,(when f (concat "filter=" (url-hexify-string f)))
+                  ,(when f-title (concat "filter_title=" (url-hexify-string f-title)))
+                  ,(when f-desc (concat "filter_description=" (url-hexify-string f-desc)))
+                  ,(when f-author (concat "filter_author=" (url-hexify-string f-author)))
+                  ,(when f-cat (concat "filter_category=" (url-hexify-string f-cat)))
+                  ,(when f-time (concat "filter_time=" (url-hexify-string f-time)))
+                  ,(when fo (concat "filterout=" (url-hexify-string fo)))
+                  ,(when fo-title (concat "filterout_title=" (url-hexify-string fo-title)))
+                  ,(when fo-desc (concat "filterout_description=" (url-hexify-string fo-desc)))
+                  ,(when fo-author (concat "filterout_author=" (url-hexify-string fo-author)))
+                  ,(when fo-cat (concat "filterout_category=" (url-hexify-string fo-cat)))
+                  ,(when img-tp (concat "image_hotlink_template=" (url-hexify-string my/img-cdn-server)))
+                  ,(when domain (concat "domain=" (url-hexify-string domain)))
+                  ,(when code (concat "code=" (md5 (concat (url-filename url) code))))))
+               "&"))))
+
+  (defun my/rss-hub-transform (url s-fmt &rest args)
+    "Pass URL and transformation rules to convert HTML/JSON into RSS."
+    (let ((title (plist-get args :t))
+          (item (plist-get args :i))
+          (item-title (plist-get args :it))
+          (item-title-a (plist-get args :ita))
+          (item-link (plist-get args :il))
+          (item-link-a (plist-get args :ila))
+          (item-desc (plist-get args :id))
+          (item-desc-a (plist-get args :ida))
+          (item-pub (plist-get args :ip))
+          (item-pub-a (plist-get args :ipa))
+          (extra (plist-get args :extra)))
+      (apply
+       #'my/rss-hub-generator
+       (concat "rsshub/transform/" s-fmt "/" (url-hexify-string url) "/"
+               (string-join
+                (delq
+                 nil
+                 `(,(when title (concat "title=" (url-hexify-string title)))
+                   ,(when item (concat "item=" (url-hexify-string item)))
+                   ,(when item-title (concat "itemTitle=" (url-hexify-string item-title)))
+                   ,(when item-title-a (concat "itemTitleAttr=" (url-hexify-string item-title-a)))
+                   ,(when item-link (concat "itemLink=" (url-hexify-string item-link)))
+                   ,(when item-link-a (concat "itemLinkAttr=" (url-hexify-string item-link-a)))
+                   ,(when item-desc (concat "itemDesc=" (url-hexify-string item-desc)))
+                   ,(when item-desc-a (concat "itemDescAttr=" (url-hexify-string item-desc-a)))
+                   ,(when item-pub (concat "itemPubDate=" (url-hexify-string item-pub)))
+                   ,(when item-pub-a (concat "itemPubDateAttr=" (url-hexify-string item-pub-a)))))
+                "&")) extra)
+      ))
+
+  (unless (file-exists-p (file-name-concat newsticker-dir "saved"))
+    (make-directory (file-name-concat newsticker-dir "saved") t))
 
   (load-file (file-name-concat user-emacs-directory "init-rss.el.gpg"))
 
@@ -608,13 +709,40 @@ elements or page is done using the provided selectors."
     args)
   (advice-add 'newsticker--get-news-by-wget :filter-args #'my/advice-newsticker--get-news-by-wget)
 
+  (defun my/newsticker-treeview-prev-page ()
+    "Scroll item buffer."
+    (interactive)
+    (save-selected-window
+      (select-window (newsticker--treeview-item-window) t)
+      (condition-case nil
+          (scroll-down nil)
+        (error
+         (goto-char (point-max))))))
+
+  (defun my/advice-newsticker-save-item (feed item)
+    "Save FEED ITEM."
+    (interactive)
+    (let ((filename
+           (read-string "Filename: "
+                        (file-name-concat newsticker-dir
+                                          "saved"
+                                          (replace-regexp-in-string
+                                           "[: ]+" "_"
+                                           (concat feed "--"
+                                                   (newsticker--title item)
+                                                   ".html"))))))
+      (with-temp-buffer
+        (insert (newsticker--desc item))
+        (write-file filename t))))
+  (advice-add 'newsticker-save-item :before-until #'my/advice-newsticker-save-item)
+
   (newsticker-start t))
 
 (use-package eww
   :custom
-  (eww-search-prefix "https://www.mojeek.com/search?q=" "or https://wiby.org/?q=")
+  (eww-search-prefix "https://reverse.zzzr.eu.org/https/html.duckduckgo.com/html/?q=" "https://www.mojeek.com/search?q= or https://wiby.org/?q=")
   (eww-auto-rename-buffer 'title)
-  (shr-inhibit-images t "images maybe hang in newsticker")
+  ;; (shr-inhibit-images t "images maybe hang in newsticker")
   :hook
   (eww-mode . (lambda ()
                 (setq-local shr-inhibit-images nil)))
@@ -669,9 +797,40 @@ elements or page is done using the provided selectors."
   (add-hook 'eww-after-render-hook 'my/eww-render-hook))
 
 (use-package tramp
+  :bind
+  (:map my/global-prefix-map
+        ("c" . 'tramp-cleanup-connection))
   :custom
+  (tramp-verbose 2)
   (tramp-use-scp-direct-remote-copying t)
+  (debug-ignored-errors (cons 'remote-file-error debug-ignored-errors))
   :config
+
+  ;; (add-to-list 'tramp-smb-options "client min protocol=NT1")
+
+  ;; ver 30.1
+  (unless (functionp 'tramp-revert-buffer-with-sudo)
+    (defun tramp-revert-buffer-with-sudo ()
+      "Revert current buffer to visit with \"sudo\" permissions.
+An alternative method could be chosen with `tramp-file-name-with-method'.
+If the buffer visits a file, the file is replaced.
+If the buffer runs `dired', the buffer is reverted."
+      (interactive)
+      (cond
+       ((buffer-file-name)
+        (find-alternate-file (tramp-file-name-with-sudo (buffer-file-name))))
+       ((tramp-dired-buffer-p)
+        (dired-unadvertise (expand-file-name default-directory))
+        (setq default-directory (tramp-file-name-with-sudo default-directory)
+	          list-buffers-directory
+	          (tramp-file-name-with-sudo list-buffers-directory))
+        (if (consp dired-directory)
+	        (setcar
+	         dired-directory (tramp-file-name-with-sudo (car dired-directory)))
+          (setq dired-directory (tramp-file-name-with-sudo dired-directory)))
+        (dired-advertise)
+        (revert-buffer)))))
+
   (connection-local-set-profile-variables
    'tramp-connection-local-termux-profile
    `((tramp-remote-path
@@ -690,6 +849,7 @@ elements or page is done using the provided selectors."
 
 (use-package shell
   :custom
+  (shell-get-old-input-include-continuation-lines t)
   (shell-kill-buffer-on-exit t))
 
 (use-package dired
@@ -706,7 +866,7 @@ elements or page is done using the provided selectors."
   :bind (:map dired-mode-map
               ("× μ" . my/mpv-image)
               ("C-c d" . my/dired-duplicate-file)
-              ("e" . my/dired-dwim)
+              ("f" . my/dired-dwim)
               ("<mouse-2>" . dired-mouse-find-file))
   :config
   (defun my/dired-dwim ()
@@ -826,7 +986,7 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
     "A keymap for mpc."))
 
 (use-package avoid :defer 15
-  :if (not (eq system-type 'android))
+  :unless (eq system-type 'android)
   :config
   (mouse-avoidance-mode 'exile))
 
@@ -948,7 +1108,7 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
 
 (use-package calendar
   :custom
-  (diary-file "~/org/diary"))
+  (diary-file (file-name-concat org-directory "diary")))
 
 (use-package image
   :custom
@@ -988,9 +1148,26 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
   (unless (eq system-type 'android)
     (setq ediff-split-window-function 'split-window-horizontally)))
 
+(use-package rmail
+  :custom
+  (rmail-remote-password-required t)
+  (send-mail-command 'smtpmail-send-it))
+
 (use-package gnus
   :custom
+  (message-send-mail-function 'smtpmail-send-it)
   (gnus-home-directory "~/.emacs.d/gnus/"))
+
+(use-package remember
+  :custom
+  (remember-diary-file (file-name-concat org-directory "remember"))
+  :custom
+  (add-to-list 'remember-handler-functions 'remember-diary-extract-entries))
+
+(use-package forms)
+(use-package ses)
+(use-package todo-mode)
+(use-package skeleton)
 
 (use-package tab-bar :defer 2
   :custom
@@ -1034,21 +1211,20 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
   (url-cookie-untrusted-urls '(".*"))
   :config
 
-  (defcustom my/proxy-domain '("\\(\\.\\|^\\)google.com$"
-                               "\\(\\.\\|^\\)ycombinator.com$")
+  (defcustom my/proxy-domain '("\\(\\.\\|^\\)google.com$")
     "Domain through proxy."
-    :group 'centaur
+    :group 'my
     :type '(repeat regexp))
 
   ;; Network Proxy: from centaur
   (defcustom my/centaur-proxy "127.0.0.1:10807"
     "Set HTTP/HTTPS proxy."
-    :group 'centaur
+    :group 'my
     :type 'string)
 
   (defcustom my/centaur-socks-proxy "127.0.0.1:10808"
     "Set SOCKS proxy."
-    :group 'centaur
+    :group 'my
     :type 'string)
 
   (defun my/proxy-http-show ()
@@ -1211,6 +1387,10 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
   :if (package-installed-p 'which-key)
   :config
   (which-key-mode))
+
+(use-package gnuplot
+  :if (package-installed-p 'gnuplot)
+  :mode ("\\.gp\\'" . gnuplot-mode))
 
 (use-package denote
   :if (package-installed-p 'denote)
