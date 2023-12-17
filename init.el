@@ -121,7 +121,6 @@ Leave point after open-bracket."
 (when (eq system-type 'windows-nt)
   "setup for windowsNT"
   (setq shr-use-fonts nil
-        w32-use-native-image-API t
         find-program "ind")
 
   (add-to-list 'exec-suffixes ".ps1")
@@ -493,7 +492,7 @@ optional:
     :group 'my
     :type '(repeat string))
 
-  (defcustom my/img-cdn-server "https://images.weserv.nl?url=${href_ue}"
+  (defcustom my/img-cdn-server "https://imageproxy.pimg.tw/resize?url=${href_ue}"
     "Default Image CDN server."
     :group 'my
     :type 'string)
