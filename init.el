@@ -474,15 +474,38 @@ optional:
   (newsticker-retrieval-interval 1800)
   (newsticker-retrieval-method 'extern)
   (newsticker-wget-name "curl")
-  (newsticker-wget-arguments '("-kqsLm30"))
+  (newsticker-wget-arguments `("-kqsLm30" "--doh-url" ,my/doh-server))
   :config
 
-  (defcustom my/rss-bridge-server "https://rss-bridge.lewd.tech/"
+  (defcustom my/rss-bridge-list '("https://rss-bridge.org/bridge01/"
+                                  ;; "https://rss-bridge.lewd.tech/"
+                                  "https://rss.nixnet.services/"
+                                  "https://wtf.roflcopter.fr/rss-bridge/"
+                                  "https://rssbridge.flossboxin.org.in/")
+    "Public RSS-Bridge Server."
+    :group 'my
+    :type '(repeat string))
+
+  (defcustom my/rss-hub-list '("https://rsshub.zzzr.eu.org/"
+                               "https://rsshub.rssforever.com/"
+                               "https://rsshub.feeded.xyz/"
+                               "https://hub.slarker.me/"
+                               "https://rsshub.liumingye.cn/"
+                               "https://rsshub-instance.zeabur.app/"
+                               "https://rss.fatpandac.com/"
+                               "https://rsshub.pseudoyu.com/"
+                               "https://rsshub.friesport.ac.cn/"
+                               "https://rsshub.atgw.io/")
+    "Public RSSHub Server."
+    :group 'my
+    :type '(repeat string))
+
+  (defcustom my/rss-bridge-server (car my/rss-bridge-list)
     "RSS bridge default server."
     :group 'my
     :type 'string)
 
-  (defcustom my/rss-hub-server "https://rsshub.zzzr.eu.org/"
+  (defcustom my/rss-hub-server (car my/rss-hub-list)
     "RSS hub default server."
     :group 'my
     :type 'string)
@@ -538,35 +561,35 @@ the links to the articles from these elements. It then, depending on
 the setting 'load_pages', either parses the selected elements,
 or downloads the page for each article and parses those. Parsing the
 elements or page is done using the provided selectors."
-(let ((content (plist-get args :content))
-      (title (plist-get args :title))
-      (time (plist-get args :time))
-      (time-fmt (plist-get args :time-fmt))
-      (url (plist-get args :url))
-      (url-pattern (plist-get args :url-pattern))
-      (title-cleanup (plist-get args :title-cleanup))
-      (content-cleanup (plist-get args :content-cleanup))
-      (cookie (plist-get args :cookie))
-      (author (plist-get args :author))
-      (cat (plist-get args :cat))
-      (rm-style (plist-get args :rm-style)))
-  (concat (my/rss-bridge-generator "CssSelectorComplexBridge")
-          "&home_page=" (url-hexify-string home)
-          "&limit=" (number-to-string limit)
-          "&entry_element_selector=" (url-hexify-string entry)
-          "&use_article_pages=" (when load-pages "on")
-          (when content (concat "&article_page_content_selector=" (url-hexify-string content)))
-          (when title (concat "&title_selector=" (url-hexify-string title)))
-          (when time (concat "&time_selector=" (url-hexify-string time)))
-          (when time-fmt (concat "&time_format=" (url-hexify-string time-fmt)))
-          (when url (concat "&url_selector=" (url-hexify-string url)))
-          (when url-pattern (concat "&url_pattern=" (url-hexify-string url-pattern)))
-          (when title-cleanup (concat "&title_cleanup=" (url-hexify-string title-cleanup)))
-          (when content-cleanup (concat "&content_cleanup=" (url-hexify-string content-cleanup)))
-          (when cookie (concat "&cookie=" (url-hexify-string cookie)))
-          (when author (concat "&author_selector=" (url-hexify-string author)))
-          (when cat (concat "&category_selector=" (url-hexify-string cat)))
-          (concat "&remove_styling=" (when rm-style "on")))))
+    (let ((content (plist-get args :content))
+          (title (plist-get args :title))
+          (time (plist-get args :time))
+          (time-fmt (plist-get args :time-fmt))
+          (url (plist-get args :url))
+          (url-pattern (plist-get args :url-pattern))
+          (title-cleanup (plist-get args :title-cleanup))
+          (content-cleanup (plist-get args :content-cleanup))
+          (cookie (plist-get args :cookie))
+          (author (plist-get args :author))
+          (cat (plist-get args :cat))
+          (rm-style (plist-get args :rm-style)))
+      (concat (my/rss-bridge-generator "CssSelectorComplexBridge")
+              "&home_page=" (url-hexify-string home)
+              "&limit=" (number-to-string limit)
+              "&entry_element_selector=" (url-hexify-string entry)
+              "&use_article_pages=" (when load-pages "on")
+              (when content (concat "&article_page_content_selector=" (url-hexify-string content)))
+              (when title (concat "&title_selector=" (url-hexify-string title)))
+              (when time (concat "&time_selector=" (url-hexify-string time)))
+              (when time-fmt (concat "&time_format=" (url-hexify-string time-fmt)))
+              (when url (concat "&url_selector=" (url-hexify-string url)))
+              (when url-pattern (concat "&url_pattern=" (url-hexify-string url-pattern)))
+              (when title-cleanup (concat "&title_cleanup=" (url-hexify-string title-cleanup)))
+              (when content-cleanup (concat "&content_cleanup=" (url-hexify-string content-cleanup)))
+              (when cookie (concat "&cookie=" (url-hexify-string cookie)))
+              (when author (concat "&author_selector=" (url-hexify-string author)))
+              (when cat (concat "&category_selector=" (url-hexify-string cat)))
+              (concat "&remove_styling=" (when rm-style "on")))))
 
   (defun my/rss-bridge-merger (feeds limit name)
     "This bridge merges two or more feeds into a single feed. Max 10
@@ -736,11 +759,6 @@ items are fetched from each feed."
         (insert (newsticker--desc item))
         (write-file filename t))))
   (advice-add 'newsticker-save-item :before-until #'my/advice-newsticker-save-item)
-
-  (when my/doh-server
-    (setq newsticker-wget-arguments
-          (append `("--doh-url" ,my/doh-server)
-                  newsticker-wget-arguments)))
 
   (newsticker-start t))
 
@@ -1208,7 +1226,9 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
 (use-package outline
   :custom
   (outline-minor-mode-use-buttons 'in-margins)
-  (outline-minor-mode-cycle t))
+  (outline-minor-mode-cycle t)
+  :config
+  (require 'foldout))
 
 (use-package emacs-news-mode
   :bind
@@ -1225,12 +1245,48 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
   (url-mime-language-string "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6")
   (url-cookie-trusted-urls '())
   (url-cookie-untrusted-urls '(".*"))
-  :config
+  :init
 
-  (defcustom my/doh-server "https://1.1.1.1/dns-query"
+  (defun my/internet-up-p (&optional host callback)
+    "Test connectivity via ping."
+    (let* ((args (if (eq system-type 'windows-nt)
+                     '("-n" "1" "-w" "1") '("-c1" "-W1")))
+           (proc (apply #'start-process "internet-test" nil "ping"
+                        (if host host "baidu.com") args))
+           (callback (if callback callback
+                       (lambda (&rest cbargs)
+                         (message (if cbargs "Up" "Down"))))))
+      (set-process-sentinel proc (lambda (proc signal)
+                                   (apply callback
+                                          (if (= 0 (process-exit-status proc))
+                                              '(t) nil))))))
+
+  (defun my/url-up-p (url &optional callback doh)
+    "Test connectivity via curl."
+    (let* ((args `("-kqsLm10" "-o/dev/null" "-w%{http_code}" ,url
+                   ,@(when doh (list "--doh-url" doh))))
+           (proc (apply #'start-process "url-test" nil "curl" args))
+           (callback (if callback callback
+                       (lambda (&rest cbargs)
+                         (message (if cbargs "Up" "Down"))))))
+      (set-process-filter proc (lambda (proc line)
+                                 (apply callback
+                                        (if (string= "200" line)
+                                            '(t) nil))))))
+
+  (defcustom my/doh-server-list '("https://1.1.1.1/dns-query"
+                                  "https://1.12.12.12/dns-query"
+                                  "https://223.6.6.6/dns-query")
+    "Public DOH Server."
+    :group 'my
+    :type '(repeat string))
+
+  (defcustom my/doh-server (car my/doh-server-list)
     "Default DOH Server."
     :group 'my
     :type 'string)
+
+  :config
 
   (defcustom my/proxy-domain '("\\(\\.\\|^\\)google.com$")
     "Domain through proxy."
