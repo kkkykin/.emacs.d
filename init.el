@@ -128,13 +128,13 @@ Leave point after open-bracket."
   (defun my/run-bash ()
     (interactive)
     (let ((shell-file-name "C:\\Windows\\system32\\bash.exe"))
-	  (shell "*bash*")))
+      (shell "*bash*")))
   (defun my/toggle-shell ()
     "Toggle shell between wsl bash and cmd"
     (interactive)
     (if (string= shell-file-name "C:\\Windows\\system32\\bash.exe")
-	    (setq shell-file-name my/vanilla-shell)
-	  (setq my/vanilla-shell shell-file-name
+        (setq shell-file-name my/vanilla-shell)
+      (setq my/vanilla-shell shell-file-name
             shell-file-name "C:\\Windows\\system32\\bash.exe"))))
 
 (when (eq system-type 'gnu/linux)
@@ -201,8 +201,6 @@ optional:
   (setq select-enable-clipboard nil
         android-pass-multimedia-buttons-to-system t)
 
-  (keymap-global-set "C-z" 'window-swap-states)
-
   (keymap-global-set "H-x" 'clipboard-kill-region)
   (keymap-global-set "H-c" 'clipboard-kill-ring-save)
   (keymap-global-set "H-v" 'clipboard-yank))
@@ -237,15 +235,12 @@ optional:
   (apropos-sort-by-scores t)
   :bind
   (:map help-map
-	("A" . 'apropos-function)
-	("V" . 'apropos-variable)
-	("B" . 'apropos-value)
-	("j" . 'apropos-local-variable)
-	("J" . 'apropos-local-value)
-	("D" . 'info-apropos)
-	("M" . 'describe-keymap)
-	("z" . 'shortdoc)
-	("Z" . 'apropos-library)))
+        ("A" . 'apropos-user-option)
+        ("V" . 'apropos-value)
+        ("D" . 'info-apropos)
+        ("M" . 'describe-keymap)
+        ("z" . 'shortdoc)
+        ("Z" . 'apropos-library)))
 
 (use-package cua-base
   :hook (emacs-startup . cua-mode)
@@ -293,7 +288,7 @@ optional:
 (use-package files
   :bind
   (:map my/global-prefix-map
-	    ("r" . 'rename-visited-file))
+        ("r" . 'rename-visited-file))
   :custom
   (major-mode-remap-alist
    '((yaml-mode . yaml-ts-mode)
@@ -329,7 +324,7 @@ optional:
 (use-package speedbar
   :bind
   (:map my/global-prefix-map
-	    ("b" . 'speedbar)))
+        ("b" . 'speedbar)))
 
 (use-package electric
   :custom
@@ -352,7 +347,13 @@ optional:
   :unless (eq system-type 'android)
   :config
   (unless (server-running-p)
-	(server-start)))
+    (server-start)))
+
+(use-package window
+  :config
+  (add-to-list 'display-buffer-alist '("*Async Shell Command*" display-buffer-no-window (nil)))
+  (when (eq system-type 'android)
+    (keymap-global-set "C-z" 'window-swap-states)))
 
 (use-package grep
   :config
@@ -397,7 +398,7 @@ optional:
      "\\`\\*Newsticker " "\\`\\*newsticker-wget-image-"))
   :bind
   (:map my/global-prefix-map
-	    ("k" . 'clean-buffer-list))
+        ("k" . 'clean-buffer-list))
   :config
   (midnight-mode))
 
@@ -664,7 +665,8 @@ items are fetched from each feed."
                    ,(when item-desc-a (concat "itemDescAttr=" (url-hexify-string item-desc-a)))
                    ,(when item-pub (concat "itemPubDate=" (url-hexify-string item-pub)))
                    ,(when item-pub-a (concat "itemPubDateAttr=" (url-hexify-string item-pub-a)))))
-                "&")) extra)
+                "&"))
+       extra)
       ))
 
   (unless (file-exists-p (file-name-concat newsticker-dir "saved"))
@@ -734,6 +736,11 @@ items are fetched from each feed."
         (insert (newsticker--desc item))
         (write-file filename t))))
   (advice-add 'newsticker-save-item :before-until #'my/advice-newsticker-save-item)
+
+  (when my/doh-server
+    (setq newsticker-wget-arguments
+          (append `("--doh-url" ,my/doh-server)
+                  newsticker-wget-arguments)))
 
   (newsticker-start t))
 
@@ -821,11 +828,11 @@ If the buffer runs `dired', the buffer is reverted."
        ((tramp-dired-buffer-p)
         (dired-unadvertise (expand-file-name default-directory))
         (setq default-directory (tramp-file-name-with-sudo default-directory)
-	          list-buffers-directory
-	          (tramp-file-name-with-sudo list-buffers-directory))
+              list-buffers-directory
+              (tramp-file-name-with-sudo list-buffers-directory))
         (if (consp dired-directory)
-	        (setcar
-	         dired-directory (tramp-file-name-with-sudo (car dired-directory)))
+            (setcar
+             dired-directory (tramp-file-name-with-sudo (car dired-directory)))
           (setq dired-directory (tramp-file-name-with-sudo dired-directory)))
         (dired-advertise)
         (revert-buffer)))))
@@ -990,6 +997,7 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
   (mouse-avoidance-mode 'exile))
 
 (use-package org
+  :init (setq org-directory "~/org")
   :bind-keymap
   ("C-c o" . my/org-prefix-map)
   :bind
@@ -1008,9 +1016,9 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
   (org-replace-disputed-keys t "see `'org-disputed-keys'")
   (org-special-ctrl-k t)
   (org-use-speed-commands t)
-  (org-default-notes-file "~/org/inbox.org")
+  (org-default-notes-file (file-name-concat org-directory "inbox.org"))
   (org-agenda-files `(,org-default-notes-file
-                      "~/org/todo"))
+                      ,(file-name-concat org-directory "todo")))
   (org-refile-use-cache nil)
   (org-archive-mark-done nil)
   (org-archive-location "%s_archive::* Archive")
@@ -1163,6 +1171,7 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
   :custom
   (add-to-list 'remember-handler-functions 'remember-diary-extract-entries))
 
+(use-package pcomplete)
 (use-package forms)
 (use-package ses)
 (use-package todo-mode)
@@ -1188,11 +1197,18 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
   (:map my/global-prefix-map
         ("e" . eshell))
   :custom
-  (eshell-scroll-to-bottom-on-output 'others))
+  (eshell-scroll-to-bottom-on-output 'others)
+  :config
+  (add-to-list 'eshell-modules-list 'eshell-smart))
 
 (use-package comint
   :custom
   (comint-scroll-to-bottom-on-output 'others))
+
+(use-package outline
+  :custom
+  (outline-minor-mode-use-buttons 'in-margins)
+  (outline-minor-mode-cycle t))
 
 (use-package emacs-news-mode
   :bind
@@ -1206,9 +1222,15 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
 (use-package url
   :custom
   (url-privacy-level 'high)
+  (url-mime-language-string "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6")
   (url-cookie-trusted-urls '())
   (url-cookie-untrusted-urls '(".*"))
   :config
+
+  (defcustom my/doh-server "https://1.1.1.1/dns-query"
+    "Default DOH Server."
+    :group 'my
+    :type 'string)
 
   (defcustom my/proxy-domain '("\\(\\.\\|^\\)google.com$")
     "Domain through proxy."
@@ -1290,7 +1312,27 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
     (interactive)
     (if (bound-and-true-p socks-noproxy)
         (proxy-socks-disable)
-      (my/proxy-socks-enable))))
+      (my/proxy-socks-enable)))
+
+  (defun my/url-http-parse-response ()
+    "Parse http response, From 'https://emacs-china.org/t/elisp-http/18432/2'."
+    (set-buffer-multibyte t)
+    (goto-char (point-min))
+    (let ((headers `(("Status"
+                      . ,(progn
+                           (re-search-forward "^[^:]+? \\([[:digit:]]+\\)"
+                                              (pos-eol) t 1)
+                           (match-string 1)))))
+          body)
+      (while (re-search-forward "^\\([^:]*\\): \\(.+\\)"
+                                url-http-end-of-headers t)
+        (push (cons (match-string 1)
+                    (match-string 2))
+              headers))
+      (setq headers (nreverse headers))
+      (goto-char (1+ url-http-end-of-headers))
+      (setq body (buffer-substring (point) (point-max)))
+      (list headers body))))
 
 (use-package filesets :defer 10
   :config
@@ -1360,16 +1402,16 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
 (use-package lua-ts-mode
   :mode "\\.lua\\'")
 
+(use-package nix-ts-mode
+  :if (package-installed-p 'nix-ts-mode)
+  :mode "\\.nix\\'")
+
 (use-package html-ts-mode
   :if (package-installed-p 'html-ts-mode)
   :mode "\\.html\\'"
   :vc (:url "https://github.com/mickeynp/html-ts-mode")
   :config
   (add-to-list 'major-mode-remap-alist '(mhtml-mode . html-ts-mode)))
-
-(use-package nix-ts-mode
-  :if (package-installed-p 'nix-ts-mode)
-  :mode "\\.nix\\'")
 
 (use-package combobulate
   :if (package-installed-p 'combobulate)
@@ -1381,6 +1423,12 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
   :init
   (when (package-installed-p 'html-ts-mode)
     (add-hook 'html-ts-mode-hook 'combobulate-mode)))
+
+(use-package anki-helper
+  :if (package-installed-p 'anki-helper)
+  :mode "\\.org\\'"
+  :vc (:url "https://github.com/Elilif/emacs-anki-helper")
+  :custom (anki-helper-default-deck "anki-helper"))
 
 (use-package which-key :defer 3
   :if (package-installed-p 'which-key)
@@ -1494,12 +1542,6 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
 
 (use-package disk-usage
   :if (package-installed-p 'disk-usage))
-
-(use-package anki-helper
-  :if (package-installed-p 'anki-helper)
-  :mode "\\.org\\'"
-  :vc (:url "https://github.com/Elilif/emacs-anki-helper")
-  :custom (anki-helper-default-deck "anki-helper"))
 
 (use-package org-fc
   :if (package-installed-p 'org-fc))
