@@ -383,6 +383,15 @@ optional:
   :hook ((prog-mode . hs-minor-mode)
          ((ediff-prepare-buffer vc-before-checkin) . turn-off-hideshow)))
 
+(use-package paren
+  :custom
+  (show-paren-when-point-in-periphery t)
+  (show-paren-context-when-offscreen 'overlay))
+
+(use-package which-func :defer 5
+  :config
+  (which-function-mode))
+
 (use-package midnight :defer 60
   :custom
   (midnight-delay 14400)
