@@ -32,6 +32,7 @@
   (blink-cursor-mode nil)
   (column-number-mode t)
   (global-prettify-symbols-mode t)
+  (prettify-symbols-unprettify-at-point t)
   (display-line-numbers-width 3)
   (use-short-answers t)
   (word-wrap-by-category t)
@@ -242,6 +243,19 @@ optional:
         ("z" . 'shortdoc)
         ("Z" . 'apropos-library)))
 
+(use-package eldoc
+  :custom
+  (eldoc-echo-area-prefer-doc-buffer t)
+  (eldoc-documentation-strategy 'eldoc-documentation-compose-eagerly)
+  :config
+  (add-to-list 'display-buffer-alist
+               '("^\\*eldoc for" display-buffer-at-bottom
+                 (window-height . 4))))
+
+(use-package man
+  :custom
+  (Man-switches "-a"))
+
 (use-package cua-base
   :hook (emacs-startup . cua-mode)
   :custom
@@ -329,7 +343,10 @@ optional:
 (use-package electric
   :custom
   (electric-pair-mode t)
-  :hook ((text-mode fundamental-mode) . (lambda () (electric-pair-local-mode -1))))
+  :hook ((text-mode fundamental-mode) . (lambda () (electric-pair-local-mode -1)))
+  :config
+  (electric-pair-mode)
+  (electric-layout-mode))
 
 (use-package windmove
   :unless (eq system-type 'android)
@@ -838,32 +855,6 @@ items are fetched from each feed."
   (tramp-use-scp-direct-remote-copying t)
   (debug-ignored-errors (cons 'remote-file-error debug-ignored-errors))
   :config
-
-  ;; (add-to-list 'tramp-smb-options "client min protocol=NT1")
-
-  ;; ver 30.1
-  (unless (functionp 'tramp-revert-buffer-with-sudo)
-    (defun tramp-revert-buffer-with-sudo ()
-      "Revert current buffer to visit with \"sudo\" permissions.
-An alternative method could be chosen with `tramp-file-name-with-method'.
-If the buffer visits a file, the file is replaced.
-If the buffer runs `dired', the buffer is reverted."
-      (interactive)
-      (cond
-       ((buffer-file-name)
-        (find-alternate-file (tramp-file-name-with-sudo (buffer-file-name))))
-       ((tramp-dired-buffer-p)
-        (dired-unadvertise (expand-file-name default-directory))
-        (setq default-directory (tramp-file-name-with-sudo default-directory)
-              list-buffers-directory
-              (tramp-file-name-with-sudo list-buffers-directory))
-        (if (consp dired-directory)
-            (setcar
-             dired-directory (tramp-file-name-with-sudo (car dired-directory)))
-          (setq dired-directory (tramp-file-name-with-sudo dired-directory)))
-        (dired-advertise)
-        (revert-buffer)))))
-
   (connection-local-set-profile-variables
    'tramp-connection-local-termux-profile
    `((tramp-remote-path
