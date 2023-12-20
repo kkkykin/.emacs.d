@@ -1,0 +1,2 @@
+tag:
+	etags lisp/*.el
