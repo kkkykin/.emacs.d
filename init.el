@@ -340,6 +340,10 @@
 (use-package flymake
   :hook sh-mode)
 
+(use-package gud
+  :custom
+  (gud-highlight-current-line t))
+
 (use-package ibuffer
   :bind (("C-x C-b" . ibuffer))
   :hook

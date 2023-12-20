@@ -19,3 +19,5 @@
 /multisession
 /eww-bookmarks
 /filesets-cache.el
+/TAGS
+*.elc
