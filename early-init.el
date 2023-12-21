@@ -25,15 +25,23 @@
 ;; Silence stupid startup message
 (setq inhibit-startup-echo-area-message (user-login-name))
 
+(defvar my/sys-winnt-p (eq system-type 'windows-nt)
+  "Windows System.")
+
+(defvar my/sys-linux-p (eq system-type 'gnu/linux)
+  "Linux System.")
+
+(defvar my/sys-android-p (eq system-type 'android)
+  "Android System.")
+
 ;; Android Termux path
-(when (eq system-type 'android)
+(when my/sys-android-p
   (setenv "PATH"
           (format "%s:%s" "/data/data/com.termux/files/usr/bin"
                   (getenv "PATH")))
   (setenv "LD_LIBRARY_PATH"
           (format "%s:%s:%s"
-		  "/system/lib64"
+                  "/system/lib64"
                   "/data/data/com.termux/files/usr/lib"
                   (getenv "LD_LIBRARY_PATH")))
-  (push "/data/data/com.termux/files/usr/bin" exec-path)
-  )
+  (push "/data/data/com.termux/files/usr/bin" exec-path))

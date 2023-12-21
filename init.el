@@ -62,17 +62,17 @@
   (prefer-coding-system 'utf-8)
   (add-hook 'window-setup-hook #'my/setup-faces)
 
-  (when (eq system-type 'windows-nt)
+  (when my/sys-winnt-p
     "setup for windowsNT"
     (setq shr-use-fonts nil)
 
     (add-to-list 'exec-suffixes ".ps1"))
 
-  (when (eq system-type 'gnu/linux)
+  (when my/sys-linux-p
     "setup for linux"
     (add-hook 'server-after-make-frame-hook #'my/setup-faces))
 
-  (when (eq system-type 'android)
+  (when my/sys-android-p
     (setenv "SSH_AUTH_SOCK" (string-trim-right (shell-command-to-string "gpgconf --homedir /data/data/com.termux/files/home/.gnupg --list-dirs agent-ssh-socket")))
 
     (dolist (hook '(focus-in-hook after-init-hook))
@@ -87,7 +87,7 @@
     (keymap-global-set "H-v" 'clipboard-yank)))
 
 (use-package touch-screen
-  :if (eq system-type 'android)
+  :if my/sys-android-p
   :custom
   (touch-screen-display-keyboard t))
 
@@ -150,14 +150,14 @@
   (cua-delete-selection nil))
 
 (use-package display-fill-column-indicator
-  :unless (eq system-type 'android)
+  :unless my/sys-android-p
   :hook prog-mode
   :custom
   (indicate-buffer-boundaries 'left)
   (display-fill-column-indicator-character ?\u254e))
 
 (use-package time :defer 9
-  :unless (eq system-type 'android)
+  :unless my/sys-android-p
   :custom
   (display-time-24hr-format t)
   (display-time-use-mail-icon t)
@@ -166,7 +166,7 @@
   (display-time))
 
 (use-package battery :defer 10
-  :unless (eq system-type 'android)
+  :unless my/sys-android-p
   :config
   (when (and battery-status-function
              (not (string= "unknown" 
@@ -208,16 +208,16 @@
 
 (use-package menu-bar
   :config
-  (unless (eq system-type 'android)
+  (unless my/sys-android-p
     (menu-bar-mode -1)))
 
 (use-package tool-bar
   :custom
   (tool-bar-button-margin 12)
-  (modifier-bar-mode t)
   (tool-bar-position 'bottom)
   :config
-  (unless (eq system-type 'android)
+  (if my/sys-android-p
+      (modifier-bar-mode)
     (tool-bar-mode -1)))
 
 (use-package speedbar
@@ -234,7 +234,7 @@
   (electric-layout-mode))
 
 (use-package windmove
-  :unless (eq system-type 'android)
+  :unless my/sys-android-p
   :hook emacs-startup
   :custom
   (windmove-create-window t)
@@ -246,7 +246,7 @@
   (windmove-swap-states-default-keybindings '(shift control)))
 
 (use-package server :defer 5
-  :unless (eq system-type 'android)
+  :unless my/sys-android-p
   :config
   (unless (server-running-p)
     (server-start)))
@@ -254,17 +254,21 @@
 (use-package window
   :config
   (add-to-list 'display-buffer-alist '("*Async Shell Command*" display-buffer-no-window (nil)))
-  (when (eq system-type 'android)
+  (when my/sys-android-p
     (keymap-global-set "C-z" 'window-swap-states)))
+
+(use-package diff
+  :custom
+  (diff-add-log-use-relative-names t))
 
 (use-package find
   :config
-  (when (eq system-type 'windows-nt)
+  (when my/sys-winnt-p
     (setq find-program "ind")))
 
 (use-package grep
   :config
-  (when (eq system-type 'windows-nt)
+  (when my/sys-winnt-p
     (setq grep-program "ug"
           grep-use-null-device nil
           grep-highlight-matches t)))
@@ -321,7 +325,7 @@
 (use-package project
   ;; Dispatch menu not available on android sometimes.
   ;; :config
-  ;; (when (eq system-type 'android)
+  ;; (when my/sys-android-p
   ;;   (setq project-switch-commands 'project-find-file))
   ;;   (setopt project-switch-commands #'project-prefix-or-any-command)
   :custom
@@ -459,7 +463,7 @@
   (wdired-allow-to-change-permissions 'advanced)
   (wdired-use-interactive-rename t)
   :init
-  (when (eq system-type 'android)
+  (when my/sys-android-p
     (add-hook 'dired-mode-hook 'dired-hide-details-mode))
   :bind (:map dired-mode-map
               ("× μ" . my/mpv-image)
@@ -520,7 +524,7 @@
 
 (use-package epg
   :config
-  (when (eq system-type 'android)
+  (when my/sys-android-p
     (setq epg-gpg-home-directory "/data/data/com.termux/files/home/.gnupg"
           epg-pinentry-mode 'loopback)
     ;; fix gnupg hang
@@ -544,7 +548,7 @@
   (mpc-host "127.0.0.1"))
 
 (use-package avoid :defer 15
-  :unless (eq system-type 'android)
+  :unless my/sys-android-p
   :config
   (mouse-avoidance-mode 'exile))
 
@@ -697,7 +701,7 @@
   (ediff-keep-variants nil)
   (ediff-window-setup-function 'ediff-setup-windows-plain)
   :config
-  (unless (eq system-type 'android)
+  (unless my/sys-android-p
     (setq ediff-split-window-function 'split-window-horizontally)))
 
 (use-package rmail

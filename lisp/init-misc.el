@@ -524,8 +524,7 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
 
 (defun my/internet-up-p (&optional host callback)
   "Test connectivity via ping."
-  (let* ((args (if (eq system-type 'windows-nt)
-                   '("-n" "1" "-w" "1") '("-c1" "-W1")))
+  (let* ((args (if my/sys-winnt-p '("-n" "1" "-w" "1") '("-c1" "-W1")))
          (proc (apply #'start-process "internet-test" nil "ping"
                       (if host host "baidu.com") args))
          (callback (if callback callback
