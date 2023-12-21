@@ -276,6 +276,7 @@
 (use-package xref
   :custom
   (xref-history-storage 'xref-window-local-history)
+  (xref-auto-jump-to-first-xref 'move)
   :config
   (with-eval-after-load 'grep
     (when (string= grep-program "ug")
@@ -329,12 +330,19 @@
   ;;   (setq project-switch-commands 'project-find-file))
   ;;   (setopt project-switch-commands #'project-prefix-or-any-command)
   :custom
+  (project-vc-include-untracked nil)
   (project-kill-buffers-display-buffer-list t))
 
 (use-package vc
   :custom
   (vc-display-status 'no-backend)
-  (vc-handled-backends '(SVN Git)))
+  (vc-handled-backends '(Git SVN))
+  (vc-command-messages 'log))
+
+(use-package add-log
+  :custom
+  (add-log-keep-changes-together t)
+  (change-log-version-info-enabled t))
 
 (use-package python
   :custom
