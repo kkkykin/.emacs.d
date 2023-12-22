@@ -189,6 +189,7 @@
   (:map my/global-prefix-map
         ("r" . 'rename-visited-file))
   :custom
+  (save-abbrevs 'silently)
   (major-mode-remap-alist
    '((yaml-mode . yaml-ts-mode)
      (bash-mode . bash-ts-mode)
@@ -464,6 +465,7 @@
 
 (use-package dired
   :custom
+  (dired-maybe-use-globstar t)
   (dired-dwim-target t)
   (dired-listing-switches "-l")
   (dired-mouse-drag-files t)
@@ -499,6 +501,10 @@
 
 (use-package dired-aux
   :custom
+  (dired-create-destination-dirs 'ask)
+  (dired-create-destination-dirs-on-trailing-dirsep 't)
+  (dired-vc-rename-file t)
+  (dired-isearch-filenames 'dwim)
   (dired-compress-file-default-suffix ".zst")
   (dired-compress-directory-default-suffix ".tar.zst")
   :config
@@ -681,6 +687,7 @@
 
 (use-package image
   :custom
+  (image-dired-external-viewer "mpv")
   (image-use-external-converter t)
   :config
   (add-to-list 'image-file-name-extensions "avif")
