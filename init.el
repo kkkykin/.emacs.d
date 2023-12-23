@@ -254,7 +254,6 @@
 
 (use-package window
   :config
-  (add-to-list 'display-buffer-alist '("*Async Shell Command*" display-buffer-no-window (nil)))
   (when my/sys-android-p
     (keymap-global-set "C-z" 'window-swap-states)))
 
@@ -262,15 +261,11 @@
   :custom
   (diff-add-log-use-relative-names t))
 
-(use-package find
-  :config
-  (when my/sys-winnt-p
-    (setq find-program "ind")))
-
 (use-package grep
-  :config
+  :init
   (when my/sys-winnt-p
-    (setq grep-program "ug"
+    (setq find-program "ind"
+          grep-program "ug"
           grep-use-null-device nil
           grep-highlight-matches t)))
 
@@ -279,9 +274,8 @@
   (xref-history-storage 'xref-window-local-history)
   (xref-auto-jump-to-first-xref 'move)
   :config
-  (with-eval-after-load 'grep
-    (when (string= grep-program "ug")
-      (setq xref-search-program 'ugrep))))
+  (when (string= grep-program "ug")
+    (setq xref-search-program 'ugrep)))
 
 (use-package abbrev
   :custom
@@ -958,6 +952,9 @@
   (corfu-popupinfo-delay '(0.25 . 0.1))
   (corfu-popupinfo-hide nil))
 
+(use-package powershell
+  :if (package-installed-p 'powershell))
+
 (use-package sqlformat
   :if (package-installed-p 'sqlformat)
   :bind
@@ -1006,7 +1003,9 @@
   :if (package-installed-p 'khoj))
 
 (use-package disk-usage
-  :if (package-installed-p 'disk-usage))
+  :if (package-installed-p 'disk-usage)
+  :custom
+  (disk-usage-find-command find-program))
 
 (use-package org-fc
   :if (package-installed-p 'org-fc))
