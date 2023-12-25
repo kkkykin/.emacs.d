@@ -49,6 +49,10 @@
   (tab-width 4)
   (switch-to-buffer-obey-display-actions t)
   (bookmark-save-flag 1)
+  (shell-command-dont-erase-buffer 'beg-last-out)
+  (async-shell-command-buffer 'rename-buffer)
+  (async-shell-command-display-buffer nil)
+  (shell-command-default-error-buffer "*Shell Command Error*")
   ;; (mouse-1-click-follows-link -450 "click set point, long press do action")
   (reb-re-syntax 'string)
 
@@ -435,6 +439,7 @@
   (tramp-verbose 2)
   (tramp-use-scp-direct-remote-copying t)
   (debug-ignored-errors (cons 'remote-file-error debug-ignored-errors))
+  (tramp-histfile-override nil)
   :config
   (add-to-list 'tramp-connection-properties
                (list (regexp-quote "termux") "remote-shell" "sh"))
@@ -774,7 +779,14 @@
 
 (use-package comint
   :custom
-  (comint-scroll-to-bottom-on-output 'others))
+  (comint-input-autoexpand 'input)
+  (comint-insert-previous-argument t)
+  (comint-scroll-to-bottom-on-output 'others)
+  :config
+  (dolist (hook '(comint-strip-ctrl-m
+                  comint-truncate-buffer
+                  comint-osc-process-output))
+      (add-hook 'comint-output-filter-functions hook)))
 
 (use-package outline
   :custom
