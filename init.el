@@ -696,6 +696,7 @@
 
 (use-package doc-view
   :custom
+  (doc-view-scale-internally nil)
   (doc-view-resolution 300))
 
 (use-package eglot
@@ -712,6 +713,11 @@
   :config
   (unless my/sys-android-p
     (setq ediff-split-window-function 'split-window-horizontally)))
+
+(use-package message
+  :custom
+  (message-kill-buffer-on-exit t)
+  (message-signature nil))
 
 (use-package rmail
   :custom
