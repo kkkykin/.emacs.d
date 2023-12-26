@@ -252,6 +252,8 @@
 
 (use-package server :defer 5
   :unless my/sys-android-p
+  :custom
+  (server-client-instructions nil)
   :config
   (unless (server-running-p)
     (server-start)))
@@ -288,6 +290,8 @@
 (use-package desktop
   :hook (emacs-startup . desktop-save-mode)
   :custom
+  (desktop-restore-frames nil)
+  (desktop-restore-eager nil)
   (desktop-auto-save-timeout 600))
 
 (use-package hideshow
@@ -459,6 +463,8 @@
 
 (use-package shell
   :custom
+  (shell-completion-execonly nil)
+  (shell-completion-fignore '("~" "#" "%"))
   (shell-get-old-input-include-continuation-lines t)
   (shell-kill-buffer-on-exit t))
 
@@ -780,7 +786,11 @@
 (use-package comint
   :custom
   (comint-input-autoexpand 'input)
-  (comint-insert-previous-argument t)
+  (comint-insert-previous-argument-from-end t)
+  (comint-prompt-read-only t)
+  (comint-input-ignoredups t)
+  (comint-completion-recexact t)
+  (comint-completion-autolist t)
   (comint-scroll-to-bottom-on-output 'others)
   :config
   (dolist (hook '(comint-strip-ctrl-m
@@ -859,8 +869,14 @@
                    ("\\subsection{%s}" . "\\subsection*{%s}")
                    ("\\subsubsection{%s}" . "\\subsubsection*{%s}")))))
 
+(use-package custom
+  :custom
+  (custom-buffer-done-kill t))
+
 (use-package package
   :custom
+  ;; (package-install-upgrade-built-in t)
+  ;; (package-pinned-packages nil)
   (package-archives '(("gnu" . "https://mirrors.ustc.edu.cn/elpa/gnu/")
                       ("nongnu" . "https://mirrors.ustc.edu.cn/elpa/nongnu/")
                       ("melpa" . "https://mirrors.ustc.edu.cn/elpa/melpa/")))
