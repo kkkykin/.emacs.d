@@ -69,6 +69,7 @@
   (when my/sys-winnt-p
     "setup for windowsNT"
     (setq shr-use-fonts nil)
+    (setenv "HOME" (file-name-parent-directory user-emacs-directory))
 
     (add-to-list 'exec-suffixes ".ps1"))
 
