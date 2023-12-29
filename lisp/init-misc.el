@@ -524,14 +524,16 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
           (image-dired-cmd-create-thumbnail-options '("-sDEVICE=jpeg" "-dSAFER" "-r20" "-o" "%t" "%f")))
       (apply oldfun args))))
 
+(defun my/default-callback (&rest args)
+  "Test default callback."
+  (message (if args "Up" "Down")))
+
 (defun my/internet-up-p (&optional host callback)
   "Test connectivity via ping."
   (let* ((args (if my/sys-winnt-p '("-n" "1" "-w" "1") '("-c1" "-W1")))
          (proc (apply #'start-process "internet-test" nil "ping"
                       (if host host "baidu.com") args))
-         (callback (if callback callback
-                     (lambda (&rest cbargs)
-                       (message (if cbargs "Up" "Down"))))))
+         (callback (if callback callback 'my/default-callback)))
     (set-process-sentinel proc (lambda (proc signal)
                                  (apply callback
                                         (if (= 0 (process-exit-status proc))
@@ -542,13 +544,15 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
   (let* ((args `("-kqsLm10" "-o/dev/null" "-w%{http_code}" ,url
                  ,@(when doh (list "--doh-url" doh))))
          (proc (apply #'start-process "url-test" nil "curl" args))
-         (callback (if callback callback
-                     (lambda (&rest cbargs)
-                       (message (if cbargs "Up" "Down"))))))
+         (callback (if callback callback 'my/default-callback)))
     (set-process-filter proc (lambda (proc line)
                                (apply callback
                                       (if (string= "200" line)
                                           '(t) nil))))))
+
+(defun my/doh-up-p (doh &optional callback)
+  "Test DOH availability."
+  (my/url-up-p "https://www.baidu.com" (if callback callback nil) doh))
 
 (defun my/proxy-http-show ()
   "Show HTTP/HTTPS proxy."
