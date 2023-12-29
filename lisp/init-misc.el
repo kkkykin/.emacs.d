@@ -90,11 +90,13 @@
   :group 'my
   :type '(repeat regexp))
 
+;; https://hub.zzzr.eu.org/curl/curl/wiki/DNS-over-HTTPS E
 (defcustom my/doh-server-list '("https://9.9.9.9/dns-query"
+                                "https://doh.bortzmeyer.fr"
+                                "https://dns.digitalsize.net/dns-query"
                                 "https://1.1.1.1/dns-query"
                                 "https://1.12.12.12/dns-query"
-                                "https://223.6.6.6/dns-query"
-                                "https://120.53.53.53/dns-query")
+                                "https://223.6.6.6/dns-query")
   "Public DOH Server."
   :group 'my
   :type '(repeat string))
