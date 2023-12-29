@@ -90,9 +90,11 @@
   :group 'my
   :type '(repeat regexp))
 
-(defcustom my/doh-server-list '("https://1.1.1.1/dns-query"
+(defcustom my/doh-server-list '("https://9.9.9.9/dns-query"
+                                "https://1.1.1.1/dns-query"
                                 "https://1.12.12.12/dns-query"
-                                "https://223.6.6.6/dns-query")
+                                "https://223.6.6.6/dns-query"
+                                "https://120.53.53.53/dns-query")
   "Public DOH Server."
   :group 'my
   :type '(repeat string))
@@ -229,22 +231,22 @@ milliseconds"
 (defun my/rss-bridge-generator (bridge)
   "Generate atom feed via rss-bridge."
   (concat my/rss-bridge-server
-          "?action=display&format=Atom&bridge=" bridge))
+          "?action=display%26format=Atom%26bridge=" bridge))
 
 (defun my/rss-bridge-wp (blog limit &optional content)
   "Returns the newest full posts of a WordPress powered website."
   (concat (my/rss-bridge-generator "WordPressBridge")
-          "&url=" (url-hexify-string blog)
-          "&limit=" (number-to-string limit)
-          (when content (concat "&content_selector=" (url-hexify-string content)))))
+          "%26url=" (url-hexify-string blog)
+          "%26limit=" (number-to-string limit)
+          (when content (concat "%26content_selector=" (url-hexify-string content)))))
 ;; todo
 ;; (defun my/rss-bridge-filter ())
 
 (defun my/rss-bridge-reducer (feed percentage)
   "Choose a percentage of a feed you want to see."
   (concat (my/rss-bridge-generator "FeedReducerBridge")
-          "&url=" (url-hexify-string feed)
-          "&percentage=" (number-to-string percentage)))
+          "%26url=" (url-hexify-string feed)
+          "%26percentage=" (number-to-string percentage)))
 
 (defun my/rss-bridge-css-expander (feed limit content &optional
                                         content-cleanup
@@ -252,12 +254,12 @@ milliseconds"
                                         discard-thumbnail)
   "Expand any site RSS feed using CSS selectors."
   (concat (my/rss-bridge-generator "CssSelectorFeedExpanderBridge")
-          "&feed=" (url-hexify-string feed)
-          "&limit=" (number-to-string limit)
-          "&content_selector=" (url-hexify-string content)
-          (when content-cleanup (concat "&content_cleanup=" (url-hexify-string content-cleanup)))
-          (concat "&dont_expand_metadata=" (when dont-expand-metadata "on"))
-          (concat "&discard_thumbnail=" (when discard-thumbnail "on"))))
+          "%26feed=" (url-hexify-string feed)
+          "%26limit=" (number-to-string limit)
+          "%26content_selector=" (url-hexify-string content)
+          (when content-cleanup (concat "%26content_cleanup=" (url-hexify-string content-cleanup)))
+          (concat "%26dont_expand_metadata=" (when dont-expand-metadata "on"))
+          (concat "%26discard_thumbnail=" (when discard-thumbnail "on"))))
 
 (defun my/rss-bridge-css-selector (home limit entry load-pages &rest args)
   "Convert any site to RSS feed using CSS selectors. The bridge first
@@ -279,22 +281,22 @@ elements or page is done using the provided selectors."
         (cat (plist-get args :cat))
         (rm-style (plist-get args :rm-style)))
     (concat (my/rss-bridge-generator "CssSelectorComplexBridge")
-            "&home_page=" (url-hexify-string home)
-            "&limit=" (number-to-string limit)
-            "&entry_element_selector=" (url-hexify-string entry)
-            "&use_article_pages=" (when load-pages "on")
-            (when content (concat "&article_page_content_selector=" (url-hexify-string content)))
-            (when title (concat "&title_selector=" (url-hexify-string title)))
-            (when time (concat "&time_selector=" (url-hexify-string time)))
-            (when time-fmt (concat "&time_format=" (url-hexify-string time-fmt)))
-            (when url (concat "&url_selector=" (url-hexify-string url)))
-            (when url-pattern (concat "&url_pattern=" (url-hexify-string url-pattern)))
-            (when title-cleanup (concat "&title_cleanup=" (url-hexify-string title-cleanup)))
-            (when content-cleanup (concat "&content_cleanup=" (url-hexify-string content-cleanup)))
-            (when cookie (concat "&cookie=" (url-hexify-string cookie)))
-            (when author (concat "&author_selector=" (url-hexify-string author)))
-            (when cat (concat "&category_selector=" (url-hexify-string cat)))
-            (concat "&remove_styling=" (when rm-style "on")))))
+            "%26home_page=" (url-hexify-string home)
+            "%26limit=" (number-to-string limit)
+            "%26entry_element_selector=" (url-hexify-string entry)
+            "%26use_article_pages=" (when load-pages "on")
+            (when content (concat "%26article_page_content_selector=" (url-hexify-string content)))
+            (when title (concat "%26title_selector=" (url-hexify-string title)))
+            (when time (concat "%26time_selector=" (url-hexify-string time)))
+            (when time-fmt (concat "%26time_format=" (url-hexify-string time-fmt)))
+            (when url (concat "%26url_selector=" (url-hexify-string url)))
+            (when url-pattern (concat "%26url_pattern=" (url-hexify-string url-pattern)))
+            (when title-cleanup (concat "%26title_cleanup=" (url-hexify-string title-cleanup)))
+            (when content-cleanup (concat "%26content_cleanup=" (url-hexify-string content-cleanup)))
+            (when cookie (concat "%26cookie=" (url-hexify-string cookie)))
+            (when author (concat "%26author_selector=" (url-hexify-string author)))
+            (when cat (concat "%26category_selector=" (url-hexify-string cat)))
+            (concat "%26remove_styling=" (when rm-style "on")))))
 
 (defun my/rss-bridge-merger (feeds limit name)
   "This bridge merges two or more feeds into a single feed. Max 10
@@ -304,11 +306,11 @@ items are fetched from each feed."
             (mapconcat
              (lambda (feed)
                (setq m (+ m 1))
-               (concat "&feed_" (number-to-string m) "="
+               (concat "%26feed_" (number-to-string m) "="
                        (url-hexify-string feed)))
              feeds))
-          "&limit=" (number-to-string limit)
-          "&feed_name=" (url-hexify-string name)))
+          "%26limit=" (number-to-string limit)
+          "%26feed_name=" (url-hexify-string name)))
 
 (defun my/rss-hub-generator (router &rest args)
   "Generate feed via RSSHub."
@@ -362,7 +364,7 @@ items are fetched from each feed."
                 ,(when img-tp (concat "image_hotlink_template=" (url-hexify-string my/img-cdn-server)))
                 ,(when domain (concat "domain=" (url-hexify-string domain)))
                 ,(when code (concat "code=" (md5 (concat (url-filename url) code))))))
-             "&"))))
+             "%26"))))
 
 (defun my/rss-hub-transform (url s-fmt &rest args)
   "Pass URL and transformation rules to convert HTML/JSON into RSS."
@@ -393,7 +395,7 @@ items are fetched from each feed."
                  ,(when item-desc-a (concat "itemDescAttr=" (url-hexify-string item-desc-a)))
                  ,(when item-pub (concat "itemPubDate=" (url-hexify-string item-pub)))
                  ,(when item-pub-a (concat "itemPubDateAttr=" (url-hexify-string item-pub-a)))))
-              "&"))
+              "%26"))
      extra)
     ))
 
