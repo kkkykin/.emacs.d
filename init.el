@@ -21,6 +21,7 @@
         ("u" . 'raise-sexp)
         ("'" . 'my/insert-quotations)
         ("\"" . 'my/insert-quotes)
+        ("[" . 'my/insert-squarebracket)
         ("{" . 'my/insert-curlybracket))
   :custom
   (inhibit-splash-screen t)
@@ -439,15 +440,19 @@
 (use-package tramp
   :bind
   (:map my/global-prefix-map
-        ("c" . 'tramp-cleanup-connection))
+        ("c" . 'tramp-cleanup-connection)
+        ("C" . 'tramp-cleanup-some-buffers))
   :custom
   (tramp-verbose 2)
   (tramp-use-scp-direct-remote-copying t)
   (debug-ignored-errors (cons 'remote-file-error debug-ignored-errors))
-  (tramp-histfile-override nil)
+  ;; (tramp-histfile-override nil)
   :config
+  (when my/sys-winnt-p
+    (setq tramp-default-method "sshx"))
+
   (add-to-list 'tramp-connection-properties
-               (list (regexp-quote "termux") "remote-shell" "sh"))
+               (list (regexp-quote "termux") "remote-shell" "/data/data/com.termux/files/usr/bin/bash"))
   (add-to-list 'tramp-connection-properties
                (list (regexp-quote "termux")
                      "tmpdir" "/data/data/com.termux/files/home/tmp"))
@@ -457,7 +462,9 @@
       . ,(mapcar
           (lambda (x)
             (if (stringp x) (concat "/data/data/com.termux/files" x) x))
-          (copy-tree tramp-remote-path)))))
+          (copy-tree tramp-remote-path)))
+     (explicit-shell-file-name
+      . "/data/data/com.termux/files/usr/bin/bash")))
   (connection-local-set-profiles
    '(:application tramp :user "termux")
    'tramp-connection-local-termux-profile))
@@ -487,7 +494,7 @@
               ("f" . my/dired-dwim)
               ("<mouse-2>" . dired-mouse-find-file))
   :config
-  
+  (require 'dired-x)
   (setq archive-7z-program (let ((7z (or (executable-find "7z")
                                          (executable-find "7za")
                                          (executable-find "7zz"))))
@@ -1041,6 +1048,16 @@
   :if (package-installed-p 'disk-usage)
   :custom
   (disk-usage-find-command find-program))
+
+(use-package aria2
+  :if (package-installed-p 'aria2)
+  :bind
+  (:map my/global-prefix-map
+        ("a" . 'aria2-downloads-list))
+  :config
+  (let ((auth (car (auth-source-search :host "aria2.localhost"))))
+    (setq aria2-rcp-secret (auth-info-password auth)
+          aria2-rcp-listen-port (string-to-number (plist-get auth :port)))))
 
 (use-package org-fc
   :if (package-installed-p 'org-fc))
