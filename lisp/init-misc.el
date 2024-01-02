@@ -191,6 +191,11 @@ Leave point after open-bracket."
     (setq my/vanilla-shell shell-file-name
           shell-file-name "C:\\Windows\\system32\\bash.exe")))
 
+(defun my/rclone-quit ()
+  "Exit rclone safely."
+  (interactive)
+  (start-process "rclone-quit" nil "rclone" "rc" "core/quit"))
+
 (defun my/transparency (value)
   "Sets the transparency of the frame window. 0=transparent/100=opaque"
   (interactive "nTransparency Value 0 - 100 opaque:")
@@ -198,7 +203,7 @@ Leave point after open-bracket."
 
 (defun my/adb-am (action activity)
   "ADB am command."
-  (start-process "" nil "adb" "shell" "am" action activity))
+  (start-process "adb-am" nil "adb" "shell" "am" action activity))
 
 (defun my/am-start-activity (name)
   "Start activity through adb."
@@ -436,9 +441,11 @@ items are fetched from each feed."
       (message "Newsticker started!"))))
 
 (defun my/advice-newsticker--get-news-by-wget (args)
-  (let ((host (url-host (url-generic-parse-url (cadr args))))
-        (domains my/proxy-domain)
-        (wget-arguments (caddr args)))
+  (let* ((url (cadr args))
+         (host (url-host (url-generic-parse-url url)))
+         (domains my/proxy-domain)
+         (wget-arguments (caddr args)))
+    (setf (cadr args) (format "\"%s\"" url))
     (catch 'aaa
       (while domains
         (if (string-match-p (car domains) host)
