@@ -7,18 +7,23 @@
 
 (use-package emacs
   :hook
-  ((prog-mode . display-line-numbers-mode)
-   (text-mode . visual-line-mode))
+  ((text-mode . visual-line-mode)
+   (window-setup . my/setup-faces))
   :bind-keymap
   ("C-x j" . my/global-prefix-map)
   :bind
   (:map global-map
         ([remap eval-expression] . pp-eval-expression)
         ([remap eval-last-sexp] . pp-eval-last-sexp)
+        ([remap upcase-word] . upcase-dwim)
+        ([remap downcase-word] . downcase-dwim)
+        ([remap capitalize-word] . capitalize-dwim)
         ("C-c d" . 'duplicate-dwim))
   (:map my/global-prefix-map
         ("p" . 'delete-pair)
         ("u" . 'raise-sexp)
+        ("t" . 'transpose-paragraphs)
+        ("T" . 'transpose-regions)
         ("'" . 'my/insert-quotations)
         ("\"" . 'my/insert-quotes)
         ("[" . 'my/insert-squarebracket)
@@ -35,9 +40,10 @@
   (scroll-bar-mode nil)
   (blink-cursor-mode nil)
   (column-number-mode t)
+  (line-number-mode nil)
   (global-prettify-symbols-mode t)
   (prettify-symbols-unprettify-at-point t)
-  (display-line-numbers-width 3)
+  (display-line-numbers-type 'relative)
   (use-short-answers t)
   (word-wrap-by-category t)
   (custom-file "~/.emacs.d/custom.el")
@@ -65,7 +71,6 @@
   (syntax-wholeline-max 1000)
   :config
   (prefer-coding-system 'utf-8)
-  (add-hook 'window-setup-hook #'my/setup-faces)
 
   (when my/sys-winnt-p
     "setup for windowsNT"
@@ -102,6 +107,8 @@
   (enable-recursive-minibuffers t)
   (resize-mini-windows t)
   (history-delete-duplicates t)
+  (completion-styles '(initials partial-completion flex))
+  (completion-cycle-threshold 10)
   (completions-max-height 20)
   (completions-detailed t)
   (completions-group t)
@@ -184,8 +191,21 @@
   ;; maybe break table.el based on text-mode
   :hook (org-mode prog-mode))
 
+(use-package display-line-numbers
+  :unless my/sys-android-p
+  :hook prog-mode)
+
+(use-package subword
+  :unless my/sys-android-p
+  :hook prog-mode)
+
+(use-package glasses
+  :unless my/sys-android-p
+  :hook prog-mode)
+
 (use-package isearch
   :custom
+  (isearch-lazy-count t)
   (isearch-allow-scroll t)
   (isearch-yank-on-move 'shift)
   (isearch-repeat-on-direction-change t))
@@ -296,6 +316,17 @@
   (desktop-restore-eager nil)
   (desktop-auto-save-timeout 600))
 
+;; https://karthinks.com/software/it-bears-repeating/
+;; https://karthinks.com/software/a-consistent-structural-editing-interface/
+;; https://karthinks.com/software/persistent-prefix-keymaps-in-emacs/
+(use-package repeat
+  :hook window-setup)
+
+(use-package elide-head
+  :unless my/sys-android-p
+  :hook prog-mode)
+
+;; https://karthinks.com/software/simple-folding-with-hideshow/
 (use-package hideshow
   :hook ((prog-mode . hs-minor-mode)
          ((ediff-prepare-buffer vc-before-checkin) . turn-off-hideshow)))
@@ -436,6 +467,31 @@
   :hook (eww-after-render . my/eww-render-hook)
   :config
   (advice-add 'eww :around 'my/advice-url-redirect))
+
+(use-package webjump
+  :bind
+  (:map my/global-prefix-map
+        ("/" . 'webjump))
+  :config
+  (dolist (web '(("Ecosia" .
+                  [simple-query "www.ecosia.org"
+                                "www.ecosia.org/search?method=index&q=" ""])
+                 ("NixPackage" .
+                  [simple-query "search.nixos.org/packages"
+                                "search.nixos.org/packages?from=0&size=50&sort=relevance&type=packages&query=" ""])
+                 ("NixOption" .
+                  [simple-query "search.nixos.org/options"
+                                "search.nixos.org/options?from=0&size=50&sort=relevance&type=packages&query=" ""])))
+    (add-to-list 'webjump-sites web)))
+
+(use-package browse-url
+  :custom
+  (browse-url-handlers '(("\\`file:" . browse-url-default-browser))))
+
+(use-package goto-addr
+  :unless my/sys-android-p
+  :hook ((text-mode . goto-address-mode)
+         (prog-mode . goto-address-prog-mode)))
 
 (use-package tramp
   :bind
@@ -579,6 +635,17 @@
   :config
   (mouse-avoidance-mode 'exile))
 
+;; https://karthinks.com/software/different-strokes-for-different-folks/
+(use-package strokes
+  :unless my/sys-android-p
+  :bind ("<down-mouse-3>" . 'strokes-do-stroke))
+
+(use-package timeclock
+  :bind
+  (:map my/global-prefix-map
+        ("o" . 'timeclock-in)
+        ("O" . 'timeclock-out)))
+
 (use-package org
   :init (setq org-directory "~/org")
   :bind-keymap
@@ -596,6 +663,7 @@
         ("i" . 'org-clock-in)
         ("o" . 'org-clock-out))
   :custom
+  (org-agenda-diary-file (file-name-concat org-directory "diary.org"))
   (org-replace-disputed-keys t "see `'org-disputed-keys'")
   (org-special-ctrl-k t)
   (org-use-speed-commands t)
@@ -692,11 +760,13 @@
 
 (use-package flyspell
   :hook (text-mode
-         (prog-mode . flyspell-prog-mode)))
+         (prog-mode . flyspell-prog-mode))
+  :custom
+  (ispell-personal-dictionary (expand-file-name "dict.txt" user-emacs-directory)))
 
 (use-package calendar
   :custom
-  (diary-file (file-name-concat org-directory "diary")))
+  (calendar-chinese-all-holidays-flag t))
 
 (use-package image
   :custom
@@ -830,8 +900,18 @@
   (url-cookie-untrusted-urls '(".*")))
 
 (use-package filesets :defer 10
+  :unless my/sys-android-p
   :config
   (filesets-init))
+
+(use-package filecache
+  :custom
+  (file-cache-alist '(("config" "~/.config/yt-dlp/"))))
+
+(use-package shadowfile
+  :unless my/sys-android-p
+  :config
+  (shadow-initialize))
 
 (use-package treesit
   :config
@@ -931,14 +1011,24 @@
   :vc (:url "https://github.com/Elilif/emacs-anki-helper")
   :custom (anki-helper-default-deck "anki-helper"))
 
-(use-package which-key :defer 3
-  :if (package-installed-p 'which-key)
-  :config
-  (which-key-mode))
-
 (use-package gnuplot
   :if (package-installed-p 'gnuplot)
   :mode ("\\.gp\\'" . gnuplot-mode))
+
+;; https://karthinks.com/software/avy-can-do-anything/
+(use-package avy
+  :if (package-installed-p 'avy))
+
+(use-package marginalia
+  :if (package-installed-p 'marginlia)
+  :bind (:map minibuffer-local-map
+              ("M-A" . marginalia-cycle))
+  :init
+  (marginalia-mode))
+
+;; https://karthinks.com/software/fifteen-ways-to-use-embark/
+(use-package embark
+  :if (package-installed-p 'embark))
 
 (use-package denote
   :if (package-installed-p 'denote)

@@ -445,7 +445,6 @@ items are fetched from each feed."
          (host (url-host (url-generic-parse-url url)))
          (domains my/proxy-domain)
          (wget-arguments (caddr args)))
-    (setf (cadr args) (format "\"%s\"" url))
     (catch 'aaa
       (while domains
         (if (string-match-p (car domains) host)
