@@ -55,7 +55,6 @@
   (indent-tabs-mode nil)
   (tab-width 4)
   (switch-to-buffer-obey-display-actions t)
-  (bookmark-save-flag 1)
   (shell-command-dont-erase-buffer 'beg-last-out)
   (async-shell-command-buffer 'rename-buffer)
   (async-shell-command-display-buffer nil)
@@ -153,6 +152,14 @@
 (use-package man
   :custom
   (Man-switches "-a"))
+
+(use-package bookmark
+  :custom
+  (bookmark-save-flag 1)
+  :config
+  (let ((shared (file-name-concat user-emacs-directory "bookmark-share")))
+    (when (file-exists-p shared)
+      (bookmark-load shared nil t))))
 
 (use-package cua-base
   :hook (emacs-startup . cua-mode)
@@ -905,10 +912,13 @@
   (filesets-init))
 
 (use-package filecache
-  :custom
-  (file-cache-alist '(("config" "~/.config/yt-dlp/"))))
+  :config
+  (setq file-cache-alist '(("init.el" "~/.emacs.d/")
+                           ("default.el" "~/.emacs.d/lisp/")
+                           ("pip.ini" "~/.config/pip/")
+                           ("config" "~/.config/yt-dlp/"))))
 
-(use-package shadowfile
+(use-package shadowfile :defer 11
   :unless my/sys-android-p
   :config
   (shadow-initialize))
