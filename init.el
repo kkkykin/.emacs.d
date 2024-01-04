@@ -22,8 +22,8 @@
   (:map my/global-prefix-map
         ("p" . 'delete-pair)
         ("u" . 'raise-sexp)
-        ("t" . 'transpose-paragraphs)
-        ("T" . 'transpose-regions)
+        ("t" . 'transpose-sentences)
+        ("T" . 'transpose-paragraphs)
         ("'" . 'my/insert-quotations)
         ("\"" . 'my/insert-quotes)
         ("[" . 'my/insert-squarebracket)
@@ -40,7 +40,6 @@
   (scroll-bar-mode nil)
   (blink-cursor-mode nil)
   (column-number-mode t)
-  (line-number-mode nil)
   (global-prettify-symbols-mode t)
   (prettify-symbols-unprettify-at-point t)
   (display-line-numbers-type 'relative)
@@ -208,7 +207,10 @@
 
 (use-package glasses
   :unless my/sys-android-p
-  :hook prog-mode)
+  ;; :hook prog-mode
+  :custom
+  (glasses-uncapitalize-p t)
+  (glasses-separate-parentheses-p nil))
 
 (use-package isearch
   :custom
@@ -327,7 +329,7 @@
 ;; https://karthinks.com/software/a-consistent-structural-editing-interface/
 ;; https://karthinks.com/software/persistent-prefix-keymaps-in-emacs/
 (use-package repeat
-  :hook window-setup)
+  :hook emacs-startup)
 
 (use-package elide-head
   :unless my/sys-android-p
@@ -449,7 +451,7 @@
   (newsticker-retrieval-interval 1800)
   (newsticker-retrieval-method 'extern)
   (newsticker-wget-name "curl")
-  (newsticker-wget-arguments `("-kqsLm30" "--doh-url" ,my/doh-server))
+  (newsticker-wget-arguments `("-Lkqsm40" "--doh-url" ,my/doh-server))
   :config
 
   (unless (file-exists-p (file-name-concat newsticker-dir "saved"))
