@@ -545,7 +545,7 @@
   :custom
   (dired-maybe-use-globstar t)
   (dired-dwim-target t)
-  (dired-listing-switches "-l")
+  (dired-listing-switches "-lh")
   (dired-mouse-drag-files t)
   (delete-by-moving-to-trash t)
   (wdired-allow-to-change-permissions 'advanced)
