@@ -445,17 +445,24 @@ items are fetched from each feed."
          (host (url-host (url-generic-parse-url url)))
          (domains my/proxy-domain)
          (wget-arguments (caddr args)))
-    (catch 'aaa
-      (while domains
-        (if (string-match-p (car domains) host)
-            (progn
-              (setf (caddr args)
-                    (append wget-arguments
-                            `("-x"
-                              ,(concat "http://emacs@"
-                                       my/centaur-proxy))))
-              (throw 'aaa "a"))
-          (setq domains (cdr domains))))))
+    (when (seq-some (lambda (x) (string-match-p x host)) domains)
+      (setf (caddr args)
+            (append wget-arguments
+                    `("-x"
+                      ,(concat "http://emacs@"
+                               my/centaur-proxy)))))
+    ;; (catch 'aaa
+    ;;   (while domains
+    ;;     (if (string-match-p (car domains) host)
+    ;;         (progn
+    ;;           (setf (caddr args)
+    ;;                 (append wget-arguments
+    ;;                         `("-x"
+    ;;                           ,(concat "http://emacs@"
+    ;;                                    my/centaur-proxy))))
+    ;;           (throw 'aaa "a"))
+    ;;       (setq domains (cdr domains)))))
+    )
   args)
 
 (defun my/newsticker-treeview-prev-page ()

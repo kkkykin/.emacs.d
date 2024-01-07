@@ -89,6 +89,7 @@
     (add-hook 'focus-out-hook 'my/normal-keyboard)
 
     (setq select-enable-clipboard nil
+          mode-line-format (delq 'mode-line-buffer-identification mode-line-format)
           android-pass-multimedia-buttons-to-system t)
 
     (keymap-global-set "H-x" 'clipboard-kill-region)
@@ -154,7 +155,7 @@
 
 (use-package bookmark
   :custom
-  (bookmark-save-flag 1)
+  (bookmark-save-flag nil)
   :config
   (let ((shared (file-name-concat user-emacs-directory "bookmark-share")))
     (when (file-exists-p shared)
@@ -1120,9 +1121,13 @@
   (httpd-host "127.0.0.1")
   (httpd-serve-files nil)
   :config
-  (defservlet* exec text/plain (cmd)
-               (insert (string-trim-right
-                        (shell-command-to-string cmd))))
+  ;; Maybe adb proxy
+  ;; adb shell settings put global http_proxy 192.168.xx.xxx:8888
+  ;; adb shell settings delete global http_proxy
+
+  ;; (defservlet* exec text/plain (cmd)
+  ;;              (insert (string-trim-right
+  ;;                       (shell-command-to-string cmd))))
   (httpd-start))
 
 (use-package emms
