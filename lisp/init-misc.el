@@ -154,6 +154,12 @@ https://scripter.co/using-emacs-advice-to-silence-messages-from-functions"
         (message-log-max nil)) ;Don't show the messages in the *Messages* buffer
     (apply orig-fun args)))
 
+(defun my/advice-url-retrieve-with-timeout (orig-fun &rest args)
+  "Use `url-queue-retrieve' instead of `url-retrieve'."
+  (cl-flet ((url-retrieve #'url-queue-retrieve)
+            (url-queue-timeout 30))
+    (apply orig-fun args)))
+
 (defun my/insert-quotations (&optional arg)
   "Enclose following ARG sexps in quotation marks.
 Leave point after open-paren."

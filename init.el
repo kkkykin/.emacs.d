@@ -465,6 +465,7 @@
   ;; remove message: Error while retrieving image | news from feeds
   (dolist (fn '(newsticker--image-sentinel newsticker--sentinel-work))
     (advice-add fn :around #'my/advice-silence-messages))
+  (advice-add 'newsticker--image-download-by-url :around #'my/advice-url-retrieve-with-timeout)
   (advice-add 'newsticker--get-news-by-wget :filter-args #'my/advice-newsticker--get-news-by-wget)
   (advice-add 'newsticker-save-item :before-until #'my/advice-newsticker-save-item)
 
@@ -919,6 +920,7 @@
   (setq file-cache-alist '(("init.el" "~/.emacs.d/")
                            ("default.el" "~/.emacs.d/lisp/")
                            ("pip.ini" "~/.config/pip/")
+                           ("mpv.conf" "~/.config/mpv/")
                            ("config" "~/.config/yt-dlp/"))))
 
 (use-package shadowfile :defer 11
