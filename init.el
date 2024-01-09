@@ -92,6 +92,7 @@
           mode-line-format (delq 'mode-line-buffer-identification mode-line-format)
           android-pass-multimedia-buttons-to-system t)
 
+    (define-key key-translation-map (kbd "<delete>") (kbd "ESC"))
     (keymap-global-set "H-x" 'clipboard-kill-region)
     (keymap-global-set "H-c" 'clipboard-kill-ring-save)
     (keymap-global-set "H-v" 'clipboard-yank)))
