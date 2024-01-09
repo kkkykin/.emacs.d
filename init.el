@@ -84,9 +84,9 @@
   (when my/sys-android-p
     (setenv "SSH_AUTH_SOCK" (string-trim-right (shell-command-to-string "gpgconf --homedir /data/data/com.termux/files/home/.gnupg --list-dirs agent-ssh-socket")))
 
-    (dolist (hook '(focus-in-hook after-init-hook))
-      (add-hook hook 'my/bare-keyboard))
-    (add-hook 'focus-out-hook 'my/normal-keyboard)
+    ;; (dolist (hook '(focus-in-hook after-init-hook))
+    ;;   (add-hook hook 'my/bare-keyboard))
+    ;; (add-hook 'focus-out-hook 'my/normal-keyboard)
 
     (setq select-enable-clipboard nil
           mode-line-format (delq 'mode-line-buffer-identification mode-line-format)
@@ -500,7 +500,7 @@
   (browse-url-handlers '(("\\`file:" . browse-url-default-browser))))
 
 (use-package goto-addr
-  :unless my/sys-android-p
+  ;; :unless my/sys-android-p
   :hook ((text-mode . goto-address-mode)
          (prog-mode . goto-address-prog-mode)))
 
