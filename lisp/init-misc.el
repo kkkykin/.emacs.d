@@ -172,6 +172,12 @@ Leave point after open-quote."
   (interactive "P")
   (insert-pair arg ?\" ?\"))
 
+(defun my/insert-than-sign (&optional arg)
+  "Enclose following ARG sexps in than sign pair.
+Leave point after less than sign."
+  (interactive "P")
+  (insert-pair arg ?\< ?\>))
+
 (defun my/insert-squarebracket (&optional arg)
   "Enclose following ARG sexps in squarebracket.
 Leave point after open-bracket."

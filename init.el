@@ -26,6 +26,7 @@
         ("T" . 'transpose-paragraphs)
         ("'" . 'my/insert-quotations)
         ("\"" . 'my/insert-quotes)
+        ("<" . 'my/insert-than-sign)
         ("[" . 'my/insert-squarebracket)
         ("{" . 'my/insert-curlybracket))
   :custom
@@ -225,7 +226,7 @@
 (use-package files
   :bind
   (:map my/global-prefix-map
-        ("r" . 'rename-visited-file))
+        ("R" . 'rename-visited-file))
   :custom
   (save-abbrevs 'silently)
   (major-mode-remap-alist
@@ -858,6 +859,9 @@
   (tab-bar-history-mode))
 
 (use-package recentf :defer 1
+  :bind
+  (:map my/global-prefix-map
+        ("r" . 'recentf))
   :config
   (recentf-mode)
   :custom
