@@ -660,118 +660,6 @@
         ("o" . 'timeclock-in)
         ("O" . 'timeclock-out)))
 
-(use-package org
-  :init (setq org-directory "~/org")
-  :bind-keymap
-  ("C-c o" . my/org-prefix-map)
-  :bind
-  (:map global-map
-        ("C-c a" . org-agenda)
-        ("C-c c" . org-capture))
-  (:map my/org-prefix-map
-        ("s" . org-store-link)
-        ("y" . org-insert-link-global)
-        ("b" . org-hide-block-toggle)
-        ("j" . 'org-clock-goto)
-        ("l" . 'org-clock-in-last)
-        ("i" . 'org-clock-in)
-        ("o" . 'org-clock-out))
-  :custom
-  (org-agenda-diary-file (file-name-concat org-directory "diary.org"))
-  (org-replace-disputed-keys t "see `'org-disputed-keys'")
-  (org-special-ctrl-k t)
-  (org-use-speed-commands t)
-  (org-default-notes-file (file-name-concat org-directory "inbox.org"))
-  (org-agenda-files `(,org-default-notes-file
-                      ,(file-name-concat org-directory "todo")))
-  (org-refile-use-cache nil)
-  (org-archive-mark-done nil)
-  (org-archive-location "%s_archive::* Archive")
-  (org-export-coding-system 'utf-8)
-  :config
-  
-  (setq org-tag-alist '(
-                        ;; locale
-                        (:startgroup)
-                        ("home" . ?h)
-                        ("work" . ?w)
-                        (:endgroup)
-                        (:newline)
-                        ;; scale
-                        (:startgroup)
-                        ("one-shot" . ?o)
-                        ("project" . ?j)
-                        ("tiny" . ?t)
-                        (:endgroup)
-                        ;; misc
-                        ("noexport")
-                        ("meta")
-                        ("review")
-                        ("reading")))
-
-  ;; (require 'oc-csl)                     ; citation support
-
-  ;; Make org-open-at-point follow file links in the same window
-  (setf (cdr (assoc 'file org-link-frame-setup)) 'find-file)
-
-  ;; Make exporting quotes better
-  (setq org-export-with-smart-quotes t)
-
-  (setq org-todo-keywords
-        '((sequence "TODO(t)" "WAITING(w@/!)" "STARTED(s!)" "|" "DONE(d!)" "OBSOLETE(o@)")))
-
-  ;; Refile configuration
-  (setq org-outline-path-complete-in-steps nil)
-  (setq org-refile-use-outline-path 'file)
-
-  (setq org-capture-templates
-        '(("c" "Default Capture" entry (file "inbox.org")
-           "* TODO %?\n%U\n%i")
-          ;; Capture and keep an org-link to the thing we're currently working with
-          ("r" "Capture with Reference" entry (file "inbox.org")
-           "* TODO %?\n%U\n%i\n%a")
-          ;; Define a section
-          ("w" "Work")
-          ("wm" "Work meeting" entry (file+headline "work.org" "Meetings")
-           "** TODO %?\n%U\n%i\n%a")
-          ("wr" "Work report" entry (file+headline "work.org" "Reports")
-           "** TODO %?\n%U\n%i\n%a")))
-
-  (setq org-agenda-custom-commands
-        '(("n" "Agenda and All Todos"
-           ((agenda)
-            (todo)))
-          ("w" "Work" agenda ""
-           ((org-agenda-files '("work.org")))))))
-
-(use-package ob
-  :custom
-  (org-plantuml-exec-mode 'plantuml)
-  :config
-  (org-babel-do-load-languages
-   'org-babel-load-languages
-   (seq-filter
-    (lambda (pair)
-      (locate-library (concat "ob-" (symbol-name (car pair)))))
-    '((R . t)
-      (ditaa . t)
-      (dot . t)
-      (emacs-lisp . t)
-      (gnuplot . t)
-      (haskell . nil)
-      (latex . t)
-      (ledger . t)
-      (ocaml . nil)
-      (octave . t)
-      (plantuml . t)
-      (python . t)
-      (ruby . t)
-      (screen . nil)
-      (sh . t) ;; obsolete
-      (shell . t)
-      (sql . t)
-      (sqlite . t)))))
-
 (use-package flyspell
   :hook (text-mode
          (prog-mode . flyspell-prog-mode))
@@ -952,8 +840,131 @@
           (javascript "https://github.com/tree-sitter/tree-sitter-javascript")
           (tsx . ("https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")))))
 
+(use-package custom
+  :custom
+  (custom-buffer-done-kill t))
+
+(use-package org
+  :init (setq org-directory "~/org")
+  :bind-keymap
+  ("C-c o" . my/org-prefix-map)
+  :bind
+  (:map my/org-prefix-map
+        ("b" . org-fold-hide-block-toggle))
+  :custom
+  (org-replace-disputed-keys t "see `'org-disputed-keys'")
+  (org-special-ctrl-a/e t)
+  (org-special-ctrl-k t)
+  (org-cycle-emulate-tab 'whitestart)
+  (org-use-speed-commands t)
+  (org-default-notes-file (file-name-concat org-directory "inbox.org"))
+  (org-agenda-files `(,org-default-notes-file
+                      ,(file-name-concat org-directory "todo")))
+  (org-refile-use-cache nil)
+  (org-outline-path-complete-in-steps nil)
+  (org-refile-use-outline-path 'file)
+  (org-archive-mark-done nil)
+  (org-archive-location "%s_archive::* Archive")
+  (org-todo-keywords
+   '((sequence "TODO(t)" "WAITING(w@/!)" "STARTED(s!)" "|" "DONE(d!)" "OBSOLETE(o@)")))
+  (org-tag-alist '(
+                   ;; locale
+                   (:startgroup)
+                   ("home" . ?h)
+                   ("work" . ?w)
+                   (:endgroup)
+                   (:newline)
+                   ;; scale
+                   (:startgroup)
+                   ("one-shot" . ?o)
+                   ("project" . ?j)
+                   ("tiny" . ?t)
+                   (:endgroup)
+                   ;; misc
+                   ("noexport")
+                   ("meta")
+                   ("review")
+                   ("reading"))))
+
+(use-package org-agenda
+  :bind
+  (:map global-map
+        ("C-c a" . org-agenda))
+  :custom
+  (org-agenda-diary-file (file-name-concat org-directory "diary.org"))
+  (org-agenda-custom-commands
+   '(("n" "Agenda and All Todos"
+      ((agenda)
+       (todo)))
+     ("w" "Work" agenda ""
+      ((org-agenda-files '("work.org")))))))
+
+(use-package org-capture
+  :bind
+  (:map global-map
+        ("C-c c" . org-capture))
+  :custom
+  (org-capture-templates
+   '(("c" "Default Capture" entry (file "inbox.org")
+      "* TODO %?\n%U\n%i")
+     ;; Capture and keep an org-link to the thing we're currently working with
+     ("r" "Capture with Reference" entry (file "inbox.org")
+      "* TODO %?\n%U\n%i\n%a")
+     ;; Define a section
+     ("w" "Work")
+     ("wm" "Work meeting" entry (file+headline "work.org" "Meetings")
+      "** TODO %?\n%U\n%i\n%a")
+     ("wr" "Work report" entry (file+headline "work.org" "Reports")
+      "** TODO %?\n%U\n%i\n%a"))))
+
+(use-package org-clock
+  :bind
+  (:map my/org-prefix-map
+        ("j" . org-clock-goto)
+        ("l" . org-clock-in-last)
+        ("i" . org-clock-in)
+        ("o" . org-clock-out)))
+
+(use-package ol
+  :bind
+  (:map my/org-prefix-map
+        ("s" . org-store-link)
+        ("y" . org-insert-link-global))
+  :config
+  (setf (cdr (assoc 'file org-link-frame-setup)) 'find-file))
+
+(use-package ob
+  :custom
+  (org-plantuml-exec-mode 'plantuml)
+  :config
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   (seq-filter
+    (lambda (pair)
+      (locate-library (concat "ob-" (symbol-name (car pair)))))
+    '((R . nil)
+      (ditaa . nil)
+      (dot . nil)
+      (emacs-lisp . t)
+      (gnuplot . t)
+      (haskell . nil)
+      (latex . t)
+      (ledger . nil)
+      (ocaml . nil)
+      (octave . nil)
+      (plantuml . t)
+      (python . t)
+      (ruby . nil)
+      (screen . nil)
+      (shell . t)
+      (sql . t)
+      (sqlite . t)))))
+
 (use-package ox
   :custom
+  (org-export-coding-system 'utf-8)
+  (org-export-with-smart-quotes t)
+  (org-export-with-sub-superscripts nil)
   (org-export-backends '(org html latex md ascii icalendar))
   (org-html-table-default-attributes '(:border "2" :cellspacing "0" :cellpadding "6" :rules "all" :frame "border"))
   (org-html-postamble nil)
@@ -977,10 +988,6 @@
                    ("\\section{%s}" . "\\section*{%s}")
                    ("\\subsection{%s}" . "\\subsection*{%s}")
                    ("\\subsubsection{%s}" . "\\subsubsection*{%s}")))))
-
-(use-package custom
-  :custom
-  (custom-buffer-done-kill t))
 
 (use-package package
   :custom
