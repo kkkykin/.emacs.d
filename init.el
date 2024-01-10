@@ -546,6 +546,9 @@
   (shell-get-old-input-include-continuation-lines t)
   (shell-kill-buffer-on-exit t))
 
+(use-package sqlite-mode
+  :magic ("SQLite format 3\x00" . my/sqlite-view-file-magically))
+
 (use-package dired
   :custom
   (dired-maybe-use-globstar t)
@@ -621,9 +624,10 @@
 
 (use-package epg
   :config
+  (unless my/sys-linux-p
+    (setq epg-pinentry-mode 'loopback))
   (when my/sys-android-p
-    (setq epg-gpg-home-directory "/data/data/com.termux/files/home/.gnupg"
-          epg-pinentry-mode 'loopback)
+    (setq epg-gpg-home-directory "/data/data/com.termux/files/home/.gnupg")
     ;; fix gnupg hang
     (fset 'epg-wait-for-status 'ignore)))
 
@@ -802,7 +806,13 @@
   (url-privacy-level 'high)
   (url-mime-language-string "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6")
   (url-cookie-trusted-urls '())
-  (url-cookie-untrusted-urls '(".*")))
+  (url-cookie-untrusted-urls '(".*"))
+  :config
+  (dolist (fn '(url-retrieve
+                url-queue-retrieve
+                url-retrieve-internal
+                url-retrieve-synchronously))
+    (advice-add fn :around #'my/advice-url-retrieve-with-proxy)))
 
 (use-package filesets :defer 10
   :unless my/sys-android-p

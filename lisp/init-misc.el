@@ -106,7 +106,8 @@
   :group 'my
   :type 'string)
 
-(defcustom my/proxy-domain '("\\(\\.\\|^\\)google.com$")
+(defcustom my/proxy-domain '("\\(\\.\\|^\\)reimu.net$"
+                             "\\(\\.\\|^\\)google.com$")
   "Domain through proxy."
   :group 'my
   :type '(repeat regexp))
@@ -120,6 +121,19 @@
   "Set SOCKS proxy."
   :group 'my
   :type 'string)
+
+(defun my/advice-url-retrieve-with-proxy (orig-fun &rest args)
+  "Proxy for specific domain."
+  (if-let ((need-proxy
+            (seq-some
+             (lambda (x)
+               (string-match-p x (url-host (url-generic-parse-url (car args)))))
+             my/proxy-domain))
+           (url-proxy-services
+            `(("http" . ,my/centaur-proxy)
+              ("https" . ,my/centaur-proxy))))
+      (apply orig-fun args)
+    (apply orig-fun args)))
 
 (defun my/setup-faces ()
   "Randomize setup faces."
@@ -206,7 +220,11 @@ Leave point after open-bracket."
 (defun my/rclone-quit ()
   "Exit rclone safely."
   (interactive)
-  (start-process "rclone-quit" nil "rclone" "rc" "core/quit"))
+  (when-let* ((args '("rc" "core/quit"))
+              (auth (car (auth-source-search :max 1 :host "rclone.localhost")))
+              (args (append args `(,(format "--rc-user=%s" (plist-get auth :user))
+                                   ,(format "--rc-pass=%s" (auth-info-password auth))))))
+    (apply #'start-process "rclone-quit" nil "rclone" args)))
 
 (defun my/transparency (value)
   "Sets the transparency of the frame window. 0=transparent/100=opaque"
@@ -526,6 +544,14 @@ items are fetched from each feed."
                    ;; 排除微信公众号内的文章
                    (not (string-match-p "weixin\\.qq\\.com" url)))
           (eww-readable))))))
+
+(defun my/sqlite-view-file-magically ()
+  "Runs `sqlite-mode-open-file' on the file name visited by the
+current buffer, killing it.
+From https://christiantietze.de/posts/2024/01/emacs-sqlite-mode-open-sqlite-files-automatically/"
+  (let ((file-name buffer-file-name))
+    (kill-current-buffer)
+    (sqlite-mode-open-file file-name)))
 
 (defun my/dired-dwim ()
   "start process with current file"
