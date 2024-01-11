@@ -11,6 +11,20 @@
 (defvar my/org-prefix-map (make-sparse-keymap)
   "A keymap for handy global access to org helpers, particularly clocking.")
 
+(defcustom my/light-theme-list
+  '(adwaita dichromacy leuven light-blue modus-operandi tango
+            tsdh-light whiteboard)
+  "Built-in light themes."
+  :group 'my
+  :type '(repeat symbol))
+
+(defcustom my/dark-theme-list
+  '(deeper-blue leuven-dark manoj-dark misterioso modus-vivendi
+                tango-dark tsdh-dark wheatgrass wombat)
+  "Built-in dark themes."
+  :group 'my
+  :type '(repeat symbol))
+
 (defcustom my/fonts-list
   '("LXGW WenKai Mono" "Sarasa Mono SC" "Unifont-JP" "UnifontExMono")
   "prefered fonts"
@@ -135,6 +149,29 @@
       (apply orig-fun args)
     (apply orig-fun args)))
 
+(defun my/set-theme (theme)
+  "Set one theme only."
+  (dolist (item custom-enabled-themes)
+    (disable-theme item))
+  (if (memq theme custom-known-themes)
+      (enable-theme theme)
+    (load-theme theme)))
+
+(defun my/shuffle-set-theme (theme-list)
+  "Shuffle set theme."
+  ;; (interactive
+  ;;  (list (completing-read "Load theme list: "
+  ;;                         '(my/light-theme-list
+  ;;                           my/dark-theme-list))))
+  (let* ((themes (remove (car custom-enabled-themes) theme-list))
+         (theme (cl-loop for item = (seq-random-elt themes)
+                         always themes
+                         do (delete item themes)
+                         when (memq item (custom-available-themes))
+                         return item)))
+    (my/set-theme theme)
+    (message "Current theme: %s" (symbol-name theme))))
+
 (defun my/setup-faces ()
   "Randomize setup faces."
   (when (display-graphic-p)
@@ -159,7 +196,7 @@
                                 ((> (display-pixel-width) 1920) (caddr height))
                                 (t (cadr height)))))
 
-    (load-theme 'leuven)))
+    (my/shuffle-set-theme my/light-theme-list)))
 
 (defun my/advice-silence-messages (orig-fun &rest args)
   "Advice function that silences all messages in ORIG-FUN.
