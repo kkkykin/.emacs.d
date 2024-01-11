@@ -134,7 +134,7 @@
   :init (setq viper-mode t
               viper-inhibit-startup-message t
               viper-expert-level '5)
-  :hook (window-setup)
+  :hook (emacs-startup)
   :custom
   (viper-vi-style-in-minibuffer nil)
   (viper-buffer-search-char ?g)
@@ -319,11 +319,6 @@
   :config
   (unless (server-running-p)
     (server-start)))
-
-(use-package window
-  :config
-  (when my/sys-android-p
-    (keymap-global-set "C-z" 'window-swap-states)))
 
 (use-package diff
   :custom
