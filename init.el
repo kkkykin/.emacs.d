@@ -17,9 +17,9 @@
         ([remap eval-last-sexp] . pp-eval-last-sexp)
         ([remap upcase-word] . upcase-dwim)
         ([remap downcase-word] . downcase-dwim)
-        ([remap capitalize-word] . capitalize-dwim)
-        ("C-c d" . 'duplicate-dwim))
+        ([remap capitalize-word] . capitalize-dwim))
   (:map my/global-prefix-map
+        ("d" . 'duplicate-dwim)
         ("p" . 'delete-pair)
         ("u" . 'raise-sexp)
         ("t" . 'transpose-sentences)
@@ -31,6 +31,7 @@
         ("{" . 'my/insert-curlybracket))
   :custom
   (inhibit-splash-screen t)
+  (indicate-buffer-boundaries 'left)
   (initial-major-mode 'fundamental-mode)
   (system-time-locale "C")
   (use-package-always-defer t)
@@ -176,7 +177,6 @@
   :unless my/sys-android-p
   :hook prog-mode
   :custom
-  (indicate-buffer-boundaries 'left)
   (display-fill-column-indicator-character ?\u254e))
 
 (use-package time :defer 9
@@ -267,7 +267,7 @@
 
 (use-package electric
   :custom
-  (electric-pair-mode t)
+  (electric-layout-rules '())
   :hook ((text-mode fundamental-mode) . (lambda () (electric-pair-local-mode -1)))
   :config
   (electric-pair-mode)
@@ -277,7 +277,6 @@
   :unless my/sys-android-p
   :hook emacs-startup
   :custom
-  (windmove-create-window t)
   (windmove-wrap-around t)
   :config
   (windmove-default-keybindings)
@@ -350,6 +349,7 @@
   (show-paren-context-when-offscreen 'overlay))
 
 (use-package which-func :defer 5
+  :unless my/sys-android-p
   :config
   (which-function-mode))
 
@@ -482,30 +482,26 @@
   :config
   (advice-add 'eww :around 'my/advice-url-redirect))
 
-(use-package webjump
+(use-package browse-url
+  :hook ((text-mode . goto-address-mode)
+         (prog-mode . goto-address-prog-mode))
   :bind
   (:map my/global-prefix-map
         ("/" . 'webjump))
-  :config
-  (dolist (web '(("Ecosia" .
-                  [simple-query "www.ecosia.org"
-                                "www.ecosia.org/search?method=index&q=" ""])
-                 ("NixPackage" .
-                  [simple-query "search.nixos.org/packages"
-                                "search.nixos.org/packages?from=0&size=50&sort=relevance&type=packages&query=" ""])
-                 ("NixOption" .
-                  [simple-query "search.nixos.org/options"
-                                "search.nixos.org/options?from=0&size=50&sort=relevance&type=packages&query=" ""])))
-    (add-to-list 'webjump-sites web)))
-
-(use-package browse-url
   :custom
-  (browse-url-handlers '(("\\`file:" . browse-url-default-browser))))
-
-(use-package goto-addr
-  ;; :unless my/sys-android-p
-  :hook ((text-mode . goto-address-mode)
-         (prog-mode . goto-address-prog-mode)))
+  (browse-url-handlers '(("\\`file:" . browse-url-default-browser)))
+  :config
+  (with-eval-after-load 'webjump
+    (dolist (web '(("Mojeek" .
+                    [simple-query "https://www.mojeek.com"
+                                  "https://www.mojeek.com/search?q=" ""])
+                   ("NixPackage" .
+                    [simple-query "https://search.nixos.org/packages"
+                                  "https://search.nixos.org/packages?from=0&size=50&sort=relevance&type=packages&query=" ""])
+                   ("NixOption" .
+                    [simple-query "https://search.nixos.org/options"
+                                  "https://search.nixos.org/options?from=0&size=50&sort=relevance&type=packages&query=" ""])))
+      (add-to-list 'webjump-sites web))))
 
 (use-package tramp
   :bind
@@ -563,27 +559,26 @@
     (add-hook 'dired-mode-hook 'dired-hide-details-mode))
   :bind (:map dired-mode-map
               ("× μ" . my/mpv-image)
-              ("C-c d" . my/dired-duplicate-file)
+              ("C-x j d" . my/dired-duplicate-file)
               ("f" . my/dired-dwim)
               ("<mouse-2>" . dired-mouse-find-file))
   :config
   (require 'dired-x)
-  (setq archive-7z-program (let ((7z (or (executable-find "7z")
-                                         (executable-find "7za")
-                                         (executable-find "7zz"))))
-                             (when 7z
-                               (file-name-base 7z))))
+  (when-let ((7z (or (executable-find "7z")
+                     (executable-find "7za")
+                     (executable-find "7zz"))))
+    (setq archive-7z-program (file-name-base 7z)))
+  
   (setq dired-guess-shell-alist-user
-        (list
-         (list "\\.\\(rar\\|zip\\|7z\\)\\(\\.001\\)?$"
-               (concat archive-7z-program " x -aoa"))
-         (list "\\.apk$" "adb install")
-         (list "\\(?:\\.t\\(?:\\(?:ar\\.\\)?zst\\)\\)\\'"
-               "zstd -dc ? | tar -xf -")
-         (list "\\.\\(mp4\\|mkv\\|avi\\|webm\\|flv\\|m4v\\|mov\\)\\'"
-               "ffmpeg -hide_banner -y -strict 2 -hwaccel auto -i ? -vf \"scale='min(2560,iw)':-1\" -c:v hevc_nvenc -rc vbr -cq 19 -qmin 19 -qmax 19 -profile:v main10 -pix_fmt p010le -b:v 0K -bf:v 3 -b_ref_mode middle -temporal-aq 1 -rc-lookahead 32 -c:a libopus -b:a 128k -f mp4 ff-`?`")
-         (list "\\.\\(png\\|jpe?g\\|gif\\|webp\\|bmp\\)\\'"
-               "ffmpeg -hide_banner -y -i ? -vf \"scale='min(4096,iw)':-1\" -c:v libaom-av1 -cpu-used 6 -row-mt 1 -tiles 2x2 -still-picture 1 -crf 20 -f avif ff-`?`"))))
+        `(("\\.\\(rar\\|zip\\|7z\\)\\(\\.001\\)?$"
+           ,(format "%s x -aoa" archive-7z-program))
+          ("\\.apk$" "adb install")
+          ("\\(?:\\.t\\(?:\\(?:ar\\.\\)?zst\\)\\)\\'"
+           "zstd -dc ? | tar -xf -")
+          ("\\.\\(mp4\\|mkv\\|avi\\|webm\\|flv\\|m4v\\|mov\\)\\'"
+           "ffmpeg -hide_banner -y -strict 2 -hwaccel auto -i ? -vf \"scale='min(2560,iw)':-1\" -c:v hevc_nvenc -rc vbr -cq 19 -qmin 19 -qmax 19 -profile:v main10 -pix_fmt p010le -b:v 0K -bf:v 3 -b_ref_mode middle -temporal-aq 1 -rc-lookahead 32 -c:a libopus -b:a 128k -f mp4 ff-`?`")
+          ("\\.\\(png\\|jpe?g\\|gif\\|webp\\|bmp\\)\\'"
+           "ffmpeg -hide_banner -y -i ? -vf \"scale='min(4096,iw)':-1\" -c:v libaom-av1 -cpu-used 6 -row-mt 1 -tiles 2x2 -still-picture 1 -crf 20 -f avif ff-`?`"))))
 
 (use-package dired-aux
   :custom
@@ -594,19 +589,20 @@
   (dired-compress-file-default-suffix ".zst")
   (dired-compress-directory-default-suffix ".tar.zst")
   :config
-  (setq dired-compress-files-alist
-        (append `(("\\.\\(tzst\\)\\'" . "tar -cf - %i | zstd -5 -o %o")
-                  ("\\.\\(zip\\|7z\\)\\'" . ,(concat archive-7z-program " a -mx5 %o %i")))
-                dired-compress-files-alist))
-  (setq dired-compress-file-suffixes
-        (append `(("\\.\\(zip\\|rar\\)\\'" #1=""
-                   ,(concat archive-7z-program " x -aoa -o%o %i"))
+
+  (dolist (item `(("\\.\\(tzst\\)\\'" . "tar -cf - %i | zstd -5 -o %o")
+                  ("\\.\\(zip\\|7z\\)\\'"
+                   . ,(format "%s a -mx5 %%o %%i" archive-7z-program))))
+    (add-to-list 'dired-compress-files-alist item))
+
+  (dolist (item `(("\\.\\(zip\\|rar\\)\\'" #1=""
+                   ,(format "%s x -aoa -o%%o %%i" archive-7z-program))
                   ("\\.t\\(ar\\.\\)?\\(gz\\|xz\\|bz\\)\\'" #1#
-                   ,(concat archive-7z-program " x %i -so | "
-                            archive-7z-program " x -aoa -si -ttar -o%o"))
+                   ,(format "%s x %%i -so | %s x -aoa -si -ttar -o%%o"
+                            archive-7z-program archive-7z-program ))
                   ("\\.t\\(ar\\.\\)?zst\\'" #1# "zstd -dc %i | tar -xf -")
-                  ("\\.zst\\'" #1# "zstd -d --rm %i"))
-                dired-compress-file-suffixes)))
+                  ("\\.zst\\'" #1# "zstd -d --rm %i")))
+    (add-to-list 'dired-compress-file-suffixes item)))
 
 (use-package arc-mode
   :config
@@ -617,7 +613,7 @@
 (use-package dictionary
   :bind
   (:map my/global-prefix-map
-        ("d" . dictionary-search))
+        ("D" . dictionary-search))
   :custom
   (dictionary-server "dict.tw")
   (dictionary-use-single-buffer t))
@@ -676,8 +672,10 @@
 
 (use-package image
   :custom
-  (image-dired-external-viewer "mpv")
+  (image-dired-external-viewer "mpv --no-config --no-osc --no-osd-bar --cursor-autohide=no --no-input-cursor")
   (image-use-external-converter t)
+  (doc-view-scale-internally nil)
+  (doc-view-resolution 300)
   :config
   (add-to-list 'image-file-name-extensions "avif")
   (unless (executable-find "gm")
@@ -688,11 +686,6 @@
                                                      "-f" "mjpeg" "%t"))
     
     (advice-add 'image-dired-create-thumb-1 :around #'my/advice-image-dired-create-thumb-maybe-gs)))
-
-(use-package doc-view
-  :custom
-  (doc-view-scale-internally nil)
-  (doc-view-resolution 300))
 
 (use-package eglot
   :custom
@@ -792,15 +785,6 @@
   :config
   (require 'foldout))
 
-(use-package emacs-news-mode
-  :bind
-  (:map emacs-news-view-mode-map
-        ("n" . outline-next-visible-heading)
-        ("p" . outline-previous-visible-heading)
-        ("f" . outline-forward-same-level)
-        ("b" . outline-backward-same-level)
-        ("u" . outline-up-heading)))
-
 (use-package url
   :custom
   (url-privacy-level 'high)
@@ -867,9 +851,9 @@
   (org-special-ctrl-k t)
   (org-cycle-emulate-tab 'whitestart)
   (org-use-speed-commands t)
+  (org-goto-auto-isearch nil)
+  (org-goto-interface 'outline-path-completion)
   (org-default-notes-file (file-name-concat org-directory "inbox.org"))
-  (org-agenda-files `(,org-default-notes-file
-                      ,(file-name-concat org-directory "todo")))
   (org-refile-use-cache nil)
   (org-outline-path-complete-in-steps nil)
   (org-refile-use-outline-path 'file)
@@ -901,6 +885,12 @@
   (:map global-map
         ("C-c a" . org-agenda))
   :custom
+  (org-agenda-dim-blocked-tasks nil)
+  (org-agenda-inhibit-startup t)
+  ;; (org-agenda-use-tag-inheritance nil)
+  ;; (org-agenda-ignore-properties '(effort appt stats category))
+  (org-agenda-files `(,org-default-notes-file
+                      ,(file-name-concat org-directory "todo")))
   (org-agenda-diary-file (file-name-concat org-directory "diary.org"))
   (org-agenda-custom-commands
    '(("n" "Agenda and All Todos"
