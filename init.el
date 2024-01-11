@@ -130,6 +130,34 @@
   :if (package-installed-p 'completion-preview)
   :hook (prog-mode eshell-mode inferior-emacs-lisp-mode))
 
+(use-package viper
+  :init (setq viper-mode t
+              viper-inhibit-startup-message t
+              viper-expert-level '5)
+  :hook (window-setup)
+  :custom
+  (viper-vi-style-in-minibuffer nil)
+  (viper-buffer-search-char ?g)
+  (viper-no-multiple-ESC nil)
+  (viper-case-fold-search t)
+  (viper-shift-width 4)
+  (viper-want-ctl-h-help t)
+  (ex-cycle-other-window nil)
+  (viper-ESC-moves-cursor-back nil)
+  (viper-auto-indent t)
+  (viper-electric-mode t)
+  (viper-ex-style-motion nil)
+  (viper-ex-style-editing nil)
+  (viper-syntax-preference 'emacs)
+  :config
+  (dolist (mode '(vc-git-log-edit-mode))
+    (setq viper-vi-state-mode-list (delq mode viper-vi-state-mode-list))
+    (add-to-list 'viper-insert-state-mode-list mode))
+
+  (dolist (mode '(diff-mode))
+    (setq viper-vi-state-mode-list (delq mode viper-vi-state-mode-list))
+    (add-to-list 'viper-emacs-state-mode-list mode)))
+
 (use-package help
   :custom
   (help-window-select t "Switch to help buffers automatically")

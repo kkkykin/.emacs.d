@@ -12,14 +12,17 @@
   "A keymap for handy global access to org helpers, particularly clocking.")
 
 (defcustom my/light-theme-list
-  '(adwaita dichromacy leuven light-blue modus-operandi tango
+  '(adwaita dichromacy leuven modus-operandi-deuteranopia modus-operandi
+            modus-operandi-tinted modus-operandi-tritanopia tango
             tsdh-light whiteboard)
   "Built-in light themes."
   :group 'my
   :type '(repeat symbol))
 
 (defcustom my/dark-theme-list
-  '(deeper-blue leuven-dark manoj-dark misterioso modus-vivendi
+  '(deeper-blue leuven-dark manoj-dark misterioso
+                modus-vivendi-deuteranopia modus-vivendi
+                modus-vivendi-tinted modus-vivendi-tritanopia
                 tango-dark tsdh-dark wheatgrass wombat)
   "Built-in dark themes."
   :group 'my
