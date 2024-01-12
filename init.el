@@ -133,23 +133,40 @@
 (use-package viper
   :init (setq viper-mode t
               viper-inhibit-startup-message t
-              viper-expert-level '5)
-  :hook (emacs-startup)
+              viper-expert-level '5
+              viper-vi-style-in-minibuffer nil
+              viper-buffer-search-char ?g
+              viper-case-fold-search t
+              viper-shift-width 4
+              viper-auto-indent t
+              viper-electric-mode t
+              viper-ex-style-motion nil
+              viper-ex-style-editing nil
+              viper-ESC-moves-cursor-back nil)
+  :hook emacs-startup
+  :bind
+  (:map viper-insert-global-user-map
+        ("C-d" . delete-char)
+        ("C-w" . kill-region)
+        ("C-v" . scroll-up))
+  (:map viper-vi-global-user-map
+        ("qf" . find-file-at-point)
+        ("C-y" . yank)
+        ("C-e" . move-end-of-line)
+        ("C-u" . universal-argument)
+        ("M-p" . viper-prev-destructive-command)
+        ("M-n" . viper-next-destructive-command)
+        ("C-v" . scroll-up))
   :custom
-  (viper-vi-style-in-minibuffer nil)
-  (viper-buffer-search-char ?g)
-  (viper-no-multiple-ESC nil)
-  (viper-case-fold-search t)
-  (viper-shift-width 4)
   (viper-want-ctl-h-help t)
+  (viper-no-multiple-ESC nil)
   (ex-cycle-other-window nil)
-  (viper-ESC-moves-cursor-back nil)
-  (viper-auto-indent t)
-  (viper-electric-mode t)
-  (viper-ex-style-motion nil)
-  (viper-ex-style-editing nil)
   (viper-syntax-preference 'emacs)
   :config
+  (setq global-mode-string (delq 'viper-mode-string global-mode-string))
+  (unless (memq 'viper-mode-string (cdddr mode-line-format))
+    (setf (cdddr mode-line-format) (cons 'viper-mode-string (cdddr mode-line-format))))
+
   (dolist (mode '(vc-git-log-edit-mode))
     (setq viper-vi-state-mode-list (delq mode viper-vi-state-mode-list))
     (add-to-list 'viper-insert-state-mode-list mode))
@@ -197,7 +214,7 @@
   :hook (emacs-startup . cua-mode)
   :custom
   (cua-enable-cua-keys nil "cua-selection-mode")
-  (cua-rectangle-mark-key [(control ^)])
+  (cua-rectangle-mark-key [(control ~)])
   (cua-prefix-override-inhibit-delay 0.3)
   (cua-delete-selection nil))
 
