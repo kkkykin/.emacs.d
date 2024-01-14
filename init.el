@@ -90,8 +90,20 @@
     ;;   (add-hook hook 'my/bare-keyboard))
     ;; (add-hook 'focus-out-hook 'my/normal-keyboard)
 
+    (let ((move-to-header '(mode-line-frame-identification
+                            mode-line-buffer-identification "   "
+                            (project-mode-line project-mode-line-format)
+                            (vc-mode vc-mode) "  " mode-line-misc-info))
+          (headers (if header-line-format header-line-format '("%e")))
+          (modes (copy-sequence mode-line-format)))
+      (dolist (item move-to-header)
+        (setq modes (delete item modes))
+        (setq headers (append headers (cons item nil))))
+      (setq-default mode-line-format modes
+                    header-line-format headers))
+
     (setq select-enable-clipboard nil
-          mode-line-format (delq 'mode-line-buffer-identification mode-line-format)
+          overriding-text-conversion-style nil
           android-pass-multimedia-buttons-to-system t)
 
     (define-key key-translation-map (kbd "<delete>") (kbd "<escape>"))
