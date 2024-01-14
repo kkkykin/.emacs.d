@@ -139,6 +139,12 @@
   :group 'my
   :type 'string)
 
+(defun my/system-dark-mode-enabled-p ()
+  "Check if dark-mode is enabled."
+  (pcase system-type
+    ('windows-nt
+     (string-search "0x1" (shell-command-to-string "reg query HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize /v AppsUseLightTheme")))))
+
 (defun my/advice-url-retrieve-with-proxy (orig-fun &rest args)
   "Proxy for specific domain."
   (if-let ((need-proxy

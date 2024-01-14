@@ -36,6 +36,7 @@
   (system-time-locale "C")
   (use-package-always-defer t)
   (truncate-lines t)
+  (show-trailing-whitespace t)
   (mark-ring-max 6)
   (global-mark-ring-max 8)
   (set-mark-command-repeat-pop t)
@@ -178,6 +179,9 @@
   (setq global-mode-string (delq 'viper-mode-string global-mode-string))
   (unless (memq 'viper-mode-string (cdddr mode-line-format))
     (setf (cdddr mode-line-format) (cons 'viper-mode-string (cdddr mode-line-format))))
+
+  (when my/sys-winnt-p
+    (add-hook 'viper-vi-state-hook (lambda () (w32-set-ime-open-status nil))))
 
   (dolist (mode '(vc-git-log-edit-mode reb-mode))
     (setq viper-vi-state-mode-list (delq mode viper-vi-state-mode-list))
@@ -342,7 +346,6 @@
   (windmove-swap-states-default-keybindings '(shift control)))
 
 (use-package server :defer 5
-  :unless my/sys-android-p
   :custom
   (server-client-instructions nil)
   :config
@@ -795,6 +798,9 @@
   (tab-bar-tab-inactive ((t (:inherit mode-line-inactive :box nil))))
   :config
   (tab-bar-history-mode))
+
+(use-package saveplace :defer 6
+  :config (save-place-mode))
 
 (use-package recentf :defer 1
   :bind
