@@ -94,8 +94,8 @@
           mode-line-format (delq 'mode-line-buffer-identification mode-line-format)
           android-pass-multimedia-buttons-to-system t)
 
-    (define-key key-translation-map (kbd "<delete>") (kbd "ESC"))
-    (define-key key-translation-map (kbd "<deletechar>") (kbd "ESC"))
+    (define-key key-translation-map (kbd "<delete>") (kbd "<escape>"))
+    (define-key key-translation-map (kbd "<deletechar>") (kbd "<escape>"))
     (keymap-global-set "H-x" 'clipboard-kill-region)
     (keymap-global-set "H-c" 'clipboard-kill-ring-save)
     (keymap-global-set "H-v" 'clipboard-yank)))
@@ -133,11 +133,11 @@
 (use-package viper
   :init (setq viper-mode t
               viper-inhibit-startup-message t
-              viper-expert-level '5
+              viper-expert-level 5
               viper-vi-style-in-minibuffer nil
               viper-buffer-search-char ?g
               viper-case-fold-search t
-              viper-shift-width 4
+              viper-shift-width 2
               viper-auto-indent t
               viper-electric-mode t
               viper-ex-style-motion nil
@@ -167,11 +167,11 @@
   (unless (memq 'viper-mode-string (cdddr mode-line-format))
     (setf (cdddr mode-line-format) (cons 'viper-mode-string (cdddr mode-line-format))))
 
-  (dolist (mode '(vc-git-log-edit-mode))
+  (dolist (mode '(vc-git-log-edit-mode reb-mode))
     (setq viper-vi-state-mode-list (delq mode viper-vi-state-mode-list))
     (add-to-list 'viper-insert-state-mode-list mode))
 
-  (dolist (mode '(diff-mode))
+  (dolist (mode '(diff-mode org-mode))
     (setq viper-vi-state-mode-list (delq mode viper-vi-state-mode-list))
     (add-to-list 'viper-emacs-state-mode-list mode)))
 
@@ -599,7 +599,7 @@
     (add-hook 'dired-mode-hook 'dired-hide-details-mode))
   :bind (:map dired-mode-map
               ("× μ" . my/mpv-image)
-              ("C-x j d" . my/dired-duplicate-file)
+              ("E" . my/dired-duplicate-file)
               ("f" . my/dired-dwim)
               ("<mouse-2>" . dired-mouse-find-file))
   :config
@@ -618,7 +618,8 @@
           ("\\.\\(mp4\\|mkv\\|avi\\|webm\\|flv\\|m4v\\|mov\\)\\'"
            "ffmpeg -hide_banner -y -strict 2 -hwaccel auto -i ? -vf \"scale='min(2560,iw)':-1\" -c:v hevc_nvenc -rc vbr -cq 19 -qmin 19 -qmax 19 -profile:v main10 -pix_fmt p010le -b:v 0K -bf:v 3 -b_ref_mode middle -temporal-aq 1 -rc-lookahead 32 -c:a libopus -b:a 128k -f mp4 ff-`?`")
           ("\\.\\(png\\|jpe?g\\|gif\\|webp\\|bmp\\)\\'"
-           "ffmpeg -hide_banner -y -i ? -vf \"scale='min(4096,iw)':-1\" -c:v libaom-av1 -cpu-used 6 -row-mt 1 -tiles 2x2 -still-picture 1 -crf 20 -f avif ff-`?`"))))
+           "ffmpeg -hide_banner -y -i ? -vf \"scale='min(4096,iw)':-1\" -c:v libaom-av1 -cpu-used 6 -row-mt 1 -tiles 2x2 -still-picture 1 -crf 20 -f avif ff-`?`")
+          (".*" "tar -cf - ? | zstd -o `?`.tzst --long --ultra -9"))))
 
 (use-package dired-aux
   :custom
@@ -630,9 +631,9 @@
   (dired-compress-directory-default-suffix ".tar.zst")
   :config
 
-  (dolist (item `(("\\.\\(tzst\\)\\'" . "tar -cf - %i | zstd -5 -o %o")
-                  ("\\.\\(zip\\|7z\\)\\'"
-                   . ,(format "%s a -mx5 %%o %%i" archive-7z-program))))
+  (dolist (item `(("\\.\\(tar\\.zst\\)\\'" . "tar -cf - %i | zstd -T0 --fast=2 -o %o")
+                  ("\\.7z\\'" . ,(format "%s a -mqs=on -mx3 %%o %%i" archive-7z-program))
+                  ("\\.zip\\'" . ,(format "%s a -mx3 %%o %%i" archive-7z-program))))
     (add-to-list 'dired-compress-files-alist item))
 
   (dolist (item `(("\\.\\(zip\\|rar\\)\\'" #1=""
