@@ -177,7 +177,7 @@
   (viper-syntax-preference 'emacs)
   :config
   (setq global-mode-string (delq 'viper-mode-string global-mode-string))
-  (unless (memq 'viper-mode-string (cdddr mode-line-format))
+  (unless (memq 'viper-mode-string mode-line-format)
     (setf (cdddr mode-line-format) (cons 'viper-mode-string (cdddr mode-line-format))))
 
   (when my/sys-winnt-p
@@ -187,7 +187,7 @@
     (setq viper-vi-state-mode-list (delq mode viper-vi-state-mode-list))
     (add-to-list 'viper-insert-state-mode-list mode))
 
-  (dolist (mode '(diff-mode org-mode))
+  (dolist (mode '(diff-mode org-mode sql-interactive-mode))
     (setq viper-vi-state-mode-list (delq mode viper-vi-state-mode-list))
     (add-to-list 'viper-emacs-state-mode-list mode)))
 
@@ -399,6 +399,7 @@
          ((ediff-prepare-buffer vc-before-checkin) . turn-off-hideshow)))
 
 (use-package paren
+  :hook (Info-mode . show-paren-local-mode)
   :custom
   (show-paren-when-point-in-periphery t)
   (show-paren-context-when-offscreen 'overlay))
@@ -550,6 +551,15 @@
     (dolist (web '(("Mojeek" .
                     [simple-query "https://www.mojeek.com"
                                   "https://www.mojeek.com/search?q=" ""])
+                   ("Yandex" .
+                    [simple-query "https://yandex.com"
+                                  "https://yandex.com/search/?text=" ""])
+                   ("Swisscows" .
+                    [simple-query "https://swisscows.com/"
+                                  "https://swisscows.com/en/web?query=" ""])
+                   ("Bing" .
+                    [simple-query "https://www.bing.com"
+                                  "https://www.bing.com/search?q=" ""])
                    ("NixPackage" .
                     [simple-query "https://search.nixos.org/packages"
                                   "https://search.nixos.org/packages?from=0&size=50&sort=relevance&type=packages&query=" ""])
