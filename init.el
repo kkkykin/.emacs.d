@@ -36,7 +36,7 @@
   (system-time-locale "C")
   (use-package-always-defer t)
   (truncate-lines t)
-  (show-trailing-whitespace t)
+  ;; (show-trailing-whitespace t)
   (mark-ring-max 6)
   (global-mark-ring-max 8)
   (set-mark-command-repeat-pop t)
@@ -948,6 +948,11 @@
                    ("meta")
                    ("review")
                    ("reading"))))
+
+(use-package org-list
+  :custom
+  (org-list-demote-modify-bullet '(("+" . "-") ("-" . "+")))
+  (org-list-use-circular-motion t))
 
 (use-package org-agenda
   :bind
