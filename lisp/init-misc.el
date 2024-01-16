@@ -139,6 +139,16 @@
   :group 'my
   :type 'string)
 
+(defun my/viper-vi-action ()
+  "Do something when viper vi state."
+  (when my/sys-winnt-p
+    (w32-set-ime-open-status nil))
+  (blink-cursor-mode -1))
+
+(defun my/viper-emacs-action ()
+  "Do something when viper emacs state."
+  (blink-cursor-mode))
+
 (defun my/system-dark-mode-enabled-p ()
   "Check if dark-mode is enabled."
   (pcase system-type
@@ -162,9 +172,13 @@
   "Set one theme only."
   (dolist (item custom-enabled-themes)
     (disable-theme item))
-  (if (memq theme custom-known-themes)
-      (enable-theme theme)
-    (load-theme theme)))
+  (unless (memq theme custom-known-themes)
+    (load-theme theme))
+  (cond ((eq theme 'tango)
+         (custom-theme-set-faces theme '(hl-line ((t (:extend t :background "cornsilk"))))))
+        ((eq theme 'whiteboard)
+         (custom-theme-set-faces theme '(hl-line ((t (:extend t :background "wheat")))))))
+  (enable-theme theme))
 
 (defun my/shuffle-set-theme (theme-list)
   "Shuffle set theme."

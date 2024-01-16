@@ -41,7 +41,6 @@
   (global-mark-ring-max 8)
   (set-mark-command-repeat-pop t)
   (scroll-bar-mode nil)
-  (blink-cursor-mode nil)
   (column-number-mode t)
   (global-prettify-symbols-mode t)
   (prettify-symbols-unprettify-at-point t)
@@ -144,10 +143,10 @@
   :hook (prog-mode eshell-mode inferior-emacs-lisp-mode))
 
 (use-package viper
-  :init (setq viper-mode t
-              viper-inhibit-startup-message t
+  :init (setq viper-inhibit-startup-message t
               viper-expert-level 5
               viper-vi-style-in-minibuffer nil
+              viper-vi-state-cursor-color nil
               viper-buffer-search-char ?g
               viper-case-fold-search t
               viper-shift-width 2
@@ -155,8 +154,9 @@
               viper-electric-mode t
               viper-ex-style-motion nil
               viper-ex-style-editing nil
-              viper-ESC-moves-cursor-back nil)
-  :hook emacs-startup
+              viper-ESC-moves-cursor-back nil
+              viper-mode t)
+  :hook window-setup
   :bind
   (:map viper-insert-global-user-map
         ("C-d" . delete-char)
@@ -179,14 +179,11 @@
   (setq global-mode-string (delq 'viper-mode-string global-mode-string))
   (unless (memq 'viper-mode-string mode-line-format)
     (setf (cdddr mode-line-format) (cons 'viper-mode-string (cdddr mode-line-format))))
-
-  (when my/sys-winnt-p
-    (add-hook 'viper-vi-state-hook (lambda () (w32-set-ime-open-status nil))))
-
+  (add-hook 'viper-vi-state-hook #'my/viper-vi-action)
+  (add-hook 'viper-emacs-state-hook #'my/viper-emacs-action)
   (dolist (mode '(vc-git-log-edit-mode reb-mode))
     (setq viper-vi-state-mode-list (delq mode viper-vi-state-mode-list))
     (add-to-list 'viper-insert-state-mode-list mode))
-
   (dolist (mode '(diff-mode org-mode sql-interactive-mode))
     (setq viper-vi-state-mode-list (delq mode viper-vi-state-mode-list))
     (add-to-list 'viper-emacs-state-mode-list mode)))
@@ -750,7 +747,6 @@
                                                      "-map_metadata" "-1"
                                                      "-vf" "scale=%w:-1"
                                                      "-f" "mjpeg" "%t"))
-    
     (advice-add 'image-dired-create-thumb-1 :around #'my/advice-image-dired-create-thumb-maybe-gs)))
 
 (use-package eglot
@@ -953,6 +949,12 @@
   :custom
   (org-list-demote-modify-bullet '(("+" . "-") ("-" . "+")))
   (org-list-use-circular-motion t))
+
+(use-package org-table
+  :hook (text-mode . turn-on-orgtbl)
+  :custom
+  (org-table-header-line-p t)
+  (org-table-automatic-realign nil))
 
 (use-package org-agenda
   :bind
