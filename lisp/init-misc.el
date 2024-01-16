@@ -149,6 +149,11 @@
   "Do something when viper emacs state."
   (blink-cursor-mode))
 
+(defun my/viper-state-action (&rest args)
+  "Check viper state when window changed."
+  (cond ((eq viper-current-state 'vi-state) (my/viper-vi-action))
+        ((eq viper-current-state 'emacs-state) (my/viper-emacs-action))))
+
 (defun my/system-dark-mode-enabled-p ()
   "Check if dark-mode is enabled."
   (pcase system-type

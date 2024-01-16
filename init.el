@@ -179,8 +179,11 @@
   (setq global-mode-string (delq 'viper-mode-string global-mode-string))
   (unless (memq 'viper-mode-string mode-line-format)
     (setf (cdddr mode-line-format) (cons 'viper-mode-string (cdddr mode-line-format))))
-  (add-hook 'viper-vi-state-hook #'my/viper-vi-action)
-  (add-hook 'viper-emacs-state-hook #'my/viper-emacs-action)
+  (dolist (hook '(window-selection-change-functions
+                  window-buffer-change-functions
+                  viper-vi-state-hook
+                  viper-emacs-state-hook))
+    (add-hook hook #'my/viper-state-action))
   (dolist (mode '(vc-git-log-edit-mode reb-mode))
     (setq viper-vi-state-mode-list (delq mode viper-vi-state-mode-list))
     (add-to-list 'viper-insert-state-mode-list mode))
