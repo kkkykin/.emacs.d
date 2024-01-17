@@ -71,10 +71,15 @@
   (syntax-wholeline-max 1000)
   :config
   (prefer-coding-system 'utf-8)
+  (set-charset-priority 'unicode)
 
   (when my/sys-winnt-p
     "setup for windowsNT"
-    (setq shr-use-fonts nil)
+    (setq shr-use-fonts nil
+          file-name-coding-system 'gbk)
+    (dolist (proc '(("cmd" . (gbk . gbk)) ("gzip" . (gbk . gbk))
+                    ("7z" . (gbk . gbk))))
+      (add-to-list 'process-coding-system-alist proc))
     (setenv "HOME" (file-name-parent-directory user-emacs-directory))
 
     (add-to-list 'exec-suffixes ".ps1"))
@@ -452,6 +457,7 @@
 (use-package python
   :custom
   (python-indent-block-paren-deeper t)
+  (python-shell-interpreter-args "-i -X utf-8")
   (python-shell-dedicated t))
 
 (use-package flymake
@@ -876,7 +882,6 @@
   (setq file-cache-alist '(("init.el" "~/.emacs.d/")
                            ("default.el" "~/.emacs.d/lisp/")
                            ("pip.ini" "~/.config/pip/")
-                           ("mpv.conf" "~/.config/mpv/")
                            ("config" "~/.config/yt-dlp/"))))
 
 (use-package shadowfile :defer 11
@@ -957,6 +962,7 @@
   ;; :hook (text-mode . turn-on-orgtbl)
   :custom
   ;; (org-table-header-line-p t)
+  (org-table-use-standard-references t)
   (org-table-automatic-realign nil))
 
 (use-package org-agenda
