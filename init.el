@@ -187,7 +187,7 @@
   (dolist (mode '(vc-git-log-edit-mode reb-mode))
     (setq viper-vi-state-mode-list (delq mode viper-vi-state-mode-list))
     (add-to-list 'viper-insert-state-mode-list mode))
-  (dolist (mode '(diff-mode org-mode sql-interactive-mode))
+  (dolist (mode '(diff-mode org-mode sql-interactive-mode outline-mode))
     (setq viper-vi-state-mode-list (delq mode viper-vi-state-mode-list))
     (add-to-list 'viper-emacs-state-mode-list mode)))
 
@@ -954,9 +954,9 @@
   (org-list-use-circular-motion t))
 
 (use-package org-table
-  :hook (text-mode . turn-on-orgtbl)
+  ;; :hook (text-mode . turn-on-orgtbl)
   :custom
-  (org-table-header-line-p t)
+  ;; (org-table-header-line-p t)
   (org-table-automatic-realign nil))
 
 (use-package org-agenda

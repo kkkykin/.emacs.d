@@ -175,14 +175,16 @@
 
 (defun my/set-theme (theme)
   "Set one theme only."
-  (dolist (item custom-enabled-themes)
-    (disable-theme item))
   (unless (memq theme custom-known-themes)
     (load-theme theme))
   (cond ((eq theme 'tango)
          (custom-theme-set-faces theme '(hl-line ((t (:extend t :background "cornsilk"))))))
         ((eq theme 'whiteboard)
-         (custom-theme-set-faces theme '(hl-line ((t (:extend t :background "wheat")))))))
+         (custom-theme-set-faces theme '(hl-line ((t (:extend t :background "wheat"))))))
+        ((eq theme 'adwaita)
+         (custom-theme-set-faces theme '(hl-line ((t (:extend t :background "navajo white")))))))
+  (dolist (item custom-enabled-themes)
+    (disable-theme item))
   (enable-theme theme))
 
 (defun my/shuffle-set-theme (theme-list)
