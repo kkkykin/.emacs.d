@@ -42,6 +42,7 @@
   (set-mark-command-repeat-pop t)
   (scroll-bar-mode nil)
   (column-number-mode t)
+  (blink-cursor-mode nil)
   (global-prettify-symbols-mode t)
   (prettify-symbols-unprettify-at-point t)
   (display-line-numbers-type 'relative)
@@ -181,14 +182,13 @@
   (ex-cycle-other-window nil)
   (viper-syntax-preference 'emacs)
   :config
+  (put 'viper-mode-string 'risky-local-variable t)
+  (add-face-text-property 0 (length viper-emacs-state-id) '(:inherit mode-line-highlight) nil viper-emacs-state-id)
   (setq global-mode-string (delq 'viper-mode-string global-mode-string))
   (unless (memq 'viper-mode-string mode-line-format)
     (setf (cdddr mode-line-format) (cons 'viper-mode-string (cdddr mode-line-format))))
-  (dolist (hook '(window-selection-change-functions
-                  window-buffer-change-functions
-                  viper-vi-state-hook
-                  viper-emacs-state-hook))
-    (add-hook hook #'my/viper-state-action))
+  (when my/sys-winnt-p
+    (add-hook 'viper-vi-state-hook (lambda () (w32-set-ime-open-status nil))))
   (dolist (mode '(vc-git-log-edit-mode reb-mode))
     (setq viper-vi-state-mode-list (delq mode viper-vi-state-mode-list))
     (add-to-list 'viper-insert-state-mode-list mode))
