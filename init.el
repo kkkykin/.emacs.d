@@ -165,6 +165,7 @@
   :hook window-setup
   :bind
   (:map viper-insert-global-user-map
+        ("<backspace>" . backward-delete-char-untabify)
         ("C-d" . delete-char)
         ("C-w" . kill-region)
         ("C-v" . scroll-up))
