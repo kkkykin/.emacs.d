@@ -1273,6 +1273,7 @@
   (:map my/global-prefix-map
         ("a" . 'aria2-downloads-list))
   :config
+  (my/get-bt-tracker "https://gitea.com/XIU2/TrackersListCollection/raw/branch/master/best_aria2.txt")
   (let ((auth (car (auth-source-search :host "aria2.localhost"))))
     (setq aria2-rcp-secret (auth-info-password auth)
           aria2-rcp-listen-port (string-to-number (plist-get auth :port)))))

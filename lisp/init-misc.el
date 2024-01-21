@@ -799,5 +799,41 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
     (setq body (buffer-substring (point) (point-max)))
     (list headers body)))
 
+;; Aria2
+(defcustom my/aria2-conf-file (expand-file-name "aria2.conf" "~/.aria2")
+  "Default aria2 configuration file path."
+  :type '(string))
+
+(defun my/get-bt-tracker (url)
+  "Get BT tracker from https://github.com/XIU2/TrackersListCollection/blob/master/README-ZH.md."
+  (when (and (file-exists-p my/aria2-conf-file)
+             (not (find-buffer-visiting my/aria2-conf-file))
+             (time-less-p
+              (time-add
+               (file-attribute-modification-time (file-attributes my/aria2-conf-file))
+               (* 60 60 12))
+              (current-time)))
+    (make-process
+     :name "my/get-bt-tracker"
+     :buffer "my/get-bt-tracker"
+     :command `("curl" ,@newsticker-wget-arguments ,url)
+     :sentinel #'my/sentinel-get-bt-tracker)))
+
+(defun my/sentinel-get-bt-tracker (proc event)
+  "Write tracker to aria2 conf file."
+  (when (string= event "finished\n")
+     (with-current-buffer (process-buffer proc)
+       (when-let ((getp (search-backward "announce" nil t))
+                  (start (pos-bol))
+                  (end (pos-eol)))
+         (with-current-buffer (find-file-noselect my/aria2-conf-file)
+           (goto-char (point-min))
+           (re-search-forward "^bt-tracker=")
+           (delete-region (point) (pos-eol))
+           (insert-buffer-substring (process-buffer proc) start end)
+           (save-buffer)
+           (kill-buffer)))
+         (kill-buffer))))
+
 (provide 'init-misc)
 ;;; init-misc.el ends here
