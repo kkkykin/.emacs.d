@@ -76,13 +76,14 @@
 
   (when my/sys-winnt-p
     "setup for windowsNT"
-    (setq shr-use-fonts nil
-          file-name-coding-system 'gbk)
-    (dolist (proc '(("cmd" . (gbk . gbk)) ("gzip" . (gbk . gbk))
-                    ("7z" . (gbk . gbk))))
-      (add-to-list 'process-coding-system-alist proc))
+    (dolist (fn '(shell-command start-file-process-shell-command))
+      (advice-add fn :around #'my/advice-shell-command-coding-fix))
+    (setq process-coding-system-alist
+          `(("[cC][mM][dD][pP][rR][oO][xX][yY]" ,locale-coding-system))
+          find-ls-option '("-exec busybox ls -ldh {} +" . "-ldh")
+          file-name-coding-system locale-coding-system
+          shr-use-fonts nil)
     (setenv "HOME" (file-name-parent-directory user-emacs-directory))
-
     (add-to-list 'exec-suffixes ".ps1"))
 
   (when my/sys-linux-p
@@ -162,7 +163,8 @@
               viper-ex-style-editing nil
               viper-ESC-moves-cursor-back nil
               viper-mode t)
-  :hook window-setup
+  :hook (window-setup
+         (edebug-mode . viper-change-state-to-emacs))
   :bind
   (:map viper-insert-global-user-map
         ("<backspace>" . backward-delete-char-untabify)
@@ -172,6 +174,8 @@
   (:map viper-vi-global-user-map
         ("qf" . find-file-at-point)
         ("C-y" . yank)
+        ("C-f" . forward-char)
+        ("C-b" . backward-char)
         ("C-e" . move-end-of-line)
         ("C-u" . universal-argument)
         ("M-p" . viper-prev-destructive-command)
@@ -184,7 +188,7 @@
   (viper-syntax-preference 'emacs)
   :config
   (put 'viper-mode-string 'risky-local-variable t)
-  (add-face-text-property 0 (length viper-emacs-state-id) '(:inherit mode-line-highlight) nil viper-emacs-state-id)
+  (add-face-text-property 0 (length viper-emacs-state-id) '(:inverse-video t) nil viper-emacs-state-id)
   (setq global-mode-string (delq 'viper-mode-string global-mode-string))
   (unless (memq 'viper-mode-string mode-line-format)
     (setf (cdddr mode-line-format) (cons 'viper-mode-string (cdddr mode-line-format))))
@@ -270,7 +274,7 @@
 
 (use-package display-line-numbers
   :unless my/sys-android-p
-  :hook prog-mode)
+  :hook (prog-mode conf-mode))
 
 (use-package subword
   :unless my/sys-android-p
@@ -539,7 +543,7 @@
 
 (use-package eww
   :custom
-  (eww-search-prefix "https://reverse.zzzr.eu.org/https/html.duckduckgo.com/html/?q=" "https://www.mojeek.com/search?q= or https://wiby.org/?q=")
+  (eww-search-prefix "https://www.mojeek.com/search?newtab=1&cdate=1&qss=DuckDuckGo&date=1&sst=1&arc=none&q=" "https://wiby.org/?q=")
   (eww-auto-rename-buffer 'title)
   :hook (eww-after-render . my/eww-render-hook)
   :config
@@ -557,7 +561,7 @@
   (with-eval-after-load 'webjump
     (dolist (web '(("Mojeek" .
                     [simple-query "https://www.mojeek.com"
-                                  "https://www.mojeek.com/search?q=" ""])
+                                  "https://www.mojeek.com/search?newtab=1&cdate=1&qss=Brave,DuckDuckGo,Google,Metager,Swisscows,Yandex,Yep&date=1&sst=1&arc=none&q=" ""])
                    ("Yandex" .
                     [simple-query "https://yandex.com"
                                   "https://yandex.com/search/?text=" ""])
@@ -642,7 +646,7 @@
     (setq archive-7z-program (file-name-base 7z)))
   
   (setq dired-guess-shell-alist-user
-        `(("\\.\\(rar\\|zip\\|7z\\)\\(\\.001\\)?$"
+        `(("\\.\\(rar\\|zip\\|7z\\|iso\\)\\(\\.001\\)?$"
            ,(format "%s x -aoa" archive-7z-program))
           ("\\.apk$" "adb install")
           ("\\(?:\\.t\\(?:\\(?:ar\\.\\)?zst\\)\\)\\'"
@@ -933,6 +937,8 @@
   (org-refile-use-outline-path 'file)
   (org-archive-mark-done nil)
   (org-archive-location "%s_archive::* Archive")
+  (org-use-fast-todo-selection 'expert)
+  (org-treat-S-cursor-todo-selection-as-state-change nil)
   (org-todo-keywords
    '((sequence "TODO(t)" "WAITING(w@/!)" "STARTED(s!)" "|" "DONE(d!)" "OBSOLETE(o@)")))
   (org-tag-alist '(
@@ -952,7 +958,8 @@
                    ("noexport")
                    ("meta")
                    ("review")
-                   ("reading"))))
+                   ("reading")))
+  :config (add-to-list 'org-modules 'id))
 
 (use-package org-list
   :custom
@@ -1013,9 +1020,12 @@
 
 (use-package ol
   :bind
-  (:map my/org-prefix-map
-        ("s" . org-store-link)
-        ("y" . org-insert-link-global))
+  (:map my/global-prefix-map
+        ("l" . org-store-link)
+        ("L" . org-insert-link-global))
+  :custom
+  (org-id-link-to-org-use-id 'create-if-interactive)
+  (org-link-use-indirect-buffer-for-internals t)
   :config
   (setf (cdr (assoc 'file org-link-frame-setup)) 'find-file))
 

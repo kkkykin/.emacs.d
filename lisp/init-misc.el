@@ -145,6 +145,21 @@
     ('windows-nt
      (string-search "0x1" (shell-command-to-string "reg query HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize /v AppsUseLightTheme")))))
 
+(defun my/advice-shell-command-coding-fix (orig-fun &rest args)
+  "Fix coding system for cmdproxy shell."
+  (if-let* ((command (cond ((string= "*Find*" (car args)) (caddr args))
+                           (t (car args))))
+            (program-name
+             (seq-some
+              (lambda (x) (and (string-match-p "^[^\\(start\\|/.+\\)]" x) x))
+              (split-string-shell-command command)))
+            (need-fix (member program-name
+                              '("busybox" "ffmpeg" "ind" "mpv")))
+            (process-coding-system-alist
+             `(("[cC][mM][dD][pP][rR][oO][xX][yY]" utf-8 . ,locale-coding-system))))
+      (apply orig-fun args)
+    (apply orig-fun args)))
+
 (defun my/advice-url-retrieve-with-proxy (orig-fun &rest args)
   "Proxy for specific domain."
   (if-let ((need-proxy
@@ -162,12 +177,12 @@
   "Set one theme only."
   (unless (memq theme custom-known-themes)
     (load-theme theme))
-  (cond ((eq theme 'tango)
-         (custom-theme-set-faces theme '(hl-line ((t (:extend t :background "cornsilk"))))))
+  (cond ((eq theme 'adwaita)
+         (custom-theme-set-faces theme '(hl-line ((t (:extend t :background "navajo white"))))))
         ((eq theme 'whiteboard)
          (custom-theme-set-faces theme '(hl-line ((t (:extend t :background "wheat"))))))
-        ((eq theme 'adwaita)
-         (custom-theme-set-faces theme '(hl-line ((t (:extend t :background "navajo white")))))))
+        ((eq theme 'tango)
+         (custom-theme-set-faces theme '(hl-line ((t (:extend t :background "cornsilk")))))))
   (dolist (item custom-enabled-themes)
     (disable-theme item))
   (enable-theme theme))
