@@ -300,14 +300,6 @@
         ("R" . 'rename-visited-file))
   :custom
   (save-abbrevs 'silently)
-  (major-mode-remap-alist
-   '((yaml-mode . yaml-ts-mode)
-     (bash-mode . bash-ts-mode)
-     (javascript-mode . js-ts-mode)
-     (typescript-mode . typescript-ts-mode)
-     (json-mode . json-ts-mode)
-     (css-mode . css-ts-mode)
-     (python-mode . python-ts-mode)))
   (kept-new-versions 3)
   (kept-old-versions 1)
   (version-control t)
@@ -894,7 +886,7 @@
   :config
   (shadow-initialize))
 
-(use-package treesit
+(use-package treesit :defer 1
   :config
   (setq treesit-language-source-alist
         '((bash "https://github.com/tree-sitter/tree-sitter-bash")
@@ -910,7 +902,17 @@
           (html "https://github.com/tree-sitter/tree-sitter-html")
           (css "https://github.com/tree-sitter/tree-sitter-css")
           (javascript "https://github.com/tree-sitter/tree-sitter-javascript")
-          (tsx . ("https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")))))
+          (tsx . ("https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src"))))
+  (dolist (lan (mapcar #'car treesit-language-source-alist))
+    (when-let* ((avaip (treesit-language-available-p lan))
+                (name (symbol-name lan))
+                (fn (intern (format "%s-ts-mode" name)))
+                (fnp (functionp fn)))
+      (add-to-list 'major-mode-remap-alist
+                   `(,(pcase lan
+                        ('json 'js-json-mode)
+                        (t (intern (format "%s-mode" name))))
+                     . ,fn)))))
 
 (use-package custom
   :custom
