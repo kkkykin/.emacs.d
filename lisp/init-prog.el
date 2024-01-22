@@ -23,7 +23,7 @@
         (add-to-list 'auto-mode-alist
                      (pcase lan
                        ('yaml `("\\.ya?ml\\'" . ,ts-fn))
-                       ('dockerfile `("^Dockerfile\\'" . ,ts-fn))
+                       ('dockerfile `("\\(?:Dockerfile\\(?:\\..*\\)?\\|\\.[Dd]ockerfile\\)\\'" . ,ts-fn))
                        (t `(,(format "\\.%s\\'" name) . ,ts-fn))))))))
 
 
