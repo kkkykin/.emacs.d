@@ -42,7 +42,6 @@
   (set-mark-command-repeat-pop t)
   (scroll-bar-mode nil)
   (column-number-mode t)
-  (blink-cursor-mode nil)
   (global-prettify-symbols-mode t)
   (prettify-symbols-unprettify-at-point t)
   (display-line-numbers-type 'relative)
@@ -80,8 +79,9 @@
       (advice-add fn :around #'my/advice-shell-command-coding-fix))
     (setq process-coding-system-alist
           `(("[cC][mM][dD][pP][rR][oO][xX][yY]" ,locale-coding-system))
-          find-ls-option '("-exec busybox ls -ldh {} +" . "-ldh")
+          default-process-coding-system `(,locale-coding-system . ,locale-coding-system)
           file-name-coding-system locale-coding-system
+          find-ls-option '("-exec busybox ls -ldh {} +" . "-ldh")
           shr-use-fonts nil)
     (setenv "HOME" (file-name-parent-directory user-emacs-directory))
     (add-to-list 'exec-suffixes ".ps1"))
@@ -936,8 +936,9 @@
   (org-treat-S-cursor-todo-selection-as-state-change nil)
   (org-todo-keywords
    '((sequence "TODO(t)" "WAITING(w@/!)" "STARTED(s!)" "|" "DONE(d!)" "OBSOLETE(o@)")))
-  (org-tag-alist '(
-                   ;; locale
+  (org-fast-tag-selection-include-todo t)
+  (org-track-ordered-property-with-tag t)
+  (org-tag-alist '(;; locale
                    (:startgroup)
                    ("home" . ?h)
                    ("work" . ?w)
@@ -954,6 +955,8 @@
                    ("meta")
                    ("review")
                    ("reading")))
+  (org-log-done 'time)
+  (org-log-into-drawer t)
   :config (add-to-list 'org-modules 'id))
 
 (use-package org-list
