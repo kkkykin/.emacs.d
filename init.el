@@ -887,6 +887,7 @@
   (shadow-initialize))
 
 (use-package treesit :defer 1
+  :after prog-mode
   :config
   (setq treesit-language-source-alist
         '((bash "https://github.com/tree-sitter/tree-sitter-bash")
@@ -901,18 +902,10 @@
           ;; frontend
           (html "https://github.com/tree-sitter/tree-sitter-html")
           (css "https://github.com/tree-sitter/tree-sitter-css")
-          (javascript "https://github.com/tree-sitter/tree-sitter-javascript")
+          (js "https://github.com/tree-sitter/tree-sitter-javascript")
           (tsx . ("https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src"))))
-  (dolist (lan (mapcar #'car treesit-language-source-alist))
-    (when-let* ((avaip (treesit-language-available-p lan))
-                (name (symbol-name lan))
-                (fn (intern (format "%s-ts-mode" name)))
-                (fnp (functionp fn)))
-      (add-to-list 'major-mode-remap-alist
-                   `(,(pcase lan
-                        ('json 'js-json-mode)
-                        (t (intern (format "%s-mode" name))))
-                     . ,fn)))))
+  (require 'init-prog)
+  (my/ts-mode-enable))
 
 (use-package custom
   :custom
