@@ -11,33 +11,10 @@
   :group 'my
   :type '(repeat string))
 
-(defcustom my/img-cdn-server "https://imageproxy.pimg.tw/resize?url=${href_ue}"
+(defcustom my/img-cdn-server (car my/img-cdn-server-list)
   "Default Image CDN server."
   :group 'my
   :type 'string)
-
-(defcustom my/url-redirect-list
-  `(("^https://github.com/\\(.+\\)/commit/\\(\\w+\\)$" .
-     ;; 针对单个 commit
-     (lambda (url)
-       (format "https://github.com/%s/commit/%s.patch"
-               (match-string 1 url)
-               (match-string 2 url))))
-    ("^https://github.com/\\(.+\\)/pull/\\([[:digit:]]+\\)$" .
-     ;; 针对单个 Pull Request
-     (lambda (url)
-       (format "https://github.com/%s/pull/%s.patch"
-               (match-string 1 url)
-               (match-string 2 url))))
-    ("^https://github.com/\\(.+\\)/blob/\\(.+\\)" .
-     ;; 针对单个文件
-     (lambda (url)
-       (format "https://github.com/%s/raw/%s"
-               (match-string 1 url)
-               (match-string 2 url)))))
-  "Refind webpage experience: from https://emacstalk.codeberg.page/post/018/"
-  :group 'my
-  :type '(repeat regexp))
 
 ;; https://hub.zzzr.eu.org/curl/curl/wiki/DNS-over-HTTPS E
 (defcustom my/doh-server-list '("https://9.9.9.9/dns-query"
@@ -494,17 +471,21 @@ items are fetched from each feed."
 
 ;; eww
 
-(defun my/advice-url-redirect (fn url &rest args)
-  (catch 'ret
-    (dolist (redirect-rule my/url-redirect-list)
-      (let* ((regexp (car redirect-rule))
-             (redirect-fn (cdr redirect-rule))
-             (inhibit-message t))
-        (when-let* ((matched-groups (string-match regexp url)))
-          (setq url (funcall redirect-fn url))
-          (message "Redirect URL to %s" url)
-          (throw 'ret url)))))
-  (apply fn url args))
+(defun my/url-redirect (url)
+  (cond 
+   ((string-match "^https://github.com/\\(.+\\)/commit/\\(\\w+\\)$" url)
+    (format "https://github.com/%s/commit/%s.patch"
+            (match-string 1 url)
+            (match-string 2 url)))
+   ((string-match "^https://github.com/\\(.+\\)/pull/\\([[:digit:]]+\\)$" url)
+    (format "https://github.com/%s/pull/%s.patch"
+            (match-string 1 url)
+            (match-string 2 url)))
+   ((string-match "^https://github.com/\\(.+\\)/blob/\\(.+\\)" url)
+    (format "https://github.com/%s/raw/%s"
+            (match-string 1 url)
+            (match-string 2 url)))
+   (t url)))
 
 (defun my/eww-render-hook()
   (let ((url (plist-get eww-data :url)))
@@ -535,7 +516,7 @@ items are fetched from each feed."
     (make-process
      :name "my/get-bt-tracker"
      :buffer "my/get-bt-tracker"
-     :command `("curl" ,@newsticker-wget-arguments ,url)
+     :command `(,newsticker-wget-name ,@newsticker-wget-arguments ,url)
      :sentinel #'my/sentinel-get-bt-tracker)))
 
 (defun my/sentinel-get-bt-tracker (proc event)

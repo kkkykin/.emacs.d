@@ -74,7 +74,6 @@
   (set-charset-priority 'unicode)
 
   (when my/sys-winnt-p
-    "setup for windowsNT"
     (dolist (fn '(shell-command start-file-process-shell-command))
       (advice-add fn :around #'my/advice-shell-command-coding-fix))
     (setq process-coding-system-alist
@@ -87,15 +86,10 @@
     (add-to-list 'exec-suffixes ".ps1"))
 
   (when my/sys-linux-p
-    "setup for linux"
     (add-hook 'server-after-make-frame-hook #'my/setup-faces))
 
   (when my/sys-android-p
     (setenv "SSH_AUTH_SOCK" (string-trim-right (shell-command-to-string "gpgconf --homedir /data/data/com.termux/files/home/.gnupg --list-dirs agent-ssh-socket")))
-
-    ;; (dolist (hook '(focus-in-hook after-init-hook))
-    ;;   (add-hook hook 'my/bare-keyboard))
-    ;; (add-hook 'focus-out-hook 'my/normal-keyboard)
 
     (let ((move-to-header '(mode-line-frame-identification
                             mode-line-buffer-identification "   "
@@ -104,8 +98,8 @@
           (headers (if header-line-format header-line-format '("%e")))
           (modes (copy-sequence mode-line-format)))
       (dolist (item move-to-header)
-        (setq modes (delete item modes))
-        (setq headers (append headers (cons item nil))))
+        (setq modes (delete item modes)
+              headers (append headers (cons item nil))))
       (setq-default mode-line-format modes
                     header-line-format headers))
 
@@ -501,7 +495,7 @@
            ("newsticker"
             (name . "^\\*Newsticker"))))))
 
-(use-package newsticker :defer 20
+(use-package newsticker :defer 5
   :bind
   (:map newsticker-treeview-mode-map
         ("DEL" . 'my/newsticker-treeview-prev-page))
@@ -514,14 +508,13 @@
   (newsticker-retrieval-interval 1800)
   (newsticker-retrieval-method 'extern)
   (newsticker-wget-name "curl")
-  (newsticker-wget-arguments `("-Lkqsm40" "--doh-url" ,my/doh-server))
+  (newsticker-wget-arguments '("-Lkqsm30"))
   :config
-
+  (when (require 'init-net nil t)
+    (setq newsticker-wget-arguments
+          (append `("--doh-url" ,my/doh-server) newsticker-wget-arguments)))
   (unless (file-exists-p (file-name-concat newsticker-dir "saved"))
     (make-directory (file-name-concat newsticker-dir "saved") t))
-
-  (load "init-rss.el.gpg" t t)
-
   ;; with interval
   (advice-add 'newsticker-start :before-until #'my/advice-newsticker-start)
   ;; remove message: Error while retrieving image | news from feeds
@@ -530,16 +523,21 @@
   (advice-add 'newsticker--image-download-by-url :around #'my/advice-url-retrieve-with-timeout)
   (advice-add 'newsticker--get-news-by-wget :filter-args #'my/advice-newsticker--get-news-by-wget)
   (advice-add 'newsticker-save-item :before-until #'my/advice-newsticker-save-item)
-
-  (newsticker-start t))
+  (load "init-rss.el.gpg" t t)
+  (when (y-or-n-p-with-timeout "Do you want to run newsticker? " 30 t)
+    (newsticker-start t)))
 
 (use-package eww
   :custom
   (eww-search-prefix "https://www.mojeek.com/search?newtab=1&cdate=1&qss=DuckDuckGo&date=1&sst=1&arc=none&q=" "https://wiby.org/?q=")
   (eww-auto-rename-buffer 'title)
+  (shr-cookie-policy nil)
+  (shr-blocked-images "^https?://\\(blogs\\.reimu\\.net\\)")
   :hook (eww-after-render . my/eww-render-hook)
   :config
-  (advice-add 'eww :around 'my/advice-url-redirect))
+  (setq eww-retrieve-command (cons newsticker-wget-name newsticker-wget-arguments))
+  (when (require 'init-net nil t)
+    (add-to-list 'eww-url-transformers 'my/url-redirect)))
 
 (use-package browse-url
   :hook ((text-mode . goto-address-mode)
@@ -580,7 +578,6 @@
   (tramp-verbose 2)
   (tramp-use-scp-direct-remote-copying t)
   (debug-ignored-errors (cons 'remote-file-error debug-ignored-errors))
-  ;; (tramp-histfile-override nil)
   :config
   (when my/sys-winnt-p
     (setq tramp-default-method "sshx"))
@@ -863,11 +860,12 @@
   (url-cookie-trusted-urls '())
   (url-cookie-untrusted-urls '(".*"))
   :config
-  (dolist (fn '(url-retrieve
-                url-queue-retrieve
-                url-retrieve-internal
-                url-retrieve-synchronously))
-    (advice-add fn :around #'my/advice-url-retrieve-with-proxy)))
+  (when (require 'init-net nil t)
+    (dolist (fn '(url-retrieve
+                  url-queue-retrieve
+                  url-retrieve-internal
+                  url-retrieve-synchronously))
+      (advice-add fn :around #'my/advice-url-retrieve-with-proxy))))
 
 (use-package filesets :defer 10
   :unless my/sys-android-p
@@ -904,8 +902,8 @@
           (css "https://github.com/tree-sitter/tree-sitter-css")
           (js "https://github.com/tree-sitter/tree-sitter-javascript")
           (tsx . ("https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src"))))
-  (require 'init-prog)
-  (my/ts-mode-enable))
+  (when (require 'init-prog nil t)
+    (my/ts-mode-enable)))
 
 (use-package custom
   :custom
