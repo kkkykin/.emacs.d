@@ -76,9 +76,7 @@
   (when my/sys-winnt-p
     (dolist (fn '(shell-command start-file-process-shell-command))
       (advice-add fn :around #'my/advice-shell-command-coding-fix))
-    (setq process-coding-system-alist
-          `(("[cC][mM][dD][pP][rR][oO][xX][yY]" ,locale-coding-system))
-          default-process-coding-system `(,locale-coding-system . ,locale-coding-system)
+    (setq default-process-coding-system `(,locale-coding-system . ,locale-coding-system)
           file-name-coding-system locale-coding-system
           find-ls-option '("-exec busybox ls -ldh {} +" . "-ldh")
           shr-use-fonts nil)

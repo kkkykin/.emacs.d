@@ -55,8 +55,8 @@
               (split-string-shell-command command)))
             (need-fix (member program-name
                               '("busybox" "ffmpeg" "ind" "mpv")))
-            (process-coding-system-alist
-             `(("[cC][mM][dD][pP][rR][oO][xX][yY]" utf-8 . ,locale-coding-system))))
+            (default-process-coding-system
+             `(utf-8 . ,locale-coding-system)))
       (apply orig-fun args)
     (apply orig-fun args)))
 
