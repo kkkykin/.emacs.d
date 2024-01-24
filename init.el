@@ -266,7 +266,7 @@
 
 (use-package display-line-numbers
   :unless my/sys-android-p
-  :hook (prog-mode conf-mode))
+  :hook (prog-mode conf-mode edmacro-mode))
 
 (use-package subword
   :unless my/sys-android-p
@@ -530,7 +530,8 @@
   (eww-search-prefix "https://www.mojeek.com/search?newtab=1&cdate=1&qss=DuckDuckGo&date=1&sst=1&arc=none&q=" "https://wiby.org/?q=")
   (eww-auto-rename-buffer 'title)
   (shr-cookie-policy nil)
-  (shr-blocked-images "^https?://\\(blogs\\.reimu\\.net\\)")
+  (shr-use-xwidgets-for-media t)
+  (shr-blocked-images (concat "^https?://" (rx (| "www.baidu.com"))))
   :hook (eww-after-render . my/eww-render-hook)
   :config
   (setq eww-retrieve-command (cons newsticker-wget-name newsticker-wget-arguments))
@@ -801,7 +802,7 @@
   (tab-bar-new-tab-to 'rightmost)
   :custom-face
   (tab-bar ((t (:inherit mode-line :box nil))))
-  (tab-bar-tab ((t (:inherit mode-line :box nil))))
+  (tab-bar-tab ((t (:inherit mode-line :box t))))
   (tab-bar-tab-inactive ((t (:inherit mode-line-inactive :box nil))))
   :config
   (tab-bar-history-mode))
