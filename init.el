@@ -224,9 +224,8 @@
   :custom
   (bookmark-save-flag nil)
   :config
-  (let ((shared (file-name-concat user-emacs-directory "bookmark-share")))
-    (when (file-exists-p shared)
-      (bookmark-load shared nil t))))
+  (when (file-exists-p my/bookmark-shared)
+    (bookmark-load my/bookmark-shared nil t)))
 
 (use-package cua-base
   :hook (emacs-startup . cua-mode)

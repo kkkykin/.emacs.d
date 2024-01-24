@@ -39,6 +39,26 @@
   :group 'my
   :type '(string))
 
+(defcustom my/bookmark-shared (expand-file-name "bookmark-share" user-emacs-directory)
+  "Shared bookmark cross device."
+  :group 'my
+  :type '(string))
+
+;; todo
+(defun my/advice-bookmark-save ()
+  (with-temp-buffer 
+         (insert-file-contents my/bookmark-shared)
+         (let* ((ori-shared (bookmark-alist-from-buffer))
+                (updated (seq-difference bookmark-alist ori-shared))
+                (local (seq-difference (mapcar #'cdr updated)
+                                       (mapcar #'cdr ori-shared)))
+                new-shared)
+           (dolist (bm bookmark-alist)
+             (unless (member (cdr bm) local)
+               ; (setq bookmark-alist (delq bm bookmark-alist))
+               (setq new-shared (cons bm new-shared))))
+           )))
+
 (defun my/system-dark-mode-enabled-p ()
   "Check if dark-mode is enabled."
   (pcase system-type
