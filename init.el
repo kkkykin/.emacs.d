@@ -222,10 +222,11 @@
 
 (use-package bookmark
   :custom
-  (bookmark-save-flag nil)
+  (bookmark-save-flag 1)
   :config
-  (when (file-exists-p my/bookmark-shared)
-    (bookmark-load my/bookmark-shared nil t)))
+  (when (file-exists-p my/bookmark-shared-file)
+    (bookmark-load my/bookmark-shared-file nil t)
+    (advice-add 'bookmark-save :around 'my/advice-bookmark-save)))
 
 (use-package cua-base
   :hook (emacs-startup . cua-mode)

@@ -39,25 +39,30 @@
   :group 'my
   :type '(string))
 
-(defcustom my/bookmark-shared (expand-file-name "bookmark-share" user-emacs-directory)
+(defcustom my/bookmark-shared-file (expand-file-name "bookmark-share" user-emacs-directory)
   "Shared bookmark cross device."
   :group 'my
   :type '(string))
 
-;; todo
-(defun my/advice-bookmark-save ()
+(defun my/advice-bookmark-save (orig-fun &rest args)
+  "Do not save shared bookmarks to local bookmark file."
   (with-temp-buffer 
-         (insert-file-contents my/bookmark-shared)
-         (let* ((ori-shared (bookmark-alist-from-buffer))
-                (updated (seq-difference bookmark-alist ori-shared))
-                (local (seq-difference (mapcar #'cdr updated)
-                                       (mapcar #'cdr ori-shared)))
-                new-shared)
-           (dolist (bm bookmark-alist)
-             (unless (member (cdr bm) local)
-               ; (setq bookmark-alist (delq bm bookmark-alist))
-               (setq new-shared (cons bm new-shared))))
-           )))
+    (insert-file-contents my/bookmark-shared-file)
+    (let* ((ori-shared (bookmark-alist-from-buffer))
+           (updated (seq-difference bookmark-alist ori-shared))
+           (local (seq-difference (mapcar #'cdr updated)
+                                  (mapcar #'cdr ori-shared)))
+           (new-local (copy-sequence bookmark-alist))
+           new-shared)
+      (dolist (bm new-local)
+        (unless (member (cdr bm) local)
+          (setq new-local (delq bm new-local))
+          (setq new-shared (cons bm new-shared))))
+      (when-let ((need-update-p (not (equal new-shared ori-shared)))
+                 (bookmark-alist new-shared))
+        (funcall orig-fun nil my/bookmark-shared-file nil))
+      (let ((bookmark-alist new-local))
+        (apply orig-fun args)))))
 
 (defun my/system-dark-mode-enabled-p ()
   "Check if dark-mode is enabled."
