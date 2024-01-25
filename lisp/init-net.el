@@ -492,12 +492,8 @@ items are fetched from each feed."
     (cond
      ((string-suffix-p ".patch" url) (diff-mode))
      ((string-suffix-p ".el" url) (emacs-lisp-mode))
-     ((string-suffix-p ".rs" url) (rust-mode))
-     ((string-suffix-p ".go" url) (go-mode))
-     (t (when (and (plist-get eww-data :source)
-                   ;; 排除微信公众号内的文章
-                   (not (string-match-p "weixin\\.qq\\.com" url)))
-          (eww-readable))))))
+     ((string-suffix-p ".rs" url) (rust-ts-mode))
+     ((string-suffix-p ".go" url) (go-ts-mode)))))
 
 ;; Aria2
 (defcustom my/aria2-conf-file (expand-file-name "aria2.conf" "~/.aria2")
