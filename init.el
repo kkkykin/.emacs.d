@@ -526,13 +526,21 @@
     (newsticker-start t)))
 
 (use-package eww
+  :bind
+  (:map eww-bookmark-mode-map
+        ("n" . next-line)
+        ("p" . previous-line)
+        ("M-RET" . eww-open-in-new-buffer)
+        ("M-n" . eww-next-bookmark)
+        ("M-p" . eww-previous-bookmark))
   :custom
   (eww-search-prefix "https://www.mojeek.com/search?newtab=1&cdate=1&qss=DuckDuckGo&date=1&sst=1&arc=none&q=" "https://wiby.org/?q=")
   (eww-auto-rename-buffer 'title)
   (shr-cookie-policy nil)
   (shr-use-xwidgets-for-media t)
   (shr-blocked-images (concat "^https?://" (rx (| "www.baidu.com"))))
-  :hook (eww-after-render . my/eww-render-hook)
+  :hook ((eww-after-render . my/eww-render-hook)
+         (eww-bookmark-mode . (lambda () (setq-local goal-column (1+ (/ (window-width) 2))))))
   :config
   (setq eww-retrieve-command (cons newsticker-wget-name newsticker-wget-arguments))
   (when (require 'init-net nil t)
