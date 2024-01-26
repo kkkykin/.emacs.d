@@ -1224,11 +1224,13 @@
 
 (use-package sqlformat
   :if (package-installed-p 'sqlformat)
+  :init
+  (dolist (var '((sqlformat-args "-d" "mysql")))
+    (add-to-list 'safe-local-variable-values var))
   :bind
   (:map sql-mode-map
         ("C-c C-f" . sqlformat))
   :custom
-  ;; set sqlformat-args manually: '("-d" "mysql") or other
   (sqlformat-command 'sqlfluff))
 
 (use-package envrc
