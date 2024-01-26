@@ -76,9 +76,10 @@
   (when my/sys-winnt-p
     (dolist (fn '(shell-command start-file-process-shell-command))
       (advice-add fn :around #'my/advice-shell-command-coding-fix))
-    (setq default-process-coding-system `(,locale-coding-system . ,locale-coding-system)
+    (setq process-coding-system-alist `(("cmdproxy" . ,locale-coding-system))
           file-name-coding-system locale-coding-system
           find-ls-option '("-exec busybox ls -ldh {} +" . "-ldh")
+          find-exec-terminator "\"+\""
           shr-use-fonts nil)
     (setenv "HOME" (file-name-parent-directory user-emacs-directory))
     (add-to-list 'exec-suffixes ".ps1"))
