@@ -68,19 +68,6 @@
                          :callback ,(when callback callback))))
     (apply #'my/url-up-p "https://www.baidu.com" :max-time 3 args)))
 
-(defun my/advice-url-retrieve-with-proxy (orig-fun &rest args)
-  "Proxy for specific domain."
-  (if-let ((need-proxy
-            (seq-some
-             (lambda (x)
-               (string-match-p x (url-host (url-generic-parse-url (car args)))))
-             my/proxy-domain))
-           (url-proxy-services
-            `(("http" . ,my/centaur-proxy)
-              ("https" . ,my/centaur-proxy))))
-      (apply orig-fun args)
-    (apply orig-fun args)))
-
 (defun my/advice-url-retrieve-with-timeout (orig-fun &rest args)
   "Use `url-queue-retrieve' instead of `url-retrieve'."
   (cl-flet ((url-retrieve #'url-queue-retrieve)
@@ -109,11 +96,15 @@
 
 ;; proxy
 
-(defcustom my/proxy-domain '("\\(\\.\\|^\\)reimu.net$"
-                             "\\(\\.\\|^\\)google.com$")
+(defcustom my/block-domain (rx (| ?. bos) (| "blogs.reimu.net") eos)
+  "Domain blocked."
+  :group 'my
+  :type 'regexp)
+
+(defcustom my/proxy-domain (rx (| ?. bos) (| "google.com") eos)
   "Domain through proxy."
   :group 'my
-  :type '(repeat regexp))
+  :type 'regexp)
 
 (defcustom my/centaur-proxy "127.0.0.1:10808"
   "Set HTTP/HTTPS proxy."
@@ -124,6 +115,17 @@
   "Set SOCKS proxy."
   :group 'my
   :type 'string)
+
+(defun my/advice-url-retrieve (orig-fun &rest args)
+  "Block or Proxy."
+  (let ((host (url-host (url-generic-parse-url (car args)))))
+    (cond ((string-match-p my/block-domain host) nil)
+          ((string-match-p my/proxy-domain host)
+           (let ((url-proxy-services
+                 `(("http" . ,my/centaur-proxy)
+                   ("https" . ,my/centaur-proxy))))
+            (apply orig-fun args)))
+          (t (apply orig-fun args)))))
 
 (defun my/proxy-up-p (&optional proxy callback)
   "Test Proxy availability."
@@ -421,26 +423,13 @@ items are fetched from each feed."
 (defun my/advice-newsticker--get-news-by-wget (args)
   (let* ((url (cadr args))
          (host (url-host (url-generic-parse-url url)))
-         (domains my/proxy-domain)
          (wget-arguments (caddr args)))
-    (when (seq-some (lambda (x) (string-match-p x host)) domains)
+    (when (string-match-p my/proxy-domain host)
       (setf (caddr args)
             (append wget-arguments
                     `("-x"
                       ,(concat "http://emacs@"
-                               my/centaur-proxy)))))
-    ;; (catch 'aaa
-    ;;   (while domains
-    ;;     (if (string-match-p (car domains) host)
-    ;;         (progn
-    ;;           (setf (caddr args)
-    ;;                 (append wget-arguments
-    ;;                         `("-x"
-    ;;                           ,(concat "http://emacs@"
-    ;;                                    my/centaur-proxy))))
-    ;;           (throw 'aaa "a"))
-    ;;       (setq domains (cdr domains)))))
-    )
+                               my/centaur-proxy))))))
   args)
 
 (defun my/newsticker-treeview-prev-page ()

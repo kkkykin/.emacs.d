@@ -34,8 +34,13 @@
   :group 'my
   :type '(repeat string))
 
-(defcustom my/termux "/data/data/com.termux/files"
-  "termux root path"
+(defcustom my/termux-root-directory "/data/data/com.termux/files"
+  "Andriod termux root path."
+  :group 'my
+  :type '(string))
+
+(defcustom my/termux-tmp-direcotry (file-name-concat my/termux-root-directory "home/tmp")
+  "Android termux tmp path."
   :group 'my
   :type '(string))
 
@@ -79,7 +84,7 @@
               (lambda (x) (and (string-match-p "^[^\\(start\\|/.+\\)]" x) x))
               (split-string-shell-command command)))
             (need-fix (member program-name
-                              '("busybox" "ffmpeg" "ind" "mpv"))))
+                              `(,find-program "busybox" "ffmpeg" "mpv"))))
       (let ((process-coding-system-alist
              `(("cmdproxy" utf-8 . ,locale-coding-system))))
         (apply orig-fun args))
@@ -89,12 +94,13 @@
   "Set one theme only."
   (unless (memq theme custom-known-themes)
     (load-theme theme))
-  (cond ((eq theme 'adwaita)
-         (custom-theme-set-faces theme '(hl-line ((t (:extend t :background "navajo white"))))))
-        ((eq theme 'whiteboard)
-         (custom-theme-set-faces theme '(hl-line ((t (:extend t :background "wheat"))))))
-        ((eq theme 'tango)
-         (custom-theme-set-faces theme '(hl-line ((t (:extend t :background "cornsilk")))))))
+  (pcase theme
+    ('adwaita
+     (custom-theme-set-faces theme '(hl-line ((t (:extend t :background "navajo white"))))))
+    ('whiteboard
+     (custom-theme-set-faces theme '(hl-line ((t (:extend t :background "wheat"))))))
+    ('tango
+     (custom-theme-set-faces theme '(hl-line ((t (:extend t :background "cornsilk")))))))
   (dolist (item custom-enabled-themes)
     (disable-theme item))
   (enable-theme theme))

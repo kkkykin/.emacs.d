@@ -76,7 +76,8 @@
   (when my/sys-winnt-p
     (dolist (fn '(shell-command start-file-process-shell-command))
       (advice-add fn :around #'my/advice-shell-command-coding-fix))
-    (setq process-coding-system-alist `(("cmdproxy" . ,locale-coding-system))
+    (setq default-process-coding-system '(utf-8-dos . utf-8-unix) ;; change this maybe break tramp sshx
+          process-coding-system-alist `(("cmdproxy" . ,locale-coding-system))
           file-name-coding-system locale-coding-system
           find-ls-option '("-exec busybox ls -ldh {} +" . "-ldh")
           find-exec-terminator "\"+\""
@@ -104,6 +105,7 @@
 
     (setq select-enable-clipboard nil
           overriding-text-conversion-style nil
+          temporary-file-directory my/termux-tmp-direcotry
           android-pass-multimedia-buttons-to-system t)
 
     (define-key key-translation-map (kbd "<delete>") (kbd "<escape>"))
@@ -583,27 +585,31 @@
         ("c" . 'tramp-cleanup-connection)
         ("C" . 'tramp-cleanup-some-buffers))
   :custom
-  (tramp-verbose 2)
+  (tramp-verbose 0)
   (tramp-use-scp-direct-remote-copying t)
   (debug-ignored-errors (cons 'remote-file-error debug-ignored-errors))
+  (tramp-use-connection-share t)
+  (tramp-ssh-controlmaster-options
+   (format "-o ControlPath=%s/ssh-ControlPath-%%r@%%h:%%p -o ControlMaster=auto -o ControlPersist=30m"
+           temporary-file-directory))
   :config
   (when my/sys-winnt-p
-    (setq tramp-default-method "sshx"))
-
+    (setq tramp-default-method "sshx"
+          tramp-use-connection-share nil))
   (add-to-list 'tramp-connection-properties
-               (list (regexp-quote "termux") "remote-shell" "/data/data/com.termux/files/usr/bin/bash"))
+               (list (regexp-quote "termux") "remote-shell"
+                     (file-name-concat my/termux-root-directory "usr/bin/bash")))
   (add-to-list 'tramp-connection-properties
-               (list (regexp-quote "termux")
-                     "tmpdir" "/data/data/com.termux/files/home/tmp"))
+               (list (regexp-quote "termux") "tmpdir" my/termux-tmp-direcotry))
   (connection-local-set-profile-variables
    'tramp-connection-local-termux-profile
    `((tramp-remote-path
       . ,(mapcar
           (lambda (x)
-            (if (stringp x) (concat "/data/data/com.termux/files" x) x))
+            (if (stringp x) (concat my/termux-root-directory x) x))
           (copy-tree tramp-remote-path)))
      (explicit-shell-file-name
-      . "/data/data/com.termux/files/usr/bin/bash")))
+      . (file-name-concat my/termux-root-directory "usr/bin/bash"))))
   (connection-local-set-profiles
    '(:application tramp :user "termux")
    'tramp-connection-local-termux-profile))
@@ -877,11 +883,7 @@
   (url-cookie-untrusted-urls '(".*"))
   :config
   (when (require 'init-net nil t)
-    (dolist (fn '(url-retrieve
-                  url-queue-retrieve
-                  url-retrieve-internal
-                  url-retrieve-synchronously))
-      (advice-add fn :around #'my/advice-url-retrieve-with-proxy))))
+    (advice-add #'url-retrieve-internal :around #'my/advice-url-retrieve)))
 
 (use-package filesets :defer 10
   :unless my/sys-android-p
