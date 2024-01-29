@@ -399,8 +399,9 @@
          ((ediff-prepare-buffer vc-before-checkin) . turn-off-hideshow)))
 
 (use-package paren
-  :hook (Info-mode . show-paren-local-mode)
   :custom
+  (show-paren-predicate '(or (not (derived-mode . special-mode))
+                             (major-mode . Info-mode)))
   (show-paren-when-point-in-periphery t)
   (show-paren-context-when-offscreen 'overlay))
 

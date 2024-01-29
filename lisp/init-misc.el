@@ -37,30 +37,32 @@
 (defcustom my/termux-root-directory "/data/data/com.termux/files"
   "Andriod termux root path."
   :group 'my
-  :type '(string))
+  :type 'directory)
 
 (defcustom my/termux-tmp-direcotry (file-name-concat my/termux-root-directory "home/tmp")
   "Android termux tmp path."
   :group 'my
-  :type '(string))
+  :type 'directory)
+
+(defcustom my/bookmark-shared-prefix "s/"
+  "Prefix of shared bookmark name."
+  :group 'my
+  :type 'string)
 
 (defcustom my/bookmark-shared-file (expand-file-name "bookmark-share" user-emacs-directory)
-  "Shared bookmark cross device."
+  "Shared bookmark file cross device."
   :group 'my
-  :type '(string))
+  :type 'file)
 
 (defun my/advice-bookmark-save (orig-fun &rest args)
   "Do not save shared bookmarks to local bookmark file."
   (with-temp-buffer 
     (insert-file-contents my/bookmark-shared-file)
-    (let* ((ori-shared (bookmark-alist-from-buffer))
-           (updated (seq-difference bookmark-alist ori-shared))
-           (local (seq-difference (mapcar #'cdr updated)
-                                  (mapcar #'cdr ori-shared)))
-           (new-local (copy-sequence bookmark-alist))
-           new-shared)
+    (let ((ori-shared (bookmark-alist-from-buffer))
+          (new-local (copy-sequence bookmark-alist))
+          new-shared)
       (dolist (bm new-local)
-        (unless (member (cdr bm) local)
+        (when (string-prefix-p my/bookmark-shared-prefix (car bm))
           (setq new-local (delq bm new-local))
           (setq new-shared (cons bm new-shared))))
       (when-let ((need-update-p (not (equal new-shared ori-shared)))
