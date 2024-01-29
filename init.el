@@ -162,7 +162,6 @@
          (edebug-mode . viper-change-state-to-emacs))
   :bind
   (:map viper-insert-global-user-map
-        ("<backspace>" . backward-delete-char-untabify)
         ("C-d" . delete-char)
         ("C-w" . kill-region)
         ("C-v" . scroll-up))
@@ -182,6 +181,10 @@
   (ex-cycle-other-window nil)
   (viper-syntax-preference 'emacs)
   :config
+  (fset 'viper-del-backward-char-in-insert 'backward-delete-char-untabify)
+  (with-eval-after-load 'elec-pair
+    (keymap-set viper-insert-global-user-map "<backspace>"
+                (alist-get 127 (cdr electric-pair-mode-map))))
   (put 'viper-mode-string 'risky-local-variable t)
   (add-face-text-property 0 (length viper-emacs-state-id) '(:inverse-video t) nil viper-emacs-state-id)
   (setq global-mode-string (delq 'viper-mode-string global-mode-string))
