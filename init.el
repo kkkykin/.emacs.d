@@ -34,6 +34,7 @@
   (indicate-buffer-boundaries 'left)
   (initial-major-mode 'fundamental-mode)
   (system-time-locale "C")
+  (use-dialog-box nil)
   (use-package-always-defer t)
   (truncate-lines t)
   ;; (show-trailing-whitespace t)
