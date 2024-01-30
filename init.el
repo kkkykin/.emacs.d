@@ -20,8 +20,6 @@
         ([remap capitalize-word] . capitalize-dwim))
   (:map my/global-prefix-map
         ("d" . 'duplicate-dwim)
-        ("p" . 'delete-pair)
-        ("u" . 'raise-sexp)
         ("t" . 'transpose-sentences)
         ("T" . 'transpose-paragraphs)
         ("'" . 'my/insert-quotations)
@@ -168,6 +166,10 @@
         ("C-v" . scroll-up))
   (:map viper-vi-global-user-map
         ("qf" . find-file-at-point)
+        ("C-w h" . windmove-left)
+        ("C-w j" . windmove-down)
+        ("C-w k" . windmove-up)
+        ("C-w l" . windmove-right)
         ("C-y" . yank)
         ("C-f" . forward-char)
         ("C-b" . backward-char)
@@ -336,15 +338,27 @@
   (electric-layout-mode))
 
 (use-package windmove
-  :unless my/sys-android-p
-  :hook emacs-startup
   :custom
   (windmove-wrap-around t)
   :config
-  (windmove-default-keybindings)
-  (windmove-display-default-keybindings)
-  (windmove-delete-default-keybindings)
-  (windmove-swap-states-default-keybindings '(shift control)))
+  (defvar-keymap my/windmove-repeat-map
+    :repeat t
+    "h" #'windmove-left
+    "j" #'windmove-down
+    "k" #'windmove-up
+    "l" #'windmove-right
+    "M-h" #'windmove-delete-left
+    "M-j" #'windmove-delete-down
+    "M-k" #'windmove-delete-up
+    "M-l" #'windmove-delete-right
+    "S-h" #'windmove-swap-state-left
+    "S-j" #'windmove-swap-state-down
+    "S-k" #'windmove-swap-state-up
+    "S-l" #'windmove-swap-state-right
+    "C-h" #'windmove-display-left
+    "C-j" #'windmove-display-down
+    "C-k" #'windmove-display-up
+    "C-l" #'windmove-display-right))
 
 (use-package server :defer 5
   :custom
@@ -384,11 +398,33 @@
   (desktop-restore-eager nil)
   (desktop-auto-save-timeout 600))
 
-;; https://karthinks.com/software/it-bears-repeating/
 ;; https://karthinks.com/software/a-consistent-structural-editing-interface/
 ;; https://karthinks.com/software/persistent-prefix-keymaps-in-emacs/
 (use-package repeat
-  :hook emacs-startup)
+  :hook emacs-startup
+  :config
+  (defvar-keymap my/structure-repeat-map
+    :repeat t
+    "C-a" #'hs-show-all
+    "C-t" #'hs-hide-all
+    "C-c" #'hs-toggle-hiding
+    "u" #'backward-up-list
+    "d" #'down-list
+    "n" #'forward-list
+    "p" #'backward-list
+    "f" #'forward-sexp
+    "b" #'backward-sexp
+    "r" #'raise-sexp
+    "i" #'indent-pp-sexp
+    "k" #'kill-sexp
+    "<backspace>" #'backward-kill-sexp
+    "SPC" #'mark-sexp
+    "t" #'transpose-sexp
+    "s" #'delete-pair
+    "/" #'undo
+    "a" #'beginning-of-defun
+    "e" #'end-of-defun
+    "x" #'eval-defun))
 
 (use-package elide-head
   :unless my/sys-android-p
