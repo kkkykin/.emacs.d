@@ -956,6 +956,10 @@
 (use-package skeleton)
 
 (use-package tab-bar :defer 2
+  :bind
+  (:repeat-map my/tab-bar-history-repeat-map
+               ("<right>" . tab-bar-history-forward)
+               ("<left>" . tab-bar-history-back))
   :custom
   (tab-bar-select-tab-modifiers '(control))
   (tab-bar-show 1)
