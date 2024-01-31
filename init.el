@@ -9,24 +9,17 @@
   :hook
   ((text-mode . visual-line-mode)
    (window-setup . my/setup-faces))
-  :bind-keymap
-  ("C-x j" . my/global-prefix-map)
+  :bind-keymap ("C-x j" . my/global-prefix-map)
   :bind
-  (:map global-map
-        ([remap eval-expression] . pp-eval-expression)
-        ([remap eval-last-sexp] . pp-eval-last-sexp)
-        ([remap upcase-word] . upcase-dwim)
-        ([remap downcase-word] . downcase-dwim)
-        ([remap capitalize-word] . capitalize-dwim))
+  ([remap eval-expression] . pp-eval-expression)
+  ([remap eval-last-sexp] . pp-eval-last-sexp)
+  ([remap upcase-word] . upcase-dwim)
+  ([remap downcase-word] . downcase-dwim)
+  ([remap capitalize-word] . capitalize-dwim)
   (:map my/global-prefix-map
-        ("d" . 'duplicate-dwim)
-        ("t" . 'transpose-sentences)
-        ("T" . 'transpose-paragraphs)
-        ("'" . 'my/insert-quotations)
-        ("\"" . 'my/insert-quotes)
-        ("<" . 'my/insert-than-sign)
-        ("[" . 'my/insert-squarebracket)
-        ("{" . 'my/insert-curlybracket))
+        ("d" . duplicate-dwim)
+        ("t" . transpose-sentences)
+        ("T" . transpose-paragraphs))
   :custom
   (inhibit-splash-screen t)
   (indicate-buffer-boundaries 'left)
@@ -195,10 +188,10 @@
     (setf (cdddr mode-line-format) (cons 'viper-mode-string (cdddr mode-line-format))))
   (when my/sys-winnt-p
     (add-hook 'viper-vi-state-hook (lambda () (w32-set-ime-open-status nil))))
-  (dolist (mode '(vc-git-log-edit-mode reb-mode))
+  (dolist (mode '(change-log-mode vc-git-log-edit-mode reb-mode))
     (setq viper-vi-state-mode-list (delq mode viper-vi-state-mode-list))
     (add-to-list 'viper-insert-state-mode-list mode))
-  (dolist (mode '(diff-mode org-mode sql-interactive-mode outline-mode))
+  (dolist (mode '(diff-mode org-mode outline-mode sql-interactive-mode))
     (setq viper-vi-state-mode-list (delq mode viper-vi-state-mode-list))
     (add-to-list 'viper-emacs-state-mode-list mode)))
 
@@ -340,25 +333,24 @@
 (use-package windmove
   :custom
   (windmove-wrap-around t)
-  :config
-  (defvar-keymap my/windmove-repeat-map
-    :repeat t
-    "h" #'windmove-left
-    "j" #'windmove-down
-    "k" #'windmove-up
-    "l" #'windmove-right
-    "M-h" #'windmove-delete-left
-    "M-j" #'windmove-delete-down
-    "M-k" #'windmove-delete-up
-    "M-l" #'windmove-delete-right
-    "S-h" #'windmove-swap-state-left
-    "S-j" #'windmove-swap-state-down
-    "S-k" #'windmove-swap-state-up
-    "S-l" #'windmove-swap-state-right
-    "C-h" #'windmove-display-left
-    "C-j" #'windmove-display-down
-    "C-k" #'windmove-display-up
-    "C-l" #'windmove-display-right))
+  :bind
+  (:repeat-map my/windmove-repeat-map
+               ("h" . windmove-left)
+               ("j" . windmove-down)
+               ("k" . windmove-up)
+               ("l" . windmove-right)
+               ("M-h" . windmove-delete-left)
+               ("M-j" . windmove-delete-down)
+               ("M-k" . windmove-delete-up)
+               ("M-l" . windmove-delete-right)
+               ("S-h" . windmove-swap-state-left)
+               ("S-j" . windmove-swap-state-down)
+               ("S-k" . windmove-swap-state-up)
+               ("S-l" . windmove-swap-state-right)
+               ("C-h" . windmove-display-left)
+               ("C-j" . windmove-display-down)
+               ("C-k" . windmove-display-up)
+               ("C-l" . windmove-display-right)))
 
 (use-package server :defer 5
   :custom
@@ -402,29 +394,35 @@
 ;; https://karthinks.com/software/persistent-prefix-keymaps-in-emacs/
 (use-package repeat
   :hook emacs-startup
-  :config
-  (defvar-keymap my/structure-repeat-map
-    :repeat t
-    "C-a" #'hs-show-all
-    "C-t" #'hs-hide-all
-    "C-c" #'hs-toggle-hiding
-    "u" #'backward-up-list
-    "d" #'down-list
-    "n" #'forward-list
-    "p" #'backward-list
-    "f" #'forward-sexp
-    "b" #'backward-sexp
-    "r" #'raise-sexp
-    "i" #'indent-pp-sexp
-    "k" #'kill-sexp
-    "<backspace>" #'backward-kill-sexp
-    "SPC" #'mark-sexp
-    "t" #'transpose-sexp
-    "s" #'delete-pair
-    "/" #'undo
-    "a" #'beginning-of-defun
-    "e" #'end-of-defun
-    "x" #'eval-defun))
+  :custom (repeat-exit-key "RET")
+  :bind
+  (:repeat-map my/structure-repeat-map
+               ("C-a" . hs-show-all)
+               ("C-t" . hs-hide-all)
+               ("C-c" . hs-toggle-hiding)
+               ("u" . backward-up-list)
+               ("d" . down-list)
+               ("n" . forward-list)
+               ("p" . backward-list)
+               ("f" . forward-sexp)
+               ("b" . backward-sexp)
+               ("r" . raise-sexp)
+               ("i" . indent-pp-sexp)
+               ("k" . kill-sexp)
+               ("<backspace>" . backward-kill-sexp)
+               ("SPC" . mark-sexp)
+               ("t" . transpose-sexps)
+               ("s" . delete-pair)
+               ("/" . undo)
+               ("a" . beginning-of-defun)
+               ("e" . end-of-defun)
+               ("x" . eval-defun)
+               ("(" . insert-parentheses)
+               ("'" . my/insert-quotations)
+               ("\"" . my/insert-quotes)
+               ("<" . my/insert-than-sign)
+               ("[" . my/insert-squarebracket)
+               ("{" . my/insert-curlybracket)))
 
 (use-package elide-head
   :unless my/sys-android-p

@@ -2,14 +2,14 @@
 ;;; Commentary:
 ;;; Code:
 
-(defvar my/global-prefix-map (make-sparse-keymap)
-  "A keymap for myself.")
+(defvar-keymap my/global-prefix-map
+  :doc "A keymap for myself.")
 
-(defvar my/mpc-prefix-map (make-sparse-keymap)
-  "A keymap for mpc.")
+(defvar-keymap my/mpc-prefix-map
+  :doc "A keymap for mpc.")
 
-(defvar my/org-prefix-map (make-sparse-keymap)
-  "A keymap for handy global access to org helpers, particularly clocking.")
+(defvar-keymap my/org-prefix-map
+  :doc "A keymap for handy global access to org helpers, particularly clocking.")
 
 (defcustom my/light-theme-list
   '(adwaita dichromacy leuven modus-operandi-deuteranopia modus-operandi
