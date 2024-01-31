@@ -656,7 +656,7 @@
   (unless (file-exists-p (file-name-concat newsticker-dir "saved"))
     (make-directory (file-name-concat newsticker-dir "saved") t))
   ;; with interval
-  (advice-add 'newsticker-start :before-until #'my/advice-newsticker-start)
+  (advice-add 'newsticker-start :before #'my/advice-newsticker-list-set-start-time)
   ;; remove message: Error while retrieving image | news from feeds
   (dolist (fn '(newsticker--image-sentinel newsticker--sentinel-work))
     (advice-add fn :around #'my/advice-silence-messages))

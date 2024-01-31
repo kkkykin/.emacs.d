@@ -407,18 +407,13 @@ items are fetched from each feed."
      extra)
     ))
 
-(defun my/advice-newsticker-start (&optional _do-not-complain-if-running)
-  (let ((running (newsticker-running-p)))
-    (unless running
-      (newsticker--cache-read))
-    ;; start retrieval timers -- one timer for each feed
-    (let ((counter 0))
-      (dolist (feed (append newsticker-url-list-defaults newsticker-url-list))
-        (setq counter (+ counter 1))
-        (run-at-time (* counter 10) nil 'newsticker--start-feed feed)))
-    (unless running
-      (run-hooks 'newsticker-start-hook)
-      (message "Newsticker started!"))))
+(defun my/advice-newsticker-list-set-start-time (&rest args)
+  "Newsticker retrieve feeds with interval start time."
+  (let ((counter 0))
+    (mapc (lambda (x)
+            (setcar (cddr x) counter)
+            (setq counter (+ counter 10)))
+          newsticker-url-list)))
 
 (defun my/advice-newsticker--get-news-by-wget (args)
   (let* ((url (cadr args))
