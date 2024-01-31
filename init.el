@@ -470,7 +470,6 @@
     "r" #'raise-sexp
     "i" #'indent-pp-sexp
     "k" #'kill-sexp
-    "<backspace>" #'backward-kill-sexp
     "SPC" #'mark-sexp
     "t" #'transpose-sexps
     "s" #'delete-pair
