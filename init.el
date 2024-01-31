@@ -408,18 +408,13 @@
                ("j" . windmove-down)
                ("k" . windmove-up)
                ("l" . windmove-right)
-               ("M-h" . windmove-delete-left)
-               ("M-j" . windmove-delete-down)
-               ("M-k" . windmove-delete-up)
-               ("M-l" . windmove-delete-right)
-               ("S-h" . windmove-swap-state-left)
-               ("S-j" . windmove-swap-state-down)
-               ("S-k" . windmove-swap-state-up)
-               ("S-l" . windmove-swap-state-right)
-               ("C-h" . windmove-display-left)
-               ("C-j" . windmove-display-down)
-               ("C-k" . windmove-display-up)
-               ("C-l" . windmove-display-right)))
+               ("C-h" . windmove-swap-states-left)
+               ("C-j" . windmove-swap-states-down)
+               ("C-k" . windmove-swap-states-up)
+               ("C-l" . windmove-swap-states-right))
+  :config
+  (windmove-display-default-keybindings '(shift control))
+  (windmove-delete-default-keybindings))
 
 (use-package server :defer 5
   :custom
