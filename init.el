@@ -460,7 +460,7 @@
   :hook emacs-startup
   :custom
   (repeat-exit-key "RET")
-  (repeat-exit-timeout 3)
+  (repeat-exit-timeout 5)
   :config
   (defvar-keymap my/structure-repeat-map
     :repeat (:enter ( treesit-beginning-of-defun beginning-of-defun
