@@ -65,8 +65,9 @@
         (when (string-prefix-p my/bookmark-shared-prefix (car bm))
           (setq new-local (delq bm new-local))
           (setq new-shared (cons bm new-shared))))
-      (when-let ((need-update-p (not (equal new-shared ori-shared)))
-                 (bookmark-alist new-shared))
+      (when-let ((sorted (sort new-shared #'eq))
+                 (need-update-p (not (equal sorted ori-shared)))
+                 (bookmark-alist sorted))
         (funcall orig-fun nil my/bookmark-shared-file nil))
       (let ((bookmark-alist new-local))
         (apply orig-fun args)))))
@@ -154,36 +155,6 @@ https://scripter.co/using-emacs-advice-to-silence-messages-from-functions"
   (let ((inhibit-message t)    ;Don't show the messages in Echo area
         (message-log-max nil)) ;Don't show the messages in the *Messages* buffer
     (apply orig-fun args)))
-
-(defun my/insert-quotations (&optional arg)
-  "Enclose following ARG sexps in quotation marks.
-Leave point after open-paren."
-  (interactive "P")
-  (insert-pair arg ?\' ?\'))
-
-(defun my/insert-quotes (&optional arg)
-  "Enclose following ARG sexps in quotes.
-Leave point after open-quote."
-  (interactive "P")
-  (insert-pair arg ?\" ?\"))
-
-(defun my/insert-than-sign (&optional arg)
-  "Enclose following ARG sexps in than sign pair.
-Leave point after less than sign."
-  (interactive "P")
-  (insert-pair arg ?\< ?\>))
-
-(defun my/insert-squarebracket (&optional arg)
-  "Enclose following ARG sexps in squarebracket.
-Leave point after open-bracket."
-  (interactive "P")
-  (insert-pair arg ?\[ ?\]))
-
-(defun my/insert-curlybracket (&optional arg)
-  "Enclose following ARG sexps in curlybracket.
-Leave point after open-bracket."
-  (interactive "P")
-  (insert-pair arg ?\{ ?\}))
 
 (defun my/run-bash ()
   (interactive)

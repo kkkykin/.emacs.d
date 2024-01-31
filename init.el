@@ -24,11 +24,11 @@
   (inhibit-splash-screen t)
   (indicate-buffer-boundaries 'left)
   (initial-major-mode 'fundamental-mode)
+  (disabled-command-function nil)
   (system-time-locale "C")
   (use-dialog-box nil)
   (use-package-always-defer t)
   (truncate-lines t)
-  ;; (show-trailing-whitespace t)
   (mark-ring-max 6)
   (global-mark-ring-max 8)
   (set-mark-command-repeat-pop t)
@@ -286,7 +286,76 @@
   (isearch-lazy-count t)
   (isearch-allow-scroll t)
   (isearch-yank-on-move 'shift)
-  (isearch-repeat-on-direction-change t))
+  (isearch-repeat-on-direction-change t)
+  :config
+  (transient-define-prefix my/isearch-menu ()
+    "isearch Menu. http://yummymelon.com/devnull/improving-emacs-isearch-usability-with-transient.html"
+    [["Edit Search String"
+      ("e"
+       "Edit the search string (recursive)"
+       isearch-edit-string
+       :transient nil)
+      ("w"
+       "Pull next word or character word from buffer"
+       isearch-yank-word-or-char
+       :transient nil)
+      ("s"
+       "Pull next symbol or character from buffer"
+       isearch-yank-symbol-or-char
+       :transient nil)
+      ("l"
+       "Pull rest of line from buffer"
+       isearch-yank-line
+       :transient nil)
+      ("y"
+       "Pull string from kill ring"
+       isearch-yank-kill
+       :transient nil)
+      ("t"
+       "Pull thing from buffer"
+       isearch-forward-thing-at-point
+       :transient nil)]
+
+     ["Replace"
+      ("q"
+       "Start ‘query-replace’"
+       isearch-query-replace
+       :if-nil buffer-read-only
+       :transient nil)
+      ("x"
+       "Start ‘query-replace-regexp’"
+       isearch-query-replace-regexp
+       :if-nil buffer-read-only     
+       :transient nil)]]
+
+    [["Toggle"
+      ("X"
+       "Toggle regexp searching"
+       isearch-toggle-regexp
+       :transient nil)
+      ("S"
+       "Toggle symbol searching"
+       isearch-toggle-symbol
+       :transient nil)
+      ("W"
+       "Toggle word searching"
+       isearch-toggle-word
+       :transient nil)
+      ("F"
+       "Toggle case fold"
+       isearch-toggle-case-fold
+       :transient nil)
+      ("L"
+       "Toggle lax whitespace"
+       isearch-toggle-lax-whitespace
+       :transient nil)]
+
+     ["Misc"
+      ("o"
+       "occur"
+       isearch-occur
+       :transient nil)]])
+  (keymap-set isearch-mode-map "C-h t" 'my/isearch-menu))
 
 (use-package files
   :bind
@@ -394,35 +463,72 @@
 ;; https://karthinks.com/software/persistent-prefix-keymaps-in-emacs/
 (use-package repeat
   :hook emacs-startup
-  :custom (repeat-exit-key "RET")
-  :bind
-  (:repeat-map my/structure-repeat-map
-               ("C-a" . hs-show-all)
-               ("C-t" . hs-hide-all)
-               ("C-c" . hs-toggle-hiding)
-               ("u" . backward-up-list)
-               ("d" . down-list)
-               ("n" . forward-list)
-               ("p" . backward-list)
-               ("f" . forward-sexp)
-               ("b" . backward-sexp)
-               ("r" . raise-sexp)
-               ("i" . indent-pp-sexp)
-               ("k" . kill-sexp)
-               ("<backspace>" . backward-kill-sexp)
-               ("SPC" . mark-sexp)
-               ("t" . transpose-sexps)
-               ("s" . delete-pair)
-               ("/" . undo)
-               ("a" . beginning-of-defun)
-               ("e" . end-of-defun)
-               ("x" . eval-defun)
-               ("(" . insert-parentheses)
-               ("'" . my/insert-quotations)
-               ("\"" . my/insert-quotes)
-               ("<" . my/insert-than-sign)
-               ("[" . my/insert-squarebracket)
-               ("{" . my/insert-curlybracket)))
+  :custom
+  (repeat-exit-key "RET")
+  (repeat-exit-timeout 3)
+  :config
+  (defvar-keymap my/structure-repeat-map
+    :repeat (:enter ( treesit-beginning-of-defun beginning-of-defun
+                      treesit-end-of-defun end-of-defun
+                      python-nav-backward-up-list backward-up-list
+                      python-shell-send-defun eval-defun))
+    "r" #'raise-sexp
+    "i" #'indent-pp-sexp
+    "k" #'kill-sexp
+    "<backspace>" #'backward-kill-sexp
+    "SPC" #'mark-sexp
+    "t" #'transpose-sexps
+    "s" #'delete-pair
+    "(" #'insert-parentheses
+    "'" (lambda ()
+          (interactive)
+          (setq repeat-map 'my/structure-repeat-map)
+          (insert-pair nil ?\' ?\'))
+    "\"" (lambda ()
+          (interactive)
+          (setq repeat-map 'my/structure-repeat-map)
+          (insert-pair nil ?\" ?\"))
+    "<" (lambda ()
+          (interactive)
+          (setq repeat-map 'my/structure-repeat-map)
+          (insert-pair nil ?\< ?\>))
+    "[" (lambda ()
+          (interactive)
+          (setq repeat-map 'my/structure-repeat-map)
+          (insert-pair nil ?\[ ?\]))
+    "{" (lambda ()
+          (interactive)
+          (setq repeat-map 'my/structure-repeat-map)
+          (insert-pair nil ?\{ ?\}))
+    "/" #'undo
+    "C-a" #'hs-show-all
+    "C-t" #'hs-hide-all
+    "C-c" #'hs-toggle-hiding
+    "u" (lambda ()
+          (interactive)
+          (setq repeat-map 'my/structure-repeat-map)
+          (cond ((memq major-mode '(python-ts-mode)) (python-nav-backward-up-list))
+                (t (backward-up-list))))
+    "d" #'down-list
+    "n" #'forward-list
+    "p" #'backward-list
+    "f" #'forward-sexp
+    "b" #'backward-sexp
+    "a" (lambda ()
+          (interactive)
+          (setq repeat-map 'my/structure-repeat-map)
+          (cond ((memq major-mode '(python-ts-mode)) (treesit-beginning-of-defun))
+                (t (beginning-of-defun))))
+    "e" (lambda ()
+          (interactive)
+          (setq repeat-map 'my/structure-repeat-map)
+          (cond ((memq major-mode '(python-ts-mode)) (treesit-end-of-defun))
+                (t (end-of-defun))))
+    "x" (lambda ()
+          (interactive)
+          (setq repeat-map 'my/structure-repeat-map)
+          (cond ((memq major-mode '(python-ts-mode)) (python-shell-send-defun))
+                (t (eval-defun))))))
 
 (use-package elide-head
   :unless my/sys-android-p
