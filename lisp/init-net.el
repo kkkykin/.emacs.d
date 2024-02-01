@@ -471,7 +471,6 @@ items are fetched from each feed."
             (match-string 2 url)))
    (t url)))
 
-;; todo
 (defun my/advice-eww--dwim-expand-url (orig-fun &rest args)
   "Maybe use other search-prefix instead of eww-search-prefix."
   (let ((url (string-trim (car args))))
@@ -480,9 +479,14 @@ items are fetched from each feed."
           (t (apply orig-fun args)))))
 
 (defun my/eww-render-hook()
-  (let ((url (plist-get eww-data :url)))
+  (when-let ((url (plist-get eww-data :url))
+             (source (plist-get eww-data :source)))
     (cond
-     ((string-prefix-p "https://manned.org/man/" url) (eww-readable))
+     ((string-match-p (concat "^https?://"
+                              (rx (or "manned.org/man/"
+                                      "www.mojeek.com/search?"))) 
+                      url)
+      (eww-readable))
      ((string-suffix-p ".patch" url) (diff-mode))
      ((string-suffix-p ".el" url) (emacs-lisp-mode))
      ((string-suffix-p ".rs" url) (rust-ts-mode))
