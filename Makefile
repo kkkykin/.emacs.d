@@ -1,2 +1,2 @@
 tag:
-	etags lisp/*.el
+	etags -r @tag.re init.el lisp/*.el

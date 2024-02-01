@@ -2,18 +2,25 @@
 ;;; This format is meant to be slightly human-readable;
 ;;; nevertheless, you probably don't want to edit it.
 ;;; -*- End Of Bookmark File Format Version Stamp -*-
-(("s/mpv.io"
+(("s/sqlfluff"
+ (front-context-string . "Basic Usage\n * C")
+ (rear-context-string . "ing SQLFluff\n * ")
+ (position . 2141)
+ (last-modified 26043 15068 146058 836000)
+ (location . "https://docs.sqlfluff.com/en/stable/")
+ (handler . eww-bookmark-jump))
+("s/mpv.io"
  (front-context-string . "Property list\n\nN")
  (rear-context-string . "on at runtime.\n\n")
  (position . 535686)
  (last-modified 26002 48732 784662 0)
  (location . "https://mpv.io/manual/master/#properties")
  (handler . eww-bookmark-jump))
-("s/sqlfluff"
- (front-context-string . "📜 The SQL Linter")
+("s/man"
+ (front-context-string . "                ")
  (rear-context-string)
- (position . 1)
- (last-modified 26039 27201 381731 949000)
- (location . "https://docs.sqlfluff.com/en/stable/")
+ (position . 13)
+ (last-modified 26043 15721 680399 968000)
+ (location . "https://manned.org/")
  (handler . eww-bookmark-jump))
 )

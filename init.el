@@ -158,7 +158,7 @@
         ("C-w" . kill-region)
         ("C-v" . scroll-up))
   (:map viper-vi-global-user-map
-        ("qf" . find-file-at-point)
+        ("qf" . org-open-at-point-global)
         ("C-w h" . windmove-left)
         ("C-w j" . windmove-down)
         ("C-w k" . windmove-up)
@@ -184,6 +184,7 @@
   (put 'viper-mode-string 'risky-local-variable t)
   (add-face-text-property 0 (length viper-emacs-state-id) '(:inverse-video t) nil viper-emacs-state-id)
   (setq global-mode-string (delq 'viper-mode-string global-mode-string))
+  (put 'viper-setup-master-buffer 'safe-local-eval-function t)
   (unless (memq 'viper-mode-string mode-line-format)
     (setf (cdddr mode-line-format) (cons 'viper-mode-string (cdddr mode-line-format))))
   (when my/sys-winnt-p
@@ -400,6 +401,8 @@
   (electric-layout-mode))
 
 (use-package windmove
+  :unless my/sys-android-p
+  :hook emacs-startup
   :custom
   (windmove-wrap-around t)
   :bind
@@ -439,9 +442,13 @@
   :custom
   (xref-history-storage 'xref-window-local-history)
   (xref-auto-jump-to-first-xref 'move)
+  (tags-revert-without-query t)
+  (tags-add-tables nil)
   :config
   (when (string= grep-program "ug")
-    (setq xref-search-program 'ugrep)))
+    (setq xref-search-program 'ugrep))
+  (put 'tags-table-list 'safe-local-variable 'listp)
+  (put 'xref-etags-mode 'safe-local-eval-function t))
 
 (use-package abbrev
   :custom
@@ -686,6 +693,7 @@
   :config
   (setq eww-retrieve-command (cons newsticker-wget-name newsticker-wget-arguments))
   (when (require 'init-net nil t)
+    (advice-add 'eww--dwim-expand-url :around 'my/advice-eww--dwim-expand-url)
     (add-to-list 'eww-url-transformers 'my/url-redirect)))
 
 (use-package browse-url
@@ -1370,14 +1378,13 @@
 
 (use-package sqlformat
   :if (package-installed-p 'sqlformat)
-  :init
-  (dolist (var '((sqlformat-args "-d" "mysql")))
-    (add-to-list 'safe-local-variable-values var))
   :bind
   (:map sql-mode-map
         ("C-c C-f" . sqlformat))
   :custom
-  (sqlformat-command 'sqlfluff))
+  (sqlformat-command 'sqlfluff)
+  :config
+  (put 'sqlformat-args 'safe-local-variable 'listp))
 
 (use-package envrc
   :if (package-installed-p 'envrc)
