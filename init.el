@@ -439,6 +439,9 @@
           grep-highlight-matches t)))
 
 (use-package xref
+  :init
+  (put 'tags-table-list 'safe-local-variable 'listp)
+  (put 'xref-etags-mode 'safe-local-eval-function t)
   :custom
   (xref-history-storage 'xref-window-local-history)
   (xref-auto-jump-to-first-xref 'move)
@@ -446,9 +449,7 @@
   (tags-add-tables nil)
   :config
   (when (string= grep-program "ug")
-    (setq xref-search-program 'ugrep))
-  (put 'tags-table-list 'safe-local-variable 'listp)
-  (put 'xref-etags-mode 'safe-local-eval-function t))
+    (setq xref-search-program 'ugrep)))
 
 (use-package abbrev
   :custom
@@ -1378,13 +1379,13 @@
 
 (use-package sqlformat
   :if (package-installed-p 'sqlformat)
+  :init
+  (put 'sqlformat-args 'safe-local-variable 'listp)
   :bind
   (:map sql-mode-map
         ("C-c C-f" . sqlformat))
   :custom
-  (sqlformat-command 'sqlfluff)
-  :config
-  (put 'sqlformat-args 'safe-local-variable 'listp))
+  (sqlformat-command 'sqlfluff))
 
 (use-package envrc
   :if (package-installed-p 'envrc)
