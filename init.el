@@ -223,6 +223,11 @@
   :custom
   (Man-switches "-a"))
 
+(use-package info
+  :custom
+  (Info-directory-list (cons (expand-file-name "info" user-emacs-directory)
+                             Info-directory-list)))
+
 (use-package bookmark
   :custom
   (bookmark-save-flag 1)
@@ -468,7 +473,7 @@
   :hook emacs-startup
   :custom
   (repeat-exit-key "RET")
-  (repeat-exit-timeout 5)
+  (repeat-exit-timeout 10)
   :config
   (defvar-keymap my/structure-repeat-map
     :repeat (:enter ( treesit-beginning-of-defun beginning-of-defun
