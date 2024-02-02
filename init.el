@@ -473,10 +473,15 @@
   (defvar-keymap my/structure-repeat-map
     :repeat (:enter ( treesit-beginning-of-defun beginning-of-defun
                       treesit-end-of-defun end-of-defun
+                      indent-pp-sexp prog-indent-sexp
                       python-nav-backward-up-list backward-up-list
                       python-shell-send-defun eval-defun))
     "r" #'raise-sexp
-    "i" #'indent-pp-sexp
+    "i" (lambda ()
+          (interactive)
+          (setq repeat-map 'my/structure-repeat-map)
+          (cond ((eq major-mode 'emacs-lisp-mode) (indent-pp-sexp))
+                (t (prog-indent-sexp))))
     "k" #'kill-sexp
     "SPC" #'mark-sexp
     "t" #'transpose-sexps
@@ -1033,6 +1038,12 @@
   (url-mime-language-string "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6")
   (url-cookie-trusted-urls '())
   (url-cookie-untrusted-urls '(".*"))
+  (url-gateway-local-host-regexp (rx (| (group (| ?. bos)
+                                               (| "mshome.net"
+                                                  "localhost"
+                                                  "local"))
+                                        (group bos (| "127.0.0.1")))
+                                     eos))
   :config
   (when (require 'init-net nil t)
     (advice-add #'url-retrieve-internal :around #'my/advice-url-retrieve)))
