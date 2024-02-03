@@ -368,6 +368,7 @@
   (:map my/global-prefix-map
         ("R" . 'rename-visited-file))
   :custom
+  (safe-local-variable-directories '())
   (save-abbrevs 'silently)
   (kept-new-versions 3)
   (kept-old-versions 1)
@@ -456,6 +457,16 @@
   (when (string= grep-program "ug")
     (setq xref-search-program 'ugrep)))
 
+(use-package etags-regen
+  :if (and (package-installed-p 'etags-regen)
+           (not my/sys-android-p))
+  :hook emacs-startup
+  :custom
+  (etags-regen-regexp-alist '(("lisp" . "/(use-package[ \t]+\([a-zA-Z0-9\-]+\)/up\/\1/")))
+  :config
+  (dolist (ext '("sql"))
+    (add-to-list 'etags-regen-file-extensions ext)))
+
 (use-package abbrev
   :custom
   (abbrev-suggest t))
@@ -513,9 +524,9 @@
           (setq repeat-map 'my/structure-repeat-map)
           (insert-pair nil ?\{ ?\}))
     "/" #'undo
-    "C-a" #'hs-show-all
-    "C-t" #'hs-hide-all
-    "C-c" #'hs-toggle-hiding
+    "w" #'hs-show-all
+    "z" #'hs-hide-all
+    "c" #'hs-toggle-hiding
     "u" (lambda ()
           (interactive)
           (setq repeat-map 'my/structure-repeat-map)
@@ -561,6 +572,8 @@
 (use-package which-func :defer 5
   :unless my/sys-android-p
   :config
+  (when my/sys-android-p
+    (setq which-func-display 'header))
   (which-function-mode))
 
 (use-package midnight :defer 60
@@ -610,17 +623,37 @@
   (python-shell-dedicated t))
 
 (use-package flymake
-  :hook sh-mode)
+  :hook sh-mode
+  :custom
+  (flymake-show-diagnostics-at-end-of-line t))
 
 (use-package gud
   :custom
   (gud-highlight-current-line t))
 
+(use-package bs
+  :bind
+  ("C-x C-b" . bs-show)
+  ("C-x C-<left>" . bs-cycle-previous)
+  ("C-x C-<right>" . bs-cycle-next)
+  (:repeat-map my/bs-repeat-map
+               ("<left>" . bs-cycle-previous)
+               ("<right>" . bs-cycle-next))
+  :config
+  (dolist (conf '(("dired" nil nil nil
+                   (lambda (buf)
+                     (with-current-buffer buf
+                       (not (eq major-mode 'dired-mode))))
+                   nil)
+                  ("SQL" nil nil nil
+                   (lambda (buf)
+                     (with-current-buffer buf
+                       (not (memq major-mode
+                                  '(sql-interactive-mode sql-mode)))))
+                   nil)))
+    (add-to-list 'bs-configurations conf t)))
+
 (use-package ibuffer
-  :bind (("C-x C-b" . ibuffer))
-  :hook
-  (ibuffer-mode . (lambda ()
-                    (ibuffer-switch-to-saved-filter-groups "default")))
   :custom
   (ibuffer-show-empty-filter-groups nil)
   :config
@@ -784,6 +817,7 @@
 
 (use-package dired
   :custom
+  (dired-movement-style 'cycle)
   (dired-maybe-use-globstar t)
   (dired-dwim-target t)
   (dired-listing-switches "-lh")

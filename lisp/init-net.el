@@ -106,6 +106,17 @@
   :group 'my
   :type 'regexp)
 
+(defcustom my/img-proxy-domain
+  (rx
+   (| ?. bos)
+   (| "saxyit.com" "reimu.net" "img.piclabo.xyz" "trts.baishancdnx.cn"
+      "www.skidrowreloaded.com" "riotpixels.net" "www.hacg.mov"
+      "mooc-image.nosdn.127.net")
+   eos)
+  "Img domain through proxy."
+  :group 'my
+  :type 'regexp)
+
 (defcustom my/centaur-proxy "127.0.0.1:10808"
   "Set HTTP/HTTPS proxy."
   :group 'my
@@ -117,14 +128,20 @@
   :type 'string)
 
 (defun my/advice-url-retrieve (orig-fun &rest args)
-  "Block or Proxy."
-  (let ((host (url-host (url-generic-parse-url (car args)))))
+  "Block, proxy, transform url."
+  (let* ((url (car args))
+         (host (url-host (url-generic-parse-url url))))
     (cond ((string-match-p my/block-domain host) nil)
           ((string-match-p my/proxy-domain host)
            (let ((url-proxy-services
-                 `(("http" . ,my/centaur-proxy)
-                   ("https" . ,my/centaur-proxy))))
-            (apply orig-fun args)))
+                  `(("http" . ,my/centaur-proxy)
+                    ("https" . ,my/centaur-proxy))))
+             (apply orig-fun args)))
+          ((string-match-p my/img-proxy-domain host)
+           (setcar args (string-replace "${href_ue}"
+                                        (url-hexify-string url)
+                                        my/img-cdn-server))
+           (apply orig-fun args))
           (t (apply orig-fun args)))))
 
 (defun my/proxy-up-p (&optional proxy callback)
