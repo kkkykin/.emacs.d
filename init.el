@@ -244,6 +244,10 @@
   (cua-prefix-override-inhibit-delay 0.3)
   (cua-delete-selection nil))
 
+(use-package pixel-scroll
+  :unless my/sys-android-p
+  :hook window-setup)
+
 (use-package display-fill-column-indicator
   :unless my/sys-android-p
   :hook prog-mode
@@ -462,7 +466,9 @@
            (not my/sys-android-p))
   :hook emacs-startup
   :custom
-  (etags-regen-regexp-alist '(("lisp" . "/(use-package[ \t]+\([a-zA-Z0-9\-]+\)/up\/\1/")))
+  (etags-regen-regexp-alist
+   '(("lisp" . "/(use-package[ \t]+\([a-zA-Z0-9\-]+\)/up\/\1/")
+     (nil . "/create \(procedure\|function\)\s+\([a-z\-_]+\)(/sql\/\2/i")))
   :config
   (dolist (ext '("sql"))
     (add-to-list 'etags-regen-file-extensions ext)))
