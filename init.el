@@ -1025,6 +1025,7 @@
   (tab-bar-tab-hints t)
   (tab-bar-close-button-show nil)
   (tab-bar-new-tab-to 'rightmost)
+  (tab-bar-history-limit 100)
   :custom-face
   (tab-bar ((t (:inherit mode-line :box nil))))
   (tab-bar-tab ((t (:inherit mode-line :box t))))
