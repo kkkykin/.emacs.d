@@ -2,12 +2,12 @@
 ;;; This format is meant to be slightly human-readable;
 ;;; nevertheless, you probably don't want to edit it.
 ;;; -*- End Of Bookmark File Format Version Stamp -*-
-(("s/sqlfluff"
- (front-context-string . "Basic Usage\n * C")
- (rear-context-string . "ing SQLFluff\n * ")
- (position . 2141)
- (last-modified 26043 15068 146058 836000)
- (location . "https://docs.sqlfluff.com/en/stable/")
+(("s/man"
+ (front-context-string . "                ")
+ (rear-context-string)
+ (position . 13)
+ (last-modified 26043 15721 680399 968000)
+ (location . "https://manned.org/")
  (handler . eww-bookmark-jump))
 ("s/mpv.io"
  (front-context-string . "Property list\n\nN")
@@ -16,11 +16,18 @@
  (last-modified 26002 48732 784662 0)
  (location . "https://mpv.io/manual/master/#properties")
  (handler . eww-bookmark-jump))
-("s/man"
- (front-context-string . "                ")
- (rear-context-string)
- (position . 13)
- (last-modified 26043 15721 680399 968000)
- (location . "https://manned.org/")
+("s/nix-manual"
+ (front-context-string . "Preface \n\nTable ")
+ (rear-context-string . "documentation \n\n")
+ (position . 685)
+ (last-modified 26048 18390 578476 482000)
+ (location . "https://nixos.org/manual/nixpkgs/stable/")
+ (handler . eww-bookmark-jump))
+("s/sqlfluff"
+ (front-context-string . "Basic Usage\n * C")
+ (rear-context-string . "ing SQLFluff\n * ")
+ (position . 2141)
+ (last-modified 26043 15068 146058 836000)
+ (location . "https://docs.sqlfluff.com/en/stable/")
  (handler . eww-bookmark-jump))
 )

@@ -65,7 +65,7 @@
         (when (string-prefix-p my/bookmark-shared-prefix (car bm))
           (setq new-local (delq bm new-local))
           (setq new-shared (cons bm new-shared))))
-      (when-let ((sorted (sort new-shared #'eq))
+      (when-let ((sorted (seq-sort-by #'car #'string< new-shared))
                  (need-update-p (not (equal sorted ori-shared)))
                  (bookmark-alist sorted))
         (funcall orig-fun nil my/bookmark-shared-file nil))

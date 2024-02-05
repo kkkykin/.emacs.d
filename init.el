@@ -1444,6 +1444,11 @@
   :custom
   (sqlformat-command 'sqlfluff))
 
+(use-package flymake-sqlfluff
+  :if (and (package-installed-p 'flymake-sqlfluff)
+           (executable-find "sqlfluff"))
+  :hook (sql-mode . flymake-sqlfluff-load))
+
 (use-package envrc
   :if (package-installed-p 'envrc)
   :bind
