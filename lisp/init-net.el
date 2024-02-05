@@ -501,7 +501,8 @@ items are fetched from each feed."
     (cond
      ((string-match-p (concat "^https?://"
                               (rx (or "manned.org/man/"
-                                      "www.mojeek.com/search?"))) 
+                                      "nixos.org/manual/nix/"
+                                      "www.mojeek.com/search?")))
                       url)
       (eww-readable))
      ((string-suffix-p ".patch" url) (diff-mode))
