@@ -101,7 +101,10 @@
   :group 'my
   :type 'regexp)
 
-(defcustom my/proxy-domain (rx (| ?. bos) (| "google.com") eos)
+(defcustom my/proxy-domain
+  (rx (| ?. bos)
+      (| "duckduckgo.com" "google.com" "wikipedia.org")
+      eos)
   "Domain through proxy."
   :group 'my
   :type 'regexp)
@@ -126,6 +129,20 @@
   "Set SOCKS proxy."
   :group 'my
   :type 'string)
+
+(defun my/curl-parameters-dwim (url &optional blockable-p &rest args)
+  "Generate explicit parameters for curl."
+  (let ((url url)
+        (host (url-host (url-generic-parse-url url)))
+        parameters)
+    (cond
+     ((and blockable-p
+           (string-match-p my/block-domain host))
+      (setq url "127.0.0.1"))
+     ((string-match-p my/proxy-domain host)
+      (setq parameters (cons (format "-xhttp://%s" my/centaur-proxy)
+                             parameters))))
+    (list url parameters)))
 
 (defun my/advice-url-retrieve (orig-fun &rest args)
   "Block, proxy, transform url."
@@ -433,15 +450,9 @@ items are fetched from each feed."
           newsticker-url-list)))
 
 (defun my/advice-newsticker--get-news-by-wget (args)
-  (let* ((url (cadr args))
-         (host (url-host (url-generic-parse-url url)))
-         (wget-arguments (caddr args)))
-    (when (string-match-p my/proxy-domain host)
-      (setf (caddr args)
-            (append wget-arguments
-                    `("-x"
-                      ,(concat "http://emacs@"
-                               my/centaur-proxy))))))
+  (setcar (cddr args)
+          (append (caddr args)
+                  (cadr (my/curl-parameters-dwim (cadr args)))))
   args)
 
 (defun my/newsticker-treeview-prev-page ()
@@ -509,6 +520,13 @@ items are fetched from each feed."
      ((string-suffix-p ".el" url) (emacs-lisp-mode))
      ((string-suffix-p ".rs" url) (rust-ts-mode))
      ((string-suffix-p ".go" url) (go-ts-mode)))))
+
+(defun my/advice-eww-retrieve (orig-fun &rest args)
+  "Append curl arguments to eww-retrieve-command when retrieving."
+  (let ((eww-retrieve-command
+         (append eww-retrieve-command
+                 (cadr (my/curl-parameters-dwim (car args))))))
+    (apply orig-fun args)))
 
 ;; Aria2
 (defcustom my/aria2-conf-file (expand-file-name "aria2.conf" "~/.aria2")

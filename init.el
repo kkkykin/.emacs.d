@@ -744,6 +744,7 @@
   (setq eww-retrieve-command (cons newsticker-wget-name newsticker-wget-arguments))
   (when (require 'init-net nil t)
     (advice-add 'eww--dwim-expand-url :around 'my/advice-eww--dwim-expand-url)
+    (advice-add 'eww-retrieve :around 'my/advice-eww-retrieve)
     (add-to-list 'eww-url-transformers 'my/url-redirect)))
 
 (use-package browse-url
