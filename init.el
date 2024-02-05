@@ -1517,6 +1517,21 @@
   :custom
   (org-pandoc-options-for-latex-pdf '((pdf-engine . "tectonic"))))
 
+(use-package nov
+  :if (package-installed-p 'nov)
+  :mode ("\\.epub\\'" . nov-mode)
+  :custom
+  (nov-unzip-program archive-7z-program)
+  (nov-unzip-args '("x" filename))
+  :config
+  ;; advice for 7z cli cannot split "-o" and `direcotry'
+  (advice-add 'nov-unzip-epub :around
+              (lambda (orig-fun &rest args)
+                (let ((nov-unzip-args
+                       (append nov-unzip-args
+                               (list (concat "-o" (car args))))))
+                  (apply orig-fun args)))))
+
 (setq gc-cons-threshold (* 2 1000 1000))
 
 ;;; init.el ends here

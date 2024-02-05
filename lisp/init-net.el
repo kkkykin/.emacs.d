@@ -510,11 +510,13 @@ items are fetched from each feed."
   (when-let ((url (plist-get eww-data :url))
              (source (plist-get eww-data :source)))
     (cond
-     ((string-match-p (concat "^https?://"
-                              (rx (or "manned.org/man/"
-                                      "nixos.org/manual/nix/"
-                                      "www.mojeek.com/search?")))
-                      url)
+     ((string-match-p
+       (concat
+        "^https?://"
+        (rx
+         (| "manned.org/man/" "nixos.org/manual/nix/" "www.mojeek.com/search?"
+            "www.wireshark.org/docs/wsug_html_chunked/")))
+       url)
       (eww-readable))
      ((string-suffix-p ".patch" url) (diff-mode))
      ((string-suffix-p ".el" url) (emacs-lisp-mode))

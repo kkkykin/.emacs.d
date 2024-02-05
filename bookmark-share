@@ -44,4 +44,11 @@
  (last-modified 26043 15068 146058 836000)
  (location . "https://docs.sqlfluff.com/en/stable/")
  (handler . eww-bookmark-jump))
+("s/wireshark"
+ (front-context-string . "Chapter 3. User ")
+ (rear-context-string)
+ (position . 1)
+ (last-modified 26048 40273 291504 162000)
+ (location . "https://www.wireshark.org/docs/wsug_html_chunked/ChapterUsing.html")
+ (handler . eww-bookmark-jump))
 )
