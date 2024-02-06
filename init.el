@@ -477,6 +477,37 @@
   :custom
   (abbrev-suggest t))
 
+(use-package skeleton
+  (:map html-ts-mode-map
+        ("<" . skeleton-pair-insert-maybe))
+  :custom
+  ;; (skeleton-pair-alist )
+  (skeleton-pair t))
+
+[[https://github.com/yilkalargaw/emacs-native-snippets]]
+(use-package tempo
+  :custom
+  (tempo-interactive t))
+
+(use-package auto-insert
+  :unless my/sys-android-p
+  :hook emacs-startup
+  :custom
+  (auto-insert-directory (file-name-concat user-emacs-directory "insert/"))
+  ;; (auto-insert-query nil)
+  :config
+  ;; (define-auto-insert )
+  )
+
+;; [[info:autotype]]
+(use-package copyright)
+(use-package executable)
+(use-package time-stamp)
+
+(use-package happie-exp
+  :bind
+  ([remap dabbrev-expand] . hippie-expand))
+
 (use-package desktop
   :hook (emacs-startup . desktop-save-mode)
   :custom
@@ -505,6 +536,7 @@
           (cond ((eq major-mode 'emacs-lisp-mode) (indent-pp-sexp))
                 (t (prog-indent-sexp))))
     "k" #'kill-sexp
+    "<backspace>" #'backward-kill-sexp
     "SPC" #'mark-sexp
     "t" #'transpose-sexps
     "s" #'delete-pair
@@ -807,7 +839,7 @@
             (if (stringp x) (concat my/termux-root-directory x) x))
           (copy-tree tramp-remote-path)))
      (explicit-shell-file-name
-      . (file-name-concat my/termux-root-directory "usr/bin/bash"))))
+      . ,(file-name-concat my/termux-root-directory "usr/bin/bash"))))
   (connection-local-set-profiles
    '(:application tramp :user "termux")
    'tramp-connection-local-termux-profile))
@@ -818,6 +850,34 @@
   (shell-completion-fignore '("~" "#" "%"))
   (shell-get-old-input-include-continuation-lines t)
   (shell-kill-buffer-on-exit t))
+
+(use-package sql
+  :bind
+  (:map sql-mode-map
+        ("C-c C-t p" . my/skeleton-sql-create-procedure)
+        ("C-c C-t i" . my/skeleton-sql-if-else))
+  :config
+  (define-skeleton my/skeleton-sql-create-procedure
+    "Drop procedure if exists then create it."
+    "Procedure name: "
+    "" \n
+    "DROP PROCEDURE IF EXISTS " str ";" \n
+    "DELIMITER //" \n
+    "CREATE PROCEDURE " str "("
+    (upcase (skeleton-read "IN/OUT/INOUT: ")) " "
+    (skeleton-read "Variable name: ") " "
+    (upcase (skeleton-read "Data type: "))
+    ((upcase (skeleton-read "IN/OUT/INOUT: ")) ", " str " "
+     (skeleton-read "Variable name: ") " "
+     (upcase (skeleton-read "Data type: ")))
+    ")" \n
+    "BEGIN" \n \n _ \n \n "END//" \n "DELIMITER ;" \n)
+  (define-skeleton my/skeleton-sql-if-else
+    "IF-ELSE in procedure." nil
+    "IF " (skeleton-read "Condition: ") " THEN" \n _ \n
+    ((skeleton-read "ELSEIF: ") "ELSEIF " str " THEN" \n \n)
+    "ELSE " \n \n "END IF;" \n)
+  )
 
 (use-package sqlite-mode
   :magic ("SQLite format 3\x00" . my/sqlite-view-file-magically))
@@ -1013,7 +1073,6 @@
 (use-package forms)
 (use-package ses)
 (use-package todo-mode)
-(use-package skeleton)
 
 (use-package tab-bar :defer 2
   :bind
