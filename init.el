@@ -478,8 +478,8 @@
   (abbrev-suggest t))
 
 (use-package skeleton
-  (:map html-ts-mode-map
-        ("<" . skeleton-pair-insert-maybe))
+  ;; (:map html-ts-mode-map
+  ;;       ("<" . skeleton-pair-insert-maybe))
   :custom
   ;; (skeleton-pair-alist )
   (skeleton-pair t))
