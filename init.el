@@ -478,28 +478,30 @@
   (abbrev-suggest t))
 
 (use-package skeleton
-  ;; (:map html-ts-mode-map
-  ;;       ("<" . skeleton-pair-insert-maybe))
   :custom
   ;; (skeleton-pair-alist )
   (skeleton-pair t))
 
-[[https://github.com/yilkalargaw/emacs-native-snippets]]
+;; [[https://github.com/yilkalargaw/emacs-native-snippets]]
 (use-package tempo
-  :custom
-  (tempo-interactive t))
+  :autoload tempo-define-template
+  :bind
+  (:map my/global-prefix-map
+        ("S n" . 'tempo-forward-mark)
+        ("S p" . 'tempo-backward-mark))
+  :config
+  (defvar-keymap my/tempo-repeat-map
+    :repeat t
+    "n" #'tempo-forward-mark
+    "p" #'tempo-backward-mark))
 
+;; [[info:autotype]]
 (use-package auto-insert
   :unless my/sys-android-p
   :hook emacs-startup
   :custom
-  (auto-insert-directory (file-name-concat user-emacs-directory "insert/"))
-  ;; (auto-insert-query nil)
-  :config
-  ;; (define-auto-insert )
-  )
+  (auto-insert-directory (file-name-concat user-emacs-directory "insert/")))
 
-;; [[info:autotype]]
 (use-package copyright)
 (use-package executable)
 (use-package time-stamp)
@@ -634,11 +636,6 @@
   (midnight-mode))
 
 (use-package project
-  ;; Dispatch menu not available on android sometimes.
-  ;; :config
-  ;; (when my/sys-android-p
-  ;;   (setq project-switch-commands 'project-find-file))
-  ;;   (setopt project-switch-commands #'project-prefix-or-any-command)
   :custom
   (project-vc-include-untracked nil)
   (project-kill-buffers-display-buffer-list t))
@@ -650,6 +647,9 @@
   (vc-command-messages 'log))
 
 (use-package add-log
+  :bind
+  (:map change-log-mode-map
+        ("(" . skeleton-pair-insert-maybe))
   :custom
   (add-log-keep-changes-together t)
   (change-log-version-info-enabled t))
@@ -852,32 +852,42 @@
   (shell-kill-buffer-on-exit t))
 
 (use-package sql
-  :bind
-  (:map sql-mode-map
-        ("C-c C-t p" . my/skeleton-sql-create-procedure)
-        ("C-c C-t i" . my/skeleton-sql-if-else))
   :config
-  (define-skeleton my/skeleton-sql-create-procedure
-    "Drop procedure if exists then create it."
-    "Procedure name: "
-    "" \n
-    "DROP PROCEDURE IF EXISTS " str ";" \n
-    "DELIMITER //" \n
-    "CREATE PROCEDURE " str "("
-    (upcase (skeleton-read "IN/OUT/INOUT: ")) " "
-    (skeleton-read "Variable name: ") " "
-    (upcase (skeleton-read "Data type: "))
-    ((upcase (skeleton-read "IN/OUT/INOUT: ")) ", " str " "
-     (skeleton-read "Variable name: ") " "
-     (upcase (skeleton-read "Data type: ")))
-    ")" \n
-    "BEGIN" \n \n _ \n \n "END//" \n "DELIMITER ;" \n)
-  (define-skeleton my/skeleton-sql-if-else
-    "IF-ELSE in procedure." nil
-    "IF " (skeleton-read "Condition: ") " THEN" \n _ \n
-    ((skeleton-read "ELSEIF: ") "ELSEIF " str " THEN" \n \n)
-    "ELSE " \n \n "END IF;" \n)
-  )
+  (tempo-define-template
+   "my/sql-create-procedure"
+   '(%""n
+     "DROP PROCEDURE IF EXISTS " (P "Procedure name: " procedure) ";"n
+     "DELIMITER //"n
+     "CREATE PROCEDURE " (s procedure) "("
+     (let ((output '(l)))
+       (while-let ((dir (completing-read "Direction: " '("IN" "OUT" "INOUT")))
+                   (emptyp (not (string= dir ""))))
+         (setq output
+               (append output
+                       (list dir " " (read-no-blanks-input "Variable name: ") " "
+                             (upcase (read-no-blanks-input "Data type: ")) ", "))))
+       (if (equal output '(l))
+           ", "
+         output))
+     (delete-char -2) ")"n
+     "BEGIN"n n p n n"END//"n"DELIMITER ;"n)
+   nil
+   "Drop procedure if exists then create it.")
+  (tempo-define-template
+   "my/sql-if-else"
+   '(%"IF " (P "Contidion: ") " THEN"n p n
+      (let ((output '(l)))
+        (while-let ((elif (read-string "ELSEIF: "))
+                    (emptyp (not (string= elif ""))))
+          (setq output
+                (append output
+                        `("ELSEIF " ,elif " THEN" n p n))))
+        output)
+      "ELSE "n p n "END IF;"n))
+  (dolist (abbrev '(("proc" . "create-procedure")
+                    ("ifelse" . "if-else")))
+    (define-abbrev sql-mode-abbrev-table (car abbrev) ""
+      (intern (concat "tempo-template-my/sql-" (cdr abbrev))))))
 
 (use-package sqlite-mode
   :magic ("SQLite format 3\x00" . my/sqlite-view-file-magically))
