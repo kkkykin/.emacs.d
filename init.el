@@ -69,7 +69,9 @@
     (dolist (fn '(shell-command start-file-process-shell-command))
       (advice-add fn :around #'my/advice-shell-command-coding-fix))
     (setq default-process-coding-system '(utf-8-dos . utf-8-unix) ;; change this maybe break tramp sshx
-          process-coding-system-alist `(("cmdproxy" . ,locale-coding-system))
+          process-coding-system-alist
+          `(("cmdproxy" . ,locale-coding-system)
+            ("sha256sum" utf-8 . ,locale-coding-system))
           file-name-coding-system locale-coding-system
           find-ls-option '("-exec busybox ls -ldh {} +" . "-ldh")
           find-exec-terminator "\"+\""
@@ -1585,6 +1587,9 @@
 
 (use-package khoj
   :if (package-installed-p 'khoj))
+
+(use-package dired-duplicates
+  :if (package-installed-p 'dired-duplicates))
 
 (use-package disk-usage
   :if (package-installed-p 'disk-usage)
