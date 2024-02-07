@@ -474,21 +474,21 @@
     (add-to-list 'etags-regen-file-extensions ext)))
 
 (use-package abbrev
+  :hook (sql-mode)
   :custom
   (abbrev-suggest t))
 
 (use-package skeleton
   :custom
-  ;; (skeleton-pair-alist )
+  (skeleton-further-elements '((abbrev-mode nil)))
   (skeleton-pair t))
 
 ;; [[https://github.com/yilkalargaw/emacs-native-snippets]]
 (use-package tempo
   :autoload tempo-define-template
   :bind
-  (:map my/global-prefix-map
-        ("S n" . 'tempo-forward-mark)
-        ("S p" . 'tempo-backward-mark))
+  ("M-g M-n" . 'tempo-forward-mark)
+  ("M-g M-p" . 'tempo-backward-mark)
   :config
   (defvar-keymap my/tempo-repeat-map
     :repeat t
@@ -874,20 +874,45 @@
    nil
    "Drop procedure if exists then create it.")
   (tempo-define-template
-   "my/sql-if-else"
+   "my/sql-if"
    '(%"IF " (P "Contidion: ") " THEN"n p n
       (let ((output '(l)))
         (while-let ((elif (read-string "ELSEIF: "))
                     (emptyp (not (string= elif ""))))
-          (setq output
-                (append output
-                        `("ELSEIF " ,elif " THEN" n p n))))
-        output)
-      "ELSE "n p n "END IF;"n))
-  (dolist (abbrev '(("proc" . "create-procedure")
-                    ("ifelse" . "if-else")))
+          (setq output (append output `("ELSEIF " ,elif " THEN" n p n))))
+        (if (y-or-n-p "ELSE: ")
+            (append output `("ELSE" n p n))
+          output))
+      "END IF;"n))
+  (tempo-define-template
+   "my/sql-case"
+   '(%"CASE"n
+      (let ((output '(l)))
+        (while-let ((co (read-string "Condition: "))
+                    (emptyp (not (string= co ""))))
+          (setq output (append output `("WHEN " ,co " THEN" n p n))))
+        (if (y-or-n-p "ELSE: ")
+            (append output `("ELSE" n p n))
+          output))
+      "END CASE;"n))
+  (define-skeleton my/sql-while
+    "SQL while statement." "Condition: "
+    "WHILE " str " DO"\n _ \n "END WHILE;"\n)
+  (define-skeleton my/sql-repeat
+    "SQL repeat statement." "Condition: "
+    "REPEAT"\n _ \n"UNTIL " str \n"END REPEAT;"\n)
+  (define-skeleton my/sql-loop
+    "SQL loop statement, use `LEAVE' or `ITERATE' label." "Label: "
+    str & ": " "LOOP" \n _ \n "END LOOP " str ";"\n)
+  (dolist (abbrev '(("proc" . "t-my/sql-create-procedure")
+                    ("if" . "t-my/sql-if")
+                    ("case" . "t-my/sql-case")
+                    ("while" . "my/sql-while")
+                    ("repeat" . "my/sql-repeat")
+                    ("loop" . "my/sql-loop")))
     (define-abbrev sql-mode-abbrev-table (car abbrev) ""
-      (intern (concat "tempo-template-my/sql-" (cdr abbrev))))))
+      (intern (replace-regexp-in-string "\\`t-" "tempo-template-"
+                                        (cdr abbrev))))))
 
 (use-package sqlite-mode
   :magic ("SQLite format 3\x00" . my/sqlite-view-file-magically))
