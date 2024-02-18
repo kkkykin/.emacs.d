@@ -758,8 +758,6 @@
   (advice-add 'newsticker--get-news-by-wget :filter-args #'my/advice-newsticker--get-news-by-wget)
   (advice-add 'newsticker-save-item :before-until #'my/advice-newsticker-save-item)
   (load "init-rss.el.gpg" t t)
-  (unless my/sys-android-p
-    (newsticker-start-ticker))
   (when (y-or-n-p-with-timeout "Do you want to run newsticker? " 30 t)
     (newsticker-start t)))
 
