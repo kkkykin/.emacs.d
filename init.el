@@ -32,6 +32,7 @@
   (mark-ring-max 6)
   (global-mark-ring-max 8)
   (set-mark-command-repeat-pop t)
+  (scroll-preserve-screen-position t)
   (scroll-bar-mode nil)
   (column-number-mode t)
   (global-prettify-symbols-mode t)
@@ -191,10 +192,11 @@
     (setf (cdddr mode-line-format) (cons 'viper-mode-string (cdddr mode-line-format))))
   (when my/sys-winnt-p
     (add-hook 'viper-vi-state-hook (lambda () (w32-set-ime-open-status nil))))
-  (dolist (mode '(change-log-mode vc-git-log-edit-mode reb-mode))
+  (dolist (mode '( change-log-mode dun-mode vc-git-log-edit-mode reb-mode
+                   sql-interactive-mode))
     (setq viper-vi-state-mode-list (delq mode viper-vi-state-mode-list))
     (add-to-list 'viper-insert-state-mode-list mode))
-  (dolist (mode '(diff-mode org-mode outline-mode sql-interactive-mode))
+  (dolist (mode '( diff-mode org-mode outline-mode))
     (setq viper-vi-state-mode-list (delq mode viper-vi-state-mode-list))
     (add-to-list 'viper-emacs-state-mode-list mode)))
 
