@@ -192,11 +192,10 @@
     (setf (cdddr mode-line-format) (cons 'viper-mode-string (cdddr mode-line-format))))
   (when my/sys-winnt-p
     (add-hook 'viper-vi-state-hook (lambda () (w32-set-ime-open-status nil))))
-  (dolist (mode '( change-log-mode dun-mode vc-git-log-edit-mode reb-mode
-                   sql-interactive-mode))
+  (dolist (mode '( change-log-mode dun-mode vc-git-log-edit-mode reb-mode))
     (setq viper-vi-state-mode-list (delq mode viper-vi-state-mode-list))
     (add-to-list 'viper-insert-state-mode-list mode))
-  (dolist (mode '( diff-mode org-mode outline-mode))
+  (dolist (mode '( diff-mode org-mode outline-mode sql-interactive-mode))
     (setq viper-vi-state-mode-list (delq mode viper-vi-state-mode-list))
     (add-to-list 'viper-emacs-state-mode-list mode)))
 
@@ -204,6 +203,7 @@
   :custom
   (help-window-select t "Switch to help buffers automatically")
   (help-window-keep-selected t)
+  (help-enable-symbol-autoload t)
   (apropos-sort-by-scores t)
   :bind
   (:map help-map
