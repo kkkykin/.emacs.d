@@ -949,9 +949,10 @@
     (setq archive-7z-program (file-name-base 7z)))
   
   (setq dired-guess-shell-alist-user
-        `(("\\.\\(rar\\|zip\\|7z\\|iso\\)\\(\\.001\\)?$"
+        `(("\\.\\(rar\\|zip\\|7z\\|iso\\|cab\\)\\(\\.001\\)?\\'"
            ,(format "%s x -aoa" archive-7z-program))
-          ("\\.apk$" "adb install")
+          ("\\.cab\\'" "expand -r")
+          ("\\.apk\\'" "adb install")
           ("\\(?:\\.t\\(?:\\(?:ar\\.\\)?zst\\)\\)\\'"
            "zstd -dc ? | tar -xf -")
           ("\\.\\(mp4\\|mkv\\|avi\\|webm\\|flv\\|m4v\\|mov\\)\\'"
@@ -971,6 +972,7 @@
   :config
 
   (dolist (item `(("\\.\\(tar\\.zst\\)\\'" . "tar -cf - %i | zstd -T0 --fast=2 -o %o")
+                  ("\\.cab\\'" . "makecab %i %o")
                   ("\\.7z\\'" . ,(format "%s a -mqs=on -mx3 %%o %%i" archive-7z-program))
                   ("\\.zip\\'" . ,(format "%s a -mx3 %%o %%i" archive-7z-program))))
     (add-to-list 'dired-compress-files-alist item))
