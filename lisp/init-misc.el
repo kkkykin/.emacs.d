@@ -34,12 +34,12 @@
   :group 'my
   :type '(repeat string))
 
-(defcustom my/termux-root-directory "/data/data/com.termux/files"
+(defcustom my/termux-root-directory "/data/data/com.termux/files/"
   "Andriod termux root path."
   :group 'my
   :type 'directory)
 
-(defcustom my/termux-tmp-direcotry (file-name-concat my/termux-root-directory "home/tmp")
+(defcustom my/termux-tmp-directory (file-name-concat my/termux-root-directory "home/tmp/")
   "Android termux tmp path."
   :group 'my
   :type 'directory)

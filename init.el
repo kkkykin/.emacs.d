@@ -100,7 +100,7 @@
 
     (setq select-enable-clipboard nil
           overriding-text-conversion-style nil
-          temporary-file-directory my/termux-tmp-direcotry
+          temporary-file-directory my/termux-tmp-directory
           android-pass-multimedia-buttons-to-system t)
 
     (define-key key-translation-map (kbd "<delete>") (kbd "<escape>"))
@@ -837,7 +837,7 @@
                (list (regexp-quote "termux") "remote-shell"
                      (file-name-concat my/termux-root-directory "usr/bin/bash")))
   (add-to-list 'tramp-connection-properties
-               (list (regexp-quote "termux") "tmpdir" my/termux-tmp-direcotry))
+               (list (regexp-quote "termux") "tmpdir" my/termux-tmp-directory))
   (connection-local-set-profile-variables
    'tramp-connection-local-termux-profile
    `((tramp-remote-path
@@ -949,9 +949,9 @@
     (setq archive-7z-program (file-name-base 7z)))
   
   (setq dired-guess-shell-alist-user
-        `(("\\.\\(rar\\|zip\\|7z\\|iso\\|cab\\)\\(\\.001\\)?\\'"
+        `(("\\.\\(rar\\|zip\\|7z\\|iso\\)\\(\\.001\\)?\\'"
            ,(format "%s x -aoa" archive-7z-program))
-          ("\\.cab\\'" "expand -r")
+          ("\\.cab\\'" ,(format "%s x -aoa -ocabexpand" archive-7z-program))
           ("\\.apk\\'" "adb install")
           ("\\(?:\\.t\\(?:\\(?:ar\\.\\)?zst\\)\\)\\'"
            "zstd -dc ? | tar -xf -")
@@ -970,9 +970,12 @@
   (dired-compress-file-default-suffix ".zst")
   (dired-compress-directory-default-suffix ".tar.zst")
   :config
-
+  (dolist (item `(("\\.exe\\'" .
+                   ,(let ((cab (concat temporary-file-directory "cab-" (md5 (system-name)))))
+                      (format "makecab %%i %s && copy /b/y \"%s\"+\"%s\" %%o & del /q/f \"%s\""
+                              cab (executable-find "extrac32") cab cab)))))
+    (add-to-list 'dired-compress-file-alist item))
   (dolist (item `(("\\.\\(tar\\.zst\\)\\'" . "tar -cf - %i | zstd -T0 --fast=2 -o %o")
-                  ("\\.cab\\'" . "makecab %i %o")
                   ("\\.7z\\'" . ,(format "%s a -mqs=on -mx3 %%o %%i" archive-7z-program))
                   ("\\.zip\\'" . ,(format "%s a -mx3 %%o %%i" archive-7z-program))))
     (add-to-list 'dired-compress-files-alist item))
