@@ -103,6 +103,11 @@
           temporary-file-directory my/termux-tmp-directory
           android-pass-multimedia-buttons-to-system t)
 
+    (dolist (path '(".aria2/" ".gitconfig" ".gnupg/" ".ssh/"))
+      (make-symbolic-link (file-name-concat
+                           my/termux-root-directory "home" path)
+                          (file-name-concat "~" path) t))
+
     (define-key key-translation-map (kbd "<delete>") (kbd "<escape>"))
     (define-key key-translation-map (kbd "<deletechar>") (kbd "<escape>"))
     (keymap-global-set "H-x" 'clipboard-kill-region)
@@ -911,15 +916,13 @@
   (define-skeleton my/sql-loop
     "SQL loop statement, use `LEAVE' or `ITERATE' label." "Label: "
     str & ": " "LOOP" \n _ \n "END LOOP " str ";"\n)
-  (dolist (abbrev '(("proc" . "t-my/sql-create-procedure")
-                    ("if" . "t-my/sql-if")
-                    ("case" . "t-my/sql-case")
-                    ("while" . "my/sql-while")
-                    ("repeat" . "my/sql-repeat")
-                    ("loop" . "my/sql-loop")))
-    (define-abbrev sql-mode-abbrev-table (car abbrev) ""
-      (intern (replace-regexp-in-string "\\`t-" "tempo-template-"
-                                        (cdr abbrev))))))
+  (define-abbrev-table 'sql-mode-abbrev-table
+    '(("proc" #1="" tempo-template-my/sql-create-procedure)
+      ("if" #1# tempo-template-my/sql-if)
+      ("case" #1# tempo-template-my/sql-case)
+      ("while" #1# my/sql-while)
+      ("repeat" #1# my/sql-repeat)
+      ("loop" #1# my/sql-loop))))
 
 (use-package sqlite-mode
   :magic ("SQLite format 3\x00" . my/sqlite-view-file-magically))
@@ -1013,11 +1016,7 @@
 (use-package epg
   :config
   (unless my/sys-linux-p
-    (setq epg-pinentry-mode 'loopback))
-  (when my/sys-android-p
-    (setq epg-gpg-home-directory "/data/data/com.termux/files/home/.gnupg")
-    ;; fix gnupg hang
-    (fset 'epg-wait-for-status 'ignore)))
+    (setq epg-pinentry-mode 'loopback)))
 
 (use-package mpc
   :bind-keymap
