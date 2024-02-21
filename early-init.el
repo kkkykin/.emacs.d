@@ -45,4 +45,4 @@
                   "/data/data/com.termux/files/usr/lib"
                   (getenv "LD_LIBRARY_PATH")))
   (push "/data/data/com.termux/files/usr/bin" exec-path)
-  (make-symbolic-link "/sdcard/Fonts" "~/fonts/" t))
+  (make-symbolic-link "/storage/emulated/0/Fonts/" "~/fonts/" t))
