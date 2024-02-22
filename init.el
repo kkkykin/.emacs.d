@@ -493,7 +493,6 @@
     (add-to-list 'etags-regen-file-extensions ext)))
 
 (use-package abbrev
-  :hook (sql-mode)
   :custom
   (abbrev-suggest t))
 
