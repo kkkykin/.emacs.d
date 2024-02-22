@@ -84,12 +84,11 @@
     (add-hook 'server-after-make-frame-hook #'my/setup-faces))
 
   (when my/sys-android-p
-    (setenv "SSH_AUTH_SOCK" (string-trim-right (shell-command-to-string "gpgconf --homedir /data/data/com.termux/files/home/.gnupg --list-dirs agent-ssh-socket")))
-
-    (let ((move-to-header '(mode-line-frame-identification
-                            mode-line-buffer-identification "   "
-                            (project-mode-line project-mode-line-format)
-                            (vc-mode vc-mode) "  " mode-line-misc-info))
+    (setenv "SSH_AUTH_SOCK" (string-trim-right (shell-command-to-string "gpgconf -L agent-ssh-socket")))
+    (let ((move-to-header '( mode-line-frame-identification
+                             mode-line-buffer-identification "   "
+                             (project-mode-line project-mode-line-format)
+                             (vc-mode vc-mode) "  " mode-line-misc-info))
           (headers (if header-line-format header-line-format '("%e")))
           (modes (copy-sequence mode-line-format)))
       (dolist (item move-to-header)
@@ -184,23 +183,31 @@
   (viper-no-multiple-ESC nil)
   (ex-cycle-other-window nil)
   (viper-syntax-preference 'emacs)
+  :custom-face
+  (viper-minibuffer-emacs ((t (:background nil :foreground nil))))
   :config
+  (when my/sys-winnt-p
+    (add-hook 'viper-vi-state-hook (lambda () (w32-set-ime-open-status nil))))
   (fset 'viper-del-backward-char-in-insert 'backward-delete-char-untabify)
   (with-eval-after-load 'elec-pair
     (keymap-set viper-insert-global-user-map "<backspace>"
                 (alist-get 127 (cdr electric-pair-mode-map))))
+  (put 'viper-setup-master-buffer 'safe-local-eval-function t)
   (put 'viper-mode-string 'risky-local-variable t)
   (add-face-text-property 0 (length viper-emacs-state-id) '(:inverse-video t) nil viper-emacs-state-id)
   (setq global-mode-string (delq 'viper-mode-string global-mode-string))
-  (put 'viper-setup-master-buffer 'safe-local-eval-function t)
   (unless (memq 'viper-mode-string mode-line-format)
-    (setf (cdddr mode-line-format) (cons 'viper-mode-string (cdddr mode-line-format))))
-  (when my/sys-winnt-p
-    (add-hook 'viper-vi-state-hook (lambda () (w32-set-ime-open-status nil))))
-  (dolist (mode '( change-log-mode dun-mode vc-git-log-edit-mode reb-mode))
+    (setcdr (cddr mode-line-format) (cons 'viper-mode-string (cdddr mode-line-format))))
+  (customize-set-variable
+   'viper-major-mode-modifier-list
+   (append '((sql-interactive-mode insert-state viper-comint-mode-modifier-map)
+             (sql-interactive-mode vi-state viper-comint-mode-modifier-map))
+           viper-major-mode-modifier-list))
+  (dolist (mode '( change-log-mode dun-mode vc-git-log-edit-mode reb-mode
+                   sql-interactive-mode))
     (setq viper-vi-state-mode-list (delq mode viper-vi-state-mode-list))
     (add-to-list 'viper-insert-state-mode-list mode))
-  (dolist (mode '( diff-mode org-mode outline-mode sql-interactive-mode))
+  (dolist (mode '( diff-mode org-mode outline-mode))
     (setq viper-vi-state-mode-list (delq mode viper-vi-state-mode-list))
     (add-to-list 'viper-emacs-state-mode-list mode)))
 
@@ -887,13 +894,13 @@
    "Drop procedure if exists then create it.")
   (tempo-define-template
    "my/sql-if"
-   '(%"IF " (P "Contidion: ") " THEN"n p n
+   '(%"IF " (P "Contidion: ") " THEN"n " "p n
       (let ((output '(l)))
         (while-let ((elif (read-string "ELSEIF: "))
                     (emptyp (not (string= elif ""))))
-          (setq output (append output `("ELSEIF " ,elif " THEN" n p n))))
+          (setq output (append output `("ELSEIF " ,elif " THEN" n "  "p n))))
         (if (y-or-n-p "ELSE: ")
-            (append output `("ELSE" n p n))
+            (append output `("ELSE" n "  "p n))
           output))
       "END IF;"n))
   (tempo-define-template
@@ -902,27 +909,27 @@
       (let ((output '(l)))
         (while-let ((co (read-string "Condition: "))
                     (emptyp (not (string= co ""))))
-          (setq output (append output `("WHEN " ,co " THEN" n p n))))
+          (setq output (append output `("  WHEN " ,co " THEN" n> "  "p n))))
         (if (y-or-n-p "ELSE: ")
-            (append output `("ELSE" n p n))
+            (append output `("  ELSE" n "  "p n))
           output))
       "END CASE;"n))
-  (define-skeleton my/sql-while
+  (define-skeleton my/sql-skeleton-while
     "SQL while statement." "Condition: "
-    "WHILE " str " DO"\n _ \n "END WHILE;"\n)
-  (define-skeleton my/sql-repeat
+    "WHILE " str " DO"\n "  "_ \n "END WHILE;"\n)
+  (define-skeleton my/sql-skeleton-repeat
     "SQL repeat statement." "Condition: "
-    "REPEAT"\n _ \n"UNTIL " str \n"END REPEAT;"\n)
-  (define-skeleton my/sql-loop
+    "REPEAT"\n "  "_ \n"UNTIL " str \n"END REPEAT;"\n)
+  (define-skeleton my/sql-skeleton-loop
     "SQL loop statement, use `LEAVE' or `ITERATE' label." "Label: "
-    str & ": " "LOOP" \n _ \n "END LOOP " str ";"\n)
+    str & ": " "LOOP" \n "  "_ \n "END LOOP " str ";"\n)
   (define-abbrev-table 'sql-mode-abbrev-table
     '(("proc" #1="" tempo-template-my/sql-create-procedure)
       ("if" #1# tempo-template-my/sql-if)
       ("case" #1# tempo-template-my/sql-case)
-      ("while" #1# my/sql-while)
-      ("repeat" #1# my/sql-repeat)
-      ("loop" #1# my/sql-loop))))
+      ("while" #1# my/sql-skeleton-while)
+      ("repeat" #1# my/sql-skeleton-repeat)
+      ("loop" #1# my/sql-skeleton-loop))))
 
 (use-package sqlite-mode
   :magic ("SQLite format 3\x00" . my/sqlite-view-file-magically))
@@ -975,7 +982,7 @@
   :config
   (dolist (item `(("\\.\\(tar\\.zst\\)\\'" . "tar -cf - %i | zstd -T0 --fast=2 -o %o")
                   ("\\.exe\\'" .
-                   ,(let ((cab (string-replace "/" "\\" (concat temporary-file-directory "cab-" (md5 (system-name))))))
+                   ,(let ((cab (string-replace "/" "\\" (file-name-concat temporary-file-directory "cab-" (md5 (system-name))))))
                       (format "makecab %%i %s && copy /b/y \"%s\"+\"%s\" %%o & del /q/f \"%s\""
                               cab (string-replace "/" "\\" (executable-find "extrac32")) cab cab)))
                   ("\\.7z\\'" . ,(format "%s a -mqs=on -mx3 %%o %%i" archive-7z-program))
