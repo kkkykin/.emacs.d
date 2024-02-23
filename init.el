@@ -956,7 +956,6 @@
                      (executable-find "7za")
                      (executable-find "7zz"))))
     (setq archive-7z-program (file-name-base 7z)))
-  
   (setq dired-guess-shell-alist-user
         `(("\\.\\(rar\\|zip\\|7z\\|iso\\)\\(\\.001\\)?\\'"
            ,(format "%s x -aoa" archive-7z-program))
@@ -979,11 +978,13 @@
   (dired-compress-file-default-suffix ".zst")
   (dired-compress-directory-default-suffix ".tar.zst")
   :config
+  (when my/sys-winnt-p
+    (dolist (item `(("\\.exe\\'" .
+                     ,(let ((cab (string-replace "/" "\\" (concat temporary-file-directory "cab-" (md5 (system-name))))))
+                        (format "makecab %%i %s && copy /b/y \"%s\"+\"%s\" %%o & del /q/f \"%s\""
+                                cab (string-replace "/" "\\" (executable-find "extrac32")) cab cab)))))
+      (add-to-list 'dired-compress-files-alist item)))
   (dolist (item `(("\\.\\(tar\\.zst\\)\\'" . "tar -cf - %i | zstd -T0 --fast=2 -o %o")
-                  ("\\.exe\\'" .
-                   ,(let ((cab (string-replace "/" "\\" (file-name-concat temporary-file-directory "cab-" (md5 (system-name))))))
-                      (format "makecab %%i %s && copy /b/y \"%s\"+\"%s\" %%o & del /q/f \"%s\""
-                              cab (string-replace "/" "\\" (executable-find "extrac32")) cab cab)))
                   ("\\.7z\\'" . ,(format "%s a -mqs=on -mx3 %%o %%i" archive-7z-program))
                   ("\\.zip\\'" . ,(format "%s a -mx3 %%o %%i" archive-7z-program))))
     (add-to-list 'dired-compress-files-alist item))
