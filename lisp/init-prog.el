@@ -10,7 +10,10 @@
     (if-let* ((avaip (treesit-language-available-p lan))
               (name (symbol-name lan))
               (fn (intern (format "%s-mode" name)))
-              (ts-fn (intern (format "%s-ts-mode" name)))
+              (ts-fn (intern (format "%s-ts-mode"
+                                     (pcase name
+                                       ("javascript" "js")
+                                       (t name)))))
               (ts-fnp (functionp ts-fn))
               (ori-fn (pcase lan
                         (t (or (seq-some

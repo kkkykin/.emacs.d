@@ -87,7 +87,7 @@
               (lambda (x) (and (string-match-p "^[^\\(start\\|/.+\\)]" x) x))
               (split-string-shell-command command)))
             (need-fix (member program-name
-                              `(,find-program "busybox" "ffmpeg" "mpv"))))
+                              `(,find-program "busybox" "curl" "ffmpeg" "make" "mpv"))))
       (let ((process-coding-system-alist
              `(("cmdproxy" utf-8 . ,locale-coding-system))))
         (apply orig-fun args))

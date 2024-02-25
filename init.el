@@ -543,6 +543,12 @@
   (repeat-exit-key "RET")
   (repeat-exit-timeout 10)
   :config
+  (defvar-keymap my/scroll-repeat-map :repeat t
+    "v" #'scroll-other-window
+    "V" (lambda ()
+          (interactive)
+          (setq repeat-map 'my/scroll-repeat-map)
+          (scroll-other-window '-)))
   (defvar-keymap my/structure-repeat-map
     :repeat (:enter ( treesit-beginning-of-defun beginning-of-defun
                       treesit-end-of-defun end-of-defun
@@ -1245,7 +1251,7 @@
           ;; frontend
           (html "https://github.com/tree-sitter/tree-sitter-html")
           (css "https://github.com/tree-sitter/tree-sitter-css")
-          (js "https://github.com/tree-sitter/tree-sitter-javascript")
+          (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
           (tsx . ("https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src"))))
   (when (require 'init-prog nil t)
     (my/ts-mode-enable)))
