@@ -17,6 +17,7 @@
   ([remap downcase-word] . downcase-dwim)
   ([remap capitalize-word] . capitalize-dwim)
   (:map my/global-prefix-map
+        ("s" . scratch-buffer)
         ("d" . duplicate-dwim)
         ("t" . transpose-sentences)
         ("T" . transpose-paragraphs))
@@ -161,6 +162,7 @@
          (edebug-mode . viper-change-state-to-emacs))
   :bind
   (:map viper-insert-global-user-map
+        ("C-t" . transpose-chars)
         ("C-d" . delete-char)
         ("C-w" . kill-region)
         ("C-v" . scroll-up))
@@ -876,6 +878,9 @@
   (shell-kill-buffer-on-exit t))
 
 (use-package sql
+  :bind
+  (:map sql-mode-map
+        ("C-c C-p" . sql-connect))
   :config
   (tempo-define-template
    "my/sql-create-procedure"
