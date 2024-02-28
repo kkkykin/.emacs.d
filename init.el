@@ -167,7 +167,7 @@
         ("C-w" . kill-region)
         ("C-v" . scroll-up))
   (:map viper-vi-global-user-map
-        ("qf" . org-open-at-point-global)
+        ("zf" . org-open-at-point-global)
         ("C-w h" . windmove-left)
         ("C-w j" . windmove-down)
         ("C-w k" . windmove-up)
@@ -485,14 +485,7 @@
 (use-package etags-regen
   :if (and (package-installed-p 'etags-regen)
            (not my/sys-android-p))
-  :hook emacs-startup
-  :custom
-  (etags-regen-regexp-alist
-   '(("lisp" . "/(use-package[ \t]+\([a-zA-Z0-9\-]+\)/up\/\1/")
-     (nil . "/create \(procedure\|function\)\s+\([a-z\-_]+\)(/sql\/\2/i")))
-  :config
-  (dolist (ext '("sql"))
-    (add-to-list 'etags-regen-file-extensions ext)))
+  :hook emacs-startup)
 
 (use-package abbrev
   :custom
@@ -679,6 +672,11 @@
   :custom
   (add-log-keep-changes-together t)
   (change-log-version-info-enabled t))
+
+(use-package elisp-mode
+  :config
+  (when (require 'init-prog)
+    (add-hook 'emacs-lisp-mode-hook 'my/custom-imenu-exp)))
 
 (use-package python
   :custom
@@ -1173,8 +1171,8 @@
   (recentf-mode)
   :custom
   (recentf-max-saved-items 1000)
-  (recentf-exclude `("/data/data/com.termux/files/home/tmp" "/tmp/" "/ssh:"
-                     "/sshx:" ,(concat package-user-dir "/.*-autoloads\\.el\\'"))))
+  (recentf-exclude `("/data/data/com\\.termux/files/home/tmp" "/tmp/" "/ssh:"
+                     "/sshx:" ,(file-name-concat package-user-dir ".*-autoloads\\.el\\'"))))
 
 (use-package esh-mode
   :bind

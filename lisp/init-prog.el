@@ -29,6 +29,18 @@
                        ('dockerfile `("\\(?:Dockerfile\\(?:\\..*\\)?\\|\\.[Dd]ockerfile\\)\\'" . ,ts-fn))
                        (t `(,(format "\\.%s\\'" name) . ,ts-fn))))))))
 
+;; imenu
+
+(defvar my/elisp-imenu-generic-expression
+  '(("usep" "^\\s-*(\\use-package \\([[:alpha:]-]+\\)" 1)
+    ("tempo" "^\\s-*(\\tempo-define-template\n? *\"\\([[:alpha:]/-]+\\)" 1))
+  "Custom imenu generic expression for elisp.")
+
+(defun my/custom-imenu-exp ()
+  "Add custom imenu expression for current major-mode."
+  (dolist (item (pcase major-mode
+                  ('emacs-lisp-mode my/elisp-imenu-generic-expression)))
+    (add-to-list 'imenu-generic-expression item)))
 
 (provide 'init-prog)
 ;;; init-prog.el ends here
