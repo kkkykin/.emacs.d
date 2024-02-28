@@ -55,7 +55,6 @@
   (async-shell-command-display-buffer nil)
   (shell-command-default-error-buffer "*Shell Command Error*")
   ;; (mouse-1-click-follows-link -450 "click set point, long press do action")
-  (reb-re-syntax 'string)
 
   ;; long line performance https://emacs-china.org/t/topic/25811/9
   (bidi-display-reordering nil)
@@ -168,6 +167,7 @@
         ("C-v" . scroll-up))
   (:map viper-vi-global-user-map
         ("zf" . org-open-at-point-global)
+        ("zr" . re-builder)
         ("C-w h" . windmove-left)
         ("C-w j" . windmove-down)
         ("C-w k" . windmove-up)
@@ -186,7 +186,7 @@
   (ex-cycle-other-window nil)
   (viper-syntax-preference 'emacs)
   :custom-face
-  (viper-minibuffer-emacs ((t (:background nil :foreground nil))))
+  (viper-minibuffer-emacs ((t (:background "unspecified" :foreground "unspecified"))))
   :config
   (when my/sys-winnt-p
     (add-hook 'viper-vi-state-hook (lambda () (w32-set-ime-open-status nil))))
@@ -309,6 +309,15 @@
   (glasses-uncapitalize-p t)
   (glasses-separate-parentheses-p nil))
 
+(use-package re-builder
+  :custom
+  (reb-re-syntax 'string)
+  :config
+  (defvar-keymap my/re-builder-repeat-mode
+    :repeat t
+    "s" #'reb-next-match
+    "r" #'reb-prev-match))
+
 (use-package isearch
   :custom
   (isearch-lazy-count t)
@@ -421,7 +430,14 @@
 (use-package speedbar
   :bind
   (:map my/global-prefix-map
-        ("b" . 'speedbar)))
+        ("b" . 'speedbar))
+  :config
+  (customize-set-variable
+   'speedbar-supported-extension-expressions
+   (append '(".sql") speedbar-supported-extension-expressions))
+  (when (require 'init-misc)
+    (keymap-set speedbar-file-key-map "=" #'my/speedbar-item-diff)
+    (keymap-set speedbar-file-key-map "(" #'my/speedbar-show-unknown-files)))
 
 (use-package electric
   :custom

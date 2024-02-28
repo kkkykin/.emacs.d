@@ -295,5 +295,24 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
   "Test default callback."
   (message (if args "Up" "Down")))
 
+;; speedbar
+
+(defun my/speedbar-show-unknown-files ()
+  "Temporary show unknown files."
+  (interactive)
+  (let ((speedbar-show-unknown-files t))
+    (speedbar-refresh)))
+
+(defun my/speedbar-item-diff ()
+  "Diff the item under the cursor or mouse with
+`speedbar-last-selected-file'."
+  (interactive)
+  (if-let* ((f (speedbar-line-file))
+            (filep (file-regular-p f)))
+      (progn
+        (diff f speedbar-last-selected-file)
+        (dframe-close-frame))
+    (error "Not a file")))
+
 (provide 'init-misc)
 ;;; init-misc.el ends here
