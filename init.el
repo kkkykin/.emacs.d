@@ -34,6 +34,9 @@
   (global-mark-ring-max 8)
   (set-mark-command-repeat-pop t)
   (scroll-preserve-screen-position t)
+  (scroll-margin 0)
+  (scroll-conservatively 97)
+  (make-cursor-line-fully-visible nil)
   (scroll-bar-mode nil)
   (column-number-mode t)
   (global-prettify-symbols-mode t)
@@ -50,7 +53,7 @@
   (indent-tabs-mode nil)
   (tab-width 4)
   (switch-to-buffer-obey-display-actions t)
-  (shell-command-dont-erase-buffer 'beg-last-out)
+  (shell-command-dont-erase-buffer 'end-last-out)
   (async-shell-command-buffer 'rename-buffer)
   (async-shell-command-display-buffer nil)
   (shell-command-default-error-buffer "*Shell Command Error*")
@@ -263,8 +266,10 @@
   (cua-delete-selection nil))
 
 (use-package pixel-scroll
-  :unless my/sys-android-p
-  :hook window-setup)
+  :hook window-setup
+  :custom
+  (pixel-scroll-precision-large-scroll-height 60)
+  (pixel-scroll-precision-interpolation-factor 8.0))
 
 (use-package display-fill-column-indicator
   :unless my/sys-android-p
@@ -1195,9 +1200,20 @@
   (:map my/global-prefix-map
         ("e" . eshell))
   :custom
+  (eshell-prefer-lisp-functions t)
+  (eshell-default-target-is-dot t)
+  (eshell-mv-overwrite-files nil)
+  (eshell-cp-overwrite-files nil)
+  (eshell-cp-interactive-query t)
+  (eshell-rm-interactive-query t)
+  (eshell-rm-removes-directories t)
+  (eshell-pushd-dunique t)
+  (eshell-pushd-dextract t)
   (eshell-scroll-to-bottom-on-output 'others)
   :config
-  (add-to-list 'eshell-modules-list 'eshell-smart))
+  (add-hook 'eshell-expand-input-functions #'eshell-expand-history-references)
+  (dolist (mod '(eshell-smart eshell-elecslash eshell-tramp eshell-xtra))
+    (add-to-list 'eshell-modules-list mod)))
 
 (use-package comint
   :custom

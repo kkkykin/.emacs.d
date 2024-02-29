@@ -515,7 +515,8 @@ items are fetched from each feed."
         "^https?://"
         (rx
          (| "manned.org/man/" "nixos.org/manual/nix/" "www.mojeek.com/search?"
-            "www.wireshark.org/docs/wsug_html_chunked/")))
+            "www.wireshark.org/docs/wsug_html_chunked/"
+            (: "nginx.org/en/docs/" (+ anychar) ".html"))))
        url)
       (eww-readable))
      ((string-suffix-p ".patch" url) (diff-mode))
