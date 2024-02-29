@@ -17,10 +17,7 @@
   ([remap downcase-word] . downcase-dwim)
   ([remap capitalize-word] . capitalize-dwim)
   (:map my/global-prefix-map
-        ("s" . scratch-buffer)
-        ("d" . duplicate-dwim)
-        ("t" . transpose-sentences)
-        ("T" . transpose-paragraphs))
+        ("s" . scratch-buffer))
   :custom
   (inhibit-splash-screen t)
   (indicate-buffer-boundaries 'left)
@@ -171,6 +168,9 @@
   (:map viper-vi-global-user-map
         ("zf" . org-open-at-point-global)
         ("zr" . re-builder)
+        ("zE" . duplicate-dwim)
+        ("zt" . transpose-sentences)
+        ("zT" . transpose-paragraphs)
         ("C-w h" . windmove-left)
         ("C-w j" . windmove-down)
         ("C-w k" . windmove-up)

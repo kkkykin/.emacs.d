@@ -80,14 +80,15 @@
 
 (defun my/advice-shell-command-coding-fix (orig-fun &rest args)
   "Fix coding system for cmdproxy shell."
-  (if-let* ((command (cond ((string= "*Find*" (car args)) (caddr args))
-                           (t (car args))))
+  (if-let* ((command (car args))
             (program-name
              (seq-some
               (lambda (x) (and (string-match-p "^[^\\(start\\|/.+\\)]" x) x))
               (split-string-shell-command command)))
-            (need-fix (member program-name
-                              `(,find-program "busybox" "curl" "ffmpeg" "make" "mpv"))))
+            (need-fix (or (member program-name
+                              `("busybox" "curl" "ffmpeg" "make" "mpv"))
+                          (string= "compilation" command)
+                          (string= "*Find*" command))))
       (let ((process-coding-system-alist
              `(("cmdproxy" utf-8 . ,locale-coding-system))))
         (apply orig-fun args))
