@@ -1690,7 +1690,7 @@
               (lambda (orig-fun &rest args)
                 (let ((nov-unzip-args
                        (append nov-unzip-args
-                               (list (concat "-o" (car args))))))
+                               (list (format "-o\"%s\"" (car args))))))
                   (apply orig-fun args)))))
 
 (setq gc-cons-threshold (* 2 1000 1000))
