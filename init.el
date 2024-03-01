@@ -559,7 +559,10 @@
   (repeat-exit-key "RET")
   (repeat-exit-timeout 10)
   :config
-  (defvar-keymap my/scroll-repeat-map :repeat t
+  (defvar-keymap my/scroll-repeat-map
+    :repeat t
+    "<" #'scroll-left
+    ">" #'scroll-right
     "v" #'scroll-other-window
     "V" (lambda ()
           (interactive)
@@ -797,6 +800,7 @@
   (advice-add 'newsticker--image-download-by-url :around #'my/advice-url-retrieve-with-timeout)
   (advice-add 'newsticker--get-news-by-wget :filter-args #'my/advice-newsticker--get-news-by-wget)
   (advice-add 'newsticker-save-item :before-until #'my/advice-newsticker-save-item)
+  (advice-add 'newsticker-treeview :before #'my/set-frame-fullscreen)
   (load "init-rss.el.gpg" t t)
   (when (y-or-n-p-with-timeout "Do you want to run newsticker? " 30 t)
     (newsticker-start t)))

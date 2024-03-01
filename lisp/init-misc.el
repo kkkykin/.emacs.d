@@ -296,6 +296,13 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
   "Test default callback."
   (message (if args "Up" "Down")))
 
+(defun my/set-frame-fullscreen (&optional frame)
+  "Set fullscreen state of FRAME. Modify from `toggle-frame-fullscreen'."
+  (let ((fullscreen (frame-parameter frame 'fullscreen)))
+    (when (not (memq fullscreen '(fullscreen fullboth)))
+      (modify-frame-parameters
+       frame `((fullscreen . fullboth) (fullscreen-restore . ,fullscreen))))))
+
 ;; speedbar
 
 (defun my/speedbar-show-unknown-files ()
