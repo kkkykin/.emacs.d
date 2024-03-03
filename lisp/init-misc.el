@@ -78,22 +78,6 @@
     ('windows-nt
      (string-search "0x1" (shell-command-to-string "reg query HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize /v AppsUseLightTheme")))))
 
-(defun my/advice-shell-command-coding-fix (orig-fun &rest args)
-  "Fix coding system for cmdproxy shell."
-  (if-let* ((command (car args))
-            (program-name
-             (seq-some
-              (lambda (x) (and (string-match-p "^[^\\(start\\|/.+\\)]" x) x))
-              (split-string-shell-command command)))
-            (need-fix (or (member program-name
-                              `("busybox" "curl" "ffmpeg" "make" "mpv"))
-                          (string= "compilation" command)
-                          (string= "*Find*" command))))
-      (let ((process-coding-system-alist
-             `(("cmdproxy" utf-8 . ,locale-coding-system))))
-        (apply orig-fun args))
-    (apply orig-fun args)))
-
 (defun my/set-theme (theme)
   "Set one theme only."
   (unless (memq theme custom-known-themes)
@@ -157,19 +141,6 @@ https://scripter.co/using-emacs-advice-to-silence-messages-from-functions"
         (message-log-max nil)) ;Don't show the messages in the *Messages* buffer
     (apply orig-fun args)))
 
-(defun my/run-bash ()
-  (interactive)
-  (let ((shell-file-name "C:\\Windows\\system32\\bash.exe"))
-    (shell "*bash*")))
-
-(defun my/toggle-shell ()
-  "Toggle shell between wsl bash and cmd"
-  (interactive)
-  (if (string= shell-file-name "C:\\Windows\\system32\\bash.exe")
-      (setq shell-file-name my/vanilla-shell)
-    (setq my/vanilla-shell shell-file-name
-          shell-file-name "C:\\Windows\\system32\\bash.exe")))
-
 (defun my/rclone-quit ()
   "Exit rclone safely."
   (interactive)
@@ -178,11 +149,6 @@ https://scripter.co/using-emacs-advice-to-silence-messages-from-functions"
               (args (append args `(,(format "--rc-user=%s" (plist-get auth :user))
                                    ,(format "--rc-pass=%s" (auth-info-password auth))))))
     (apply #'start-process "rclone-quit" nil "rclone" args)))
-
-(defun my/transparency (value)
-  "Sets the transparency of the frame window. 0=transparent/100=opaque"
-  (interactive "nTransparency Value 0 - 100 opaque:")
-  (set-frame-parameter nil 'alpha-background value))
 
 (defun my/adb-am (action activity)
   "ADB am command."
@@ -198,46 +164,6 @@ https://scripter.co/using-emacs-advice-to-silence-messages-from-functions"
   "Force-stop app through adb."
   (let ((package (cond ((string= name "termux") "com.termux"))))
     (my/adb-am "force-stop" package)))
-
-;; todo
-(defun my/mpv-intent (scheme &optional sub)
-  "http://mpv-android.github.io/mpv-android/intent.html
-am: [-e|--es <EXTRA_KEY> <EXTRA_STRING_VALUE> ...]  filepath
-scheme: rtmp, rtmps, rtp, rtsp, mms, mmst, mmsh, tcp, udp,
-content, file, http, https example:
-am start -n is.xyz.mpv/is.xyz.mpv.MPVActivity -e filepath
-file:///sdcard/Music/local
-
-optional: - decode_mode (Byte): if set to 2, hardware decoding
-will be disabled - subs (ParcelableArray of Uri): list of
-subtitle URIs to be added as additional tracks -
-subs.enable (ParcelableArray of Uri): specifies which of the
-subtitles should be selected by default, subset of previous array
-- position (Int): starting point of video playback in
-milliseconds"
-  (when (file-exists-p scheme)
-    (let ((url (concat "file://" scheme)))
-      (start-process "" nil "am" "start" "-n"
-                     "is.xyz.mpv/is.xyz.mpv.MPVActivity"
-                     "-e" "filepath" url))))
-
-(defun my/fooview-run (cmd)
-  "Run fooview action."
-  (start-process "fooview-run" nil "am" "start" "-a"
-                 "com.fooview.android.intent.RUN_WORKFLOW" "-e" "action"
-                 cmd "com.fooview.android.fooview/.ShortcutProxyActivity"))
-
-(defun my/rish-run (cmd)
-  "Run command with rish."
-  (start-process "rish-run" nil "rish" "-c" cmd))
-
-(defun my/normal-keyboard ()
-  "Enable normal keyboard on android."
-  (my/rish-run "ime set com.samsung.android.honeyboard/.service.HoneyBoardService"))
-
-(defun my/bare-keyboard ()
-  "Enable bare keyboard on android."
-  (my/rish-run "ime set keepass2android.keepass2android/keepass2android.softkeyboard.KP2AKeyboard"))
 
 (defun my/sqlite-view-file-magically ()
   "Runs `sqlite-mode-open-file' on the file name visited by the

@@ -567,5 +567,12 @@ items are fetched from each feed."
            (kill-buffer)))
          (kill-buffer))))
 
+(defun my/toggle-sshd ()
+  (pcase system-type
+    ('android
+     (if (buffer-live-p "*sshd*")
+         (delete-process "*sshd*")
+       (start-process "sshd" "*sshd*" "dropbear" "-w" "-s" "-p" "8022")))))
+
 (provide 'init-net)
 ;;; init-net.el ends here

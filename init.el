@@ -65,53 +65,10 @@
   :config
   (prefer-coding-system 'utf-8)
   (set-charset-priority 'unicode)
-
-  (when my/sys-winnt-p
-    (dolist (fn '(shell-command start-file-process-shell-command))
-      (advice-add fn :around #'my/advice-shell-command-coding-fix))
-    (setq default-process-coding-system '(utf-8-dos . utf-8-unix) ;; change this maybe break tramp sshx
-          process-coding-system-alist
-          `(("cmdproxy" . ,locale-coding-system)
-            ("sha256sum" utf-8 . ,locale-coding-system))
-          file-name-coding-system locale-coding-system
-          find-ls-option '("-exec busybox ls -ldh {} +" . "-ldh")
-          find-exec-terminator "\"+\""
-          shr-use-fonts nil)
-    (setenv "HOME" (file-name-parent-directory user-emacs-directory))
-    (add-to-list 'exec-suffixes ".ps1"))
-
-  (when my/sys-linux-p
-    (add-hook 'server-after-make-frame-hook #'my/setup-faces))
-
-  (when my/sys-android-p
-    (setenv "SSH_AUTH_SOCK" (string-trim-right (shell-command-to-string "gpgconf -L agent-ssh-socket")))
-    (let ((move-to-header '( mode-line-frame-identification
-                             mode-line-buffer-identification "   "
-                             (project-mode-line project-mode-line-format)
-                             (vc-mode vc-mode) "  " mode-line-misc-info))
-          (headers (if header-line-format header-line-format '("%e")))
-          (modes (copy-sequence mode-line-format)))
-      (dolist (item move-to-header)
-        (setq modes (delete item modes)
-              headers (append headers (cons item nil))))
-      (setq-default mode-line-format modes
-                    header-line-format headers))
-
-    (setq select-enable-clipboard nil
-          overriding-text-conversion-style nil
-          temporary-file-directory my/termux-tmp-directory
-          android-pass-multimedia-buttons-to-system t)
-
-    (dolist (path '(".aria2/" ".gitconfig" ".gnupg/" ".ssh/"))
-      (make-symbolic-link (file-name-concat
-                           my/termux-root-directory "home" path)
-                          (file-name-concat "~" path) t))
-
-    (define-key key-translation-map (kbd "<delete>") (kbd "<escape>"))
-    (define-key key-translation-map (kbd "<deletechar>") (kbd "<escape>"))
-    (keymap-global-set "H-x" 'clipboard-kill-region)
-    (keymap-global-set "H-c" 'clipboard-kill-ring-save)
-    (keymap-global-set "H-v" 'clipboard-yank)))
+  (pcase system-type
+    ('windows-nt (require 'init-winnt))
+    ('gnu/linux (require 'init-linux))
+    ('android (require 'init-android))))
 
 (use-package touch-screen
   :if my/sys-android-p
@@ -330,6 +287,7 @@
   (isearch-yank-on-move 'shift)
   (isearch-repeat-on-direction-change t)
   :config
+  (require 'transient)
   (transient-define-prefix my/isearch-menu ()
     "isearch Menu. http://yummymelon.com/devnull/improving-emacs-isearch-usability-with-transient.html"
     [["Edit Search String"

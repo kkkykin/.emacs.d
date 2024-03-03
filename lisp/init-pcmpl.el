@@ -23,6 +23,19 @@
 
 ;;; Code:
 
+(defun my/pcmpl-7z--list-archive ()
+  "List archive files with 7z."
+  (let ((margins "^\\([[:digit:]- :]\\{20\\}[.[:upper:]]+ +[[:digit:]]+ +[[:digit:]]+ +\\)")
+        (pass (or (seq-some (lambda (a) (and (string-prefix-p "-p" a) a))
+                            pcomplete-args)
+                  "-p⑨"))
+        (arc (seq-some (lambda (a) (and (file-regular-p a) a)) pcomplete-args))
+        (curarg (pcomplete-arg)))
+    (pcomplete-from-help
+     (list archive-7z-program "l" arc pass)
+     :margin margins
+     :argument ".+")))
+
 (defun pcomplete/7z ()
   "Completion for `7z'."
   (let ((subcommands (pcomplete-from-help `(,archive-7z-program "--help")
@@ -30,33 +43,45 @@
         (switches (pcomplete-from-help `(,archive-7z-program "--help"))))
     (while (not (member (pcomplete-arg 1) subcommands))
       (pcomplete-here subcommands))
-    (let ((subcmd (pcomplete-arg 1))
-          (cur (pcomplete-arg)))
+    (let ((subcmd (pcomplete-arg 1)))
       (while (pcase subcmd
-               ;; ((guard (string-prefix-p "-o" cur))
-               ;;  (pcomplete-here
-               ;;   (directory-files )))
-               ((guard (string= "-" cur))
-                (pcomplete-here switches))
-               ((or "a" "x") (pcomplete-here (pcomplete-entries)))))
-      ))
-  )
+               ((guard (string-prefix-p "-" (pcomplete-arg)))
+                (cond
+                 ((string-prefix-p "-o" (pcomplete-arg))
+                  (pcomplete-here
+                   (mapcar (lambda (a) (concat "-o" a))
+                           (directory-files 
+                            (or (file-name-directory
+                                 (substring (pcomplete-arg) 2))
+                                "")
+                            t))))
+                 (t (pcomplete-here switches))))
+               ((or "a" "h" "l" "t" "x")
+                (pcomplete-here (pcomplete-entries)))
+               ((or "d" "e" "rn")
+                (pcomplete-here (my/pcmpl-7z--list-archive)))
+               ("u"
+                (pcomplete-here (completion-table-merge
+                                 (pcomplete-entries)
+                                 (my/pcmpl-7z--list-archive)))))))))
 (defalias 'pcomplete/7zz 'pcomplete/7z)
 
 (defun pcomplete/adb ()
   "Completion for `adb'."
-  (message (pcomplete-arg))
   (let ((subcommands (pcomplete-from-help "adb --help"
                                           :margin "^\\( \\)[a-z]"
-                                          :argument "[[:alpha:]-]+")))
+                                          :argument "[[:alpha:]-]+"))
+        (switches (pcomplete-from-help "adb --help" :margin "^\\( \\)-"))
+        (devices (mapcar (lambda (a) (replace-regexp-in-string "\t.+" "" a))
+                         (delete "" (cdr (process-lines "adb" "devices"))))))
     (while (not (member (pcomplete-arg 1) subcommands))
-      (if (string-prefix-p "-" (pcomplete-arg))
-          (pcomplete-here (pcomplete-from-help "adb --help"
-                                               :margin "^\\( \\)-"))
-        (pcomplete-here (completion-table-merge
-                         subcommands
-                         (when (string-prefix-p "-" (pcomplete-arg 1))
-                           (pcomplete-entries))))))
+      (cond ((string= "-s" (pcomplete-arg 1)) (pcomplete-here devices))
+            ((string-prefix-p "-" (pcomplete-arg))
+             (pcomplete-here switches))
+            (t (pcomplete-here (completion-table-merge
+                                subcommands
+                                (when (string-prefix-p "-" (pcomplete-arg 1))
+                                  (pcomplete-entries)))))))
     (let ((subcmd (pcomplete-arg 1)))
       (while (pcase subcmd
                ((guard (string-prefix-p "-" (pcomplete-arg)))
