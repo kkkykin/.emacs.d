@@ -80,9 +80,6 @@ milliseconds"
 (defvar my/sshd-buffer-name "*sshd*"
   "Default sshd buffer name.")
 
-(defvar my/sshd-exit-time nil
-  "Time of last ssh client exit.")
-
 (defun my/toggle-sshd ()
   "Toggle local sshd server."
   (interactive)
@@ -92,10 +89,10 @@ milliseconds"
         (kill-buffer my/sshd-buffer-name)
         (cancel-timer my/sshd-timer))
     (start-process "sshd" my/sshd-buffer-name "dropbear" "-F" "-w" "-s")
-    (setq my/sshd-exit-time (format-time-string "%b %d %T"))
-    (setq my/sshd-timer (run-at-time 300 300 #'my/sshd-handler))))
+    (setq my/sshd-timer (run-at-time 300 300 #'my/sshd-handler
+                                     (format-time-string "%G %b %d %T")))))
 
-(defun my/sshd-handler ()
+(defun my/sshd-handler (exit)
   "Kill sshd when no connection over 5 min."
   (with-current-buffer my/sshd-buffer-name
     (goto-char (point-min))
@@ -104,13 +101,13 @@ milliseconds"
         (if (string= (match-string 3) "Child")
             (push (match-string 1) child)
           (setq child (delete (match-string 1) child)
-                my/sshd-exit-time (concat (format-time-string "%G ")
-                                          (match-string 2)))))
+                exit (concat (format-time-string "%G ")
+                             (match-string 2)))))
       (when (and (eq child nil)
                  (time-less-p
                   (time-add
                    (encode-time
-                    (parse-time-string my/sshd-exit-time))
+                    (parse-time-string exit))
                    300)
                   nil))
         (my/toggle-sshd)))))
