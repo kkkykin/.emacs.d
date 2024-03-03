@@ -1132,6 +1132,7 @@
   :custom
   (pcomplete-autolist t)
   (pcomplete-recexact t)
+  (pcomplete-termination-string "")
   :config
   (require 'init-pcmpl))
 

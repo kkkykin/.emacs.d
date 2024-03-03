@@ -25,15 +25,16 @@
 
 (defun my/pcmpl-7z--list-archive ()
   "List archive files with 7z."
-  (let ((margins "^\\([[:digit:]- :]\\{20\\}[.[:upper:]]+ +[[:digit:]]+ +[[:digit:]]+ +\\)")
-        (pass (or (seq-some (lambda (a) (and (string-prefix-p "-p" a) a))
-                            pcomplete-args)
-                  "-p⑨"))
-        (arc (seq-some (lambda (a) (and (file-regular-p a) a)) pcomplete-args))
-        (curarg (pcomplete-arg)))
+  (when-let ((pass (or (seq-some (lambda (a) (and (string-prefix-p "-p" a) a))
+                                 pcomplete-args)
+                       "-p⑨"))
+             (arc (seq-some (lambda (a) (and (file-regular-p a) a)) pcomplete-args)))
+    ;; todo: output to temp buffer, then regex match
+    ;; (with-temp-buffer
+    ;;   )
     (pcomplete-from-help
      (list archive-7z-program "l" arc pass)
-     :margin margins
+     :margin "^\\([[:digit:]-: ]\\{20\\}[[:upper:].]+ +[[:digit:]]+[[:digit:] ]\\{15\\}\\)"
      :argument ".+")))
 
 (defun pcomplete/7z ()
@@ -58,9 +59,7 @@
                  (t (pcomplete-here switches))))
                ((or "a" "h" "l" "t" "x")
                 (pcomplete-here (pcomplete-entries)))
-               ((or "d" "e" "rn")
-                (pcomplete-here (my/pcmpl-7z--list-archive)))
-               ("u"
+               ((or "d" "e" "rn" "u")
                 (pcomplete-here (completion-table-merge
                                  (pcomplete-entries)
                                  (my/pcmpl-7z--list-archive)))))))))
