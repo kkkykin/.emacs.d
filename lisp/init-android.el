@@ -72,6 +72,50 @@ milliseconds"
   "Enable bare keyboard on android."
   (my/rish-run "ime set keepass2android.keepass2android/keepass2android.softkeyboard.KP2AKeyboard"))
 
+
+;; sshd
+(defvar my/sshd-timer nil
+  "sshd timer object.")
+
+(defvar my/sshd-buffer-name "*sshd*"
+  "Default sshd buffer name.")
+
+(defvar my/sshd-exit-time nil
+  "Time of last ssh client exit.")
+
+(defun my/toggle-sshd ()
+  "Toggle local sshd server."
+  (interactive)
+  (if (buffer-live-p (get-buffer my/sshd-buffer-name))
+      (let ((kill-buffer-query-functions nil))
+        (call-process-shell-command "pkill dropbear")
+        (kill-buffer my/sshd-buffer-name)
+        (cancel-timer my/sshd-timer))
+    (start-process "sshd" my/sshd-buffer-name "dropbear" "-F" "-w" "-s")
+    (setq my/sshd-exit-time (format-time-string "%b %d %T"))
+    (setq my/sshd-timer (run-at-time 300 300 #'my/sshd-handler))))
+
+(defun my/sshd-handler ()
+  "Kill sshd when no connection over 5 min."
+  (with-current-buffer my/sshd-buffer-name
+    (goto-char (point-min))
+    (let (child)
+      (while (re-search-forward "^\\[\\([[:digit:]]+\\)\\] \\([[:alpha:]]\\{3\\} [[:digit:]]\\{2\\} [[:digit:]:]\\{8\\}\\) \\(Child\\|Exit\\)" nil t)
+        (if (string= (match-string 3) "Child")
+            (push (match-string 1) child)
+          (setq child (delete (match-string 1) child)
+                my/sshd-exit-time (concat (format-time-string "%G ")
+                                          (match-string 2)))))
+      (when (and (eq child nil)
+                 (time-less-p
+                  (time-add
+                   (encode-time
+                    (parse-time-string my/sshd-exit-time))
+                   300)
+                  nil))
+        (my/toggle-sshd)))))
+
+
 (setenv "SSH_AUTH_SOCK" (string-trim-right (shell-command-to-string "gpgconf -L agent-ssh-socket")))
 
 (let ((move-to-header '( mode-line-frame-identification

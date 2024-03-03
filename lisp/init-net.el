@@ -567,43 +567,5 @@ items are fetched from each feed."
            (kill-buffer)))
          (kill-buffer))))
 
-
-;; sshd
-(defvar my/sshd-timer nil
-  "sshd timer object.")
-
-(defvar my/sshd-buffer-name "*sshd*"
-  "Default sshd buffer name.")
-
-(defun my/toggle-sshd ()
-  "Toggle local sshd server."
-  (interactive)
-  (pcase system-type
-    ('android
-     (if (buffer-live-p (get-buffer my/sshd-buffer-name))
-         (let ((kill-buffer-query-functions nil))
-           (call-process-shell-command "pkill dropbear")
-           (kill-buffer my/sshd-buffer-name)
-           (cancel-timer my/sshd-timer))
-       (start-process "sshd" my/sshd-buffer-name "dropbear" "-F" "-w" "-s")
-       (setq my/sshd-timer (run-at-time nil (* 60 10) #'my/sshd-handler))))))
-
-(defun my/sshd-handler ()
-  "Kill sshd when no connection over 10 min."
-  (with-current-buffer my/sshd-buffer-name
-    (goto-char (point-min))
-    (let (child exit)
-      (while (re-search-forward "^\\[\\([[:digit:]]+\\)\\] \\([[:alpha:]]\\{3\\} [[:digit:]]\\{2\\} [[:digit:]:]\\{8\\}\\) \\(Child\\|Exit\\)" nil t)
-        (if (string= (match-string 3) "Child")
-            (push (match-string 1) child)
-          (setq child (delete (match-string 1) child)
-                exit (concat (format-time-string "%G ") (match-string 2)))))
-      (when (and (eq child nil)
-                 (time-less-p
-                  (time-add
-                   (encode-time (parse-time-string exit)) (* 60 10))
-                  nil))
-        (my/toggle-sshd)))))
-
 (provide 'init-net)
 ;;; init-net.el ends here
