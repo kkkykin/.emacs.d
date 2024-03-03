@@ -1119,7 +1119,22 @@
   :custom
   (add-to-list 'remember-handler-functions 'remember-diary-extract-entries))
 
-(use-package pcomplete)
+(use-package proced
+  :bind
+  (:map my/global-prefix-map
+        ("p" . proced))
+  :custom
+  (proced-goal-attribute nil)
+  (proced-show-remote-processes t)
+  (proced-enable-color-flag t))
+
+(use-package pcomplete
+  :custom
+  (pcomplete-autolist t)
+  (pcomplete-recexact t)
+  :config
+  (require 'init-pcmpl))
+
 (use-package forms)
 (use-package ses)
 (use-package todo-mode)
