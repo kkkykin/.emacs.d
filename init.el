@@ -1069,7 +1069,7 @@
 
 (use-package image
   :custom
-  (image-dired-external-viewer "mpv --no-config --no-osc --no-osd-bar --cursor-autohide=no --no-input-cursor")
+  (image-dired-external-viewer "ffplay -fs -an -noborder")
   (image-use-external-converter t)
   (doc-view-scale-internally nil)
   (doc-view-resolution 300)
