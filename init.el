@@ -885,7 +885,7 @@
    "Drop procedure if exists then create it.")
   (tempo-define-template
    "my/sql-if"
-   '(%"IF " (P "Contidion: ") " THEN"n " "p n
+   '(%"IF " (P "Contidion: ") " THEN"n "  "p n
       (let ((output '(l)))
         (while-let ((elif (read-string "ELSEIF: "))
                     (emptyp (not (string= elif ""))))
