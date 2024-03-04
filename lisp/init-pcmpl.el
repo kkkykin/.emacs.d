@@ -25,17 +25,18 @@
 
 (defun my/pcmpl-7z--list-archive ()
   "List archive files with 7z."
-  (when-let ((pass (or (seq-some (lambda (a) (and (string-prefix-p "-p" a) a))
-                                 pcomplete-args)
-                       "-p⑨"))
-             (arc (seq-some (lambda (a) (and (file-regular-p a) a)) pcomplete-args)))
-    ;; todo: output to temp buffer, then regex match
-    ;; (with-temp-buffer
-    ;;   )
-    (pcomplete-from-help
-     (list archive-7z-program "l" arc pass)
-     :margin "^\\([[:digit:]-: ]\\{20\\}[[:upper:].]+ +[[:digit:]]+[[:digit:] ]\\{15\\}\\)"
-     :argument ".+")))
+  (let ((pass (or (seq-some (lambda (a) (and (string-prefix-p "-p" a) a))
+                            pcomplete-args)
+                  "-p⑨"))
+        (arc (seq-some (lambda (a) (and (file-regular-p a) a)) pcomplete-args))
+        files)
+    (when arc
+      (with-temp-buffer
+        (call-process archive-7z-program nil t t "l" arc pass)
+        (goto-char (point-min))
+        (while (re-search-forward "^[[:digit:]-: ]\\{20\\}[[:upper:].]+ +[[:digit:]]+[[:digit:] ]\\{15\\}\\(.+\\)" nil t)
+          (push (match-string 1) files))))
+    files))
 
 (defun pcomplete/7z ()
   "Completion for `7z'."
@@ -51,7 +52,7 @@
                  ((string-prefix-p "-o" (pcomplete-arg))
                   (pcomplete-here
                    (mapcar (lambda (a) (concat "-o" a))
-                           (directory-files 
+                           (directory-files
                             (or (file-name-directory
                                  (substring (pcomplete-arg) 2))
                                 "")
