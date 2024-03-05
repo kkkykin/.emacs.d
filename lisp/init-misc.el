@@ -213,10 +213,12 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
     (dired-revert)))
 
 (defun my/advice-image-dired-create-thumb-maybe-gs (oldfun &rest args)
-  (when (string= (file-name-extension (car args)) "pdf")
-    (let ((image-dired-cmd-create-thumbnail-program "gs")
-          (image-dired-cmd-create-thumbnail-options '("-sDEVICE=jpeg" "-dSAFER" "-r20" "-o" "%t" "%f")))
-      (apply oldfun args))))
+  (if (string= (file-name-extension (car args)) "pdf")
+      (let ((image-dired-cmd-create-thumbnail-program "gs")
+            (image-dired-cmd-create-thumbnail-options
+             '("-sDEVICE=jpeg" "-dSAFER" "-r20" "-o" "%t" "%f")))
+        (apply oldfun args))
+    (apply oldfun args)))
 
 (defun my/default-callback (&rest args)
   "Test default callback."

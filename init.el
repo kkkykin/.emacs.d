@@ -34,6 +34,7 @@
   (scroll-margin 0)
   (scroll-conservatively 97)
   (make-cursor-line-fully-visible nil)
+  (blink-cursor-mode nil)
   (scroll-bar-mode nil)
   (column-number-mode t)
   (global-prettify-symbols-mode t)
@@ -41,7 +42,7 @@
   (display-line-numbers-type 'relative)
   (use-short-answers t)
   (word-wrap-by-category t)
-  (custom-file "~/.emacs.d/custom.el")
+  (custom-file (expand-file-name "custom.el" user-emacs-directory))
   (what-cursor-show-names t)
   (redisplay-skip-fontification-on-input t)
   (kill-read-only-ok t)
@@ -128,10 +129,6 @@
         ("zE" . duplicate-dwim)
         ("zt" . transpose-sentences)
         ("zT" . transpose-paragraphs)
-        ("C-w h" . windmove-left)
-        ("C-w j" . windmove-down)
-        ("C-w k" . windmove-up)
-        ("C-w l" . windmove-right)
         ("C-y" . yank)
         ("C-f" . forward-char)
         ("C-b" . backward-char)
@@ -414,20 +411,7 @@
   :unless my/sys-android-p
   :hook emacs-startup
   :custom
-  (windmove-wrap-around t)
-  :bind
-  (:repeat-map my/windmove-repeat-map
-               ("h" . windmove-left)
-               ("j" . windmove-down)
-               ("k" . windmove-up)
-               ("l" . windmove-right)
-               ("C-h" . windmove-swap-states-left)
-               ("C-j" . windmove-swap-states-down)
-               ("C-k" . windmove-swap-states-up)
-               ("C-l" . windmove-swap-states-right))
-  :config
-  (windmove-display-default-keybindings '(shift control))
-  (windmove-delete-default-keybindings))
+  (windmove-wrap-around t))
 
 (use-package server :defer 5
   :custom
@@ -516,16 +500,34 @@
   :custom
   (repeat-exit-key "RET")
   (repeat-exit-timeout 10)
+  :bind
+  (:repeat-map other-window-repeat-map
+               ("<backspace>" . kill-buffer)
+               ("S-<backspace>" . kill-buffer-and-window)
+               ("<left>" . windmove-left)
+               ("<right>" . windmove-right)
+               ("<up>" . windmove-up)
+               ("<down>" . windmove-down)
+               ("C-<left>" . windmove-delete-left)
+               ("C-<right>" . windmove-delete-right)
+               ("C-<up>" . windmove-delete-up)
+               ("C-<down>" . windmove-delete-down)
+               ("C-h" . windmove-swap-states-left)
+               ("C-l" . windmove-swap-states-right)
+               ("C-k" . windmove-swap-states-up)
+               ("C-j" . windmove-swap-states-down)
+               ("h" . windmove-display-left)
+               ("l" . windmove-display-right)
+               ("k" . windmove-display-up)
+               ("j" . windmove-display-down)
+               ("0" . windmove-display-same-window)
+               ("f" . windmove-display-new-frame)
+               ("t" . windmove-display-new-tab)
+               ("<" . scroll-left)
+               (">" . scroll-right)
+               ("v" . scroll-other-window)
+               ("V" . scroll-other-window-down))
   :config
-  (defvar-keymap my/scroll-repeat-map
-    :repeat t
-    "<" #'scroll-left
-    ">" #'scroll-right
-    "v" #'scroll-other-window
-    "V" (lambda ()
-          (interactive)
-          (setq repeat-map 'my/scroll-repeat-map)
-          (scroll-other-window '-)))
   (defvar-keymap my/structure-repeat-map
     :repeat (:enter ( treesit-beginning-of-defun beginning-of-defun
                       treesit-end-of-defun end-of-defun
@@ -536,8 +538,9 @@
     "i" (lambda ()
           (interactive)
           (setq repeat-map 'my/structure-repeat-map)
-          (cond ((eq major-mode 'emacs-lisp-mode) (indent-pp-sexp))
-                (t (prog-indent-sexp))))
+          (pcase major-mode
+            ('emacs-lisp-mode (indent-pp-sexp))
+            (_ (prog-indent-sexp))))
     "k" #'kill-sexp
     "<backspace>" #'backward-kill-sexp
     "SPC" #'mark-sexp
@@ -549,9 +552,9 @@
           (setq repeat-map 'my/structure-repeat-map)
           (insert-pair nil ?\' ?\'))
     "\"" (lambda ()
-          (interactive)
-          (setq repeat-map 'my/structure-repeat-map)
-          (insert-pair nil ?\" ?\"))
+           (interactive)
+           (setq repeat-map 'my/structure-repeat-map)
+           (insert-pair nil ?\" ?\"))
     "<" (lambda ()
           (interactive)
           (setq repeat-map 'my/structure-repeat-map)
@@ -571,8 +574,10 @@
     "u" (lambda ()
           (interactive)
           (setq repeat-map 'my/structure-repeat-map)
-          (cond ((memq major-mode '(python-ts-mode)) (python-nav-backward-up-list))
-                (t (backward-up-list))))
+          (pcase major-mode
+            ((guard (memq major-mode '(python-ts-mode)))
+             (python-nav-backward-up-list))
+            (_ (backward-up-list))))
     "d" #'down-list
     "n" #'forward-list
     "p" #'backward-list
@@ -581,18 +586,24 @@
     "a" (lambda ()
           (interactive)
           (setq repeat-map 'my/structure-repeat-map)
-          (cond ((memq major-mode '(python-ts-mode)) (treesit-beginning-of-defun))
-                (t (beginning-of-defun))))
+          (pcase major-mode
+            ((guard (memq major-mode '(python-ts-mode)))
+             (treesit-beginning-of-defun))
+            (_ (beginning-of-defun))))
     "e" (lambda ()
           (interactive)
           (setq repeat-map 'my/structure-repeat-map)
-          (cond ((memq major-mode '(python-ts-mode)) (treesit-end-of-defun))
-                (t (end-of-defun))))
+          (pcase major-mode
+            ((guard (memq major-mode '(python-ts-mode)))
+             (treesit-end-of-defun))
+            (_ (end-of-defun))))
     "x" (lambda ()
           (interactive)
           (setq repeat-map 'my/structure-repeat-map)
-          (cond ((memq major-mode '(python-ts-mode)) (python-shell-send-defun))
-                (t (eval-defun))))))
+          (pcase major-mode
+            ((guard (memq major-mode '(python-ts-mode)))
+             (python-shell-send-defun))
+            (_ (eval-defun))))))
 
 (use-package elide-head
   :unless my/sys-android-p
@@ -1107,7 +1118,7 @@
   (add-to-list 'image-file-name-extensions "avif")
   (unless (executable-find "gm")
     (setq image-dired-cmd-create-thumbnail-program "ffmpeg"
-          image-dired-cmd-create-thumbnail-options '("-i" "%f"
+          image-dired-cmd-create-thumbnail-options '("-y" "-i" "%f"
                                                      "-map_metadata" "-1"
                                                      "-vf" "scale=%w:-1"
                                                      "-f" "mjpeg" "%t"))
@@ -1115,6 +1126,7 @@
 
 (use-package eglot
   :custom
+  (eglot-autoshutdown t)
   (eglot-report-progress nil)
   (eglot-send-changes-idle-time 0.1)
   :config
@@ -1145,7 +1157,7 @@
 (use-package gnus
   :custom
   (message-send-mail-function 'smtpmail-send-it)
-  (gnus-home-directory "~/.emacs.d/gnus/"))
+  (gnus-home-directory (expand-file-name "gnus/" user-emacs-directory)))
 
 (use-package remember
   :custom
