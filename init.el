@@ -884,6 +884,35 @@
    nil
    "Drop procedure if exists then create it.")
   (tempo-define-template
+   "my/sql-create-function"
+   '(%""n
+     "DROP FUNCTION IF EXISTS " (P "Function name: " function) ";"n
+     "DELIMITER //"n
+     "CREATE FUNCTION " (s function) "("
+     (let ((output '(l)))
+       (while-let ((name (read-no-blanks-input "Variable name: "))
+                   (emptyp (not (string= name ""))))
+         (setq output
+               (append output
+                       (list name " "
+                             (upcase (read-no-blanks-input "Data type: "))
+                             ", "))))
+       (if (equal output '(l))
+           ", "
+         output))
+     (delete-char -2) ") RETURNS "
+     (append '(l) (list (upcase (read-no-blanks-input "Retunrs type: "))))
+     n
+     (let ((output '(l)))
+       (while-let ((act (completing-read "Action: "
+                                         '("READS SQL DATA"
+                                           "MODIFIES SQL DATA"
+                                           "NO SQL")))
+                   (emptyp (not (string= act ""))))
+         (setq output (append output `(,act "\n"))))
+       output)
+     "BEGIN"n n p n n"END//"n"DELIMITER ;"n))
+  (tempo-define-template
    "my/sql-if"
    '(%"IF " (P "Contidion: ") " THEN"n "  "p n
       (let ((output '(l)))
@@ -916,6 +945,7 @@
     str & ": " "LOOP" \n "  "_ \n "END LOOP " str ";"\n)
   (define-abbrev-table 'sql-mode-abbrev-table
     '(("proc" #1="" tempo-template-my/sql-create-procedure)
+      ("fun" #1# tempo-template-my/sql-create-function)
       ("if" #1# tempo-template-my/sql-if)
       ("case" #1# tempo-template-my/sql-case)
       ("while" #1# my/sql-skeleton-while)
@@ -1092,6 +1122,10 @@
 
 (use-package ediff
   :custom
+  (ediff-use-last-dir t)
+  (ediff-use-long-help-message t)
+  (ediff-show-clashes-only t)
+  (ediff-make-buffers-readonly-at-startup t)
   (ediff-keep-variants nil)
   (ediff-window-setup-function 'ediff-setup-windows-plain)
   :config
