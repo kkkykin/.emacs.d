@@ -1027,6 +1027,7 @@
   (dired-compress-directory-default-suffix ".tar.zst")
   :config
   (when my/sys-winnt-p
+    (advice-add 'dired-shell-stuff-it :filter-args #'my/advice-dired-shell-stuff-it)
     (dolist (item `(("\\.exe\\'" .
                      ,(let ((cab (string-replace "/" "\\" (concat temporary-file-directory "cab-" (md5 (system-name))))))
                         (format "makecab %%i %s && copy /b/y \"%s\"+\"%s\" %%o & del /q/f \"%s\""
@@ -1299,7 +1300,8 @@
 
 (use-package filecache
   :config
-  (setq file-cache-alist '(("init.el" "~/.emacs.d/")
+  (setq file-cache-alist '(("aria2.conf" "~/.config/aria2/")
+                           ("init.el" "~/.emacs.d/")
                            ("default.el" "~/.emacs.d/lisp/")
                            ("pip.ini" "~/.config/pip/")
                            ("config" "~/.config/yt-dlp/"))))

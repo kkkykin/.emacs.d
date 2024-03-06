@@ -32,13 +32,23 @@
               (lambda (x) (and (string-match-p "^[^\\(start\\|/.+\\)]" x) x))
               (split-string-shell-command command)))
             (need-fix (or (member program-name
-                                  `("busybox" "curl" "ffmpeg" "make" "mpv"))
+                                  `( ,find-program "busybox" "curl"
+                                     "ffmpeg" "make" "mpv" "ug"))
                           (string= "compilation" command)
-                          (string= "*Find*" command))))
+                          (string= "*Find*" command)
+                          (string= "grep" command))))
       (let ((process-coding-system-alist
              `(("cmdproxy" utf-8 . ,locale-coding-system))))
         (apply orig-fun args))
     (apply orig-fun args)))
+
+(defun my/advice-dired-shell-stuff-it (args)
+  "Fix `;' cannot sequentially execute command on windows."
+  (when (string-match-p ";[ \t]*&?[ \t]*\\'" (car args))
+    (setcar args
+            (replace-regexp-in-string "\\(.*\\);[ \t]*\\(&?[ \t]*\\)\\'"
+                                      "/wait \\1\\2" (car args))))
+  args)
 
 (defun my/run-bash ()
   (interactive)
