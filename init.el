@@ -874,55 +874,70 @@
   (:map sql-mode-map
         ("C-c C-p" . sql-connect))
   :config
+  
+  ;; (defun my/sql-table-select-all (name &optional limit)
+  ;;   "Select all from a database table named NAME."
+  ;;   (interactive
+  ;;    (list (sql-read-table-name "Table name: ")
+  ;;          current-prefix-arg))
+  ;;   (let ((sqlbuf (sql-find-sqli-buffer)))
+  ;;     (unless sqlbuf
+  ;;       (user-error "No SQL interactive buffer found"))
+  ;;     (unless name
+  ;;       (user-error "No table name specified"))
+  ;;     (sql-execute sqlbuf (format "*Select all from %s*" name)
+  ;;                          (format "select * from %s %s;") enhanced name)))
+
+  
   (tempo-define-template
    "my/sql-create-procedure"
    '(%""n
-     "DROP PROCEDURE IF EXISTS " (P "Procedure name: " procedure) ";"n
-     "DELIMITER //"n
-     "CREATE PROCEDURE " (s procedure) "("
-     (let ((output '(l)))
-       (while-let ((dir (completing-read "Direction: " '("IN" "OUT" "INOUT")))
-                   (emptyp (not (string= dir ""))))
-         (setq output
-               (append output
-                       (list dir " " (read-no-blanks-input "Variable name: ") " "
-                             (upcase (read-no-blanks-input "Data type: ")) ", "))))
-       (if (equal output '(l))
-           ", "
-         output))
-     (delete-char -2) ")"n
-     "BEGIN"n n p n n"END//"n"DELIMITER ;"n)
+      "DROP PROCEDURE IF EXISTS " (P "Procedure name: " procedure) ";"n
+      "DELIMITER //"n
+      "CREATE PROCEDURE " (s procedure) "("
+      (let ((output '(l)))
+        (while-let ((dir (completing-read "Direction: " '("IN" "OUT" "INOUT")))
+                    (emptyp (not (string= dir ""))))
+          (setq output
+                (append output
+                        (list dir " " (read-no-blanks-input "Variable name: ") " "
+                              (upcase (read-no-blanks-input "Data type: ")) ", "))))
+        (if (equal output '(l))
+            ", "
+          output))
+      (delete-char -2) ")"n
+      "BEGIN"n n p n n"END//"n"DELIMITER ;"n)
    nil
    "Drop procedure if exists then create it.")
   (tempo-define-template
    "my/sql-create-function"
    '(%""n
-     "DROP FUNCTION IF EXISTS " (P "Function name: " function) ";"n
-     "DELIMITER //"n
-     "CREATE FUNCTION " (s function) "("
-     (let ((output '(l)))
-       (while-let ((name (read-no-blanks-input "Variable name: "))
-                   (emptyp (not (string= name ""))))
-         (setq output
-               (append output
-                       (list name " "
-                             (upcase (read-no-blanks-input "Data type: "))
-                             ", "))))
-       (if (equal output '(l))
-           ", "
-         output))
-     (delete-char -2) ") RETURNS "
-     (append '(l) (list (upcase (read-no-blanks-input "Retunrs type: "))))
-     n
-     (let ((output '(l)))
-       (while-let ((act (completing-read "Action: "
-                                         '("READS SQL DATA"
-                                           "MODIFIES SQL DATA"
-                                           "NO SQL")))
-                   (emptyp (not (string= act ""))))
-         (setq output (append output `(,act "\n"))))
-       output)
-     "BEGIN"n n p n n"END//"n"DELIMITER ;"n))
+      "DROP FUNCTION IF EXISTS " (P "Function name: " function) ";"n
+      "DELIMITER //"n
+      "CREATE FUNCTION " (s function) "("
+      (let ((output '(l)))
+        (while-let ((name (read-no-blanks-input "Variable name: "))
+                    (emptyp (not (string= name ""))))
+          (setq output
+                (append output
+                        (list name " "
+                              (upcase (read-no-blanks-input "Data type: "))
+                              ", "))))
+        (if (equal output '(l))
+            ", "
+          output))
+      (delete-char -2) ") RETURNS "
+      (append '(l) (list (upcase (read-no-blanks-input "Retunrs type: "))))
+      n
+      (let ((output '(l)))
+        (while-let ((act (completing-read "Action: "
+                                          '("READS SQL DATA"
+                                            "MODIFIES SQL DATA"
+                                            "NO SQL")))
+                    (emptyp (not (string= act ""))))
+          (setq output (append output `(,act "\n"))))
+        output)
+      "BEGIN"n n p n n"END//"n"DELIMITER ;"n))
   (tempo-define-template
    "my/sql-if"
    '(%"IF " (P "Contidion: ") " THEN"n "  "p n
@@ -1716,6 +1731,10 @@
                        (append nov-unzip-args
                                (list (format "-o\"%s\"" (car args))))))
                   (apply orig-fun args)))))
+
+(use-package fdroid
+  :if (package-installed-p 'fdroid)
+  :vc (:url "https://github.com/migalmoreno/fdroid.el"))
 
 (setq gc-cons-threshold (* 2 1000 1000))
 
