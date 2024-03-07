@@ -106,6 +106,11 @@
                                  "\\(.+/\\)[^/]+\\'" "\"'\\1\'**\""
                                  (pcomplete-arg))))))))))
 
+(defun my/advice-pcmpl-git--expand-flags (args)
+  "Fix `git help ,subcmd' not work on windows."
+  (pcomplete-from-help `(,vc-git-program ,subcmd "-h")
+                       :argument
+                       "-+\\(?:\\[no-\\]\\)?[a-z-]+=?"))
+
 (provide 'init-pcmpl)
 ;;; init-pcmpl.el ends here
-

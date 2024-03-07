@@ -32,8 +32,9 @@
               (lambda (x) (and (string-match-p "^[^\\(start\\|/.+\\)]" x) x))
               (split-string-shell-command command)))
             (need-fix (or (member program-name
-                                  `( ,find-program "busybox" "curl"
-                                     "ffmpeg" "make" "mpv" "ug"))
+                                  `( ,find-program ,grep-program
+                                     "busybox" "curl" "ffmpeg" "make"
+                                     "mpv"))
                           (string= "compilation" command)
                           (string= "*Find*" command)
                           (string= "grep" command))))
