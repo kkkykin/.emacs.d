@@ -119,6 +119,8 @@
          (edebug-mode . viper-change-state-to-emacs))
   :bind
   (:map viper-insert-global-user-map
+        ("M-p" . viper-insert-prev-from-insertion-ring)
+        ("M-n" . viper-insert-next-from-insertion-ring)
         ("C-t" . transpose-chars)
         ("C-d" . delete-char)
         ("C-w" . kill-region)
@@ -526,7 +528,9 @@
                ("<" . scroll-left)
                (">" . scroll-right)
                ("v" . scroll-other-window)
-               ("V" . scroll-other-window-down))
+               ("V" . scroll-other-window-down)
+               :exit
+               ("b" . switch-to-buffer))
   :config
   (defvar-keymap my/structure-repeat-map
     :repeat (:enter ( treesit-beginning-of-defun beginning-of-defun
@@ -679,6 +683,12 @@
 
 (use-package flymake
   :hook sh-mode
+  :bind
+  (:map flymake-mode-map
+        ("C-x `" . flymake-goto-next-error))
+  (:repeat-map my/flymake-repeat-map
+               ("n" . flymake-goto-next-error)
+               ("p" . flymake-goto-prev-error))
   :custom
   (flymake-show-diagnostics-at-end-of-line t))
 
@@ -1196,7 +1206,11 @@
   (pcomplete-recexact t)
   (pcomplete-termination-string "")
   :config
-  (require 'init-pcmpl))
+  (when (and (require 'init-pcmpl)
+             my/sys-winnt-p)
+    (with-eval-after-load 'pcmpl-git
+      (advice-add 'pcmpl-git--expand-flags :filter-args
+                  #'my/advice-pcmpl-git--expand-flags))))
 
 (use-package forms)
 (use-package ses)
