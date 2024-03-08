@@ -37,6 +37,7 @@
   (blink-cursor-mode nil)
   (scroll-bar-mode nil)
   (column-number-mode t)
+  (shift-select-mode nil)
   (global-prettify-symbols-mode t)
   (prettify-symbols-unprettify-at-point t)
   (display-line-numbers-type 'relative)
@@ -883,21 +884,49 @@
   :bind
   (:map sql-mode-map
         ("C-c C-p" . sql-connect))
+  (:map sql-interactive-mode-map
+        ("C-c C-l s" . my/sql-table-selector))
   :config
+  (defun my/sql-table-get-pri-key (sqlbuf table)
+    "Get primary key name from table."
+    (with-temp-buffer
+      (sql-execute-feature sqlbuf (current-buffer) :list-table nil table)
+      (goto-char (point-min))
+      (re-search-forward "^| \\([[:alnum:]_]+\\).+| PRI |")
+      (match-string 1)))
   
-  ;; (defun my/sql-table-select-all (name &optional limit)
-  ;;   "Select all from a database table named NAME."
-  ;;   (interactive
-  ;;    (list (sql-read-table-name "Table name: ")
-  ;;          current-prefix-arg))
-  ;;   (let ((sqlbuf (sql-find-sqli-buffer)))
-  ;;     (unless sqlbuf
-  ;;       (user-error "No SQL interactive buffer found"))
-  ;;     (unless name
-  ;;       (user-error "No table name specified"))
-  ;;     (sql-execute sqlbuf (format "*Select all from %s*" name)
-  ;;                          (format "select * from %s %s;") enhanced name)))
-
+  (defun my/sql-table-selector (name &optional arg)
+    "Select data from NAME. Default select latest 10 records,
+with a positive argument, select latest (* 10 number) records;
+with a negative argument, select oldest (* 10 number) records;
+with `universal argument', select all records."
+    (interactive
+     (list (sql-read-table-name "Table name: ")
+           current-prefix-arg))
+    (let ((sqlbuf (sql-find-sqli-buffer))
+          (builder (list (format "`%s`" name))))
+      (unless sqlbuf
+        (user-error "No SQL interactive buffer found"))
+      (unless name
+        (user-error "No table name specified"))
+      (when (or (natnump arg) (listp arg))
+        (setq builder
+              (append builder
+                      `("order by"
+                        ,(my/sql-table-get-pri-key sqlbuf name)
+                        "desc"))))
+      (cond ((and (listp arg)
+                  (eq nil (car arg)))
+             (setq builder
+                   (append builder
+                           `("limit" "10"))))
+            ((numberp arg)
+             (setq builder
+                   (append builder
+                           `("limit" ,(number-to-string (* (abs arg) 10)))))))
+      (sql-execute sqlbuf "SQL table selector"
+                   "select * from %s;" nil
+                   (mapconcat #'identity builder " "))))
   
   (tempo-define-template
    "my/sql-create-procedure"
