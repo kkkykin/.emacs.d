@@ -430,10 +430,18 @@
 (use-package grep
   :init
   (when my/sys-winnt-p
-    (setq find-program "ind"
-          grep-program "ug"
+    (setq grep-program "ug"
           grep-use-null-device nil
-          grep-highlight-matches t)))
+          grep-highlight-matches t
+          grep-find-command
+          '("fd -t f -X ug --color=auto -nH --null -e \"\" {} ;" . 43)
+          grep-find-template
+          "fd --base-directory <D> <X> -t f <F> -X ug <C> -nH --null -e <R> {} ;"
+          find-program "fd"))
+  :config
+  (when (string= find-program "fd")
+    (advice-add 'rgrep-default-command :around
+                #'my/advice-rgrep-default-command-maybe-fd)))
 
 (use-package xref
   :init
@@ -447,6 +455,13 @@
   :config
   (when (string= grep-program "ug")
     (setq xref-search-program 'ugrep)))
+
+(use-package find-dired
+  :config
+  (when (string= find-program "fd")
+    (advice-add 'find-dired-with-command :filter-args #'my/advice-find-dired-with-command-maybe-fd)
+    (setq find-name-arg "-g"
+          find-ls-option '("-X busybox ls -ldh {} ;" . "-ldh"))))
 
 (use-package etags-regen
   :if (and (package-installed-p 'etags-regen)
@@ -1238,8 +1253,8 @@ with `universal argument', select all records."
   (when (and (require 'init-pcmpl)
              my/sys-winnt-p)
     (with-eval-after-load 'pcmpl-git
-      (advice-add 'pcmpl-git--expand-flags :filter-args
-                  #'my/advice-pcmpl-git--expand-flags))))
+      (advice-add 'pcomplete-from-help :filter-args
+                  #'my/advice-pcomplete-from-help))))
 
 (use-package forms)
 (use-package ses)

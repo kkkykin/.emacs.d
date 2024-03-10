@@ -45,10 +45,11 @@
 
 (defun my/advice-dired-shell-stuff-it (args)
   "Fix `;' cannot sequentially execute command on windows."
-  (when (string-match-p ";[ \t]*&?[ \t]*\\'" (car args))
+  (when-let* ((cmd (car args))
+              (fix-p (string-match-p ";[ \t]*&?[ \t]*\\'" cmd))) 
     (setcar args
             (replace-regexp-in-string "\\(.*\\);[ \t]*\\(&?[ \t]*\\)\\'"
-                                      "/wait \\1\\2" (car args))))
+                                      "/wait \\1\\2" cmd)))
   args)
 
 (defun my/run-bash ()
@@ -72,8 +73,6 @@
       `(("cmdproxy" . ,locale-coding-system)
         ("sha256sum" utf-8 . ,locale-coding-system))
       file-name-coding-system locale-coding-system
-      find-ls-option '("-exec busybox ls -ldh {} +" . "-ldh")
-      find-exec-terminator "\"+\""
       shr-use-fonts nil)
 
 (setenv "HOME" (file-name-parent-directory user-emacs-directory))

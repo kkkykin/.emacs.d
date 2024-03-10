@@ -250,5 +250,55 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
         (dframe-close-frame))
     (error "Not a file")))
 
+;; find & grep
+
+(defun my/advice-find-dired-with-command-maybe-fd (args)
+  "Use `fd' instead of `find', fix some syntax error."
+  (when-let* ((cmd (cadr args))
+              (fix-p (string-prefix-p "fd . \"(\"" cmd)))
+    (setcdr args
+            `(,(replace-regexp-in-string " \\. \\\"(\\\"\\(.+\\)\\\")\\\""
+                                         "\\1" cmd))))
+  args)
+
+(defun my/advice-rgrep-default-command-maybe-fd (oldfun &rest args)
+  "Use `fd' synyax."
+  (if (string-prefix-p "fd " grep-find-template)
+      (let* ((files (cadr args))
+             (dir (caddr args))
+             (grep-find-template
+              (string-replace
+               "<F>"
+               (concat " \".*\\.("
+                       (mapconcat
+                        (lambda (x) (string-replace "*." "" x))
+                        (split-string files) "|")
+                       ")$\" ")
+               grep-find-template))
+             (grep-find-template
+              (string-replace
+               "<X>"
+               (concat
+                (and grep-find-ignored-directories
+                     (concat (mapconcat (lambda (d) (concat "-E \"*/" d "\""))
+                                        (rgrep-find-ignored-directories dir)
+                                        " ")
+                             " "))
+                (and grep-find-ignored-files
+                     (concat (mapconcat
+                              (lambda (ignore)
+                                (cond ((stringp ignore)
+                                       (concat "-E \"*." ignore "\""))
+                                      ((consp ignore)
+                                       (and (funcall (car ignore) dir)
+                                            (concat "-E \"*."
+                                                    (cdr ignore) "\"")))))
+                              grep-find-ignored-files
+                              " ")
+                             " ")))
+               grep-find-template)))
+        (apply oldfun args))
+    (apply oldfun args)))
+
 (provide 'init-misc)
 ;;; init-misc.el ends here

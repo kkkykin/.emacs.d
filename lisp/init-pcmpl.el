@@ -46,24 +46,24 @@
     (while (not (member (pcomplete-arg 1) subcommands))
       (pcomplete-here subcommands))
     (let ((subcmd (pcomplete-arg 1)))
-      (while (pcase subcmd
-               ((guard (string-prefix-p "-" (pcomplete-arg)))
-                (cond
-                 ((string-prefix-p "-o" (pcomplete-arg))
-                  (pcomplete-here
-                   (mapcar (lambda (a) (concat "-o" a))
-                           (directory-files
-                            (or (file-name-directory
-                                 (substring (pcomplete-arg) 2))
-                                "")
-                            t))))
-                 (t (pcomplete-here switches))))
-               ((or "a" "h" "l" "t" "x")
-                (pcomplete-here (pcomplete-entries)))
-               ((or "d" "e" "rn" "u")
-                (pcomplete-here (completion-table-merge
-                                 (pcomplete-entries)
-                                 (my/pcmpl-7z--list-archive)))))))))
+      (while
+          (let ((cur (pcomplete-arg)))
+            (pcase subcmd
+              ((guard (string-prefix-p "-" cur))
+               (cond ((string-prefix-p "-o" cur)
+                      (let ((path (substring cur 2)))
+                        (pcomplete-here
+                         (mapcar (lambda (a) (concat "-o" a))
+                                 (directory-files
+                                  (or (file-name-directory path) "")
+                                  t)))))
+                     (t (pcomplete-here switches))))
+              ((or "a" "h" "l" "t" "x")
+               (pcomplete-here (pcomplete-entries)))
+              ((or "d" "e" "rn" "u")
+               (pcomplete-here (completion-table-merge
+                                (pcomplete-entries)
+                                (my/pcmpl-7z--list-archive))))))))))
 (defalias 'pcomplete/7zz 'pcomplete/7z)
 
 (defun pcomplete/adb ()
@@ -106,11 +106,13 @@
                                  "\\(.+/\\)[^/]+\\'" "\"'\\1\'**\""
                                  (pcomplete-arg))))))))))
 
-(defun my/advice-pcmpl-git--expand-flags (args)
-  "Fix `git help ,subcmd' not work on windows."
-  (pcomplete-from-help `(,vc-git-program ,subcmd "-h")
-                       :argument
-                       "-+\\(?:\\[no-\\]\\)?[a-z-]+=?"))
+(defun my/advice-pcomplete-from-help (args)
+  "Fix `git help subcmd' not work on windows."
+  (let ((cmd (car args)))
+    (when (and (equal `(,vc-git-program "help") (seq-take cmd 2))
+               (not (string= "-a" (caddr cmd))))
+      (setcar args (list vc-git-program (elt cmd 2) "-h"))))
+  args)
 
 (provide 'init-pcmpl)
 ;;; init-pcmpl.el ends here
