@@ -1362,7 +1362,7 @@ with `universal argument', select all records."
                            ("init.el" "~/.emacs.d/")
                            ("default.el" "~/.emacs.d/lisp/")
                            ("pip.ini" "~/.config/pip/")
-                           ("config" "~/.config/yt-dlp/"))))
+                           ("config.txt" "~/.config/yt-dlp/"))))
 
 (use-package shadowfile :defer 11
   :unless my/sys-android-p
