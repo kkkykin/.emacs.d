@@ -269,33 +269,44 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
              (grep-find-template
               (string-replace
                "<F>"
-               (concat " \".*\\.("
-                       (mapconcat
-                        (lambda (x) (string-replace "*." "" x))
-                        (split-string files) "|")
-                       ")$\" ")
+               (shell-quote-argument
+                (concat ".*\\.("
+                        (mapconcat
+                         (lambda (x) (string-replace "*." "" x))
+                         (split-string files) "|")
+                        ")$")
+                grep-quoting-style)
                grep-find-template))
              (grep-find-template
               (string-replace
                "<X>"
                (concat
                 (and grep-find-ignored-directories
-                     (concat (mapconcat (lambda (d) (concat "-E \"*/" d "\""))
-                                        (rgrep-find-ignored-directories dir)
-                                        " ")
-                             " "))
+                     (concat
+                      (mapconcat
+                       (lambda (d) (concat "-E " (shell-quote-argument
+                                              (concat "*/" d)
+                                              grep-quoting-style)))
+                       (rgrep-find-ignored-directories dir)
+                       " ")
+                      " "))
                 (and grep-find-ignored-files
-                     (concat (mapconcat
-                              (lambda (ignore)
-                                (cond ((stringp ignore)
-                                       (concat "-E \"*." ignore "\""))
-                                      ((consp ignore)
-                                       (and (funcall (car ignore) dir)
-                                            (concat "-E \"*."
-                                                    (cdr ignore) "\"")))))
-                              grep-find-ignored-files
-                              " ")
-                             " ")))
+                     (concat
+                      (mapconcat
+                       (lambda (ignore)
+                         (cond ((stringp ignore)
+                                (concat "-E " (shell-quote-argument
+                                               (concat "*." ignore)
+                                               grep-quoting-style)))
+                               ((consp ignore)
+                                (and (funcall (car ignore) dir)
+                                     (concat "-E "
+                                             (shell-quote-argument
+                                              (concat "*." (cdr ignore))
+                                              grep-quoting-style))))))
+                       grep-find-ignored-files
+                       " ")
+                      " ")))
                grep-find-template)))
         (apply oldfun args))
     (apply oldfun args)))
