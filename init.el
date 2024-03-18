@@ -959,7 +959,7 @@ with `universal argument', select all records."
         (if (equal output '(l))
             ", "
           output))
-      (delete-char -2) ")"n
+      (delete-char -2) ")"n"COMMENT '"p"'"n
       "BEGIN"n n p n n"END//"n"DELIMITER ;"n)
    nil
    "Drop procedure if exists then create it.")
@@ -982,7 +982,7 @@ with `universal argument', select all records."
           output))
       (delete-char -2) ") RETURNS "
       (append '(l) (list (upcase (read-no-blanks-input "Retunrs type: "))))
-      n
+      n"COMMENT '"p"'"n
       (let ((output '(l)))
         (while-let ((act (completing-read "Action: "
                                           '("READS SQL DATA"
