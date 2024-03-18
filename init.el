@@ -917,7 +917,8 @@ with a negative argument, select oldest (* 10 number) records;
 with `universal argument', select all records."
     (interactive
      (list (sql-read-table-name "Table name: ")
-           current-prefix-arg))
+           current-prefix-arg)
+     sql-mode sql-interactive-mode)
     (let ((sqlbuf (sql-find-sqli-buffer))
           (builder (list (format "`%s`" name))))
       (unless sqlbuf
