@@ -96,7 +96,12 @@
    (emacs-startup . savehist-mode)))
 
 (use-package icomplete
-  :hook (emacs-startup . fido-mode))
+  :hook (emacs-startup . fido-mode)
+  :config
+  (advice-add 'icomplete--fido-mode-setup :after-while
+              (lambda (&rest r)
+                (setq-local completion-styles
+                            '(initials partial-completion flex)))))
 
 (use-package completion-preview
   :if (package-installed-p 'completion-preview)
@@ -546,6 +551,7 @@
                ("v" . scroll-other-window)
                ("V" . scroll-other-window-down)
                :exit
+               ("1" . delete-other-windows)
                ("b" . switch-to-buffer))
   :config
   (defvar-keymap my/structure-repeat-map
