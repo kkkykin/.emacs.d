@@ -497,6 +497,9 @@ items are fetched from each feed."
     (format "https://github.com/%s/raw/%s"
             (match-string 1 url)
             (match-string 2 url)))
+   ((string-prefix-p "https://www.reddit.com" url)
+    (replace-regexp-in-string "^https://www.reddit.com"
+                              "https://old.reddit.com" url))
    (t url)))
 
 (defun my/advice-eww--dwim-expand-url (orig-fun &rest args)

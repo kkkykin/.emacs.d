@@ -34,7 +34,7 @@
 (defconst my/sys-android-p (eq system-type 'android)
   "Android System.")
 
-;; Android Termux path
+;; Android Setup
 (when my/sys-android-p
   (setenv "PATH"
           (format "%s:%s" "/data/data/com.termux/files/usr/bin"
@@ -44,5 +44,6 @@
                   "/system/lib64"
                   "/data/data/com.termux/files/usr/lib"
                   (getenv "LD_LIBRARY_PATH")))
+  (setq image-scaling-factor 2)
   (push "/data/data/com.termux/files/usr/bin" exec-path)
   (make-symbolic-link "/storage/emulated/0/Fonts/" "~/fonts/" t))

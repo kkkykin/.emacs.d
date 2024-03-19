@@ -165,8 +165,8 @@
   (setq global-mode-string (delq 'viper-mode-string global-mode-string))
   (unless (memq 'viper-mode-string mode-line-format)
     (setcdr (cddr mode-line-format) (cons 'viper-mode-string (cdddr mode-line-format))))
-  (customize-set-variable
-   'viper-major-mode-modifier-list
+  (setopt
+   viper-major-mode-modifier-list
    (append '((sql-interactive-mode insert-state viper-comint-mode-modifier-map)
              (sql-interactive-mode vi-state viper-comint-mode-modifier-map))
            viper-major-mode-modifier-list))
@@ -400,9 +400,9 @@
   (:map my/global-prefix-map
         ("b" . 'speedbar))
   :config
-  (customize-set-variable
-   'speedbar-supported-extension-expressions
-   (append '(".sql") speedbar-supported-extension-expressions))
+  (setopt speedbar-supported-extension-expressions
+          (append '(".sql")
+                  speedbar-supported-extension-expressions))
   (when (require 'init-misc)
     (keymap-set speedbar-file-key-map "=" #'my/speedbar-item-diff)
     (keymap-set speedbar-file-key-map "(" #'my/speedbar-show-unknown-files)))
