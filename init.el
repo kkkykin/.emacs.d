@@ -966,7 +966,7 @@ with `universal argument', select all records."
         (if (equal output '(l))
             ", "
           output))
-      (delete-char -2) ")"n"COMMENT '"p"'"n
+      (delete-char -2) ")"n"COMMENT \""p"\""n
       "BEGIN"n n p n n"END//"n"DELIMITER ;"n)
    nil
    "Drop procedure if exists then create it.")
@@ -988,17 +988,25 @@ with `universal argument', select all records."
             ", "
           output))
       (delete-char -2) ") RETURNS "
-      (append '(l) (list (upcase (read-no-blanks-input "Retunrs type: "))))
-      n"COMMENT '"p"'"n
-      (let ((output '(l)))
+      (let* ((return-var (read-no-blanks-input "Retunrs Variable: "
+                                               "data_output"))
+             (return-type (upcase (read-no-blanks-input "Retunrs Type: ")))
+             (return-default (read-string "Returns Default Value: "))
+             (output `(l ,return-type n "COMMENT \"" p "\"" n)))
         (while-let ((act (completing-read "Action: "
                                           '("READS SQL DATA"
                                             "MODIFIES SQL DATA"
                                             "NO SQL")))
                     (emptyp (not (string= act ""))))
-          (setq output (append output `(,act "\n"))))
+          (setq output
+                (append output
+                        `( ,act n "BEGIN" n "DECLARE " ,return-var
+                           " " ,return-type
+                           ,@(unless (string= "" return-default)
+                               (list " DEFAULT " return-default))
+                           ";" n n p n n "RETURN " ,return-var ";"))))
         output)
-      "BEGIN"n n p n n"END//"n"DELIMITER ;"n))
+      n"END//"n"DELIMITER ;"n))
   (tempo-define-template
    "my/sql-if"
    '(%"IF " (P "Contidion: ") " THEN"n "  "p n
