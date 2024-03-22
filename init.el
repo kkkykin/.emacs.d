@@ -733,6 +733,7 @@
                ("<left>" . bs-cycle-previous)
                ("<right>" . bs-cycle-next))
   :config
+  (keymap-set bs-mode-map "i" (lambda () (interactive) (bs-kill) (ibuffer)))
   (dolist (conf '(("dired" nil nil nil
                    (lambda (buf)
                      (with-current-buffer buf
@@ -910,6 +911,7 @@
 (use-package sql
   :bind
   (:map sql-mode-map
+        ("C-c C-l s" . my/sql-table-selector)
         ("C-c C-p" . sql-connect))
   (:map sql-interactive-mode-map
         ("C-c C-l s" . my/sql-table-selector))
