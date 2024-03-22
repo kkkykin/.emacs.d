@@ -125,8 +125,6 @@
          (edebug-mode . viper-change-state-to-emacs))
   :bind
   (:map viper-insert-global-user-map
-        ("M-p" . viper-insert-prev-from-insertion-ring)
-        ("M-n" . viper-insert-next-from-insertion-ring)
         ("C-t" . transpose-chars)
         ("C-d" . delete-char)
         ("C-w" . kill-region)
@@ -524,6 +522,12 @@
   (repeat-exit-key "RET")
   (repeat-exit-timeout 10)
   :bind
+  (:repeat-map page-navigation-repeat-map
+               :exit
+               ("n" . narrow-to-page))
+  (:repeat-map comint-repeat-map
+               ("n" . comint-next-prompt)
+               ("p" . comint-previous-prompt))
   (:repeat-map other-window-repeat-map
                ("<backspace>" . kill-buffer)
                ("S-<backspace>" . kill-buffer-and-window)
@@ -554,6 +558,8 @@
                ("1" . delete-other-windows)
                ("b" . switch-to-buffer))
   :config
+  (keymap-unset comint-repeat-map "C-n")
+  (keymap-unset comint-repeat-map "C-p")
   (defvar-keymap my/structure-repeat-map
     :repeat (:enter ( treesit-beginning-of-defun beginning-of-defun
                       treesit-end-of-defun end-of-defun
