@@ -33,8 +33,8 @@
               (split-string-shell-command command)))
             (need-fix (or (member program-name
                                   `( ,find-program ,grep-program
-                                     "busybox" "curl" "ffmpeg" "make"
-                                     "mpv"))
+                                     "busybox" "curl" "ffmpeg" "git"
+                                     "make" "mpv"))
                           (string= "compilation" command)
                           (string= "*Find*" command)
                           (string= "grep" command))))
@@ -42,6 +42,35 @@
              `(("cmdproxy" utf-8 . ,locale-coding-system))))
         (apply orig-fun args))
     (apply orig-fun args)))
+
+(defun my/output-coding-system-fix (input output)
+  "Fix coding system by `process-coding-system-alist'."
+  (if-let* ((program (car (split-string-shell-command input)))
+            (coding-system (alist-get program process-coding-system-alist
+                                      nil nil 'equal))
+            (from (symbol-name (if (listp coding-system)
+                                   (car coding-system)
+                                 coding-system)))
+            (to (symbol-name (if (listp coding-system)
+                                 (cdr coding-system)
+                               coding-system))))
+      (with-temp-buffer
+        (insert output)
+        (call-process-region (point-min) (point-max)
+                             "iconv" t t nil "-f" from "-t" to)
+        (buffer-string))
+    output))
+
+(defun my/eshell-coding-system-fix (output)
+  "Fix stdout coding-system in eshell."
+  (my/output-coding-system-fix (eshell-previous-input-string 0)
+                               output))
+;; (add-hook 'eshell-preoutput-filter-functions #'my/eshell-coding-system-fix nil)
+;; (remove-hook 'eshell-preoutput-filter-functions #'my/eshell-coding-system-fix nil)
+
+(defun my/shell-coding-system-fix (output)
+  "Fix stdout coding-system in shell."
+  (my/output-coding-system-fix (comint-previous-input-string 0) output))
 
 (defun my/advice-dired-shell-stuff-it (args)
   "Fix `;' cannot sequentially execute command on windows."
@@ -68,9 +97,15 @@
 (dolist (fn '(shell-command start-file-process-shell-command))
   (advice-add fn :around #'my/advice-shell-command-coding-fix))
 
+(add-hook 'shell-mode-hook
+          (lambda ()
+            (add-hook 'comint-preoutput-filter-functions
+                      #'my/shell-coding-system-fix nil t)))
+
 (setq default-process-coding-system '(utf-8-dos . utf-8-unix) ;; change this maybe break tramp sshx
       process-coding-system-alist
       `(("cmdproxy" . ,locale-coding-system)
+        ("git" utf-8 . ,locale-coding-system)
         ("sha256sum" utf-8 . ,locale-coding-system))
       file-name-coding-system locale-coding-system
       shr-use-fonts nil)

@@ -733,7 +733,11 @@
                ("<left>" . bs-cycle-previous)
                ("<right>" . bs-cycle-next))
   :config
-  (keymap-set bs-mode-map "i" (lambda () (interactive) (bs-kill) (ibuffer)))
+  (keymap-set bs-mode-map "i"
+              (lambda () (interactive)
+                (bs-kill)
+                (ibuffer)
+                (ibuffer-switch-to-saved-filter-groups "default")))
   (dolist (conf '(("dired" nil nil nil
                    (lambda (buf)
                      (with-current-buffer buf
