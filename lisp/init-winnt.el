@@ -47,18 +47,14 @@
   "Fix coding system by `process-coding-system-alist'."
   (if-let* ((program (car (split-string-shell-command input)))
             (coding-system (alist-get program process-coding-system-alist
-                                      nil nil 'equal))
-            (from (symbol-name (if (listp coding-system)
-                                   (car coding-system)
-                                 coding-system)))
-            (to (symbol-name (if (listp coding-system)
-                                 (cdr coding-system)
-                               coding-system))))
-      (with-temp-buffer
-        (insert output)
-        (call-process-region (point-min) (point-max)
-                             "iconv" t t nil "-f" from "-t" to)
-        (buffer-string))
+                                      nil nil 'equal)))
+      (if (listp coding-system)
+          (decode-coding-string
+           (encode-coding-string
+            (decode-coding-string output (car coding-system))
+            (cdr coding-system))
+           'prefer-utf-8)
+        (decode-coding-string output 'prefer-utf-8))
     output))
 
 (defun my/eshell-coding-system-fix (output)
@@ -71,6 +67,16 @@
 (defun my/shell-coding-system-fix (output)
   "Fix stdout coding-system in shell."
   (my/output-coding-system-fix (comint-previous-input-string 0) output))
+
+(defun my/compilation-coding-system-fix (output)
+  "Fix stdout coding-system in compilation."
+  (let ((fixed (my/output-coding-system-fix
+                (car compilation-arguments)
+                (buffer-substring compilation-filter-start (point)))))
+    (delete-region compilation-filter-start (point))
+    (insert fixed)))
+;; (with-eval-after-load 'compile
+;;   (add-hook 'compilation-filter-hook #'my/compilation-coding-system-fix))
 
 (defun my/advice-dired-shell-stuff-it (args)
   "Fix `;' cannot sequentially execute command on windows."
