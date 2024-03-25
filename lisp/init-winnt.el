@@ -85,9 +85,10 @@
   (let ((fixed (my/output-coding-system-fix find-program (buffer-string))))
     (delete-region (point-min) (point-max))
     (insert fixed)))
-(let ((ori find-dired-refine-function))
-  (setq find-dired-refine-function 'my/find-dired-coding-system-fix)
-  (advice-add find-dired-refine-function :after ori))
+(with-eval-after-load 'find-dired
+  (let ((ori find-dired-refine-function))
+    (setq find-dired-refine-function 'my/find-dired-coding-system-fix)
+    (advice-add find-dired-refine-function :after ori)))
 
 (defun my/advice-dired-shell-stuff-it (args)
   "Fix `;' cannot sequentially execute command on windows."
