@@ -125,6 +125,8 @@
          (edebug-mode . viper-change-state-to-emacs))
   :bind
   (:map viper-insert-global-user-map
+        ("M-p" . viper-insert-prev-from-insertion-ring)
+        ("M-n" . viper-insert-next-from-insertion-ring)
         ("C-t" . transpose-chars)
         ("C-d" . delete-char)
         ("C-w" . kill-region)
@@ -529,7 +531,9 @@
                ("n" . narrow-to-page))
   (:repeat-map comint-repeat-map
                ("n" . comint-next-prompt)
-               ("p" . comint-previous-prompt))
+               ("p" . comint-previous-prompt)
+               :exit
+               ("m" . comint-get-old-input))
   (:repeat-map other-window-repeat-map
                ("<backspace>" . kill-buffer)
                ("S-<backspace>" . kill-buffer-and-window)

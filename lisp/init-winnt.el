@@ -24,24 +24,24 @@
 
 ;;; Code:
 
-(defun my/find-shell-command-coding-system (command)
+(defun mw/find-shell-command-coding-system (command)
   "Find coding system for shell command."
   (let ((program (seq-some (lambda (x) (and (not (string-prefix-p "/" x))
                                         (not (string= "start" x)) x))
                            (split-string-shell-command command))))
     (find-operation-coding-system 'call-process program)))
 
-(defun my/advice-shell-command-coding-fix (orig-fun &rest args)
+(defun mw/advice-shell-command-coding-fix (orig-fun &rest args)
   "Fix coding system for by change I/O coding-system."
-  (let* ((coding-system (my/find-shell-command-coding-system (car args)))
+  (let* ((coding-system (mw/find-shell-command-coding-system (car args)))
          (coding-system-for-read (car coding-system))
          (coding-system-for-write (cdr coding-system)))
     (apply orig-fun args)))
-(advice-add 'shell-command :around #'my/advice-shell-command-coding-fix)
+(advice-add 'shell-command :around #'mw/advice-shell-command-coding-fix)
 
-(defun my/output-coding-system-fix (input output)
+(defun mw/output-coding-system-fix (input output)
   "Fix coding system by convert string."
-  (if-let ((coding-system (my/find-shell-command-coding-system input)))
+  (if-let ((coding-system (mw/find-shell-command-coding-system input)))
       (decode-coding-string
        (encode-coding-string
         (decode-coding-string output (car coding-system))
@@ -49,48 +49,54 @@
        'prefer-utf-8)
     output))
 
-(defun my/eshell-coding-system-fix (output)
+(defun mw/eshell-coding-system-fix (output)
   "Fix stdout coding-system in eshell."
   (if-let ((command (condition-case nil
                         (eshell-previous-input-string 0)
                       (error nil))))
-      (my/output-coding-system-fix command output)
+      (mw/output-coding-system-fix command output)
     output))
-(add-hook 'eshell-preoutput-filter-functions #'my/eshell-coding-system-fix nil)
+(add-hook 'eshell-preoutput-filter-functions #'mw/eshell-coding-system-fix nil)
 
-(defun my/shell-coding-system-fix (output)
-  "Fix stdout coding-system in shell."
-  (my/output-coding-system-fix (comint-previous-input-string 0) output))
-(add-hook 'shell-mode-hook
-          (lambda ()
-            (add-hook 'comint-preoutput-filter-functions
-                      #'my/shell-coding-system-fix nil t)))
+(defun mw/shell-coding-system-fix (output)
+  "Fix stdout coding-system in shell, remove useless command in first line."
+  (mw/output-coding-system-fix
+   (comint-previous-input-string 0)
+   (replace-regexp-in-string "\\`.+\n" "" output)))
 
-(defun my/compilation-coding-system-fix ()
+(defun mw/shell-mode-setup ()
+  "Setup for shell-mode."
+  (shell-dirtrack-mode -1)
+  (dirtrack-mode)
+  (add-hook 'comint-preoutput-filter-functions
+            #'mw/shell-coding-system-fix nil t))
+(add-hook 'shell-mode-hook #'mw/shell-mode-setup)
+
+(defun mw/compilation-coding-system-fix ()
   "Fix stdout coding-system in compilation."
-  (let ((coding-system (my/find-shell-command-coding-system
+  (let ((coding-system (mw/find-shell-command-coding-system
                         (car compilation-arguments))))
     (setq-local coding-system-for-read (car coding-system)
                 coding-system-for-write (cdr coding-system))))
-(setq compilation-process-setup-function #'my/compilation-coding-system-fix)
+(setq compilation-process-setup-function #'mw/compilation-coding-system-fix)
 
-(defun my/grep-coding-system-fix ()
+(defun mw/grep-coding-system-fix ()
   "Fix coding-system for grep."
-  (let ((coding-system (my/find-shell-command-coding-system grep-program)))
+  (let ((coding-system (mw/find-shell-command-coding-system grep-program)))
     (setq-local coding-system-for-read (car coding-system))))
-(add-hook 'grep-setup-hook #'my/grep-coding-system-fix)
+(add-hook 'grep-setup-hook #'mw/grep-coding-system-fix)
 
-(defun my/find-dired-coding-system-fix ()
+(defun mw/find-dired-coding-system-fix ()
   "Fix coding-system for find-dired."
-  (let ((fixed (my/output-coding-system-fix find-program (buffer-string))))
+  (let ((fixed (mw/output-coding-system-fix find-program (buffer-string))))
     (delete-region (point-min) (point-max))
     (insert fixed)))
 (with-eval-after-load 'find-dired
   (let ((ori find-dired-refine-function))
-    (setq find-dired-refine-function 'my/find-dired-coding-system-fix)
+    (setq find-dired-refine-function 'mw/find-dired-coding-system-fix)
     (advice-add find-dired-refine-function :after ori)))
 
-(defun my/advice-dired-shell-stuff-it (args)
+(defun mw/advice-dired-shell-stuff-it (args)
   "Fix `;' cannot sequentially execute command on windows."
   (when-let* ((cmd (car args))
               (fix-p (string-match-p ";[ \t]*&?[ \t]*\\'" cmd))) 
@@ -99,17 +105,17 @@
                                       "/wait \\1\\2" cmd)))
   args)
 
-(defun my/run-bash ()
+(defun mw/run-bash ()
   (interactive)
   (let ((shell-file-name "C:\\Windows\\system32\\bash.exe"))
     (shell "*bash*")))
 
-(defun my/toggle-shell ()
+(defun mw/toggle-shell ()
   "Toggle shell between wsl bash and cmd"
   (interactive)
   (if (string= shell-file-name "C:\\Windows\\system32\\bash.exe")
-      (setq shell-file-name my/vanilla-shell)
-    (setq my/vanilla-shell shell-file-name
+      (setq shell-file-name mw/vanilla-shell)
+    (setq mw/vanilla-shell shell-file-name
           shell-file-name "C:\\Windows\\system32\\bash.exe")))
 
 (setq default-process-coding-system '(utf-8-dos . utf-8-unix) ;; change this maybe break tramp sshx
@@ -132,3 +138,7 @@
 
 (provide 'init-winnt)
 ;;; init-winnt.el ends here
+
+;; Local Variables:
+;; read-symbol-shorthands: (("mw/" . "my/win-"))
+;; End:
