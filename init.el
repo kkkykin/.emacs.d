@@ -426,6 +426,10 @@
   (unless (server-running-p)
     (server-start)))
 
+(use-package autorevert
+  :custom
+  (auto-revert-remote-files t))
+
 (use-package diff
   :custom
   (diff-add-log-use-relative-names t))
