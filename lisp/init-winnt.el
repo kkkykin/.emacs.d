@@ -76,7 +76,7 @@
 
 (defun my/grep-coding-system-fix ()
   "Fix coding-system for grep."
-  (let ((coding-system (my/find-shell-command-coding-system ,grep-program)))
+  (let ((coding-system (my/find-shell-command-coding-system grep-program)))
     (setq-local coding-system-for-read (car coding-system))))
 (add-hook 'grep-setup-hook #'my/grep-coding-system-fix)
 
