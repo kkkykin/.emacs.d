@@ -130,9 +130,10 @@
         ("C-w" . kill-region)
         ("C-v" . scroll-up))
   (:map viper-vi-global-user-map
+        ("zE" . duplicate-dwim)
         ("zf" . org-open-at-point-global)
         ("zr" . re-builder)
-        ("zE" . duplicate-dwim)
+        ("zR" . rename-visited-file)
         ("zt" . transpose-sentences)
         ("zT" . transpose-paragraphs)
         ("C-y" . yank)
@@ -361,9 +362,6 @@
   (keymap-set isearch-mode-map "C-h t" 'my/isearch-menu))
 
 (use-package files
-  :bind
-  (:map my/global-prefix-map
-        ("R" . 'rename-visited-file))
   :custom
   (safe-local-variable-directories '())
   (save-abbrevs 'silently)
@@ -667,7 +665,7 @@
 (use-package midnight :defer 60
   :custom
   (midnight-delay 14400)
-  (clean-buffer-list-kill-buffer-gnames
+  (clean-buffer-list-kill-buffer-names
    '("*Help*" "*Apropos*" "*Completions*"
      "*Ibuffer*" "*Buffer List*" "*buffer-selection*" "*timer-list*"
      "*Compile-Log*" "*Pp Eval Output*" "*Async-native-compile-log*"
@@ -677,9 +675,6 @@
   (clean-buffer-list-kill-regexps
    '("\\`\\*Man " "\\`\\*Shortdoc "
      "\\`\\*Newsticker " "\\`\\*newsticker-wget-image-"))
-  :bind
-  (:map my/global-prefix-map
-        ("k" . 'clean-buffer-list))
   :config
   (midnight-mode))
 
