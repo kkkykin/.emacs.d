@@ -67,6 +67,7 @@
 (defun mw/shell-mode-setup ()
   "Setup for shell-mode."
   (dirtrack-mode)
+  (setq dirtrack-list '("^\\([a-zA-Z]:.*\\)>" 1))
   (add-hook 'comint-preoutput-filter-functions
             #'mw/shell-coding-system-fix nil t))
 (add-hook 'shell-mode-hook #'mw/shell-mode-setup)
