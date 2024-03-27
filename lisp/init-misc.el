@@ -306,8 +306,9 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
 
 (defun my/advice-comint-get-old-input (arg)
   "If default get empty string, then get last input string, comint."
-  (and (string-empty-p arg)
-       (comint-previous-input-string 0)))
+  (if (string-empty-p arg)
+      (comint-previous-input-string 0)
+    arg))
 
 (defun my/comint-mode-hook ()
   "Set up for comint-mode."
@@ -318,8 +319,9 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
 
 (defun my/advice-eshell-get-old-input (arg)
   "If default get empty string, then get last input string, Eshell."
-  (and (string-empty-p arg)
-       (eshell-previous-input-string 0)))
+  (if (string-empty-p arg)
+      (eshell-previous-input-string 0)
+    arg))
 (with-eval-after-load 'esh-mode
   (advice-add 'eshell-get-old-input
               :filter-return

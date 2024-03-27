@@ -529,11 +529,13 @@
   (:repeat-map page-navigation-repeat-map
                :exit
                ("n" . narrow-to-page))
+  (:repeat-map next-error-repeat-map
+               ("l" . recenter-top-bottom))
   (:repeat-map comint-repeat-map
                ("n" . comint-next-prompt)
                ("p" . comint-previous-prompt)
                :exit
-               ("m" . comint-get-old-input))
+               ("m" . comint-copy-old-input))
   (:repeat-map other-window-repeat-map
                ("<backspace>" . kill-buffer)
                ("S-<backspace>" . kill-buffer-and-window)
