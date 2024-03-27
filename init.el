@@ -8,6 +8,7 @@
 (use-package emacs
   :hook
   ((text-mode . visual-line-mode)
+   (next-error . recenter)
    (window-setup . my/setup-faces))
   :bind-keymap ("C-x j" . my/global-prefix-map)
   :bind
@@ -529,8 +530,6 @@
   (:repeat-map page-navigation-repeat-map
                :exit
                ("n" . narrow-to-page))
-  (:repeat-map next-error-repeat-map
-               ("l" . recenter-top-bottom))
   (:repeat-map comint-repeat-map
                ("n" . comint-next-prompt)
                ("p" . comint-previous-prompt)
@@ -910,6 +909,7 @@
    'tramp-connection-local-termux-profile))
 
 (use-package shell
+  :hook (shell-mode . (lambda () (shell-dirtrack-mode -1)))
   :custom
   (shell-completion-execonly nil)
   (shell-completion-fignore '("~" "#" "%"))

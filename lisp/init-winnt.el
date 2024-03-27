@@ -66,7 +66,6 @@
 
 (defun mw/shell-mode-setup ()
   "Setup for shell-mode."
-  (shell-dirtrack-mode -1)
   (dirtrack-mode)
   (add-hook 'comint-preoutput-filter-functions
             #'mw/shell-coding-system-fix nil t))
