@@ -917,6 +917,14 @@
   (shell-kill-buffer-on-exit t))
 
 (use-package sql
+  :hook
+  (sql-mode
+   . (lambda ()
+       (mapc
+        (lambda (a)
+          (setcar (cdr a)
+                  (replace-regexp-in-string "\\\\([^?]" "`?\\&" (cadr a))))
+        imenu-generic-expression)))
   :bind
   (:map sql-mode-map
         ("C-c C-l s" . my/sql-table-selector)
