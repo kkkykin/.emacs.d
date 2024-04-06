@@ -62,7 +62,7 @@
   "Fix stdout coding-system in shell, remove useless command in first line."
   (mw/output-coding-system-fix
    (comint-previous-input-string 0)
-   (replace-regexp-in-string "\\`.+\n" "" output)))
+   output))
 
 (defun mw/shell-mode-setup ()
   "Setup for shell-mode."
@@ -104,6 +104,8 @@
             (replace-regexp-in-string "\\(.*\\);[ \t]*\\(&?[ \t]*\\)\\'"
                                       "/wait \\1\\2" cmd)))
   args)
+(with-eval-after-load 'dired-aux
+  (advice-add 'dired-shell-stuff-it :filter-args #'mw/advice-dired-shell-stuff-it))
 
 (defun mw/run-bash ()
   (interactive)
@@ -118,7 +120,15 @@
     (setq mw/vanilla-shell shell-file-name
           shell-file-name "C:\\Windows\\system32\\bash.exe")))
 
-(setq default-process-coding-system '(utf-8-dos . utf-8-unix) ;; change this maybe break tramp sshx
+(setq grep-program "ug"
+      grep-use-null-device nil
+      grep-highlight-matches t
+      grep-find-command
+      '("fd -t f -X ug --color=auto -nH --null -e \"\" {} ;" . 43)
+      grep-find-template
+      "fd --base-directory <D> <X> -t f <F> -X ug <C> -nH --null -e <R> {} ;"
+      find-program "fd"
+      default-process-coding-system '(utf-8-dos . utf-8-unix) ;; change this maybe break tramp sshx
       process-coding-system-alist
       `(("cmdproxy" . ,locale-coding-system)
         ("curl" utf-8 . ,locale-coding-system)

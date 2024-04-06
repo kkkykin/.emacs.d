@@ -4,20 +4,20 @@
 
 ;; url
 
-(defcustom my/img-cdn-server-list
+(defcustom mn/img-cdn-server-list
   '("https://images.weserv.nl?url=${href_ue}"
     "https://imageproxy.pimg.tw/resize?url=${href_ue}")
   "Public Image CDN server."
   :group 'my
   :type '(repeat string))
 
-(defcustom my/img-cdn-server (car my/img-cdn-server-list)
+(defcustom mn/img-cdn-server (car mn/img-cdn-server-list)
   "Default Image CDN server."
   :group 'my
   :type 'string)
 
 ;; https://hub.zzzr.eu.org/curl/curl/wiki/DNS-over-HTTPS E
-(defcustom my/doh-server-list '("https://9.9.9.9/dns-query"
+(defcustom mn/doh-server-list '("https://9.9.9.9/dns-query"
                                 "https://doh.bortzmeyer.fr"
                                 "https://dns.digitalsize.net/dns-query"
                                 "https://1.1.1.1/dns-query"
@@ -27,24 +27,24 @@
   :group 'my
   :type '(repeat string))
 
-(defcustom my/doh-server (car my/doh-server-list)
+(defcustom mn/doh-server (car mn/doh-server-list)
   "Default DOH Server."
   :group 'my
   :type 'string)
 
-(defun my/internet-up-p (&optional host callback)
+(defun mn/internet-up-p (&optional host callback)
   "Test connectivity via ping."
   (interactive)
-  (let* ((args (if my/sys-winnt-p '("-n" "1" "-w" "1") '("-c1" "-W1")))
+  (let* ((args (if mn/sys-winnt-p '("-n" "1" "-w" "1") '("-c1" "-W1")))
          (proc (apply #'start-process "internet-test" nil "ping"
                       (if host host "baidu.com") args))
-         (callback (if callback callback 'my/default-callback)))
+         (callback (if callback callback 'mn/default-callback)))
     (set-process-sentinel proc (lambda (proc signal)
                                  (apply callback
                                         (if (= 0 (process-exit-status proc))
                                             '(t) nil))))))
 
-(defun my/url-up-p (url &rest cbargs)
+(defun mn/url-up-p (url &rest cbargs)
   "Test connectivity via curl."
   (let* ((callback (plist-get cbargs :callback))
          (max-time (plist-get cbargs :max-time))
@@ -55,26 +55,26 @@
                  ,@(when proxy (list "-x" proxy))
                  "-o/dev/null" "-w%{http_code}" ,url))
          (proc (apply #'start-process "url-test" nil "curl" args))
-         (callback (if callback callback 'my/default-callback)))
+         (callback (if callback callback 'mn/default-callback)))
     (set-process-filter proc (lambda (proc line)
                                (apply callback
                                       (if (string= "200" line)
                                           '(t) nil))))))
 
-(defun my/doh-up-p (&optional doh-url callback)
+(defun mn/doh-up-p (&optional doh-url callback)
   "Test DOH availability."
   (interactive)
-  (let ((args `(:doh-url ,(if doh-url doh-url my/doh-server)
+  (let ((args `(:doh-url ,(if doh-url doh-url mn/doh-server)
                          :callback ,(when callback callback))))
-    (apply #'my/url-up-p "https://www.baidu.com" :max-time 3 args)))
+    (apply #'mn/url-up-p "https://www.baidu.com" :max-time 3 args)))
 
-(defun my/advice-url-retrieve-with-timeout (orig-fun &rest args)
+(defun mn/advice-url-retrieve-with-timeout (orig-fun &rest args)
   "Use `url-queue-retrieve' instead of `url-retrieve'."
   (cl-flet ((url-retrieve #'url-queue-retrieve)
             (url-queue-timeout 30))
     (apply orig-fun args)))
 
-(defun my/url-http-parse-response ()
+(defun mn/url-http-parse-response ()
   "Parse http response, From 'https://emacs-china.org/t/elisp-http/18432/2'."
   (set-buffer-multibyte t)
   (goto-char (point-min))
@@ -96,12 +96,12 @@
 
 ;; proxy
 
-(defcustom my/block-domain (rx (| ?. bos) (| "blogs.reimu.net") eos)
+(defcustom mn/block-domain (rx (| ?. bos) (| "blogs.reimu.net") eos)
   "Domain blocked."
   :group 'my
   :type 'regexp)
 
-(defcustom my/proxy-domain
+(defcustom mn/proxy-domain
   (rx (| ?. bos)
       (| "duckduckgo.com" "google.com" "wikipedia.org")
       eos)
@@ -109,7 +109,7 @@
   :group 'my
   :type 'regexp)
 
-(defcustom my/img-proxy-domain
+(defcustom mn/img-proxy-domain
   (rx
    (| ?. bos)
    (| "saxyit.com" "reimu.net" "img.piclabo.xyz" "trts.baishancdnx.cn"
@@ -120,85 +120,86 @@
   :group 'my
   :type 'regexp)
 
-(defcustom my/centaur-proxy "127.0.0.1:10808"
+(defcustom mn/centaur-proxy "127.0.0.1:10808"
   "Set HTTP/HTTPS proxy."
   :group 'my
   :type 'string)
 
-(defcustom my/centaur-socks-proxy "127.0.0.1:10808"
+(defcustom mn/centaur-socks-proxy "127.0.0.1:10807"
   "Set SOCKS proxy."
   :group 'my
   :type 'string)
 
-(defun my/curl-parameters-dwim (url &optional blockable-p &rest args)
+(defun mn/curl-parameters-dwim (url &optional blockable-p &rest args)
   "Generate explicit parameters for curl."
   (let ((url url)
         (host (url-host (url-generic-parse-url url)))
         parameters)
     (cond
      ((and blockable-p
-           (string-match-p my/block-domain host))
+           (string-match-p mn/block-domain host))
       (setq url "127.0.0.1"))
-     ((string-match-p my/proxy-domain host)
-      (setq parameters (cons (format "-xhttp://%s" my/centaur-proxy)
+     ((string-match-p mn/proxy-domain host)
+      (setq parameters (cons (format "-xhttp://%s" mn/centaur-proxy)
                              parameters))))
     (list url parameters)))
 
-(defun my/advice-url-retrieve (orig-fun &rest args)
+(defun mn/advice-url-retrieve (orig-fun &rest args)
   "Block, proxy, transform url."
   (let* ((url (car args))
          (host (url-host (url-generic-parse-url url))))
-    (cond ((string-match-p my/block-domain host) nil)
-          ((string-match-p my/proxy-domain host)
+    (cond ((string-match-p mn/block-domain host) nil)
+          ((string-match-p mn/proxy-domain host)
            (let ((url-proxy-services
-                  `(("http" . ,my/centaur-proxy)
-                    ("https" . ,my/centaur-proxy))))
+                  `(("http" . ,mn/centaur-proxy)
+                    ("https" . ,mn/centaur-proxy))))
              (apply orig-fun args)))
-          ((string-match-p my/img-proxy-domain host)
+          ((string-match-p mn/img-proxy-domain host)
            (setcar args (string-replace "${href_ue}"
                                         (url-hexify-string url)
-                                        my/img-cdn-server))
+                                        mn/img-cdn-server))
            (apply orig-fun args))
           (t (apply orig-fun args)))))
+(advice-add #'url-retrieve-internal :around #'my/advice-url-retrieve)
 
-(defun my/proxy-up-p (&optional proxy callback)
+(defun mn/proxy-up-p (&optional proxy callback)
   "Test Proxy availability."
   (interactive)
   (let ((args `(:proxy ,(if proxy proxy
-                          (concat "http://" my/centaur-proxy))
+                          (concat "http://" mn/centaur-proxy))
                        :callback ,(when callback callback))))
-    (apply #'my/url-up-p "https://www.baidu.com" :max-time 2 args)))
+    (apply #'mn/url-up-p "https://www.baidu.com" :max-time 2 args)))
 
-(defun my/proxy-http-show ()
+(defun mn/proxy-http-show ()
   "Show HTTP/HTTPS proxy."
   (interactive)
   (if url-proxy-services
-      (message "Current HTTP proxy is `%s'" my/centaur-proxy)
+      (message "Current HTTP proxy is `%s'" mn/centaur-proxy)
     (message "No HTTP proxy")))
 
-(defun my/proxy-http-enable ()
+(defun mn/proxy-http-enable ()
   "Enable HTTP/HTTPS proxy."
   (interactive)
   (setq url-proxy-services
-        `(("http" . ,my/centaur-proxy)
-          ("https" . ,my/centaur-proxy)
+        `(("http" . ,mn/centaur-proxy)
+          ("https" . ,mn/centaur-proxy)
           ("no_proxy" . "^\\(localhost\\|192.168.*\\|10.*\\)")))
-  (my/proxy-http-show))
+  (mn/proxy-http-show))
 
-(defun my/proxy-http-disable ()
+(defun mn/proxy-http-disable ()
   "Disable HTTP/HTTPS proxy."
   (interactive)
   (setq url-proxy-services nil)
-  (my/proxy-http-show))
+  (mn/proxy-http-show))
 
-(defun my/proxy-http-toggle ()
+(defun mn/proxy-http-toggle ()
   "Toggle HTTP/HTTPS proxy."
   (interactive)
   (if (bound-and-true-p url-proxy-services)
-      (my/proxy-http-disable)
-    (my/proxy-http-enable)))
+      (mn/proxy-http-disable)
+    (mn/proxy-http-enable)))
 
-(defun my/proxy-socks-show ()
+(defun mn/proxy-socks-show ()
   "Show SOCKS proxy."
   (interactive)
   (if (bound-and-true-p socks-noproxy)
@@ -206,38 +207,38 @@
                (cadddr socks-server) (cadr socks-server) (caddr socks-server))
     (message "No SOCKS proxy")))
 
-(defun my/proxy-socks-enable ()
+(defun mn/proxy-socks-enable ()
   "Enable SOCKS proxy."
   (interactive)
   (require 'socks)
   (setq url-gateway-method 'socks
         socks-noproxy '("localhost"))
-  (let* ((proxy (split-string my/centaur-socks-proxy ":"))
+  (let* ((proxy (split-string mn/centaur-socks-proxy ":"))
          (host (car proxy))
          (port (string-to-number (cadr proxy))))
     (setq socks-server `("Default server" ,host ,port 5)))
-  (setenv "all_proxy" (concat "socks5://" my/centaur-socks-proxy))
-  (my/proxy-socks-show))
+  (setenv "all_proxy" (concat "socks5://" mn/centaur-socks-proxy))
+  (mn/proxy-socks-show))
 
-(defun my/proxy-socks-disable ()
+(defun mn/proxy-socks-disable ()
   "Disable SOCKS proxy."
   (interactive)
   (setq url-gateway-method 'native
         socks-noproxy nil
         socks-server nil)
   (setenv "all_proxy" "")
-  (my/proxy-socks-show))
+  (mn/proxy-socks-show))
 
-(defun my/proxy-socks-toggle ()
+(defun mn/proxy-socks-toggle ()
   "Toggle SOCKS proxy."
   (interactive)
   (if (bound-and-true-p socks-noproxy)
       (proxy-socks-disable)
-    (my/proxy-socks-enable)))
+    (mn/proxy-socks-enable)))
 
 ;; Newsticker
 
-(defcustom my/rss-bridge-list '("https://rss-bridge.org/bridge01/"
+(defcustom mn/rss-bridge-list '("https://rss-bridge.org/bridge01/"
                                 ;; "https://rss-bridge.lewd.tech/"
                                 "https://rss.nixnet.services/"
                                 "https://wtf.roflcopter.fr/rss-bridge/"
@@ -246,7 +247,7 @@
   :group 'my
   :type '(repeat string))
 
-(defcustom my/rss-hub-list '("https://rsshub.zzzr.eu.org/"
+(defcustom mn/rss-hub-list '("https://rsshub.zzzr.eu.org/"
                              "https://rsshub.rssforever.com/"
                              "https://rsshub.feeded.xyz/"
                              "https://hub.slarker.me/"
@@ -260,42 +261,42 @@
   :group 'my
   :type '(repeat string))
 
-(defcustom my/rss-bridge-server (car my/rss-bridge-list)
+(defcustom mn/rss-bridge-server (car mn/rss-bridge-list)
   "RSS bridge default server."
   :group 'my
   :type 'string)
 
-(defcustom my/rss-hub-server (car my/rss-hub-list)
+(defcustom mn/rss-hub-server (car mn/rss-hub-list)
   "RSS hub default server."
   :group 'my
   :type 'string)
 
-(defun my/rss-bridge-generator (bridge)
+(defun mn/rss-bridge-generator (bridge)
   "Generate atom feed via rss-bridge."
-  (concat my/rss-bridge-server
+  (concat mn/rss-bridge-server
           "?action=display&format=Atom&bridge=" bridge))
 
-(defun my/rss-bridge-wp (blog limit &optional content)
+(defun mn/rss-bridge-wp (blog limit &optional content)
   "Returns the newest full posts of a WordPress powered website."
-  (concat (my/rss-bridge-generator "WordPressBridge")
+  (concat (mn/rss-bridge-generator "WordPressBridge")
           "&url=" (url-hexify-string blog)
           "&limit=" (number-to-string limit)
           (when content (concat "&content_selector=" (url-hexify-string content)))))
 ;; todo
-;; (defun my/rss-bridge-filter ())
+;; (defun mn/rss-bridge-filter ())
 
-(defun my/rss-bridge-reducer (feed percentage)
+(defun mn/rss-bridge-reducer (feed percentage)
   "Choose a percentage of a feed you want to see."
-  (concat (my/rss-bridge-generator "FeedReducerBridge")
+  (concat (mn/rss-bridge-generator "FeedReducerBridge")
           "&url=" (url-hexify-string feed)
           "&percentage=" (number-to-string percentage)))
 
-(defun my/rss-bridge-css-expander (feed limit content &optional
+(defun mn/rss-bridge-css-expander (feed limit content &optional
                                         content-cleanup
                                         dont-expand-metadata
                                         discard-thumbnail)
   "Expand any site RSS feed using CSS selectors."
-  (concat (my/rss-bridge-generator "CssSelectorFeedExpanderBridge")
+  (concat (mn/rss-bridge-generator "CssSelectorFeedExpanderBridge")
           "&feed=" (url-hexify-string feed)
           "&limit=" (number-to-string limit)
           "&content_selector=" (url-hexify-string content)
@@ -303,7 +304,7 @@
           (concat "&dont_expand_metadata=" (when dont-expand-metadata "on"))
           (concat "&discard_thumbnail=" (when discard-thumbnail "on"))))
 
-(defun my/rss-bridge-css-selector (home limit entry load-pages &rest args)
+(defun mn/rss-bridge-css-selector (home limit entry load-pages &rest args)
   "Convert any site to RSS feed using CSS selectors. The bridge first
 selects the element describing the article entries. It then extracts
 the links to the articles from these elements. It then, depending on
@@ -322,7 +323,7 @@ elements or page is done using the provided selectors."
         (author (plist-get args :author))
         (cat (plist-get args :cat))
         (rm-style (plist-get args :rm-style)))
-    (concat (my/rss-bridge-generator "CssSelectorComplexBridge")
+    (concat (mn/rss-bridge-generator "CssSelectorComplexBridge")
             "&home_page=" (url-hexify-string home)
             "&limit=" (number-to-string limit)
             "&entry_element_selector=" (url-hexify-string entry)
@@ -340,10 +341,10 @@ elements or page is done using the provided selectors."
             (when cat (concat "&category_selector=" (url-hexify-string cat)))
             (concat "&remove_styling=" (when rm-style "on")))))
 
-(defun my/rss-bridge-merger (feeds limit name)
+(defun mn/rss-bridge-merger (feeds limit name)
   "This bridge merges two or more feeds into a single feed. Max 10
 items are fetched from each feed."
-  (concat (my/rss-bridge-generator "FeedMergeBridge")
+  (concat (mn/rss-bridge-generator "FeedMergeBridge")
           (let ((m 0))
             (mapconcat
              (lambda (feed)
@@ -354,10 +355,10 @@ items are fetched from each feed."
           "&limit=" (number-to-string limit)
           "&feed_name=" (url-hexify-string name)))
 
-(defun my/rss-hub-generator (router &rest args)
+(defun mn/rss-hub-generator (router &rest args)
   "Generate feed via RSSHub."
   (let* ((fmt (plist-get args :fmt))
-         (main (concat my/rss-hub-server router
+         (main (concat mn/rss-hub-server router
                        (when fmt (concat "." fmt))))
          (url (url-generic-parse-url main))
          (limit (plist-get args :limit))
@@ -403,12 +404,12 @@ items are fetched from each feed."
                 ,(when fo-desc (concat "filterout_description=" (url-hexify-string fo-desc)))
                 ,(when fo-author (concat "filterout_author=" (url-hexify-string fo-author)))
                 ,(when fo-cat (concat "filterout_category=" (url-hexify-string fo-cat)))
-                ,(when img-tp (concat "image_hotlink_template=" (url-hexify-string my/img-cdn-server)))
+                ,(when img-tp (concat "image_hotlink_template=" (url-hexify-string mn/img-cdn-server)))
                 ,(when domain (concat "domain=" (url-hexify-string domain)))
                 ,(when code (concat "code=" (md5 (concat (url-filename url) code))))))
              "&"))))
 
-(defun my/rss-hub-transform (url s-fmt &rest args)
+(defun mn/rss-hub-transform (url s-fmt &rest args)
   "Pass URL and transformation rules to convert HTML/JSON into RSS."
   (let ((title (plist-get args :t))
         (item (plist-get args :i))
@@ -422,7 +423,7 @@ items are fetched from each feed."
         (item-pub-a (plist-get args :ipa))
         (extra (plist-get args :extra)))
     (apply
-     #'my/rss-hub-generator
+     #'mn/rss-hub-generator
      (concat "rsshub/transform/" s-fmt "/" (url-hexify-string url) "/"
              (string-join
               (delq
@@ -441,7 +442,7 @@ items are fetched from each feed."
      extra)
     ))
 
-(defun my/advice-newsticker-list-set-start-time (&rest args)
+(defun mn/advice-newsticker-list-set-start-time (&rest args)
   "Newsticker retrieve feeds with interval start time."
   (let ((counter 0))
     (mapc (lambda (x)
@@ -449,13 +450,13 @@ items are fetched from each feed."
             (setq counter (+ counter 10)))
           newsticker-url-list)))
 
-(defun my/advice-newsticker--get-news-by-wget (args)
+(defun mn/advice-newsticker--get-news-by-wget (args)
   (setcar (cddr args)
           (append (caddr args)
-                  (cadr (my/curl-parameters-dwim (cadr args)))))
+                  (cadr (mn/curl-parameters-dwim (cadr args)))))
   args)
 
-(defun my/newsticker-treeview-prev-page ()
+(defun mn/newsticker-treeview-prev-page ()
   "Scroll item buffer."
   (interactive)
   (save-selected-window
@@ -465,7 +466,7 @@ items are fetched from each feed."
       (error
        (goto-char (point-max))))))
 
-(defun my/advice-newsticker-save-item (feed item)
+(defun mn/advice-newsticker-save-item (feed item)
   "Save FEED ITEM."
   (interactive)
   (let ((filename
@@ -481,9 +482,19 @@ items are fetched from each feed."
       (insert (newsticker--desc item))
       (write-file filename t))))
 
+(with-eval-after-load 'newsticker
+  (setq newsticker-wget-arguments
+        (append `("--doh-url" ,mn/doh-server) newsticker-wget-arguments))
+  (advice-add 'newsticker-start :before #'mn/advice-newsticker-list-set-start-time)
+  (advice-add 'newsticker--image-download-by-url :around #'mn/advice-url-retrieve-with-timeout)
+  (advice-add 'newsticker--get-news-by-wget :filter-args #'mn/advice-newsticker--get-news-by-wget)
+  (advice-add 'newsticker-save-item :before-until #'mn/advice-newsticker-save-item)
+  (with-eval-after-load 'eww
+    (setq eww-retrieve-command (cons newsticker-wget-name newsticker-wget-arguments))))
+
 ;; eww
 
-(defun my/url-redirect (url)
+(defun mn/url-redirect (url)
   (cond 
    ((string-match "^https://github.com/\\(.+\\)/commit/\\(\\w+\\)$" url)
     (format "https://github.com/%s/commit/%s.patch"
@@ -502,14 +513,14 @@ items are fetched from each feed."
                               "https://old.reddit.com" url))
    (t url)))
 
-(defun my/advice-eww--dwim-expand-url (orig-fun &rest args)
+(defun mn/advice-eww--dwim-expand-url (orig-fun &rest args)
   "Maybe use other search-prefix instead of eww-search-prefix."
   (let ((url (string-trim (car args))))
     (cond ((string-match-p "\\`man [[:alpha:][:digit:]\\-_]+\\'" url)
            (string-replace "man " "https://manned.org/man/" url))
           (t (apply orig-fun args)))))
 
-(defun my/eww-render-hook()
+(defun mn/eww-render-hook()
   (when-let ((url (plist-get eww-data :url))
              (source (plist-get eww-data :source)))
     (cond
@@ -527,41 +538,47 @@ items are fetched from each feed."
      ((string-suffix-p ".rs" url) (rust-ts-mode))
      ((string-suffix-p ".go" url) (go-ts-mode)))))
 
-(defun my/advice-eww-retrieve (orig-fun &rest args)
+(defun mn/advice-eww-retrieve (orig-fun &rest args)
   "Append curl arguments to eww-retrieve-command when retrieving."
   (let ((eww-retrieve-command
          (append eww-retrieve-command
-                 (cadr (my/curl-parameters-dwim (car args))))))
+                 (cadr (mn/curl-parameters-dwim (car args))))))
     (apply orig-fun args)))
 
+(with-eval-after-load 'eww
+  (advice-add 'eww--dwim-expand-url :around 'mn/advice-eww--dwim-expand-url)
+  (advice-add 'eww-retrieve :around 'mn/advice-eww-retrieve)
+  (add-to-list 'eww-url-transformers 'mn/url-redirect)
+  (add-hook 'eww-after-render-hook #'mn/eww-render-hook))
+
 ;; Aria2
-(defcustom my/aria2-conf-file (expand-file-name "aria2.conf" "~/.aria2")
+(defcustom mn/aria2-conf-file (expand-file-name "aria2.conf" "~/.aria2")
   "Default aria2 configuration file path."
   :type '(string))
 
-(defun my/get-bt-tracker (url)
+(defun mn/get-bt-tracker (url)
   "Get BT tracker from https://github.com/XIU2/TrackersListCollection/blob/master/README-ZH.md."
-  (when (and (file-exists-p my/aria2-conf-file)
-             (not (find-buffer-visiting my/aria2-conf-file))
+  (when (and (file-exists-p mn/aria2-conf-file)
+             (not (find-buffer-visiting mn/aria2-conf-file))
              (time-less-p
               (time-add
-               (file-attribute-modification-time (file-attributes my/aria2-conf-file))
+               (file-attribute-modification-time (file-attributes mn/aria2-conf-file))
                (* 60 60 12))
               (current-time)))
     (make-process
-     :name "my/get-bt-tracker"
-     :buffer "my/get-bt-tracker"
+     :name "mn/get-bt-tracker"
+     :buffer "mn/get-bt-tracker"
      :command `(,newsticker-wget-name ,@newsticker-wget-arguments ,url)
-     :sentinel #'my/sentinel-get-bt-tracker)))
+     :sentinel #'mn/sentinel-get-bt-tracker)))
 
-(defun my/sentinel-get-bt-tracker (proc event)
+(defun mn/sentinel-get-bt-tracker (proc event)
   "Write tracker to aria2 conf file."
   (when (string= event "finished\n")
      (with-current-buffer (process-buffer proc)
        (when-let ((getp (search-backward "announce" nil t))
                   (start (pos-bol))
                   (end (pos-eol)))
-         (with-current-buffer (find-file-noselect my/aria2-conf-file)
+         (with-current-buffer (find-file-noselect mn/aria2-conf-file)
            (goto-char (point-min))
            (re-search-forward "^bt-tracker=")
            (delete-region (point) (pos-eol))
@@ -572,3 +589,7 @@ items are fetched from each feed."
 
 (provide 'init-net)
 ;;; init-net.el ends here
+
+;; Local Variables:
+;; read-symbol-shorthands: (("mn/" . "my/net-"))
+;; End:

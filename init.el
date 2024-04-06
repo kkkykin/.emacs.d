@@ -436,16 +436,6 @@
   (diff-add-log-use-relative-names t))
 
 (use-package grep
-  :init
-  (when my/sys-winnt-p
-    (setq grep-program "ug"
-          grep-use-null-device nil
-          grep-highlight-matches t
-          grep-find-command
-          '("fd -t f -X ug --color=auto -nH --null -e \"\" {} ;" . 43)
-          grep-find-template
-          "fd --base-directory <D> <X> -t f <F> -X ug <C> -nH --null -e <R> {} ;"
-          find-program "fd"))
   :config
   (when (string= find-program "fd")
     (advice-add 'rgrep-default-command :around
@@ -803,20 +793,11 @@
   (newsticker-wget-name "curl")
   (newsticker-wget-arguments '("-Lkqsm30" "-A\"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36 Edg/117.0.2045.35\""))
   :config
-  (when (require 'init-net nil t)
-    (setq newsticker-wget-arguments
-          (append `("--doh-url" ,my/doh-server) newsticker-wget-arguments)))
-  (unless (file-exists-p (file-name-concat newsticker-dir "saved"))
-    (make-directory (file-name-concat newsticker-dir "saved") t))
-  ;; with interval
-  (advice-add 'newsticker-start :before #'my/advice-newsticker-list-set-start-time)
-  ;; remove message: Error while retrieving image | news from feeds
+  (make-directory (file-name-concat newsticker-dir "saved") t)
   (dolist (fn '(newsticker--image-sentinel newsticker--sentinel-work))
     (advice-add fn :around #'my/advice-silence-messages))
-  (advice-add 'newsticker--image-download-by-url :around #'my/advice-url-retrieve-with-timeout)
-  (advice-add 'newsticker--get-news-by-wget :filter-args #'my/advice-newsticker--get-news-by-wget)
-  (advice-add 'newsticker-save-item :before-until #'my/advice-newsticker-save-item)
-  (load "init-rss.el.gpg" t t)
+  (when (require 'init-net nil t)
+    (load "init-rss.el.gpg" t t))
   (when (y-or-n-p-with-timeout "Do you want to run newsticker? " 30 t)
     (newsticker-start t)))
 
@@ -834,14 +815,7 @@
   (shr-cookie-policy nil)
   (shr-use-xwidgets-for-media t)
   (shr-blocked-images (concat "^https?://" (rx (| "www.baidu.com"))))
-  :hook ((eww-after-render . my/eww-render-hook)
-         (eww-bookmark-mode . (lambda () (setq-local goal-column (1+ (/ (window-width) 2))))))
-  :config
-  (setq eww-retrieve-command (cons newsticker-wget-name newsticker-wget-arguments))
-  (when (require 'init-net nil t)
-    (advice-add 'eww--dwim-expand-url :around 'my/advice-eww--dwim-expand-url)
-    (advice-add 'eww-retrieve :around 'my/advice-eww-retrieve)
-    (add-to-list 'eww-url-transformers 'my/url-redirect)))
+  :hook ((eww-bookmark-mode . (lambda () (setq-local goal-column (1+ (/ (window-width) 2)))))))
 
 (use-package browse-url
   :hook ((text-mode . goto-address-mode)
@@ -1120,7 +1094,6 @@ with `universal argument', select all records."
   (dired-compress-directory-default-suffix ".tar.zst")
   :config
   (when my/sys-winnt-p
-    (advice-add 'dired-shell-stuff-it :filter-args #'my/advice-dired-shell-stuff-it)
     (dolist (item `(("\\.exe\\'" .
                      ,(let ((cab (string-replace "/" "\\" (concat temporary-file-directory "cab-" (md5 (system-name))))))
                         (format "makecab %%i %s && copy /b/y \"%s\"+\"%s\" %%o & del /q/f \"%s\""
@@ -1385,10 +1358,7 @@ with `universal argument', select all records."
                                                   "localhost"
                                                   "local"))
                                         (group bos (| "127.0.0.1")))
-                                     eos))
-  :config
-  (when (require 'init-net nil t)
-    (advice-add #'url-retrieve-internal :around #'my/advice-url-retrieve)))
+                                     eos)))
 
 (use-package filesets :defer 10
   :unless my/sys-android-p
