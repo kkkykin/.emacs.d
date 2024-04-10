@@ -339,7 +339,8 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
           (format "%s
 " (buffer-substring-no-properties (overlay-start a) (overlay-end a)))))
       reb-overlays))))
-(keymap-set reb-mode-map "C-c M-w" 'my/reb-copy-match)
+(with-eval-after-load 're-builder
+  (keymap-set reb-mode-map "C-c M-w" 'my/reb-copy-match))
 
 (provide 'init-misc)
 ;;; init-misc.el ends here
