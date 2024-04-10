@@ -327,5 +327,19 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
               :filter-return
               #'my/advice-eshell-get-old-input))
 
+(defun my/reb-copy-match (&optional priority)
+  "Copy current match strings into the `kill-ring'. Default copy first group."
+  (interactive "p" reb-mode)
+  (reb-assert-buffer-in-window)
+  (with-current-buffer (window-buffer reb-target-window)
+    (kill-new
+     (mapconcat
+      (lambda (a)
+        (when (equal (overlay-get a 'priority) priority)
+          (format "%s
+" (buffer-substring-no-properties (overlay-start a) (overlay-end a)))))
+      reb-overlays))))
+(keymap-set reb-mode-map "C-c M-w" 'my/reb-copy-match)
+
 (provide 'init-misc)
 ;;; init-misc.el ends here
