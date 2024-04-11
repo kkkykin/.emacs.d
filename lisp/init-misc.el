@@ -330,8 +330,7 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
 (defun my/reb-copy-match (&optional priority)
   "Copy current match strings into the `kill-ring'. Default copy first group."
   (interactive "p" reb-mode)
-  (reb-assert-buffer-in-window)
-  (with-current-buffer (window-buffer reb-target-window)
+  (with-current-buffer reb-target-buffer
     (kill-new
      (mapconcat
       (lambda (a)
