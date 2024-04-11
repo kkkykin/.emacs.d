@@ -155,6 +155,8 @@
   :custom-face
   (viper-minibuffer-emacs ((t (:background "unspecified" :foreground "unspecified"))))
   :config
+  (keymap-unset viper-insert-basic-map "C-c M-n")
+  (keymap-unset viper-insert-basic-map "C-c M-p")
   (when my/sys-winnt-p
     (add-hook 'viper-vi-state-hook (lambda () (w32-set-ime-open-status nil))))
   (fset 'viper-del-backward-char-in-insert 'backward-delete-char-untabify)
@@ -1337,6 +1339,14 @@ with `universal argument', select all records."
     (add-to-list 'eshell-modules-list mod)))
 
 (use-package comint
+  :bind
+  (:map comint-mode-map
+        ("SPC" . comint-magic-space)
+        ("C-c M-n" . comint-next-input)
+        ("C-c M-p" . comint-previous-input))
+  (:repeat-map comint-input-repeat-map
+               ("p" . comint-previous-input)
+               ("n" . comint-next-input))
   :custom
   (comint-input-autoexpand 'input)
   (comint-insert-previous-argument-from-end t)
