@@ -40,8 +40,8 @@
           (format "%s:%s" "/data/data/com.termux/files/usr/bin"
                   (getenv "PATH")))
   (setenv "LD_LIBRARY_PATH"
-          (format "%s:%s:%s"
-                  "/system/lib64"
+          (format "%s:%s"
+                  ;; "/system/lib64"
                   "/data/data/com.termux/files/usr/lib"
                   (getenv "LD_LIBRARY_PATH")))
   (setq image-scaling-factor 2)
