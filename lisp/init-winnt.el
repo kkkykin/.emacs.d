@@ -61,15 +61,13 @@
 (add-hook 'eshell-preoutput-filter-functions #'mw/eshell-coding-system-fix nil)
 
 (defun mw/shell-coding-system-fix (output)
-  "Fix stdout coding-system in shell, remove useless command in first line."
+  "Fix stdout coding-system in shell."
   (mw/output-coding-system-fix
    (comint-previous-input-string 0)
    output))
 
 (defun mw/shell-mode-setup ()
   "Setup for shell-mode."
-  (dirtrack-mode)
-  (setq dirtrack-list '("^\\([a-zA-Z]:.*\\)>" 1))
   (add-hook 'comint-preoutput-filter-functions
             #'mw/shell-coding-system-fix nil t))
 (add-hook 'shell-mode-hook #'mw/shell-mode-setup)
