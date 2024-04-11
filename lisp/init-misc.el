@@ -327,6 +327,15 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
               :filter-return
               #'my/advice-eshell-get-old-input))
 
+(defun my/shell-dirtrack-setup ()
+  "Setup dirtrack for shell-mode."
+  (pcase (file-name-base (or explicit-shell-file-name shell-file-name))
+    ("bash" (shell-dirtrack-mode -1))
+    ("cmdproxy" (progn (shell-dirtrack-mode -1)
+                       (dirtrack-mode)
+                       (setq dirtrack-list '("^\\([a-zA-Z]:.*\\)>" 1))))))
+(add-hook 'shell-mode-hook #'my/shell-dirtrack-setup)
+
 (defun my/reb-copy-match (&optional priority)
   "Copy current match strings into the `kill-ring'. Default copy first group."
   (interactive "p" reb-mode)

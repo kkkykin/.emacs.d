@@ -883,7 +883,6 @@
    'tramp-connection-local-termux-profile))
 
 (use-package shell
-  :hook (shell-mode . (lambda () (shell-dirtrack-mode -1)))
   :custom
   (shell-completion-execonly nil)
   (shell-completion-fignore '("~" "#" "%"))
