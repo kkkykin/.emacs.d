@@ -341,6 +341,12 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
                       -100 t)))))
 (add-hook 'shell-mode-hook #'my/shell-setup)
 
+;; todo
+;; (defun my/comint-save-history ()
+;;   "Save comint `input-ring' cross session."
+;;   )
+;; (add-hook 'comint-mode-hook #'my/comint-save-history)
+
 (defun my/reb-copy-match (&optional priority)
   "Copy current match strings into the `kill-ring'. Default copy first group."
   (interactive "p" reb-mode)
