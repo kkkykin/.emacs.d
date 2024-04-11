@@ -1309,6 +1309,14 @@ with `universal argument', select all records."
   :bind
   (:map my/global-prefix-map
         ("e" . eshell))
+  (:repeat-map eshell-command-repeat-map
+               ("b" . eshell-backward-argument)
+               ("f" . eshell-forward-argument))
+  (:repeat-map eshell-prompt-repeat-map
+               ("n" . eshell-next-prompt)
+               ("p" . eshell-previous-prompt)
+               :exit
+               ("m" . eshell-copy-old-input))
   :custom
   (eshell-prefer-lisp-functions t)
   (eshell-default-target-is-dot t)
@@ -1321,6 +1329,10 @@ with `universal argument', select all records."
   (eshell-pushd-dextract t)
   (eshell-scroll-to-bottom-on-output 'others)
   :config
+  (keymap-unset eshell-command-repeat-map "C-b")
+  (keymap-unset eshell-command-repeat-map "C-f")
+  (keymap-unset eshell-prompt-repeat-map "C-n")
+  (keymap-unset eshell-prompt-repeat-map "C-p")
   (add-hook 'eshell-expand-input-functions #'eshell-expand-history-references)
   (dolist (mod '(eshell-smart eshell-elecslash eshell-tramp eshell-xtra))
     (add-to-list 'eshell-modules-list mod)))
