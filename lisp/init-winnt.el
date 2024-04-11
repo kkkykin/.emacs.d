@@ -51,7 +51,9 @@
 
 (defun mw/eshell-coding-system-fix (output)
   "Fix stdout coding-system in eshell."
-  (if-let ((command (condition-case nil
+  (if-let ((promptp (not (string-match-p
+                          (concat eshell-prompt-regexp "$") output)))
+           (command (condition-case nil
                         (eshell-previous-input-string 0)
                       (error nil))))
       (mw/output-coding-system-fix command output)
