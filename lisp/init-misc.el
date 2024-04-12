@@ -347,6 +347,13 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
 ;;   )
 ;; (add-hook 'comint-mode-hook #'my/comint-save-history)
 
+;; todo
+;; (defun my/org-open-link-nearby (&optional arg)
+;;   "Follow a link or a time-stamp like `org-open-at-point-global' does.
+;; But open links nearby."
+;;   (interactive "P")
+;;   (org-next-link))
+
 (defun my/reb-copy-match (&optional priority)
   "Copy current match strings into the `kill-ring'. Default copy first group."
   (interactive "p" reb-mode)

@@ -174,13 +174,11 @@
    (append '((sql-interactive-mode insert-state viper-comint-mode-modifier-map)
              (sql-interactive-mode vi-state viper-comint-mode-modifier-map))
            viper-major-mode-modifier-list))
-  (dolist (mode '( change-log-mode dun-mode vc-git-log-edit-mode reb-mode
+  (dolist (mode '( change-log-mode diff-mode dun-mode org-mode
+                   outline-mode vc-git-log-edit-mode reb-mode
                    sql-interactive-mode))
     (setq viper-vi-state-mode-list (delq mode viper-vi-state-mode-list))
-    (add-to-list 'viper-insert-state-mode-list mode))
-  (dolist (mode '( diff-mode org-mode outline-mode))
-    (setq viper-vi-state-mode-list (delq mode viper-vi-state-mode-list))
-    (add-to-list 'viper-emacs-state-mode-list mode)))
+    (add-to-list 'viper-insert-state-mode-list mode)))
 
 (use-package help
   :custom
@@ -263,7 +261,10 @@
 
 (use-package hl-line
   ;; maybe break table.el based on text-mode
-  :hook (org-mode prog-mode))
+  ;; :hook (org-mode prog-mode comint-mode)
+  :hook (emacs-startup . global-hl-line-mode)
+  :custom
+  (global-hl-line-sticky-flag t))
 
 (use-package display-line-numbers
   :unless my/sys-android-p
@@ -1432,7 +1433,7 @@ with `universal argument', select all records."
   (:map my/org-prefix-map
         ("b" . org-fold-hide-block-toggle))
   :custom
-  (org-replace-disputed-keys t "see `'org-disputed-keys'")
+  ;; (org-replace-disputed-keys t "see `'org-disputed-keys'")
   (org-special-ctrl-a/e t)
   (org-special-ctrl-k t)
   (org-cycle-emulate-tab 'whitestart)
