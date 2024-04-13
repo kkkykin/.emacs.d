@@ -332,13 +332,17 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
   (pcase (file-name-base (or explicit-shell-file-name shell-file-name))
     ("bash" (shell-dirtrack-mode -1))
     ("cmdproxy"
-     (progn (shell-dirtrack-mode -1)
-            (dirtrack-mode)
-            (setq dirtrack-list '("^\\([a-zA-Z]:.*\\)>" 1))
-            (add-hook 'comint-preoutput-filter-functions
-                      (lambda (output)
-                        (replace-regexp-in-string "\\`.+\n" "" output))
-                      -100 t)))))
+     (shell-dirtrack-mode -1)
+     (dirtrack-mode)
+     (setq dirtrack-list '("^\\([a-zA-Z]:.*\\)>" 1))
+     (add-hook 'comint-preoutput-filter-functions
+               (lambda (output)
+                 (if (member (my/win-cmdproxy-real-program-name
+                              (comint-previous-input-string 0))
+                             '("whoami"))
+                     output
+                   (replace-regexp-in-string "\\`.*?\n" "" output)))
+               -100 t))))
 (add-hook 'shell-mode-hook #'my/shell-setup)
 
 ;; todo
@@ -347,12 +351,33 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
 ;;   )
 ;; (add-hook 'comint-mode-hook #'my/comint-save-history)
 
-;; todo
-;; (defun my/org-open-link-nearby (&optional arg)
-;;   "Follow a link or a time-stamp like `org-open-at-point-global' does.
-;; But open links nearby."
-;;   (interactive "P")
-;;   (org-next-link))
+(defun my/org-open-link-nearby (&optional arg)
+  "Follow a link nearby like Org mode does."
+  (interactive "P")
+  (unless (when (null arg)
+            (ignore-error user-error
+              (org-open-at-point-global)))
+    (let ((count (pcase arg
+                   ('- -1)
+                   ((guard (numberp arg)) arg)
+                   (_ 1)))
+          link)
+      (save-excursion
+        (re-search-forward org-link-any-re
+                           (when (use-region-p)
+                             (if (natnump count)
+                                 (region-end)
+                               (region-beginning)))
+                           t count)
+        (setq link (match-string-no-properties 0))
+        (if (and (string-match-p org-link-any-re link)
+                 (y-or-n-p (format "Open link: %s?" link)))
+            (org-link-open-from-string link)
+          (user-error "No link found"))))))
+(with-eval-after-load 'viper
+  (substitute-key-definition 'org-open-at-point-global
+                             'my/org-open-link-nearby
+                             viper-vi-global-user-map))
 
 (defun my/reb-copy-match (&optional priority)
   "Copy current match strings into the `kill-ring'. Default copy first group."

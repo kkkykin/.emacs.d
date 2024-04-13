@@ -24,11 +24,15 @@
 
 ;;; Code:
 
+(defun mw/cmdproxy-real-program-name (cmd)
+  "Find invoked real program name in cmd."
+  (seq-some (lambda (x) (and (not (string-prefix-p "/" x))
+                         (not (string= "start" x)) x))
+            (split-string-shell-command cmd)))
+
 (defun mw/find-shell-command-coding-system (command)
   "Find coding system for shell command."
-  (let ((program (seq-some (lambda (x) (and (not (string-prefix-p "/" x))
-                                        (not (string= "start" x)) x))
-                           (split-string-shell-command command))))
+  (let ((program (mw/cmdproxy-real-program-name command)))
     (find-operation-coding-system 'call-process program)))
 
 (defun mw/advice-shell-command-coding-fix (orig-fun &rest args)
