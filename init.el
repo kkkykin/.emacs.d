@@ -147,8 +147,7 @@
   :config
   (advice-add 'icomplete--fido-mode-setup :after-while
               (lambda (&rest r)
-                (setq-local completion-styles
-                            '(initials partial-completion flex)))))
+                (kill-local-variable 'completion-styles))))
 
 (use-package completion-preview
   :if (package-installed-p 'completion-preview)
