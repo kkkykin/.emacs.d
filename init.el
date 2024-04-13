@@ -3,22 +3,26 @@
 ;;; Code:
 
 (add-to-list 'load-path (file-name-concat user-emacs-directory "lisp"))
-(require 'init-misc)
+
+(defconst my/sys-winnt-p (eq system-type 'windows-nt)
+  "Windows System.")
+
+(defconst my/sys-linux-p (eq system-type 'gnu/linux)
+  "Linux System.")
+
+(defconst my/sys-android-p (eq system-type 'android)
+  "Android System.")
 
 (use-package emacs
   :hook
   ((text-mode . visual-line-mode)
-   (next-error . recenter)
-   (window-setup . my/setup-faces))
-  :bind-keymap ("C-x j" . my/global-prefix-map)
+   (next-error . recenter))
   :bind
   ([remap eval-expression] . pp-eval-expression)
   ([remap eval-last-sexp] . pp-eval-last-sexp)
   ([remap upcase-word] . upcase-dwim)
   ([remap downcase-word] . downcase-dwim)
   ([remap capitalize-word] . capitalize-dwim)
-  (:map my/global-prefix-map
-        ("s" . scratch-buffer))
   :custom
   (inhibit-splash-screen t)
   (indicate-buffer-boundaries 'left)
@@ -67,11 +71,53 @@
   (syntax-wholeline-max 1000)
   :config
   (prefer-coding-system 'utf-8)
-  (set-charset-priority 'unicode)
-  (pcase system-type
-    ('windows-nt (require 'init-winnt))
-    ('gnu/linux (require 'init-linux))
-    ('android (require 'init-android))))
+  (set-charset-priority 'unicode))
+
+;; [[https://github.com/yilkalargaw/emacs-native-snippets]]
+(use-package tempo
+  :autoload tempo-define-template
+  :bind
+  ("M-g M-n" . 'tempo-forward-mark)
+  ("M-g M-p" . 'tempo-backward-mark)
+  (:repeat-map my/tempo-repeat-map
+               ("n" . tempo-forward-mark)
+               ("p" . tempo-backward-mark)))
+
+(use-package transient
+  :autoload transient-define-prefix)
+
+(use-package init-winnt :demand t
+  :if (and my/sys-winnt-p (locate-library "init-winnt")))
+
+(use-package init-linux :demand t
+  :if (and my/sys-linux-p (locate-library "init-linux")))
+
+(use-package init-android :demand t
+  :if (and my/sys-android-p (locate-library "init-android")))
+
+(use-package init-misc
+  :if (locate-library "init-misc")
+  :demand t)
+
+(use-package init-prog
+  :if (locate-library "init-prog")
+  :demand t)
+
+(use-package init-net
+  :if (locate-library "init-net")
+  :demand t)
+
+(use-package init-org
+  :if (locate-library "init-org")
+  :after viper :defer 1)
+
+(use-package init-comint
+  :if (locate-library "init-comint")
+  :after comint :defer 0)
+
+(use-package init-pcmpl
+  :if (locate-library "init-pcmpl")
+  :after pcomplete :defer 0)
 
 (use-package touch-screen
   :if my/sys-android-p
@@ -157,8 +203,6 @@
   :config
   (keymap-unset viper-insert-basic-map "C-c M-n")
   (keymap-unset viper-insert-basic-map "C-c M-p")
-  (when my/sys-winnt-p
-    (add-hook 'viper-vi-state-hook (lambda () (w32-set-ime-open-status nil))))
   (fset 'viper-del-backward-char-in-insert 'backward-delete-char-untabify)
   (with-eval-after-load 'elec-pair
     (keymap-set viper-insert-global-user-map "<backspace>"
@@ -215,11 +259,7 @@
 
 (use-package bookmark
   :custom
-  (bookmark-save-flag 1)
-  :config
-  (when (file-exists-p my/bookmark-shared-file)
-    (bookmark-load my/bookmark-shared-file nil t)
-    (advice-add 'bookmark-save :around 'my/advice-bookmark-save)))
+  (bookmark-save-flag 1))
 
 (use-package cua-base
   :hook (emacs-startup . cua-mode)
@@ -263,8 +303,9 @@
   ;; maybe break table.el based on text-mode
   ;; :hook (org-mode prog-mode comint-mode)
   :hook (emacs-startup . global-hl-line-mode)
-  :custom
-  (global-hl-line-sticky-flag t))
+  ;; :custom
+  ;; (global-hl-line-sticky-flag t)
+  )
 
 (use-package display-line-numbers
   :unless my/sys-android-p
@@ -284,88 +325,17 @@
 (use-package re-builder
   :custom
   (reb-re-syntax 'string)
-  :config
-  (defvar-keymap my/re-builder-repeat-mode
-    :repeat t
-    "s" #'reb-next-match
-    "r" #'reb-prev-match))
+  :bind
+  (:repeat-map my/re-builder-repeat-mode
+               ("s" . reb-next-match)
+               ("r" . reb-prev-match)))
 
 (use-package isearch
   :custom
   (isearch-lazy-count t)
   (isearch-allow-scroll t)
   (isearch-yank-on-move 'shift)
-  (isearch-repeat-on-direction-change t)
-  :config
-  (require 'transient)
-  (transient-define-prefix my/isearch-menu ()
-    "isearch Menu. http://yummymelon.com/devnull/improving-emacs-isearch-usability-with-transient.html"
-    [["Edit Search String"
-      ("e"
-       "Edit the search string (recursive)"
-       isearch-edit-string
-       :transient nil)
-      ("w"
-       "Pull next word or character word from buffer"
-       isearch-yank-word-or-char
-       :transient nil)
-      ("s"
-       "Pull next symbol or character from buffer"
-       isearch-yank-symbol-or-char
-       :transient nil)
-      ("l"
-       "Pull rest of line from buffer"
-       isearch-yank-line
-       :transient nil)
-      ("y"
-       "Pull string from kill ring"
-       isearch-yank-kill
-       :transient nil)
-      ("t"
-       "Pull thing from buffer"
-       isearch-forward-thing-at-point
-       :transient nil)]
-
-     ["Replace"
-      ("q"
-       "Start ‘query-replace’"
-       isearch-query-replace
-       :if-nil buffer-read-only
-       :transient nil)
-      ("x"
-       "Start ‘query-replace-regexp’"
-       isearch-query-replace-regexp
-       :if-nil buffer-read-only     
-       :transient nil)]]
-
-    [["Toggle"
-      ("X"
-       "Toggle regexp searching"
-       isearch-toggle-regexp
-       :transient nil)
-      ("S"
-       "Toggle symbol searching"
-       isearch-toggle-symbol
-       :transient nil)
-      ("W"
-       "Toggle word searching"
-       isearch-toggle-word
-       :transient nil)
-      ("F"
-       "Toggle case fold"
-       isearch-toggle-case-fold
-       :transient nil)
-      ("L"
-       "Toggle lax whitespace"
-       isearch-toggle-lax-whitespace
-       :transient nil)]
-
-     ["Misc"
-      ("o"
-       "occur"
-       isearch-occur
-       :transient nil)]])
-  (keymap-set isearch-mode-map "C-h t" 'my/isearch-menu))
+  (isearch-repeat-on-direction-change t))
 
 (use-package files
   :custom
@@ -398,16 +368,10 @@
     (tool-bar-mode -1)))
 
 (use-package speedbar
-  :bind
-  (:map my/global-prefix-map
-        ("b" . 'speedbar))
   :config
   (setopt speedbar-supported-extension-expressions
           (append '(".sql")
-                  speedbar-supported-extension-expressions))
-  (when (require 'init-misc)
-    (keymap-set speedbar-file-key-map "=" #'my/speedbar-item-diff)
-    (keymap-set speedbar-file-key-map "(" #'my/speedbar-show-unknown-files)))
+                  speedbar-supported-extension-expressions)))
 
 (use-package electric
   :custom
@@ -438,12 +402,6 @@
   :custom
   (diff-add-log-use-relative-names t))
 
-(use-package grep
-  :config
-  (when (string= find-program "fd")
-    (advice-add 'rgrep-default-command :around
-                #'my/advice-rgrep-default-command-maybe-fd)))
-
 (use-package xref
   :init
   (put 'tags-table-list 'safe-local-variable 'listp)
@@ -456,13 +414,6 @@
   :config
   (when (string= grep-program "ug")
     (setq xref-search-program 'ugrep)))
-
-(use-package find-dired
-  :config
-  (when (string= find-program "fd")
-    (advice-add 'find-dired-with-command :filter-args #'my/advice-find-dired-with-command-maybe-fd)
-    (setq find-name-arg "-g"
-          find-ls-option '("-X busybox ls -ldh {} ;" . "-ldh"))))
 
 (use-package etags-regen
   :if (and (package-installed-p 'etags-regen)
@@ -477,18 +428,6 @@
   :custom
   (skeleton-further-elements '((abbrev-mode nil)))
   (skeleton-pair t))
-
-;; [[https://github.com/yilkalargaw/emacs-native-snippets]]
-(use-package tempo
-  :autoload tempo-define-template
-  :bind
-  ("M-g M-n" . 'tempo-forward-mark)
-  ("M-g M-p" . 'tempo-backward-mark)
-  :config
-  (defvar-keymap my/tempo-repeat-map
-    :repeat t
-    "n" #'tempo-forward-mark
-    "p" #'tempo-backward-mark))
 
 ;; [[info:autotype]]
 (use-package auto-insert
@@ -560,82 +499,7 @@
   :config
   (keymap-unset comint-repeat-map "C-n")
   (keymap-unset comint-repeat-map "C-p")
-  (defvar-keymap my/structure-repeat-map
-    :repeat (:enter ( treesit-beginning-of-defun beginning-of-defun
-                      treesit-end-of-defun end-of-defun
-                      indent-pp-sexp prog-indent-sexp
-                      python-nav-backward-up-list backward-up-list
-                      python-shell-send-defun eval-defun))
-    "r" #'raise-sexp
-    "i" (lambda ()
-          (interactive)
-          (setq repeat-map 'my/structure-repeat-map)
-          (pcase major-mode
-            ('emacs-lisp-mode (indent-pp-sexp))
-            (_ (prog-indent-sexp))))
-    "k" #'kill-sexp
-    "<backspace>" #'backward-kill-sexp
-    "SPC" #'mark-sexp
-    "t" #'transpose-sexps
-    "s" #'delete-pair
-    "(" #'insert-parentheses
-    "'" (lambda ()
-          (interactive)
-          (setq repeat-map 'my/structure-repeat-map)
-          (insert-pair nil ?\' ?\'))
-    "\"" (lambda ()
-           (interactive)
-           (setq repeat-map 'my/structure-repeat-map)
-           (insert-pair nil ?\" ?\"))
-    "<" (lambda ()
-          (interactive)
-          (setq repeat-map 'my/structure-repeat-map)
-          (insert-pair nil ?\< ?\>))
-    "[" (lambda ()
-          (interactive)
-          (setq repeat-map 'my/structure-repeat-map)
-          (insert-pair nil ?\[ ?\]))
-    "{" (lambda ()
-          (interactive)
-          (setq repeat-map 'my/structure-repeat-map)
-          (insert-pair nil ?\{ ?\}))
-    "/" #'undo
-    "w" #'hs-show-all
-    "z" #'hs-hide-all
-    "c" #'hs-toggle-hiding
-    "u" (lambda ()
-          (interactive)
-          (setq repeat-map 'my/structure-repeat-map)
-          (pcase major-mode
-            ((guard (memq major-mode '(python-ts-mode)))
-             (python-nav-backward-up-list))
-            (_ (backward-up-list))))
-    "d" #'down-list
-    "n" #'forward-list
-    "p" #'backward-list
-    "f" #'forward-sexp
-    "b" #'backward-sexp
-    "a" (lambda ()
-          (interactive)
-          (setq repeat-map 'my/structure-repeat-map)
-          (pcase major-mode
-            ((guard (memq major-mode '(python-ts-mode)))
-             (treesit-beginning-of-defun))
-            (_ (beginning-of-defun))))
-    "e" (lambda ()
-          (interactive)
-          (setq repeat-map 'my/structure-repeat-map)
-          (pcase major-mode
-            ((guard (memq major-mode '(python-ts-mode)))
-             (treesit-end-of-defun))
-            (_ (end-of-defun))))
-    "x" (lambda ()
-          (interactive)
-          (setq repeat-map 'my/structure-repeat-map)
-          (pcase major-mode
-            ((guard (memq major-mode '(python-ts-mode)))
-             (python-shell-send-defun))
-            (_ (eval-defun))))))
+  )
 
 (use-package elide-head
   :unless my/sys-android-p
@@ -656,8 +520,6 @@
 (use-package which-func :defer 5
   :unless my/sys-android-p
   :config
-  (when my/sys-android-p
-    (setq which-func-display 'header))
   (which-function-mode))
 
 (use-package midnight :defer 60
@@ -694,11 +556,6 @@
   :custom
   (add-log-keep-changes-together t)
   (change-log-version-info-enabled t))
-
-(use-package elisp-mode
-  :config
-  (when (require 'init-prog)
-    (add-hook 'emacs-lisp-mode-hook 'my/custom-imenu-exp)))
 
 (use-package python
   :custom
@@ -782,9 +639,6 @@
             (name . "^\\*Newsticker"))))))
 
 (use-package newsticker :defer 5
-  :bind
-  (:map newsticker-treeview-mode-map
-        ("DEL" . 'my/newsticker-treeview-prev-page))
   :custom
   (newsticker-obsolete-item-max-age 864000)
   (newsticker-treeview-date-format "%y.%m.%d, %H:%M")
@@ -797,10 +651,8 @@
   (newsticker-wget-arguments '("-Lkqsm30" "-A\"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36 Edg/117.0.2045.35\""))
   :config
   (make-directory (file-name-concat newsticker-dir "saved") t)
-  (dolist (fn '(newsticker--image-sentinel newsticker--sentinel-work))
-    (advice-add fn :around #'my/advice-silence-messages))
-  (when (require 'init-net nil t)
-    (load "init-rss.el.gpg" t t))
+  ;; (when (require 'init-net nil t)
+  ;;   (load "init-rss.el.gpg" t t))
   (when (y-or-n-p-with-timeout "Do you want to run newsticker? " 30 t)
     (newsticker-start t)))
 
@@ -823,9 +675,6 @@
 (use-package browse-url
   :hook ((text-mode . goto-address-mode)
          (prog-mode . goto-address-prog-mode))
-  :bind
-  (:map my/global-prefix-map
-        ("/" . 'webjump))
   :custom
   (browse-url-handlers '(("\\`file:" . browse-url-default-browser)))
   :config
@@ -851,10 +700,6 @@
       (add-to-list 'webjump-sites web))))
 
 (use-package tramp
-  :bind
-  (:map my/global-prefix-map
-        ("c" . 'tramp-cleanup-connection)
-        ("C" . 'tramp-cleanup-some-buffers))
   :custom
   (tramp-verbose 0)
   (tramp-use-scp-direct-remote-copying t)
@@ -862,28 +707,7 @@
   (tramp-use-connection-share t)
   (tramp-ssh-controlmaster-options
    (format "-o ControlPath=%s/ssh-ControlPath-%%r@%%h:%%p -o ControlMaster=auto -o ControlPersist=30m"
-           temporary-file-directory))
-  :config
-  (when my/sys-winnt-p
-    (setq tramp-default-method "sshx"
-          tramp-use-connection-share nil))
-  (add-to-list 'tramp-connection-properties
-               (list (regexp-quote "termux") "remote-shell"
-                     (file-name-concat my/termux-root-directory "usr/bin/bash")))
-  (add-to-list 'tramp-connection-properties
-               (list (regexp-quote "termux") "tmpdir" my/termux-tmp-directory))
-  (connection-local-set-profile-variables
-   'tramp-connection-local-termux-profile
-   `((tramp-remote-path
-      . ,(mapcar
-          (lambda (x)
-            (if (stringp x) (concat my/termux-root-directory x) x))
-          (copy-tree tramp-remote-path)))
-     (explicit-shell-file-name
-      . ,(file-name-concat my/termux-root-directory "usr/bin/bash"))))
-  (connection-local-set-profiles
-   '(:application tramp :user "termux")
-   'tramp-connection-local-termux-profile))
+           temporary-file-directory)))
 
 (use-package shell
   :custom
@@ -893,162 +717,9 @@
   (shell-kill-buffer-on-exit t))
 
 (use-package sql
-  :hook
-  (sql-mode
-   . (lambda ()
-       (mapc
-        (lambda (a)
-          (setcar (cdr a)
-                  (replace-regexp-in-string "\\\\([^?]" "`?\\&" (cadr a))))
-        imenu-generic-expression)))
   :bind
   (:map sql-mode-map
-        ("C-c C-l s" . my/sql-table-selector)
-        ("C-c C-p" . sql-connect))
-  (:map sql-interactive-mode-map
-        ("C-c C-l s" . my/sql-table-selector))
-  :config
-  (defun my/sql-table-get-pri-key (sqlbuf table)
-    "Get primary key name from table."
-    (with-temp-buffer
-      (sql-execute-feature sqlbuf (current-buffer) :list-table nil table)
-      (goto-char (point-min))
-      (re-search-forward "^| \\([[:alnum:]_]+\\).+| PRI |")
-      (match-string 1)))
-  
-  (defun my/sql-table-selector (name &optional arg)
-    "Select data from NAME. Default select latest 10 records,
-with a positive argument, select latest (* 10 number) records;
-with a negative argument, select oldest (* 10 number) records;
-with `universal argument', select all records."
-    (interactive
-     (list (sql-read-table-name "Table name: ")
-           current-prefix-arg)
-     sql-mode sql-interactive-mode)
-    (let ((sqlbuf (sql-find-sqli-buffer))
-          (builder (list (format "`%s`" name))))
-      (unless sqlbuf
-        (user-error "No SQL interactive buffer found"))
-      (unless name
-        (user-error "No table name specified"))
-      (when (or (natnump arg) (listp arg))
-        (setq builder
-              (append builder
-                      `("order by"
-                        ,(my/sql-table-get-pri-key sqlbuf name)
-                        "desc"))))
-      (cond ((and (listp arg)
-                  (eq nil (car arg)))
-             (setq builder
-                   (append builder
-                           `("limit" "10"))))
-            ((numberp arg)
-             (setq builder
-                   (append builder
-                           `("limit" ,(number-to-string (* (abs arg) 10)))))))
-      (sql-execute sqlbuf "SQL table selector"
-                   "select * from %s;" nil
-                   (mapconcat #'identity builder " "))))
-  
-  (tempo-define-template
-   "my/sql-create-procedure"
-   '(%""n
-      "DROP PROCEDURE IF EXISTS " (P "Procedure name: " procedure) ";"n
-      "DELIMITER //"n
-      "CREATE PROCEDURE " (s procedure) "("
-      (let ((output '(l)))
-        (while-let ((dir (completing-read "Direction: " '("IN" "OUT" "INOUT")))
-                    (emptyp (not (string= dir ""))))
-          (setq output
-                (append output
-                        (list dir " " (read-no-blanks-input "Variable name: ") " "
-                              (upcase (read-no-blanks-input "Data type: ")) ", "))))
-        (if (equal output '(l))
-            ", "
-          output))
-      (delete-char -2) ")"n"COMMENT \""p"\""n
-      "BEGIN"n n p n n"END//"n"DELIMITER ;"n)
-   nil
-   "Drop procedure if exists then create it.")
-  (tempo-define-template
-   "my/sql-create-function"
-   '(%""n
-      "DROP FUNCTION IF EXISTS " (P "Function name: " function) ";"n
-      "DELIMITER //"n
-      "CREATE FUNCTION " (s function) "("
-      (let ((output '(l)))
-        (while-let ((name (read-no-blanks-input "Variable name: "))
-                    (emptyp (not (string= name ""))))
-          (setq output
-                (append output
-                        (list name " "
-                              (upcase (read-no-blanks-input "Data type: "))
-                              ", "))))
-        (if (equal output '(l))
-            ", "
-          output))
-      (delete-char -2) ") RETURNS "
-      (let* ((return-var (read-no-blanks-input "Retunrs Variable: "
-                                               "data_output"))
-             (return-type (upcase (read-no-blanks-input "Retunrs Type: ")))
-             (return-default (read-string "Returns Default Value: "))
-             (output `(l ,return-type n "COMMENT \"" p "\"" n)))
-        (while-let ((act (completing-read "Action: "
-                                          '("READS SQL DATA"
-                                            "MODIFIES SQL DATA"
-                                            "NO SQL")))
-                    (emptyp (not (string= act ""))))
-          (setq output
-                (append output
-                        `( ,act n "BEGIN" n "DECLARE " ,return-var
-                           " " ,return-type
-                           ,@(unless (string= "" return-default)
-                               (list " DEFAULT " return-default))
-                           ";" n n p n n "RETURN " ,return-var ";"))))
-        output)
-      n"END//"n"DELIMITER ;"n))
-  (tempo-define-template
-   "my/sql-if"
-   '(%"IF " (P "Contidion: ") " THEN"n "  "p n
-      (let ((output '(l)))
-        (while-let ((elif (read-string "ELSEIF: "))
-                    (emptyp (not (string= elif ""))))
-          (setq output (append output `("ELSEIF " ,elif " THEN" n "  "p n))))
-        (if (y-or-n-p "ELSE: ")
-            (append output `("ELSE" n "  "p n))
-          output))
-      "END IF;"n))
-  (tempo-define-template
-   "my/sql-case"
-   '(%"CASE"n
-      (let ((output '(l)))
-        (while-let ((co (read-string "Condition: "))
-                    (emptyp (not (string= co ""))))
-          (setq output (append output `("  WHEN " ,co " THEN" n> "  "p n))))
-        (if (y-or-n-p "ELSE: ")
-            (append output `("  ELSE" n "  "p n))
-          output))
-      "END CASE;"n))
-  (define-skeleton my/sql-skeleton-while
-    "SQL while statement." "Condition: "
-    "WHILE " str " DO"\n "  "_ \n "END WHILE;"\n)
-  (define-skeleton my/sql-skeleton-repeat
-    "SQL repeat statement." "Condition: "
-    "REPEAT"\n "  "_ \n"UNTIL " str \n"END REPEAT;"\n)
-  (define-skeleton my/sql-skeleton-loop
-    "SQL loop statement, use `LEAVE' or `ITERATE' label." "Label: "
-    str & ": " "LOOP" \n "  "_ \n "END LOOP " str ";"\n)
-  (define-abbrev-table 'sql-mode-abbrev-table
-    '(("proc" #1="" tempo-template-my/sql-create-procedure)
-      ("fun" #1# tempo-template-my/sql-create-function)
-      ("if" #1# tempo-template-my/sql-if)
-      ("case" #1# tempo-template-my/sql-case)
-      ("while" #1# my/sql-skeleton-while)
-      ("repeat" #1# my/sql-skeleton-repeat)
-      ("loop" #1# my/sql-skeleton-loop))))
-
-(use-package sqlite-mode
-  :magic ("SQLite format 3\x00" . my/sqlite-view-file-magically))
+        ("C-c C-p" . sql-connect)))
 
 (use-package dired
   :custom
@@ -1060,13 +731,7 @@ with `universal argument', select all records."
   (delete-by-moving-to-trash t)
   (wdired-allow-to-change-permissions 'advanced)
   (wdired-use-interactive-rename t)
-  :init
-  (when my/sys-android-p
-    (add-hook 'dired-mode-hook 'dired-hide-details-mode))
   :bind (:map dired-mode-map
-              ("× μ" . my/mpv-image)
-              ("E" . my/dired-duplicate-file)
-              ("f" . my/dired-dwim)
               ("<mouse-2>" . dired-mouse-find-file))
   :config
   (when-let ((7z (or (executable-find "7z")
@@ -1095,12 +760,6 @@ with `universal argument', select all records."
   (dired-compress-file-default-suffix ".zst")
   (dired-compress-directory-default-suffix ".tar.zst")
   :config
-  (when my/sys-winnt-p
-    (dolist (item `(("\\.exe\\'" .
-                     ,(let ((cab (string-replace "/" "\\" (concat temporary-file-directory "cab-" (md5 (system-name))))))
-                        (format "makecab %%i %s && copy /b/y \"%s\"+\"%s\" %%o & del /q/f \"%s\""
-                                cab (string-replace "/" "\\" (executable-find "extrac32")) cab cab)))))
-      (add-to-list 'dired-compress-files-alist item)))
   (dolist (item `(("\\.\\(tar\\.zst\\)\\'" . "tar -cf - %i | zstd -T0 --fast=2 -o %o")
                   ("\\.7z\\'" . ,(format "%s a -mqs=on -mx3 %%o %%i" archive-7z-program))
                   ("\\.zip\\'" . ,(format "%s a -mx3 %%o %%i" archive-7z-program))))
@@ -1129,9 +788,6 @@ with `universal argument', select all records."
   (advice-add 'archive-rar-extract :before-until #'archive-7z-extract))
 
 (use-package dictionary
-  :bind
-  (:map my/global-prefix-map
-        ("D" . dictionary-search))
   :custom
   (dictionary-server "dict.tw")
   (dictionary-use-single-buffer t))
@@ -1142,19 +798,6 @@ with `universal argument', select all records."
     (setq epg-pinentry-mode 'loopback)))
 
 (use-package mpc
-  :bind-keymap
-  ("C-c m" . my/mpc-prefix-map)
-  :bind
-  (:map my/mpc-prefix-map
-        ("s" . 'mpc-toggle-play)
-        ("n" . 'mpc-next)
-        ("p" . 'mpc-prev)
-        ("b" . 'mpc-status-buffer-show)
-        ("g" . 'mpc-seek-current)
-        ("r" . 'mpc-toggle-repeat)
-        ("z" . 'mpc-toggle-shuffle)
-        ("a" . 'mpc-toggle-single)
-        ("u" . 'mpc-update))
   :custom
   (mpc-host "127.0.0.1"))
 
@@ -1176,12 +819,6 @@ with `universal argument', select all records."
   :unless my/sys-android-p
   :bind ("<down-mouse-3>" . 'strokes-do-stroke))
 
-(use-package timeclock
-  :bind
-  (:map my/global-prefix-map
-        ("o" . 'timeclock-in)
-        ("O" . 'timeclock-out)))
-
 (use-package flyspell
   :hook (text-mode
          (prog-mode . flyspell-prog-mode))
@@ -1199,14 +836,7 @@ with `universal argument', select all records."
   (doc-view-scale-internally nil)
   (doc-view-resolution 300)
   :config
-  (add-to-list 'image-file-name-extensions "avif")
-  (unless (executable-find "gm")
-    (setq image-dired-cmd-create-thumbnail-program "ffmpeg"
-          image-dired-cmd-create-thumbnail-options '("-y" "-i" "%f"
-                                                     "-map_metadata" "-1"
-                                                     "-vf" "scale=%w:-1"
-                                                     "-f" "mjpeg" "%t"))
-    (advice-add 'image-dired-create-thumb-1 :around #'my/advice-image-dired-create-thumb-maybe-gs)))
+  (add-to-list 'image-file-name-extensions "avif"))
 
 (use-package eglot
   :custom
@@ -1250,9 +880,6 @@ with `universal argument', select all records."
   (add-to-list 'remember-handler-functions 'remember-diary-extract-entries))
 
 (use-package proced
-  :bind
-  (:map my/global-prefix-map
-        ("p" . proced))
   :custom
   (proced-goal-attribute nil)
   (proced-show-remote-processes t)
@@ -1262,13 +889,7 @@ with `universal argument', select all records."
   :custom
   (pcomplete-autolist t)
   (pcomplete-recexact t)
-  (pcomplete-termination-string "")
-  :config
-  (when (and (require 'init-pcmpl)
-             my/sys-winnt-p)
-    (with-eval-after-load 'pcmpl-git
-      (advice-add 'pcomplete-from-help :filter-args
-                  #'my/advice-pcomplete-from-help))))
+  (pcomplete-termination-string ""))
 
 (use-package forms)
 (use-package ses)
@@ -1297,9 +918,6 @@ with `universal argument', select all records."
   :config (save-place-mode))
 
 (use-package recentf :defer 1
-  :bind
-  (:map my/global-prefix-map
-        ("r" . 'recentf))
   :config
   (recentf-mode)
   :custom
@@ -1309,8 +927,6 @@ with `universal argument', select all records."
 
 (use-package esh-mode
   :bind
-  (:map my/global-prefix-map
-        ("e" . eshell))
   (:repeat-map eshell-command-repeat-map
                ("b" . eshell-backward-argument)
                ("f" . eshell-forward-argument))
@@ -1417,9 +1033,7 @@ with `universal argument', select all records."
           (html "https://github.com/tree-sitter/tree-sitter-html")
           (css "https://github.com/tree-sitter/tree-sitter-css")
           (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
-          (tsx . ("https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src"))))
-  (when (require 'init-prog nil t)
-    (my/ts-mode-enable)))
+          (tsx . ("https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")))))
 
 (use-package custom
   :custom
@@ -1427,11 +1041,6 @@ with `universal argument', select all records."
 
 (use-package org
   :init (setq org-directory "~/org")
-  :bind-keymap
-  ("C-c o" . my/org-prefix-map)
-  :bind
-  (:map my/org-prefix-map
-        ("b" . org-fold-hide-block-toggle))
   :custom
   ;; (org-replace-disputed-keys t "see `'org-disputed-keys'")
   (org-special-ctrl-a/e t)
@@ -1522,19 +1131,7 @@ with `universal argument', select all records."
      ("wr" "Work report" entry (file+headline "work.org" "Reports")
       "** TODO %?\n%U\n%i\n%a"))))
 
-(use-package org-clock
-  :bind
-  (:map my/org-prefix-map
-        ("j" . org-clock-goto)
-        ("l" . org-clock-in-last)
-        ("i" . org-clock-in)
-        ("o" . org-clock-out)))
-
 (use-package ol
-  :bind
-  (:map my/global-prefix-map
-        ("l" . org-store-link)
-        ("L" . org-insert-link-global))
   :custom
   (org-id-link-to-org-use-id 'create-if-interactive)
   (org-link-use-indirect-buffer-for-internals t)
@@ -1790,11 +1387,7 @@ with `universal argument', select all records."
 
 (use-package aria2
   :if (package-installed-p 'aria2)
-  :bind
-  (:map my/global-prefix-map
-        ("a" . 'aria2-downloads-list))
   :config
-  (my/get-bt-tracker "https://gitea.com/XIU2/TrackersListCollection/raw/branch/master/best_aria2.txt")
   (let ((auth (car (auth-source-search :host "aria2.localhost"))))
     (setq aria2-rcp-secret (auth-info-password auth)
           aria2-rcp-listen-port (string-to-number (plist-get auth :port)))))

@@ -3,13 +3,37 @@
 ;;; Code:
 
 (defvar-keymap my/global-prefix-map
-  :doc "A keymap for myself.")
+  :doc "A keymap for myself."
+  "/" #'webjump
+  "a" #'area2-download-list
+  "b" #'speedbar
+  "c" #'org-clock-in-last
+  "C" #'org-clock-in
+  "D" #'dictionary-search
+  "e" #'eshell
+  "l" #'org-store-link
+  "L" #'org-insert-link-global
+  "o" #'org-clock-out
+  "O" #'org-clock-goto
+  "P" #'proced
+  "r" #'recentf
+  "s" #'scratch-buffer
+  "t" #'tramp-cleanup-connection
+  "T" #'tramp-cleanup-some-buffers)
+(keymap-set ctl-x-map "j" my/global-prefix-map)
 
 (defvar-keymap my/mpc-prefix-map
-  :doc "A keymap for mpc.")
-
-(defvar-keymap my/org-prefix-map
-  :doc "A keymap for handy global access to org helpers, particularly clocking.")
+  :doc "A keymap for mpc."
+  "s" #'mpc-toggle-play
+  "n" #'mpc-next
+  "p" #'mpc-prev
+  "b" #'mpc-status-buffer-show
+  "g" #'mpc-seek-current
+  "r" #'mpc-toggle-repeat
+  "z" #'mpc-toggle-shuffle
+  "a" #'mpc-toggle-single
+  "u" #'mpc-update)
+(keymap-set ctl-x-map "c" my/mpc-prefix-map)
 
 (defcustom my/light-theme-list
   '( adwaita dichromacy leuven modus-operandi-deuteranopia modus-operandi
@@ -34,6 +58,9 @@
   :group 'my
   :type '(repeat string))
 
+
+;; termux
+
 (defcustom my/termux-root-directory "/data/data/com.termux/files/"
   "Andriod termux root path."
   :group 'my
@@ -44,6 +71,28 @@
   :group 'my
   :type 'directory)
 
+(with-eval-after-load 'tramp
+  (add-to-list 'tramp-connection-properties
+               (list (regexp-quote "termux") "remote-shell"
+                     (file-name-concat my/termux-root-directory "usr/bin/bash")))
+  (add-to-list 'tramp-connection-properties
+               (list (regexp-quote "termux") "tmpdir" my/termux-tmp-directory))
+  (connection-local-set-profile-variables
+   'tramp-connection-local-termux-profile
+   `((tramp-remote-path
+      . ,(mapcar
+          (lambda (x)
+            (if (stringp x) (concat my/termux-root-directory x) x))
+          (copy-tree tramp-remote-path)))
+     (explicit-shell-file-name
+      . ,(file-name-concat my/termux-root-directory "usr/bin/bash"))))
+  (connection-local-set-profiles
+   '(:application tramp :user "termux")
+   'tramp-connection-local-termux-profile))
+
+
+;; bookmark
+
 (defcustom my/bookmark-shared-prefix "s/"
   "Prefix of shared bookmark name."
   :group 'my
@@ -53,6 +102,8 @@
   "Shared bookmark file cross device."
   :group 'my
   :type 'file)
+(when (file-exists-p my/bookmark-shared-file)
+  (bookmark-load my/bookmark-shared-file nil t))
 
 (defun my/advice-bookmark-save (orig-fun &rest args)
   "Do not save shared bookmarks to local bookmark file."
@@ -71,6 +122,7 @@
         (funcall orig-fun nil my/bookmark-shared-file nil))
       (let ((bookmark-alist new-local))
         (apply orig-fun args)))))
+(advice-add 'bookmark-save :around 'my/advice-bookmark-save)
 
 (defun my/system-dark-mode-enabled-p ()
   "Check if dark-mode is enabled."
@@ -133,6 +185,7 @@
                                 (t (cadr height)))))
 
     (my/shuffle-set-theme my/light-theme-list)))
+(add-hook 'window-setup-hook #'my/setup-faces)
 
 (defun my/advice-silence-messages (orig-fun &rest args)
   "Advice function that silences all messages in ORIG-FUN.
@@ -165,13 +218,8 @@ https://scripter.co/using-emacs-advice-to-silence-messages-from-functions"
   (let ((package (cond ((string= name "termux") "com.termux"))))
     (my/adb-am "force-stop" package)))
 
-(defun my/sqlite-view-file-magically ()
-  "Runs `sqlite-mode-open-file' on the file name visited by the
-current buffer, killing it.
-From https://christiantietze.de/posts/2024/01/emacs-sqlite-mode-open-sqlite-files-automatically/"
-  (let ((file-name buffer-file-name))
-    (kill-current-buffer)
-    (sqlite-mode-open-file file-name)))
+
+;; dired
 
 (defun my/dired-dwim ()
   "start process with current file"
@@ -181,15 +229,6 @@ From https://christiantietze.de/posts/2024/01/emacs-sqlite-mode-open-sqlite-file
       (setq filename default-directory))
     (my/mpv-intent filename))
   )
-
-(defun my/mpv-image ()
-  "mpv play current directory with miniplayer"
-  (interactive)
-  (async-shell-command
-   (concat
-    "mpv --ontop --autofit=30% --geometry=100%:20% --shuffle --image-display-duration=60 --no-osc --no-osd-bar --cursor-autohide=no --no-input-cursor \""
-    default-directory "\"")
-   "mpv"))
 
 (defun my/dired-duplicate-file (arg)
   "Duplicate a file from dired with an incremented number.
@@ -220,12 +259,22 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
         (apply oldfun args))
     (apply oldfun args)))
 
-(defun my/default-callback (&rest args)
-  "Test default callback."
-  (message (if args "Up" "Down")))
+(with-eval-after-load 'dired
+  (define-keymap :keymap dired-mode-map
+    "E" #'my/dired-duplicate-file
+    "f" #'my/dired-dwim))
 
+(with-eval-after-load 'image-dired
+  (unless (executable-find "gm")
+    (setq image-dired-cmd-create-thumbnail-program "ffmpeg"
+          image-dired-cmd-create-thumbnail-options '("-y" "-i" "%f"
+                                                     "-map_metadata" "-1"
+                                                     "-vf" "scale=%w:-1"
+                                                     "-f" "mjpeg" "%t"))
+    (advice-add 'image-dired-create-thumb-1 :around #'my/advice-image-dired-create-thumb-maybe-gs)))
+
+
 ;; speedbar
-
 (defun my/speedbar-show-unknown-files ()
   "Temporary show unknown files."
   (interactive)
@@ -243,8 +292,14 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
         (dframe-close-frame))
     (error "Not a file")))
 
-;; find & grep
+(with-eval-after-load 'speedbar
+  (define-keymap
+    :keymap speedbar-file-key-map
+    "=" #'my/speedbar-item-diff
+    "(" #'my/speedbar-show-unknown-files))
 
+
+;; find & grep
 (defun my/advice-find-dired-with-command-maybe-fd (args)
   "Use `fd' instead of `find', fix some syntax error."
   (when-let* ((cmd (cadr args))
@@ -253,6 +308,11 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
             `(,(replace-regexp-in-string " \\. \\\"(\\\"\\(.+\\)\\\")\\\""
                                          "\\1" cmd))))
   args)
+(with-eval-after-load 'find-grep
+  (when (string= find-program "fd")
+    (advice-add 'find-dired-with-command :filter-args #'my/advice-find-dired-with-command-maybe-fd)
+    (setq find-name-arg "-g"
+          find-ls-option '("-X ls -ldh {} ;" . "-ldh"))))
 
 (defun my/advice-rgrep-default-command-maybe-fd (oldfun &rest args)
   "Use `fd' synyax."
@@ -304,80 +364,13 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
         (apply oldfun args))
     (apply oldfun args)))
 
-(defun my/advice-comint-get-old-input (arg)
-  "If default get empty string, then get last input string, comint."
-  (if (string-empty-p arg)
-      (comint-previous-input-string 0)
-    arg))
+(with-eval-after-load 'grep
+  (when (string= find-program "fd")
+    (advice-add 'rgrep-default-command :around
+                #'my/advice-rgrep-default-command-maybe-fd)))
 
-(defun my/comint-mode-hook ()
-  "Set up for comint-mode."
-  (advice-add comint-get-old-input
-              :filter-return
-              #'my/advice-comint-get-old-input))
-(add-hook 'comint-mode-hook #'my/comint-mode-hook)
-
-(defun my/advice-eshell-get-old-input (arg)
-  "If default get empty string, then get last input string, Eshell."
-  (if (string-empty-p arg)
-      (eshell-previous-input-string 0)
-    arg))
-(with-eval-after-load 'esh-mode
-  (advice-add 'eshell-get-old-input
-              :filter-return
-              #'my/advice-eshell-get-old-input))
-
-(defun my/shell-setup ()
-  "Setup various shell in shell-mode."
-  (pcase (file-name-base (or explicit-shell-file-name shell-file-name))
-    ("bash" (shell-dirtrack-mode -1))
-    ("cmdproxy"
-     (shell-dirtrack-mode -1)
-     (dirtrack-mode)
-     (setq dirtrack-list '("^\\([a-zA-Z]:.*\\)>" 1))
-     (add-hook 'comint-preoutput-filter-functions
-               (lambda (output)
-                 (if (member (my/win-cmdproxy-real-program-name
-                              (comint-previous-input-string 0))
-                             '("whoami"))
-                     output
-                   (replace-regexp-in-string "\\`.*?\n" "" output)))
-               -100 t))))
-(add-hook 'shell-mode-hook #'my/shell-setup)
-
-;; todo
-;; (defun my/comint-save-history ()
-;;   "Save comint `input-ring' cross session."
-;;   )
-;; (add-hook 'comint-mode-hook #'my/comint-save-history)
-
-(defun my/org-open-link-nearby (&optional arg)
-  "Follow a link nearby like Org mode does."
-  (interactive "P")
-  (unless (when (null arg)
-            (ignore-error user-error
-              (org-open-at-point-global)))
-    (let ((count (pcase arg
-                   ('- -1)
-                   ((guard (numberp arg)) arg)
-                   (_ 1)))
-          link)
-      (save-excursion
-        (re-search-forward org-link-any-re
-                           (when (use-region-p)
-                             (if (natnump count)
-                                 (region-end)
-                               (region-beginning)))
-                           t count)
-        (setq link (match-string-no-properties 0))
-        (if (and (string-match-p org-link-any-re link)
-                 (y-or-n-p (format "Open link: %s?" link)))
-            (org-link-open-from-string link)
-          (user-error "No link found"))))))
-(with-eval-after-load 'viper
-  (substitute-key-definition 'org-open-at-point-global
-                             'my/org-open-link-nearby
-                             viper-vi-global-user-map))
+
+;; re-builder
 
 (defun my/reb-copy-match (&optional priority)
   "Copy current match strings into the `kill-ring'. Default copy first group."
@@ -392,6 +385,161 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
       reb-overlays))))
 (with-eval-after-load 're-builder
   (keymap-set reb-mode-map "C-c M-w" 'my/reb-copy-match))
+
+
+;; isearch
+
+(with-eval-after-load 'isearch
+  (transient-define-prefix my/isearch-menu ()
+    "isearch Menu. http://yummymelon.com/devnull/improving-emacs-isearch-usability-with-transient.html"
+    [["Edit Search String"
+      ("e"
+       "Edit the search string (recursive)"
+       isearch-edit-string
+       :transient nil)
+      ("w"
+       "Pull next word or character word from buffer"
+       isearch-yank-word-or-char
+       :transient nil)
+      ("s"
+       "Pull next symbol or character from buffer"
+       isearch-yank-symbol-or-char
+       :transient nil)
+      ("l"
+       "Pull rest of line from buffer"
+       isearch-yank-line
+       :transient nil)
+      ("y"
+       "Pull string from kill ring"
+       isearch-yank-kill
+       :transient nil)
+      ("t"
+       "Pull thing from buffer"
+       isearch-forward-thing-at-point
+       :transient nil)]
+
+     ["Replace"
+      ("q"
+       "Start ‘query-replace’"
+       isearch-query-replace
+       :if-nil buffer-read-only
+       :transient nil)
+      ("x"
+       "Start ‘query-replace-regexp’"
+       isearch-query-replace-regexp
+       :if-nil buffer-read-only     
+       :transient nil)]]
+
+    [["Toggle"
+      ("X"
+       "Toggle regexp searching"
+       isearch-toggle-regexp
+       :transient nil)
+      ("S"
+       "Toggle symbol searching"
+       isearch-toggle-symbol
+       :transient nil)
+      ("W"
+       "Toggle word searching"
+       isearch-toggle-word
+       :transient nil)
+      ("F"
+       "Toggle case fold"
+       isearch-toggle-case-fold
+       :transient nil)
+      ("L"
+       "Toggle lax whitespace"
+       isearch-toggle-lax-whitespace
+       :transient nil)]
+
+     ["Misc"
+      ("o"
+       "occur"
+       isearch-occur
+       :transient nil)]])
+  (keymap-set isearch-mode-map "C-h t" 'my/isearch-menu))
+
+
+;; repeat
+
+(defvar-keymap my/structure-repeat-map
+  :repeat (:enter ( treesit-beginning-of-defun beginning-of-defun
+                    treesit-end-of-defun end-of-defun
+                    indent-pp-sexp prog-indent-sexp
+                    python-nav-backward-up-list backward-up-list
+                    python-shell-send-defun eval-defun))
+  "r" #'raise-sexp
+  "i" (lambda ()
+        (interactive)
+        (setq repeat-map 'my/structure-repeat-map)
+        (pcase major-mode
+          ('emacs-lisp-mode (indent-pp-sexp))
+          (_ (prog-indent-sexp))))
+  "k" #'kill-sexp
+  "<backspace>" #'backward-kill-sexp
+  "SPC" #'mark-sexp
+  "t" #'transpose-sexps
+  "s" #'delete-pair
+  "(" #'insert-parentheses
+  "'" (lambda ()
+        (interactive)
+        (setq repeat-map 'my/structure-repeat-map)
+        (insert-pair nil ?\' ?\'))
+  "\"" (lambda ()
+         (interactive)
+         (setq repeat-map 'my/structure-repeat-map)
+         (insert-pair nil ?\" ?\"))
+  "<" (lambda ()
+        (interactive)
+        (setq repeat-map 'my/structure-repeat-map)
+        (insert-pair nil ?\< ?\>))
+  "[" (lambda ()
+        (interactive)
+        (setq repeat-map 'my/structure-repeat-map)
+        (insert-pair nil ?\[ ?\]))
+  "{" (lambda ()
+        (interactive)
+        (setq repeat-map 'my/structure-repeat-map)
+        (insert-pair nil ?\{ ?\}))
+  "/" #'undo
+  "w" #'hs-show-all
+  "z" #'hs-hide-all
+  "c" #'hs-toggle-hiding
+  "u" (lambda ()
+        (interactive)
+        (setq repeat-map 'my/structure-repeat-map)
+        (pcase major-mode
+          ((guard (memq major-mode '(python-ts-mode)))
+           (python-nav-backward-up-list))
+          (_ (backward-up-list))))
+  "d" #'down-list
+  "n" #'forward-list
+  "p" #'backward-list
+  "f" #'forward-sexp
+  "b" #'backward-sexp
+  "a" (lambda ()
+        (interactive)
+        (setq repeat-map 'my/structure-repeat-map)
+        (pcase major-mode
+          ((guard (memq major-mode '(python-ts-mode)))
+           (treesit-beginning-of-defun))
+          (_ (beginning-of-defun))))
+  "e" (lambda ()
+        (interactive)
+        (setq repeat-map 'my/structure-repeat-map)
+        (pcase major-mode
+          ((guard (memq major-mode '(python-ts-mode)))
+           (treesit-end-of-defun))
+          (_ (end-of-defun))))
+  "x" (lambda ()
+        (interactive)
+        (setq repeat-map 'my/structure-repeat-map)
+        (pcase major-mode
+          ((guard (memq major-mode '(python-ts-mode)))
+           (python-shell-send-defun))
+          (_ (eval-defun)))))
+
+
 
 (provide 'init-misc)
 ;;; init-misc.el ends here

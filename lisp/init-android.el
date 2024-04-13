@@ -24,11 +24,26 @@
 
 ;;; Code:
 
+
+;; which-func
+
+(with-eval-after-load 'which-func
+  (setq which-func-display 'header))
+
+
+;; hardware
+
 (defun my/mini-screen-setup-maybe ()
   "Setup for mini screen mobile."
   (if (= (display-pixel-height) 260)
       (modifier-bar-mode -1)
     (modifier-bar-mode 1)))
+
+
+;; dired
+
+(with-eval-after-load 'dired
+  (add-hook 'dired-mode-hook 'dired-hide-details-mode))
 
 ;; todo
 (defun my/mpv-intent (scheme &optional sub)
@@ -74,6 +89,7 @@ milliseconds"
 
 
 ;; sshd
+
 (defvar my/sshd-timer nil
   "sshd timer object.")
 

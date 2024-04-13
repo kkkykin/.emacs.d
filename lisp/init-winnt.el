@@ -24,6 +24,9 @@
 
 ;;; Code:
 
+
+;; shell
+
 (defun mw/cmdproxy-real-program-name (cmd)
   "Find invoked real program name in cmd."
   (seq-some (lambda (x) (and (not (string-prefix-p "/" x))
@@ -76,6 +79,19 @@
             #'mw/shell-coding-system-fix nil t))
 (add-hook 'shell-mode-hook #'mw/shell-mode-setup)
 
+(defun mw/run-bash ()
+  (interactive)
+  (let ((shell-file-name "C:\\Windows\\system32\\bash.exe"))
+    (shell "*bash*")))
+
+(defun mw/toggle-shell ()
+  "Toggle shell between wsl bash and cmd"
+  (interactive)
+  (if (string= shell-file-name "C:\\Windows\\system32\\bash.exe")
+      (setq shell-file-name mw/vanilla-shell)
+    (setq mw/vanilla-shell shell-file-name
+          shell-file-name "C:\\Windows\\system32\\bash.exe")))
+
 (defun mw/compilation-coding-system-fix ()
   "Fix stdout coding-system in compilation."
   (let ((coding-system (mw/find-shell-command-coding-system
@@ -100,6 +116,9 @@
     (setq find-dired-refine-function 'mw/find-dired-coding-system-fix)
     (advice-add find-dired-refine-function :after ori)))
 
+
+;; dired
+
 (defun mw/advice-dired-shell-stuff-it (args)
   "Fix `;' cannot sequentially execute command on windows."
   (when-let* ((cmd (car args))
@@ -109,20 +128,12 @@
                                       "/wait \\1\\2" cmd)))
   args)
 (with-eval-after-load 'dired-aux
+  (dolist (item `(("\\.exe\\'" .
+                   ,(let ((cab (string-replace "/" "\\" (concat temporary-file-directory "cab-" (md5 (system-name))))))
+                      (format "makecab %%i %s && copy /b/y \"%s\"+\"%s\" %%o & del /q/f \"%s\""
+                              cab (string-replace "/" "\\" (executable-find "extrac32")) cab cab)))))
+    (add-to-list 'dired-compress-files-alist item))
   (advice-add 'dired-shell-stuff-it :filter-args #'mw/advice-dired-shell-stuff-it))
-
-(defun mw/run-bash ()
-  (interactive)
-  (let ((shell-file-name "C:\\Windows\\system32\\bash.exe"))
-    (shell "*bash*")))
-
-(defun mw/toggle-shell ()
-  "Toggle shell between wsl bash and cmd"
-  (interactive)
-  (if (string= shell-file-name "C:\\Windows\\system32\\bash.exe")
-      (setq shell-file-name mw/vanilla-shell)
-    (setq mw/vanilla-shell shell-file-name
-          shell-file-name "C:\\Windows\\system32\\bash.exe")))
 
 (setq grep-program "ug"
       grep-use-null-device nil
@@ -144,11 +155,19 @@
         ("mpv" utf-8 . ,locale-coding-system)
         ("sha256sum" utf-8 . ,locale-coding-system))
       file-name-coding-system locale-coding-system
-      shr-use-fonts nil)
+      shr-use-fonts nil
+      tramp-default-method "sshx"
+      tramp-use-connection-share nil)
 
 (setenv "HOME" (file-name-parent-directory user-emacs-directory))
 
 (add-to-list 'exec-suffixes ".ps1")
+
+
+;; viper
+
+(with-eval-after-load 'viper
+  (add-hook 'viper-vi-state-hook (lambda () (w32-set-ime-open-status nil))))
 
 (provide 'init-winnt)
 ;;; init-winnt.el ends here

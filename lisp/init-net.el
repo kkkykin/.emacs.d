@@ -32,6 +32,10 @@
   :group 'my
   :type 'string)
 
+(defun my/default-callback (&rest args)
+  "Test default callback."
+  (message (if args "Up" "Down")))
+
 (defun mn/internet-up-p (&optional host callback)
   "Test connectivity via ping."
   (interactive)
@@ -236,6 +240,7 @@
       (proxy-socks-disable)
     (mn/proxy-socks-enable)))
 
+
 ;; Newsticker
 
 (defcustom mn/rss-bridge-list '("https://rss-bridge.org/bridge01/"
@@ -484,16 +489,20 @@ items are fetched from each feed."
 
 (with-eval-after-load 'newsticker
   (setq newsticker-wget-arguments
-        (append `("--doh-url" ,mn/doh-server) newsticker-wget-arguments))
+        (append `("--doh-url" ,mn/doh-server) newsticker-wget-arguments)
+        eww-retrieve-command (cons newsticker-wget-name newsticker-wget-arguments))
   (advice-add 'newsticker-start :before #'mn/advice-newsticker-list-set-start-time)
   (advice-add 'newsticker--image-download-by-url :around #'mn/advice-url-retrieve-with-timeout)
   (advice-add 'newsticker--get-news-by-wget :filter-args #'mn/advice-newsticker--get-news-by-wget)
   (advice-add 'newsticker-save-item :before-until #'mn/advice-newsticker-save-item)
-  (with-eval-after-load 'eww
-    (setq eww-retrieve-command (cons newsticker-wget-name newsticker-wget-arguments))))
+  (dolist (fn '(newsticker--image-sentinel newsticker--sentinel-work))
+    (advice-add fn :around #'my/advice-silence-messages))
+  (load "init-rss.el.gpg" t t)
+  (define-keymap :keymap newsticker-treeview-mode-map
+    "DEL" #'mn/newsticker-treeview-prev-page))
 
+
 ;; eww
-
 (defun mn/url-redirect (url)
   (cond 
    ((string-match "^https://github.com/\\(.+\\)/commit/\\(\\w+\\)$" url)
@@ -551,7 +560,9 @@ items are fetched from each feed."
   (add-to-list 'eww-url-transformers 'mn/url-redirect)
   (add-hook 'eww-after-render-hook #'mn/eww-render-hook))
 
+
 ;; Aria2
+
 (defcustom mn/aria2-conf-file (expand-file-name "aria2.conf" "~/.aria2")
   "Default aria2 configuration file path."
   :type '(string))
@@ -586,6 +597,11 @@ items are fetched from each feed."
            (save-buffer)
            (kill-buffer)))
          (kill-buffer))))
+
+(with-eval-after-load 'aria2
+  (mn/get-bt-tracker "https://gitea.com/XIU2/TrackersListCollection/raw/branch/master/best_aria2.txt"))
+
+
 
 (provide 'init-net)
 ;;; init-net.el ends here

@@ -25,17 +25,8 @@
 ;; Silence stupid startup message
 (setq inhibit-startup-echo-area-message (user-login-name))
 
-(defconst my/sys-winnt-p (eq system-type 'windows-nt)
-  "Windows System.")
-
-(defconst my/sys-linux-p (eq system-type 'gnu/linux)
-  "Linux System.")
-
-(defconst my/sys-android-p (eq system-type 'android)
-  "Android System.")
-
 ;; Android Setup
-(when my/sys-android-p
+(when (eq system-type 'android)
   (setenv "PATH"
           (format "%s:%s" "/data/data/com.termux/files/usr/bin"
                   (getenv "PATH")))
