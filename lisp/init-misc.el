@@ -372,17 +372,18 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
 
 ;; re-builder
 
-(defun my/reb-copy-match (&optional priority)
-  "Copy current match strings into the `kill-ring'. Default copy first group."
+(defun my/reb-copy-match (&optional group)
+  "Copy current match strings into the `kill-ring'. With
+`universal-argument' select nth group. Default copy first group."
   (interactive "p" reb-mode)
   (with-current-buffer reb-target-buffer
     (kill-new
      (mapconcat
       (lambda (a)
-        (when (equal (overlay-get a 'priority) priority)
+        (when (equal (overlay-get a 'priority) group)
           (format "%s
 " (buffer-substring-no-properties (overlay-start a) (overlay-end a)))))
-      reb-overlays))))
+      (reverse reb-overlays)))))
 (with-eval-after-load 're-builder
   (keymap-set reb-mode-map "C-c M-w" 'my/reb-copy-match))
 
