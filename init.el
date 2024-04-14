@@ -718,7 +718,9 @@
 (use-package sql
   :bind
   (:map sql-mode-map
-        ("C-c C-p" . sql-connect)))
+        ("C-c C-p" . sql-connect))
+  :custom
+  (sql-input-ring-file-name (locate-user-emacs-file "sql-history.eld")))
 
 (use-package dired
   :custom

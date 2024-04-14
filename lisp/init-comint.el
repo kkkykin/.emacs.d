@@ -24,6 +24,9 @@
 
 ;;; Code:
 
+
+;; shell
+
 (defun my/shell-setup ()
   "Setup various shell in shell-mode."
   (pcase (file-name-base (or explicit-shell-file-name shell-file-name))
@@ -41,12 +44,6 @@
                    (replace-regexp-in-string "\\`.*?\n" "" output)))
                -100 t))))
 (add-hook 'shell-mode-hook #'my/shell-setup)
-
-;; todo
-;; (defun my/comint-save-history ()
-;;   "Save comint `input-ring' cross session."
-;;   )
-;; (add-hook 'comint-mode-hook #'my/comint-save-history)
 
 
 
