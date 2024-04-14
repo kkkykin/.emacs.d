@@ -39,15 +39,7 @@
     ("cmdproxy"
      (shell-dirtrack-mode -1)
      (dirtrack-mode)
-     (setq dirtrack-list '("^\\([a-zA-Z]:.*\\)>" 1))
-     (add-hook 'comint-preoutput-filter-functions
-               (lambda (output)
-                 (if (member (my/win-cmdproxy-real-program-name
-                              (comint-previous-input-string 0))
-                             '("whoami" "ffmpeg" "ffplay"))
-                     output
-                   (replace-regexp-in-string "\\`.*?\n" "" output)))
-               -100 t))))
+     (setq dirtrack-list '("^\\([a-zA-Z]:.*\\)>" 1)))))
 (add-hook 'shell-mode-hook #'my/shell-setup)
 
 (defun my/advice-comint-save-history-sentinel (proc event)

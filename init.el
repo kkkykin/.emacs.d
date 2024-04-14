@@ -70,6 +70,7 @@
   (large-hscroll-threshold 1000)
   (syntax-wholeline-max 1000)
   :config
+  (put 'buffer-file-coding-system 'safe-local-variable 'symbolp)
   (prefer-coding-system 'utf-8)
   (set-charset-priority 'unicode))
 
