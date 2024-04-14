@@ -45,6 +45,7 @@ its subdirectories."
                    ('- -1)
                    ((guard (numberp arg)) arg)
                    (_ 1)))
+          (org-link-elisp-confirm-function nil)
           link)
       (save-excursion
         (re-search-forward org-link-any-re
@@ -53,11 +54,13 @@ its subdirectories."
                                  (region-end)
                                (region-beginning)))
                            t count)
-        (setq link (match-string-no-properties 0))
+        (setq link (org-add-props (match-string-no-properties 0)
+                       nil 'face 'org-warning))
         (if (and (string-match-p org-link-any-re link)
                  (y-or-n-p (format "Open link: %s?" link)))
             (org-link-open-from-string link)
           (user-error "No link found"))))))
+
 (with-eval-after-load 'viper
   (keymap-substitute viper-vi-global-user-map
                      'org-open-at-point-global

@@ -1083,7 +1083,7 @@
                    ("reading")))
   (org-log-done 'time)
   (org-log-into-drawer t)
-  :config (add-to-list 'org-modules 'id))
+  :config (add-to-list 'org-modules 'org-id))
 
 (use-package org-list
   :custom
@@ -1139,7 +1139,7 @@
   (org-id-link-to-org-use-id 'create-if-interactive)
   (org-link-use-indirect-buffer-for-internals t)
   :config
-  (setf (cdr (assoc 'file org-link-frame-setup)) 'find-file))
+  (setcdr (assoc 'file org-link-frame-setup) 'find-file))
 
 (use-package ob
   :custom
