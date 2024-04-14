@@ -151,6 +151,7 @@
         (,find-program utf-8 . ,locale-coding-system)
         (,grep-program utf-8 . ,locale-coding-system)
         ("git" utf-8 . ,locale-coding-system)
+        ("ls" utf-8 . ,locale-coding-system)
         ("make" utf-8 . ,locale-coding-system)
         ("mpv" utf-8 . ,locale-coding-system)
         ("sha256sum" utf-8 . ,locale-coding-system))
