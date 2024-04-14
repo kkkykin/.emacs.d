@@ -541,6 +541,17 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
           (_ (eval-defun)))))
 
 
+;; file
+
+(defun my/file-modified-recently-p (file seconds)
+  "Check file is modified recently."
+  (and (file-exists-p file)
+       (time-less-p
+        (current-time)
+        (time-add
+         (file-attribute-modification-time
+          (file-attributes file))
+         seconds))))
 
 (provide 'init-misc)
 ;;; init-misc.el ends here
