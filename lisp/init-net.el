@@ -98,29 +98,45 @@
     (setq body (buffer-substring (point) (point-max)))
     (list headers body)))
 
+
 ;; proxy
 
-(defcustom mn/block-domain (rx (| ?. bos) (| "blogs.reimu.net") eos)
+(defcustom mn/block-domain
+  '("blogs.reimu.net")
   "Domain blocked."
   :group 'my
-  :type 'regexp)
+  :type '(repeat string))
 
 (defcustom mn/proxy-domain
-  (rx (| ?. bos)
-      (| "duckduckgo.com" "google.com" "wikipedia.org")
-      eos)
-  "Domain through proxy."
+  '("duckduckgo.com" "github.com" "google.com" "google.com.hk"
+    "wikipedia.org")
+  "Domain proxyed."
+  :group 'my
+  :type '(repeat string))
+
+(defcustom mn/img-proxy-domain
+  '("saxyit.com" "reimu.net" "img.piclabo.xyz" "trts.baishancdnx.cn"
+    "www.skidrowreloaded.com" "riotpixels.net" "www.hacg.mov"
+    "mooc-image.nosdn.127.net")
+  "Img domain proxyed."
+  :group 'my
+  :type '(repeat string))
+
+(defcustom mn/block-domain-regexp
+  (rx (| ?. bos) (regex (regexp-opt mn/block-domain)) eos)
+  "Regexp for domain blocked."
   :group 'my
   :type 'regexp)
 
-(defcustom mn/img-proxy-domain
-  (rx
-   (| ?. bos)
-   (| "saxyit.com" "reimu.net" "img.piclabo.xyz" "trts.baishancdnx.cn"
-      "www.skidrowreloaded.com" "riotpixels.net" "www.hacg.mov"
-      "mooc-image.nosdn.127.net")
-   eos)
-  "Img domain through proxy."
+(defcustom mn/proxy-domain-regexp
+  (rx (| ?. bos) (regex (regexp-opt mn/proxy-domain)) eos)
+  "Regexp for domain through proxy."
+  :group 'my
+  :type 'regexp)
+
+(defcustom mn/img-proxy-domain-regexp
+  (rx (| ?. bos) (regex (regexp-opt mn/img-proxy-domain)) eos)
+  "Regexp for img domain through proxy."
   :group 'my
   :type 'regexp)
 
@@ -141,9 +157,9 @@
         parameters)
     (cond
      ((and blockable-p
-           (string-match-p mn/block-domain host))
+           (string-match-p mn/block-domain-regexp host))
       (setq url "127.0.0.1"))
-     ((string-match-p mn/proxy-domain host)
+     ((string-match-p mn/proxy-domain-regexp host)
       (setq parameters (cons (format "-xhttp://%s" mn/centaur-proxy)
                              parameters))))
     (list url parameters)))
@@ -152,13 +168,13 @@
   "Block, proxy, transform url."
   (let* ((url (car args))
          (host (url-host (url-generic-parse-url url))))
-    (cond ((string-match-p mn/block-domain host) nil)
-          ((string-match-p mn/proxy-domain host)
+    (cond ((string-match-p mn/block-domain-regexp host) nil)
+          ((string-match-p mn/proxy-domain-regexp host)
            (let ((url-proxy-services
                   `(("http" . ,mn/centaur-proxy)
                     ("https" . ,mn/centaur-proxy))))
              (apply orig-fun args)))
-          ((string-match-p mn/img-proxy-domain host)
+          ((string-match-p mn/img-proxy-domain-regexp host)
            (setcar args (string-replace "${href_ue}"
                                         (url-hexify-string url)
                                         mn/img-cdn-server))
@@ -503,6 +519,7 @@ items are fetched from each feed."
 
 
 ;; eww
+
 (defun mn/url-redirect (url)
   (cond 
    ((string-match "^https://github.com/\\(.+\\)/commit/\\(\\w+\\)$" url)
