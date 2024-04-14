@@ -27,6 +27,12 @@
 
 ;; shell
 
+(defcustom my/comint-dir (locate-user-emacs-file "comint/")
+  "Directory where comint saves data."
+  :type 'directory
+  :group 'my
+  :set (make-directory my/comint-dir t))
+
 (defun my/shell-setup ()
   "Setup various shell in shell-mode."
   (pcase (file-name-base (or explicit-shell-file-name shell-file-name))
@@ -39,11 +45,37 @@
                (lambda (output)
                  (if (member (my/win-cmdproxy-real-program-name
                               (comint-previous-input-string 0))
-                             '("whoami"))
+                             '("whoami" "ffmpeg" "ffplay"))
                      output
                    (replace-regexp-in-string "\\`.*?\n" "" output)))
                -100 t))))
 (add-hook 'shell-mode-hook #'my/shell-setup)
+
+(defun my/advice-comint-save-history-sentinel (proc event)
+  "Save history if the default sentinel not save, then kill buffer."
+  (with-current-buffer (process-buffer proc)
+    (when (and (not (null comint-input-ring-file-name))
+               (or (not (file-exists-p comint-input-ring-file-name))
+                   (and (file-exists-p comint-input-ring-file-name)
+                        (time-less-p
+                         (time-add
+                          (file-attribute-modification-time
+                           (file-attributes comint-input-ring-file-name))
+                          5)
+                         (current-time)))))
+      (comint-write-input-ring))
+    (kill-buffer (current-buffer))))
+
+(defun my/comint-save-history ()
+  "Let all comint-mode save `input-ring' history cross session."
+  (let* ((proc (get-buffer-process (current-buffer)))
+         (program (file-name-base (car (process-command proc)))))
+    (setq-local comint-input-ring-file-name
+                (expand-file-name program my/comint-dir))
+    (comint-read-input-ring t)
+    (advice-add (process-sentinel proc) :after
+                #'my/advice-comint-save-history-sentinel)))
+(add-hook 'comint-exec-hook #'my/comint-save-history)
 
 
 

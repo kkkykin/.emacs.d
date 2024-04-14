@@ -215,7 +215,9 @@
   (setopt
    viper-major-mode-modifier-list
    (append '((sql-interactive-mode insert-state viper-comint-mode-modifier-map)
-             (sql-interactive-mode vi-state viper-comint-mode-modifier-map))
+             (sql-interactive-mode vi-state viper-comint-mode-modifier-map)
+             (inferior-python-mode insert-state viper-comint-mode-modifier-map)
+             (inferior-python-mode vi-state viper-comint-mode-modifier-map))
            viper-major-mode-modifier-list))
   (dolist (mode '( change-log-mode diff-mode dun-mode org-mode
                    outline-mode vc-git-log-edit-mode reb-mode
@@ -718,9 +720,7 @@
 (use-package sql
   :bind
   (:map sql-mode-map
-        ("C-c C-p" . sql-connect))
-  :custom
-  (sql-input-ring-file-name (locate-user-emacs-file "sql-history.eld")))
+        ("C-c C-p" . sql-connect)))
 
 (use-package dired
   :custom
