@@ -38,13 +38,11 @@
   (let ((program (mw/cmdproxy-real-program-name command)))
     (find-operation-coding-system 'call-process program)))
 
-(defun mw/advice-shell-command-coding-fix (orig-fun &rest args)
-  "Fix coding system for by change I/O coding-system."
+(define-advice shell-command (:around (orig-fun &rest args) fix-coding)
   (let* ((coding-system (mw/find-shell-command-coding-system (car args)))
          (coding-system-for-read (car coding-system))
          (coding-system-for-write (cdr coding-system)))
     (apply orig-fun args)))
-(advice-add 'shell-command :around #'mw/advice-shell-command-coding-fix)
 
 (defun mw/output-coding-system-fix (input output)
   "Fix coding system by convert string."
@@ -119,21 +117,20 @@
 
 ;; dired
 
-(defun mw/advice-dired-shell-stuff-it (args)
-  "Fix `;' cannot sequentially execute command on windows."
-  (when-let* ((cmd (car args))
-              (fix-p (string-match-p ";[ \t]*&?[ \t]*\\'" cmd))) 
-    (setcar args
-            (replace-regexp-in-string "\\(.*\\);[ \t]*\\(&?[ \t]*\\)\\'"
-                                      "/wait \\1\\2" cmd)))
-  args)
 (with-eval-after-load 'dired-aux
   (dolist (item `(("\\.exe\\'" .
                    ,(let ((cab (string-replace "/" "\\" (concat temporary-file-directory "cab-" (md5 (system-name))))))
                       (format "makecab %%i %s && copy /b/y \"%s\"+\"%s\" %%o & del /q/f \"%s\""
                               cab (string-replace "/" "\\" (executable-find "extrac32")) cab cab)))))
     (add-to-list 'dired-compress-files-alist item))
-  (advice-add 'dired-shell-stuff-it :filter-args #'mw/advice-dired-shell-stuff-it))
+  (define-advice dired-shell-stuff-it (:filter-args (args) fix-seqentially-exec)
+    "Fix `;' cannot sequentially execute command on windows."
+    (when-let* ((cmd (car args))
+                (fix-p (string-match-p ";[ \t]*&?[ \t]*\\'" cmd))) 
+      (setcar args
+              (replace-regexp-in-string "\\(.*\\);[ \t]*\\(&?[ \t]*\\)\\'"
+                                        "/wait \\1\\2" cmd)))
+    args))
 
 (setq grep-program "ug"
       grep-use-null-device nil
@@ -169,6 +166,18 @@
 
 (with-eval-after-load 'viper
   (add-hook 'viper-vi-state-hook (lambda () (w32-set-ime-open-status nil))))
+
+
+;; pcmpl
+
+(with-eval-after-load 'pcmpl-git
+  (define-advice pcomplete-from-help (:filter-args (args) fix-git-help)
+    "Full document of `git' not work on windows."
+    (let ((cmd (car args)))
+      (when (and (equal `(,vc-git-program "help") (seq-take cmd 2))
+                 (not (string= "-a" (caddr cmd))))
+        (setcar args (list vc-git-program (elt cmd 2) "-h"))))
+    args))
 
 (provide 'init-winnt)
 ;;; init-winnt.el ends here

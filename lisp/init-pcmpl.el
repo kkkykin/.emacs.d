@@ -106,21 +106,5 @@
                                  "\\(.+/\\)[^/]+\\'" "\"'\\1\'**\""
                                  (pcomplete-arg))))))))))
 
-
-;; git
-
-(defun my/advice-pcomplete-from-help (args)
-  "Fix `git help subcmd' not work on windows."
-  (let ((cmd (car args)))
-    (when (and (equal `(,vc-git-program "help") (seq-take cmd 2))
-               (not (string= "-a" (caddr cmd))))
-      (setcar args (list vc-git-program (elt cmd 2) "-h"))))
-  args)
-
-(when my/sys-winnt-p
-  (with-eval-after-load 'pcmpl-git
-    (advice-add 'pcomplete-from-help :filter-args
-                #'my/advice-pcomplete-from-help)))
-
 (provide 'init-pcmpl)
 ;;; init-pcmpl.el ends here
