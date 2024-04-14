@@ -30,8 +30,7 @@
 (defcustom my/comint-dir (locate-user-emacs-file "comint/")
   "Directory where comint saves data."
   :type 'directory
-  :group 'my
-  :set (make-directory my/comint-dir t))
+  :group 'my)
 
 (defun my/shell-setup ()
   "Setup various shell in shell-mode."
@@ -67,8 +66,8 @@
     (setq-local comint-input-ring-file-name
                 (expand-file-name program my/comint-dir))
     (comint-read-input-ring t)
-    (advice-add (process-sentinel proc) :after
-                #'my/advice-comint-save-history-sentinel)))
+    (add-function :after (process-sentinel proc)
+                  #'my/advice-comint-save-history-sentinel)))
 (add-hook 'comint-exec-hook #'my/comint-save-history)
 
 
