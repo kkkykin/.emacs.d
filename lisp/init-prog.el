@@ -14,10 +14,10 @@
               (ts-fn (intern (format "%s-ts-mode"
                                      (pcase name
                                        ("javascript" "js")
-                                       (t name)))))
+                                       (_ name)))))
               (ts-fnp (functionp ts-fn))
               (ori-fn (pcase lan
-                        (t (or (seq-some
+                        (_ (or (seq-some
                                 (lambda (x) (and (string-match-p (car x) (concat "a." name)) (cdr x)))
                                 auto-mode-alist)
                                (and (functionp fn) fn)))))
@@ -28,7 +28,7 @@
                      (pcase lan
                        ('yaml `("\\.ya?ml\\'" . ,ts-fn))
                        ('dockerfile `("\\(?:Dockerfile\\(?:\\..*\\)?\\|\\.[Dd]ockerfile\\)\\'" . ,ts-fn))
-                       (t `(,(format "\\.%s\\'" name) . ,ts-fn))))))))
+                       (_ `(,(format "\\.%s\\'" name) . ,ts-fn))))))))
 
 (with-eval-after-load 'treesit
   (mp/ts-mode-enable))
