@@ -259,16 +259,16 @@
 
 ;; Newsticker
 
-(defcustom mn/rss-bridge-list '("https://rss-bridge.org/bridge01/"
-                                ;; "https://rss-bridge.lewd.tech/"
-                                "https://rss.nixnet.services/"
-                                "https://wtf.roflcopter.fr/rss-bridge/"
-                                "https://rssbridge.flossboxin.org.in/")
+(defcustom mn/rss-bridge-list '("rss-bridge.kkky.fun:2053"
+                                "rss-bridge.org/bridge01"
+                                "rss.nixnet.services"
+                                "wtf.roflcopter.fr/rss-bridge"
+                                "rssbridge.flossboxin.org.in")
   "Public RSS-Bridge Server."
   :group 'my
   :type '(repeat string))
 
-(defcustom mn/rss-hub-list '("https://rsshub.zzzr.eu.org/"
+(defcustom mn/rss-hub-list '("https://rsshub.kkky.fun/"
                              "https://rsshub.rssforever.com/"
                              "https://rsshub.feeded.xyz/"
                              "https://hub.slarker.me/"
@@ -292,10 +292,22 @@
   :group 'my
   :type 'string)
 
-(defun mn/rss-bridge-generator (bridge)
+(defun mn/rss-bridge-generator (bridge &optional proxy cache-timeout)
   "Generate atom feed via rss-bridge."
-  (concat mn/rss-bridge-server
-          "?action=display&format=Atom&bridge=" bridge))
+  (if-let* ((url (concat "https://" mn/rss-bridge-server))
+            (obj (url-generic-parse-url url))
+            (request (format "%s/?action=display&format=Atom&bridge=%s"
+                             url bridge))
+            (found (car (auth-source-search :host (url-host obj)
+                                            :port (url-portspec obj)
+                                            :max 1))))
+      (replace-regexp-in-string
+       "\\`https://\\(.+\\)"
+       (format "https://%s:%s@\\1&_noproxy=%s&_cache_timeout=%d"
+               (plist-get found :user) (auth-info-password found)
+               (if proxy "off" "on") (if cache-timeout cache-timeout 1800))
+       request)
+    request))
 
 (defun mn/rss-bridge-wp (blog limit &optional content)
   "Returns the newest full posts of a WordPress powered website."
