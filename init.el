@@ -181,6 +181,7 @@
   (:map viper-vi-global-user-map
         ("zE" . duplicate-dwim)
         ("zf" . org-open-at-point-global)
+        ("zL" . org-insert-link-global)
         ("zr" . re-builder)
         ("zR" . rename-visited-file)
         ("zt" . transpose-sentences)
@@ -722,8 +723,18 @@
   :bind
   (:map sql-mode-map
         ("C-c C-p" . sql-connect))
+  (:map sql-interactive-mode-map
+        ("C-c C-y" . sql-copy-column) 
+        ("C-c C-k a" . sql-list-all)
+        ("C-c C-k t" . sql-list-table))
   :custom
-  (sql-input-ring-file-name (locate-user-emacs-file "sql-history.eld")))
+  (sql-input-ring-file-name (locate-user-emacs-file "sql-history.eld"))
+  :config
+  (keymap-unset sql-interactive-mode-map "C-c C-l a")
+  (keymap-unset sql-interactive-mode-map "C-c C-l t")
+  (define-keymap :keymap sql-interactive-mode-map
+    "C-c C-w" #'backward-kill-word
+    "C-c C-l" #'comint-dynamic-list-input-ring))
 
 (use-package dired
   :custom
@@ -1136,6 +1147,7 @@
       "** TODO %?\n%U\n%i\n%a"))))
 
 (use-package ol
+  :commands org-insert-link-global
   :custom
   (org-id-link-to-org-use-id 'create-if-interactive)
   (org-link-use-indirect-buffer-for-internals t)

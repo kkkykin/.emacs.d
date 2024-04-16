@@ -199,9 +199,9 @@ with `universal argument', select all records."
 
 (with-eval-after-load 'sql
   (define-keymap :keymap sql-mode-map
-    "C-c C-l s" #'mp/sql-table-selector)
+    "C-c C-k s" #'mp/sql-table-selector)
   (define-keymap :keymap sql-interactive-mode-map
-    "C-c C-l s" #'mp/sql-table-selector)
+    "C-c C-k s" #'mp/sql-table-selector)
   (define-abbrev-table 'sql-mode-abbrev-table
     '(("proc" #1="" tempo-template-mp/sql-create-procedure)
       ("fun" #1# tempo-template-mp/sql-create-function)
