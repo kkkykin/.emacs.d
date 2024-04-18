@@ -1333,6 +1333,12 @@
   (corfu-popupinfo-delay '(0.25 . 0.1))
   (corfu-popupinfo-hide nil))
 
+(use-package separedit
+  :if (package-installed-p 'separedit))
+
+(use-package lentic
+  :if (package-installed-p 'lentic))
+
 (use-package powershell
   :if (package-installed-p 'powershell))
 
