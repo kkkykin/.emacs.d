@@ -32,7 +32,7 @@
   :group 'my
   :type 'string)
 
-(defun my/default-callback (&rest args)
+(defun mn/default-callback (&rest args)
   "Test default callback."
   (message (if args "Up" "Down")))
 
@@ -180,7 +180,7 @@
                                         mn/img-cdn-server))
            (apply orig-fun args))
           (t (apply orig-fun args)))))
-(advice-add #'url-retrieve-internal :around #'my/advice-url-retrieve)
+(advice-add #'url-retrieve-internal :around #'mn/advice-url-retrieve)
 
 (defun mn/proxy-up-p (&optional proxy callback)
   "Test Proxy availability."
