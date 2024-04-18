@@ -169,7 +169,8 @@
               viper-ESC-moves-cursor-back nil
               viper-mode t)
   :hook (window-setup
-         (edebug-mode . viper-change-state-to-emacs))
+         (( change-log-mode edebug-mode org-mode log-edit-mode)
+          . viper-change-state-to-insert))
   :bind
   (:map viper-insert-global-user-map
         ("M-p" . viper-insert-prev-from-insertion-ring)
@@ -221,8 +222,7 @@
              (inferior-python-mode insert-state viper-comint-mode-modifier-map)
              (inferior-python-mode vi-state viper-comint-mode-modifier-map))
            viper-major-mode-modifier-list))
-  (dolist (mode '( change-log-mode diff-mode dun-mode org-mode
-                   outline-mode vc-git-log-edit-mode reb-mode
+  (dolist (mode '( diff-mode dun-mode outline-mode reb-mode
                    sql-interactive-mode))
     (setq viper-vi-state-mode-list (delq mode viper-vi-state-mode-list))
     (add-to-list 'viper-insert-state-mode-list mode)))
