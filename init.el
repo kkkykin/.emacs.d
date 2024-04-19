@@ -1336,15 +1336,17 @@
 (use-package separedit
   :if (package-installed-p 'separedit)
   :hook (separedit-buffer-creation . auto-fill-mode)
-  :bind
-  (:map prog-mode-map ("C-c '" . separedit))
-  (:map minibuffer-local-map ("C-c '" . separedit))
-  (:map help-mode-map ("C-c '" . separedit))
+  :bind ("C-c '" . separedit)
   :custom
   (separedit-default-mode 'org-mode)
   (separedit-preserve-string-indentation t)
   (separedit-continue-fill-column t)
-  (separedit-remove-trailing-spaces-in-comment t))
+  (separedit-remove-trailing-spaces-in-comment t)
+  :config
+  (with-eval-after-load 'viper
+    (dolist (mode '( separedit-mode separedit-single-quote-string-mode
+                     separedit-double-quote-string-mode))
+      (add-to-list 'viper-insert-state-mode-list mode))))
 
 (use-package lentic
   :if (package-installed-p 'lentic))
