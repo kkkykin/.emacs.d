@@ -173,8 +173,6 @@
           . viper-change-state-to-insert))
   :bind
   (:map viper-insert-global-user-map
-        ("M-p" . viper-insert-prev-from-insertion-ring)
-        ("M-n" . viper-insert-next-from-insertion-ring)
         ("C-t" . transpose-chars)
         ("C-d" . delete-char)
         ("C-w" . kill-region)
@@ -195,6 +193,9 @@
         ("M-p" . viper-prev-destructive-command)
         ("M-n" . viper-next-destructive-command)
         ("C-v" . scroll-up))
+  (:repeat-map my/viper-insert-repeat-map
+               ("p" . viper-insert-prev-from-insertion-ring)
+               ("n" . viper-insert-next-from-insertion-ring))
   :custom
   (viper-want-ctl-h-help t)
   (viper-no-multiple-ESC nil)
@@ -203,8 +204,6 @@
   :custom-face
   (viper-minibuffer-emacs ((t (:background "unspecified" :foreground "unspecified"))))
   :config
-  (keymap-unset viper-insert-basic-map "C-c M-n")
-  (keymap-unset viper-insert-basic-map "C-c M-p")
   (fset 'viper-del-backward-char-in-insert 'backward-delete-char-untabify)
   (with-eval-after-load 'elec-pair
     (keymap-set viper-insert-global-user-map "<backspace>"
@@ -973,10 +972,8 @@
 (use-package comint
   :bind
   (:map comint-mode-map
-        ("SPC" . comint-magic-space)
-        ("C-c M-n" . comint-next-input)
-        ("C-c M-p" . comint-previous-input))
-  (:repeat-map comint-input-repeat-map
+        ("SPC" . comint-magic-space))
+  (:repeat-map my/comint-input-repeat-map
                ("p" . comint-previous-input)
                ("n" . comint-next-input))
   :custom
