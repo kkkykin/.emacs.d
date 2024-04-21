@@ -1335,9 +1335,8 @@
   (separedit-remove-trailing-spaces-in-comment t)
   :config
   (with-eval-after-load 'viper
-    (dolist (mode '( separedit-mode separedit-single-quote-string-mode
-                     separedit-double-quote-string-mode))
-      (add-to-list 'viper-insert-state-mode-list mode))))
+    (add-hook 'separedit-buffer-creation-hook
+              #'viper-change-state-to-insert)))
 
 (use-package lentic
   :if (package-installed-p 'lentic))
