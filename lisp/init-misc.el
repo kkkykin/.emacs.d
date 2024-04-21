@@ -308,7 +308,7 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
             `(,(replace-regexp-in-string " \\. \\\"(\\\"\\(.+\\)\\\")\\\""
                                          "\\1" cmd))))
   args)
-(with-eval-after-load 'find-grep
+(with-eval-after-load 'find-dired
   (when (string= find-program "fd")
     (advice-add 'find-dired-with-command :filter-args #'my/advice-find-dired-with-command-maybe-fd)
     (setq find-name-arg "-g"
