@@ -390,8 +390,6 @@
   (windmove-wrap-around t))
 
 (use-package server :defer 5
-  :custom
-  (server-client-instructions nil)
   :config
   (unless (server-running-p)
     (server-start)))
