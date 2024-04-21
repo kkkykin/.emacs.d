@@ -554,8 +554,7 @@
 
 (use-package add-log
   :custom
-  (add-log-keep-changes-together t)
-  (change-log-version-info-enabled t))
+  (add-log-keep-changes-together t))
 
 (use-package python
   :custom
