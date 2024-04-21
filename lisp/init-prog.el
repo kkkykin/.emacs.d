@@ -224,6 +224,18 @@ From https://christiantietze.de/posts/2024/01/emacs-sqlite-mode-open-sqlite-file
 
 (add-to-list 'magic-mode-alist '("SQLite format 3\x00" . mp/sqlite-view-file-magically))
 
+;; vc
+
+(define-skeleton mp/vc-commit-template
+  "VC Conventional Commits.
+   https://www.conventionalcommits.org/en/v1.0.0/"
+  "Scope: "
+  (completing-read "Type: "
+                   '("fix" "feat" "build" "chore" "ci" "docs" "style"
+                     "refactor" "perf" "test"))
+  "("str"): ")
+(add-hook 'log-edit-hook #'mp/vc-commit-template 1)
+
 
 (provide 'init-prog)
 ;;; init-prog.el ends here
