@@ -648,11 +648,8 @@
   (newsticker-retrieval-interval 1800)
   (newsticker-retrieval-method 'extern)
   (newsticker-wget-name "curl")
-  (newsticker-wget-arguments '("-Lkqsm30" "-A\"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36 Edg/117.0.2045.35\""))
+  (newsticker-wget-arguments '("-Lkqsm30" "-A" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36 Edg/117.0.2045.35"))
   :config
-  (make-directory (file-name-concat newsticker-dir "saved") t)
-  ;; (when (require 'init-net nil t)
-  ;;   (load "init-rss.el.gpg" t t))
   (when (y-or-n-p-with-timeout "Do you want to run newsticker? " 30 t)
     (newsticker-start t)))
 
