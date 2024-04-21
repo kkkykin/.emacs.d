@@ -234,7 +234,8 @@ From https://christiantietze.de/posts/2024/01/emacs-sqlite-mode-open-sqlite-file
                    '("fix" "feat" "build" "chore" "ci" "docs" "style"
                      "refactor" "perf" "test"))
   "("str"): ")
-(add-hook 'log-edit-hook #'mp/vc-commit-template 1)
+(with-eval-after-load 'log-edit
+  (add-hook 'log-edit-hook #'mp/vc-commit-template 1))
 
 
 (provide 'init-prog)
