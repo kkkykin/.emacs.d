@@ -17,17 +17,17 @@
   :type 'string)
 
 ;; https://hub.zzzr.eu.org/curl/curl/wiki/DNS-over-HTTPS E
-(defcustom mn/doh-server-list '("https://9.9.9.9/dns-query"
-                                "https://doh.bortzmeyer.fr"
-                                "https://dns.digitalsize.net/dns-query"
-                                "https://1.1.1.1/dns-query"
-                                "https://1.12.12.12/dns-query"
-                                "https://223.6.6.6/dns-query")
+(defcustom mn/doh-server-list '("9.9.9.9/dns-query"
+                                "doh.bortzmeyer.fr"
+                                "dns.digitalsize.net/dns-query"
+                                "1.1.1.1/dns-query"
+                                "1.12.12.12/dns-query"
+                                "223.6.6.6/dns-query")
   "Public DOH Server."
   :group 'my
   :type '(repeat string))
 
-(defcustom mn/doh-server (car mn/doh-server-list)
+(defcustom mn/doh-server (concat "https://" (car mn/doh-server-list))
   "Default DOH Server."
   :group 'my
   :type 'string)
@@ -268,36 +268,35 @@
   :group 'my
   :type '(repeat string))
 
-(defcustom mn/rss-hub-list '("https://rsshub.kkky.fun/"
-                             "https://rsshub.rssforever.com/"
-                             "https://rsshub.feeded.xyz/"
-                             "https://hub.slarker.me/"
-                             "https://rsshub.liumingye.cn/"
-                             "https://rsshub-instance.zeabur.app/"
-                             "https://rss.fatpandac.com/"
-                             "https://rsshub.pseudoyu.com/"
-                             "https://rsshub.friesport.ac.cn/"
-                             "https://rsshub.atgw.io/")
+(defcustom mn/rss-hub-list '("rsshub.kkky.fun/"
+                             "rsshub.rssforever.com/"
+                             "rsshub.feeded.xyz/"
+                             "hub.slarker.me/"
+                             "rsshub.liumingye.cn/"
+                             "rsshub-instance.zeabur.app/"
+                             "rss.fatpandac.com/"
+                             "rsshub.pseudoyu.com/"
+                             "rsshub.friesport.ac.cn/"
+                             "rsshub.atgw.io/")
   "Public RSSHub Server."
   :group 'my
   :type '(repeat string))
 
-(defcustom mn/rss-bridge-server (car mn/rss-bridge-list)
+(defcustom mn/rss-bridge-server (concat "https://" (car mn/rss-bridge-list))
   "RSS bridge default server."
   :group 'my
   :type 'string)
 
-(defcustom mn/rss-hub-server (car mn/rss-hub-list)
+(defcustom mn/rss-hub-server (concat "https://" (car mn/rss-hub-list))
   "RSS hub default server."
   :group 'my
   :type 'string)
 
 (defun mn/rss-bridge-generator (bridge &optional proxy cache-timeout)
   "Generate atom feed via rss-bridge."
-  (if-let* ((url (concat "https://" mn/rss-bridge-server))
-            (obj (url-generic-parse-url url))
+  (if-let* ((obj (url-generic-parse-url mn/rss-bridge-server))
             (request (format "%s/?action=display&format=Atom&bridge=%s"
-                             url bridge))
+                             mn/rss-bridge-server bridge))
             (found (car (auth-source-search :host (url-host obj)
                                             :port (url-portspec obj)
                                             :max 1))))
@@ -525,6 +524,7 @@ items are fetched from each feed."
   (advice-add 'newsticker-save-item :before-until #'mn/advice-newsticker-save-item)
   (dolist (fn '(newsticker--image-sentinel newsticker--sentinel-work))
     (advice-add fn :around #'my/advice-silence-messages))
+  (make-directory (file-name-concat newsticker-dir "saved") t)
   (load "init-rss.el.gpg" t t)
   (define-keymap :keymap newsticker-treeview-mode-map
     "DEL" #'mn/newsticker-treeview-prev-page))
