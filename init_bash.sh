@@ -3,4 +3,4 @@ myprompt () {
 }
 PROMPT_COMMAND=myprompt
 
-export GIT_PAGER=''
+export GIT_PAGER='' EDITOR=emacsclient
