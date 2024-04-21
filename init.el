@@ -378,7 +378,9 @@
 (use-package electric
   :custom
   (electric-layout-rules '())
-  :hook ((text-mode fundamental-mode) . (lambda () (electric-pair-local-mode -1)))
+  :hook
+  (((change-log-mode . log-edit-mode) . electric-pair-local-mode)
+   ((text-mode fundamental-mode) . (lambda () (electric-pair-local-mode -1))))
   :config
   (electric-pair-mode)
   (electric-layout-mode))
@@ -550,9 +552,6 @@
   (vc-command-messages 'log))
 
 (use-package add-log
-  :bind
-  (:map change-log-mode-map
-        ("(" . skeleton-pair-insert-maybe))
   :custom
   (add-log-keep-changes-together t)
   (change-log-version-info-enabled t))
