@@ -967,9 +967,6 @@
   :bind
   (:map comint-mode-map
         ("SPC" . comint-magic-space))
-  (:repeat-map my/comint-input-repeat-map
-               ("p" . comint-previous-input)
-               ("n" . comint-next-input))
   :custom
   (comint-input-autoexpand 'input)
   (comint-insert-previous-argument-from-end t)
