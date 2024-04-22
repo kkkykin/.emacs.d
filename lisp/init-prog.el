@@ -230,10 +230,13 @@ From https://christiantietze.de/posts/2024/01/emacs-sqlite-mode-open-sqlite-file
   "VC Conventional Commits.
    https://www.conventionalcommits.org/en/v1.0.0/"
   "Scope: "
-  (completing-read "Type: "
-                   '("fix" "feat" "build" "chore" "ci" "docs" "style"
-                     "refactor" "perf" "test"))
-  "("str"): ")
+  (let ((type (completing-read "Type: "
+                               '("fix" "feat" "build" "chore" "ci" "docs"
+                                 "style" "refactor" "perf" "test" "merge"))))
+    (pcase type
+      ("merge" (format "Merge branch '%s'"
+                       (vc-read-revision "Merging branch: ")))
+      (_ (format "%s(%s): " type (skeleton-read "Scope: "))))))
 (with-eval-after-load 'log-edit
   (add-hook 'log-edit-hook #'mp/vc-commit-template 1))
 
