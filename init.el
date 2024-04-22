@@ -379,7 +379,7 @@
   :custom
   (electric-layout-rules '())
   :hook
-  (((change-log-mode . log-edit-mode) . electric-pair-local-mode)
+  (((change-log-mode log-edit-mode) . electric-pair-local-mode)
    ((text-mode fundamental-mode) . (lambda () (electric-pair-local-mode -1))))
   :config
   (electric-pair-mode)
