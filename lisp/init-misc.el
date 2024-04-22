@@ -553,5 +553,48 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
           (file-attributes file))
          seconds))))
 
+
+;; etc
+
+(defun my/generate-uuid (&optional obj)
+  "Generate UUID format string.
+   See http://xahlee.info/emacs/emacs/elisp_generate_uuid.html."
+  (interactive)
+  (if obj
+      (let ((xstr (md5 obj)))
+        (format "%s-%s-4%s-%s-%s"
+                (substring xstr 0 8)
+                (substring xstr 8 12)
+                (substring xstr 12 15)
+                (substring xstr 16 20)
+                (substring xstr 20 32)))
+    (with-temp-buffer
+      (cond
+       ((executable-find "powershell")
+        (call-process "powershell" nil (current-buffer) nil
+                      "-Command" "[guid]::NewGuid().toString()"))
+       ((executable-find "uuidgen")
+        (call-process "uuidgen" nil (current-buffer nil)))
+       (t
+        (let ((xstr (md5 (format "%s%s%s%s%s%s%s%s%s%s"
+                                 (user-uid)
+                                 (emacs-pid)
+                                 (system-name)
+                                 (user-full-name)
+                                 (current-time)
+                                 (emacs-uptime)
+                                 (garbage-collect)
+                                 (buffer-string)
+                                 (random)
+                                 (recent-keys)))))
+          (insert (format "%s-%s-4%s-%s%s-%s"
+                          (substring xstr 0 8)
+                          (substring xstr 8 12)
+                          (substring xstr 13 16)
+                          (format "%x" (+ 8 (random 4)))
+                          (substring xstr 17 20)
+                          (substring xstr 20 32))))))
+      (buffer-substring-no-properties 1 37))))
+
 (provide 'init-misc)
 ;;; init-misc.el ends here
