@@ -17,7 +17,6 @@
 
 ;; Startup speed, annoyance suppression
 (setq package-enable-at-startup nil)
-(setq gc-cons-threshold 10000000)
 (setq byte-compile-warnings '(not obsolete))
 (setq warning-suppress-log-types '((comp) (bytecomp)))
 (setq native-comp-async-report-warnings-errors 'silent)
@@ -25,16 +24,31 @@
 ;; Silence stupid startup message
 (setq inhibit-startup-echo-area-message (user-login-name))
 
+(setq gc-cons-threshold most-positive-fixnum ; 2^61 bytes
+      gc-cons-percentage 0.6)
+(defvar my/file-name-handler-alist-cache file-name-handler-alist)
+(setq file-name-handler-alist nil)
+(defun my/restore-post-init-settings ()
+  (setq gc-cons-threshold 16777216 ; 16mb
+        gc-cons-percentage 0.1)
+  (setq file-name-handler-alist my/file-name-handler-alist-cache))
+(add-hook 'emacs-startup-hook #'my/restore-post-init-settings)
+
 ;; Android Setup
-(when (eq system-type 'android)
-  (setenv "PATH"
-          (format "%s:%s" "/data/data/com.termux/files/usr/bin"
-                  (getenv "PATH")))
-  (setenv "LD_LIBRARY_PATH"
-          (format "%s:%s"
-                  ;; "/system/lib64"
-                  "/data/data/com.termux/files/usr/lib"
-                  (getenv "LD_LIBRARY_PATH")))
-  (setq image-scaling-factor 2)
-  (push "/data/data/com.termux/files/usr/bin" exec-path)
-  (make-symbolic-link "/storage/emulated/0/Fonts/" "~/fonts/" t))
+(if (eq system-type 'android)
+    (progn (setenv "PATH"
+                   (format "%s:%s" "/data/data/com.termux/files/usr/bin"
+                           (getenv "PATH")))
+           (setenv "LD_LIBRARY_PATH"
+                   (format "%s:%s"
+                           ;; "/system/lib64"
+                           "/data/data/com.termux/files/usr/lib"
+                           (getenv "LD_LIBRARY_PATH")))
+           (setq image-scaling-factor 2)
+           (push "/data/data/com.termux/files/usr/bin" exec-path)
+           (make-symbolic-link "/storage/emulated/0/Fonts/" "~/fonts/" t))
+  (push '(scroll-bar-mode . nil) default-frame-alist)
+  (push '(tool-bar-mode . nil) default-frame-alist)
+  (scroll-bar-mode -1)
+  (tool-bar-mode -1)
+  (menu-bar-mode -1))

@@ -40,7 +40,6 @@
   (scroll-conservatively 97)
   (make-cursor-line-fully-visible nil)
   (blink-cursor-mode nil)
-  (scroll-bar-mode nil)
   (column-number-mode t)
   (shift-select-mode nil)
   (global-prettify-symbols-mode t)
@@ -70,6 +69,12 @@
   (large-hscroll-threshold 1000)
   (syntax-wholeline-max 1000)
   :config
+  (defun my/defer-gc ()
+    (setq gc-cons-threshold most-positive-fixnum))
+  (defun my/do-restore-gc ()
+    (setq gc-cons-threshold 16777216))
+  (defun my/restore-gc ()
+    (run-at-time 1 nil #'my/do-restore-gc))
   (put 'buffer-file-coding-system 'safe-local-variable 'symbolp)
   (prefer-coding-system 'utf-8)
   (set-charset-priority 'unicode))
@@ -141,7 +146,9 @@
   (minibuffer-regexp-mode t)
   :hook
   ((emacs-startup . minibuffer-electric-default-mode)
-   (emacs-startup . savehist-mode)))
+   (emacs-startup . savehist-mode)
+   (minibuffer-setup . my/defer-gc)
+   (minibuffer-exit . my/restore-gc)))
 
 (use-package icomplete
   :hook (emacs-startup . fido-mode)
@@ -355,19 +362,13 @@
   (add-to-list 'auto-mode-alist
                '("[^/]\\.dired\\'" . dired-virtual-mode)))
 
-(use-package menu-bar
-  :config
-  (unless my/sys-android-p
-    (menu-bar-mode -1)))
-
 (use-package tool-bar
+  :if my/sys-android-p
   :custom
   (tool-bar-button-margin 12)
   (tool-bar-position 'bottom)
   :config
-  (if my/sys-android-p
-      (modifier-bar-mode)
-    (tool-bar-mode -1)))
+  (modifier-bar-mode))
 
 (use-package speedbar
   :config
