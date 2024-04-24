@@ -318,7 +318,7 @@
 
 (use-package display-line-numbers
   :unless my/sys-android-p
-  :hook (prog-mode conf-mode edmacro-mode))
+  :hook (prog-mode conf-mode edmacro-mode yaml-ts-mode))
 
 (use-package subword
   :unless my/sys-android-p
