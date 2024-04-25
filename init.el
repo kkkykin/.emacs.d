@@ -211,6 +211,7 @@
   :custom-face
   (viper-minibuffer-emacs ((t (:background "unspecified" :foreground "unspecified"))))
   :config
+  (keymap-unset viper-dired-modifier-map "/" t)
   (fset 'viper-del-backward-char-in-insert 'backward-delete-char-untabify)
   (with-eval-after-load 'elec-pair
     (keymap-set viper-insert-global-user-map "<backspace>"
