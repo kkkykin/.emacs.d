@@ -319,7 +319,7 @@
 
 (use-package display-line-numbers
   :unless my/sys-android-p
-  :hook (prog-mode conf-mode edmacro-mode yaml-ts-mode))
+  :hook (emacs-startup . global-display-line-numbers-mode))
 
 (use-package subword
   :unless my/sys-android-p
