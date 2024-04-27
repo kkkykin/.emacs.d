@@ -1148,6 +1148,9 @@
   :custom
   (org-plantuml-exec-mode 'plantuml)
   :config
+  (setq org-babel-default-header-args
+        (cons '(:noweb . "yes")
+              (assq-delete-all :noweb org-babel-default-header-args)))
   (org-babel-do-load-languages
    'org-babel-load-languages
    (seq-filter
