@@ -474,6 +474,80 @@ items are fetched from each feed."
      extra)
     ))
 
+(defun mn/atom-builder (title link entrys &optional id updated author)
+  "Create brief atom feeds."
+  (with-temp-buffer
+    (insert-file-contents-literally (expand-file-name "atom.xml" auto-insert-directory))
+    (goto-char (point-min))
+    (let ((updated (or updated (format-time-string "%FT%TZ")))
+          (author (or author (url-host (url-generic-parse-url link))))
+          (id (or id (concat "urn:uuid:" (my/generate-uuid (concat title link updated)))))
+          (link (string-replace "&" "&amp;" link)))
+      (search-forward "{{title}}" nil nil 1) (replace-match title t t)
+      (search-forward "{{link}}" nil nil 1) (replace-match link t t)
+      (search-forward "{{updated}}" nil nil 1) (replace-match updated t t)
+      (search-forward "{{author}}" nil nil 1) (replace-match author t t)
+      (search-forward "{{id}}" nil nil 1) (replace-match id t t)
+      (re-search-forward "<entry>[^z-a]*</entry>" nil nil 1)
+      (with-restriction (match-beginning 0) (match-end 0)
+        (let ((entry (buffer-string)))
+          (delete-region (point-min) (point-max))
+          (mapcar
+           (lambda (a)
+             (insert (concat "\n  " entry))
+             (goto-char (point-min))
+             (let* ((updated (or (plist-get a :updated) updated))
+                    (author (or (plist-get a :author) author))
+                    (title (or (plist-get a :title) title))
+                    (link (string-replace "&" "&amp;" (or (plist-get a :link) link)))
+                    (id (or (plist-get a :id)
+                            (concat "urn:uuid:"
+                                    (my/generate-uuid
+                                     (concat title link updated)))))
+                    (content (plist-get a :content))
+                    (category (plist-get a :category)))
+               (search-forward "{{title}}" nil nil 1) (replace-match title t t)
+               (search-forward "{{author}}" nil nil 1) (replace-match author t t)
+               (search-forward "{{link}}" nil nil 1) (replace-match link t t)
+               (search-forward "{{id}}" nil nil 1) (replace-match id t t)
+               (search-forward "{{updated}}" nil nil 1) (replace-match updated t t)
+               (search-forward "{{content}}" nil nil 1) (replace-match content t t)
+               (search-forward "<category><![CDATA[{{category}}]]></category>" nil nil 1)
+               (replace-match
+                (if category (mapconcat
+                              (lambda (a) (format "<category><![CDATA[%s]]></category>" a))
+                              category "\n    ")
+                  "")
+                t t))
+             (goto-char (point-max)))
+           entrys))))
+    (encode-coding-string (buffer-string) 'utf-8)))
+
+(defun mn/atom-bosszhipin-feeds (query &optional limit)
+  "Boss Zhipin Jobs feeds."
+  (mn/atom-builder
+   (concat "BOSS-" query)
+   "https://www.zhipin.com"
+   (with-temp-buffer
+     (insert-file-contents "d:/project/jobs/boss.json")
+     (goto-char 1)
+     (mapcar
+      (lambda (a)
+        `( :updated ,(format-time-string "%FT%TZ"
+                                         (time-convert
+                                          (/ (gethash "lastModifyTime" a) 1000)))
+           :author ,(gethash "brandName" a)
+           :link ,(format "https://www.zhipin.com/job_detail/%s.html"
+                          (gethash "encryptJobId" a))
+           :category ,(gethash "welfareList" a)
+           :content ,(mapconcat #'identity (vconcat
+                                            (gethash "jobLabels" a)
+                                            (gethash "skills" a))
+                                "<br>")
+           :title ,(format "%s-%s" (gethash "cityName" a)
+                           (gethash "jobName" a))))
+      (gethash "jobList" (gethash "zpData" (json-parse-buffer)))))))
+
 (defun mn/advice-newsticker-list-set-start-time (&rest args)
   "Newsticker retrieve feeds with interval start time."
   (let ((counter 0))
