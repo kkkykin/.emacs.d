@@ -232,8 +232,11 @@ From https://christiantietze.de/posts/2024/01/emacs-sqlite-mode-open-sqlite-file
   "Scope: "
   (let ((type (completing-read "Type: "
                                '("fix" "feat" "build" "chore" "ci" "docs"
-                                 "style" "refactor" "perf" "test" "merge"))))
+                                 "style" "refactor" "perf" "test" "merge"
+                                 "kill" "blank"))))
     (pcase type
+      ("kill" (current-kill 0))
+      ("blank" "")
       ("merge" (format "Merge branch '%s' to '%s'"
                        (vc-read-revision "Merging branch: ")
                        (vc-read-revision "Current branch: ")))
