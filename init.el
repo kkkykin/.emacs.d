@@ -320,7 +320,8 @@
 (use-package display-line-numbers
   :unless my/sys-android-p
   :hook ((emacs-startup . global-display-line-numbers-mode)
-         ((Info-mode
+         ((compilation-mode
+           Info-mode
            newsticker-mode
            newsticker-treeview-mode
            newsticker-treeview-item-mode
