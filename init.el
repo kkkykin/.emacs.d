@@ -1029,6 +1029,7 @@
 
 (use-package treesit :defer 1
   :after prog-mode
+  :custom (treesit-font-lock-level 4)
   :config
   (setq treesit-language-source-alist
         '((bash "https://github.com/tree-sitter/tree-sitter-bash")
