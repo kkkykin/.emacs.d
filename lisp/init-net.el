@@ -499,7 +499,7 @@ items are fetched from each feed."
              (let* ((updated (or (plist-get a :updated) updated))
                     (author (or (plist-get a :author) author))
                     (title (or (plist-get a :title) title))
-                    (link (string-replace "&" "&amp;" (or (plist-get a :link) link)))
+                    (link (or (string-replace "&" "&amp;" (plist-get a :link)) link))
                     (id (or (plist-get a :id)
                             (concat "urn:uuid:"
                                     (my/generate-uuid
