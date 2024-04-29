@@ -866,6 +866,24 @@
   :config
   (fset #'jsonrpc--log-event #'ignore))
 
+(use-package smerge-mode
+  :bind
+  (:repeat-map my/smerge-repeat-map
+               ("n" . smerge-next)
+               ("p" . smerge-prev)
+               ("r" . smerge-resolve)
+               ("a" . smerge-keep-all)
+               ("b" . smerge-keep-base)
+               ("l" . smerge-keep-lower)
+               ("u" . smerge-keep-upper)
+               ("m" . smerge-keep-current)
+               ("E" . smerge-ediff)
+               ("C" . smerge-combine-with-next)
+               ("R" . smerge-refine)
+               ("<" . smerge-diff-base-upper)
+               (">" . smerge-diff-base-lower)
+               ("=" . smerge-diff-upper-lower)))
+
 (use-package ediff
   :custom
   (ediff-use-last-dir t)
