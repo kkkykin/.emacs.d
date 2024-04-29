@@ -593,13 +593,13 @@ Argument EVENT tells what has happened to the process."
                  ("multiBusinessDistrict" ,(plist-get args :multibusinessdistrict)))))))))
 
 (defun mn/newsticker--get-news-by-build
-    (feed-name &optional limit curl-arguments &rest args)
+    (feed-name &optional curl-arguments limit extras)
   "Newsticker build atom feeds."
   (let* ((buffername (concat " *newsticker-curl-" feed-name "*"))
-         (parts (split-string feed-name ","))
+         (parts (split-string feed-name "-" t))
          (channel (car parts))
          (title (cadr parts))
-         (url (mn/newsticker--url-stuff-it channel title args)))
+         (url (mn/newsticker--url-stuff-it channel title extras)))
     (with-current-buffer (get-buffer-create buffername)
       (erase-buffer)
       ;; throw an error if there is an old curl-process around
@@ -665,6 +665,15 @@ Argument EVENT tells what has happened to the process."
   (setq newsticker-wget-arguments
         (append `("--doh-url" ,mn/doh-server) newsticker-wget-arguments)
         eww-retrieve-command (cons newsticker-wget-name newsticker-wget-arguments))
+
+  (define-advice newsticker--get-news-by-funcall
+      (:around (orig-fun feed-name function) build-feeds)
+    "Get feeds maybe by build atom feeds."
+    (if-let* ((item (assoc feed-name newsticker-url-list-defaults)))
+        (mn/newsticker--get-news-by-build
+         feed-name (elt item 4) (elt item 5) (elt item 6))
+      (funcall orig-fun feed-name function)))
+
   (advice-add 'newsticker-start :before #'mn/advice-newsticker-list-set-start-time)
   (advice-add 'newsticker--image-download-by-url :around #'mn/advice-url-retrieve-with-timeout)
   (advice-add 'newsticker--get-news-by-wget :filter-args #'mn/advice-newsticker--get-news-by-wget)
