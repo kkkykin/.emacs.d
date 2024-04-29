@@ -542,7 +542,9 @@ items are fetched from each feed."
                             (gethash "encryptJobId" a))
              :category ,(gethash "welfareList" a)
              :content ,(mapconcat #'identity (vconcat
+                                              (make-vector 1 "<h1>jobLabels</h1>")
                                               (gethash "jobLabels" a)
+                                              (make-vector 1 "<br><h1>Skills</h1>")
                                               (gethash "skills" a))
                                   "<br>")
              :title ,(format "%s-%s" (gethash "cityName" a)
@@ -586,7 +588,7 @@ Argument EVENT tells what has happened to the process."
                  ("payType" ,(plist-get args :paytype))
                  ("experience" ,(plist-get args :experience))
                  ("city" ,(plist-get args :city))
-                 ("query" ,title)
+                 ("query" ,(plist-get args :query))
                  ("scene" ,(plist-get args :scene))
                  ("pageSize" ,(plist-get args :pagesize))
                  ("page" ,(plist-get args :page))
