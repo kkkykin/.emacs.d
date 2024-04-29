@@ -237,9 +237,10 @@ From https://christiantietze.de/posts/2024/01/emacs-sqlite-mode-open-sqlite-file
     (pcase type
       ("kill" (current-kill 0))
       ("blank" "")
-      ("merge" (format "Merge branch '%s' to '%s'"
-                       (vc-read-revision "Merging branch: ")
-                       (vc-read-revision "Current branch: ")))
+      ("merge" (with-temp-buffer
+                 (format "Merge branch '%s' to '%s'"
+                         (vc-read-revision "Merging branch: ")
+                         (vc-read-revision "Current branch: "))))
       (_ (format "%s(%s): " type (skeleton-read "Scope: "))))))
 (with-eval-after-load 'log-edit
   (add-hook 'log-edit-hook #'mp/vc-commit-template 1))
