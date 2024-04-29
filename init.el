@@ -471,6 +471,7 @@
   :custom
   (repeat-exit-key "RET")
   (repeat-exit-timeout 10)
+  (repeat-echo-function #'repeat-echo-mode-line)
   :bind
   (:repeat-map page-navigation-repeat-map
                :exit
