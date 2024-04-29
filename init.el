@@ -992,6 +992,9 @@
   (keymap-unset eshell-command-repeat-map "C-f")
   (keymap-unset eshell-prompt-repeat-map "C-n")
   (keymap-unset eshell-prompt-repeat-map "C-p")
+  (define-advice eshell-send-eof-to-process (:after-until () maybe-kill-eshell)
+    "Kill eshell buffer if no process, like `comint-send-eof'."
+    (kill-current-buffer))
   (add-hook 'eshell-expand-input-functions #'eshell-expand-history-references)
   (dolist (mod '(eshell-smart eshell-elecslash eshell-tramp eshell-xtra))
     (add-to-list 'eshell-modules-list mod)))
