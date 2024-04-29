@@ -325,6 +325,7 @@
   (display-line-numbers-type 'relative)
   :hook ((emacs-startup . global-display-line-numbers-mode)
          ((compilation-mode
+           help-mode
            Info-mode
            newsticker-mode
            newsticker-treeview-mode
