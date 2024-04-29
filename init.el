@@ -226,6 +226,8 @@
    viper-major-mode-modifier-list
    (append '((sql-interactive-mode insert-state viper-comint-mode-modifier-map)
              (sql-interactive-mode vi-state viper-comint-mode-modifier-map)
+             (eshell-mode insert-state viper-comint-mode-modifier-map)
+             (eshell-mode vi-state viper-comint-mode-modifier-map)
              (inferior-python-mode insert-state viper-comint-mode-modifier-map)
              (inferior-python-mode vi-state viper-comint-mode-modifier-map))
            viper-major-mode-modifier-list))
