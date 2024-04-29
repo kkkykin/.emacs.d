@@ -555,7 +555,6 @@ Argument EVENT tells what has happened to the process."
          (exit-status (process-exit-status process))
          (feed-name (process-get  process 'nt-feed-name))
          (feed-channel (process-get  process 'nt-feed-channel))
-         (feed-title (process-get  process 'nt-feed-title))
          (feed-limit (process-get  process 'nt-feed-limit))
          (command (process-command process))
          (feed-url (car (last command)))
@@ -563,7 +562,7 @@ Argument EVENT tells what has happened to the process."
     (when (and (eq p-status 'exit)
                (= exit-status 0))
       (apply (intern (format "my/net-atom-%s-builder" feed-channel))
-             (list feed-title feed-url buffer))
+             (list feed-name feed-url buffer))
       (newsticker--sentinel-work event t feed-name command buffer))))
 
 (defun mn/newsticker--url-stuff-it (channel &optional title args)
@@ -593,13 +592,10 @@ Argument EVENT tells what has happened to the process."
                  ("multiBusinessDistrict" ,(plist-get args :multibusinessdistrict)))))))))
 
 (defun mn/newsticker--get-news-by-build
-    (feed-name &optional curl-arguments limit extras)
+    (feed-name channel &optional curl-arguments limit extras)
   "Newsticker build atom feeds."
-  (let* ((buffername (concat " *newsticker-curl-" feed-name "*"))
-         (parts (split-string feed-name "-" t))
-         (channel (car parts))
-         (title (cadr parts))
-         (url (mn/newsticker--url-stuff-it channel title extras)))
+  (let ((buffername (concat " *newsticker-curl-" feed-name "*"))
+        (url (mn/newsticker--url-stuff-it channel feed-name extras)))
     (with-current-buffer (get-buffer-create buffername)
       (erase-buffer)
       ;; throw an error if there is an old curl-process around
@@ -615,7 +611,6 @@ Argument EVENT tells what has happened to the process."
         (set-process-sentinel proc #'mn/newsticker--sentinel)
         (process-put proc 'nt-feed-name feed-name)
         (process-put proc 'nt-feed-channel channel)
-        (process-put proc 'nt-feed-title title)
         (process-put proc 'nt-feed-limit limit)
         (setq newsticker--process-ids (cons (process-id proc)
                                             newsticker--process-ids))
@@ -668,10 +663,11 @@ Argument EVENT tells what has happened to the process."
 
   (define-advice newsticker--get-news-by-funcall
       (:around (orig-fun feed-name function) build-feeds)
-    "Get feeds maybe by build atom feeds."
+    "Get feeds maybe by build atom feeds.
+     '((\"zzz\" ignore 1 3600 (\"-c\" \"3\") \"boss\" 10 (:dd 3)))"
     (if-let* ((item (assoc feed-name newsticker-url-list-defaults)))
         (mn/newsticker--get-news-by-build
-         feed-name (elt item 4) (elt item 5) (elt item 6))
+         feed-name (nth 5 item) (nth 4 item) (nth 6 item) (nth 7 item))
       (funcall orig-fun feed-name function)))
 
   (advice-add 'newsticker-start :before #'mn/advice-newsticker-list-set-start-time)
