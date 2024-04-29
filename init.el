@@ -40,11 +40,11 @@
   (scroll-conservatively 97)
   (make-cursor-line-fully-visible nil)
   (blink-cursor-mode nil)
+  (line-number-mode nil)
   (column-number-mode t)
   (shift-select-mode nil)
   (global-prettify-symbols-mode t)
   (prettify-symbols-unprettify-at-point t)
-  (display-line-numbers-type 'relative)
   (use-short-answers t)
   (word-wrap-by-category t)
   (custom-file (expand-file-name "custom.el" user-emacs-directory))
@@ -319,6 +319,8 @@
 
 (use-package display-line-numbers
   :unless my/sys-android-p
+  :custom
+  (display-line-numbers-type 'relative)
   :hook ((emacs-startup . global-display-line-numbers-mode)
          ((compilation-mode
            Info-mode
