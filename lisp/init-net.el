@@ -479,7 +479,7 @@ items are fetched from each feed."
   (erase-buffer)
   (insert-file-contents-literally (expand-file-name "atom.xml" auto-insert-directory))
   (goto-char (point-min))
-  (let ((updated (or updated (format-time-string "%FT%TZ")))
+  (let ((updated (or updated (format-time-string "%FT%T%z")))
         (author (or author (url-host (url-generic-parse-url link))))
         (id (or id (concat "urn:uuid:" (my/generate-uuid (concat title link updated)))))
         (link (string-replace "&" "&amp;" link)))
@@ -533,7 +533,7 @@ items are fetched from each feed."
         (lambda (a)
           `( :updated
              ,(format-time-string
-               "%FT%TZ"
+               "%FT%T%z"
                (time-convert (/ (gethash "lastModifyTime" a) 1000)))
              :author ,(gethash "brandName" a)
              :link ,(format "https://www.zhipin.com/job_detail/%s.html"
