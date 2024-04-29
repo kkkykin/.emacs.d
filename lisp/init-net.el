@@ -611,7 +611,7 @@ Argument EVENT tells what has happened to the process."
                            (list "-s" url)))
              (proc (apply #'start-process feed-name buffername
                           newsticker-wget-name args)))
-        (set-process-coding-system proc 'no-conversion 'no-conversion)
+        (set-process-coding-system proc 'utf-8 'utf-8)
         (set-process-sentinel proc #'mn/newsticker--sentinel)
         (process-put proc 'nt-feed-name feed-name)
         (process-put proc 'nt-feed-channel channel)
