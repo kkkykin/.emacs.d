@@ -2,6 +2,8 @@
 ;;; Commentary:
 ;;; Code:
 
+(require 'cl-lib)
+
 ;; url
 
 (defcustom mn/img-cdn-server-list
@@ -328,13 +330,17 @@
                                         dont-expand-metadata
                                         discard-thumbnail)
   "Expand any site RSS feed using CSS selectors."
-  (concat (mn/rss-bridge-generator "CssSelectorFeedExpanderBridge")
-          "&feed=" (url-hexify-string feed)
-          "&limit=" (number-to-string limit)
-          "&content_selector=" (url-hexify-string content)
-          (when content-cleanup (concat "&content_cleanup=" (url-hexify-string content-cleanup)))
-          (concat "&dont_expand_metadata=" (when dont-expand-metadata "on"))
-          (concat "&discard_thumbnail=" (when discard-thumbnail "on"))))
+  (concat "https://rss-bridge.org/bridge01/?action=display&format=Atom&bridge=CssSelectorFeedExpanderBridge&"
+          ;; (mn/rss-bridge-generator "CssSelectorFeedExpanderBridge")
+          (url-build-query-string
+           (cl-remove-if
+            (lambda (a) (eq (cadr a) nil))
+            `(("feed" ,feed)
+              ("limit" ,limit)
+              ("content_selector" ,content)
+              ("content_cleanup" ,content-cleanup)
+              ("dont_expand_metadata" ,(when dont-expand-metadata "on"))
+              ("discard_thumbnail" ,(when discard-thumbnail "on")))))))
 
 (defun mn/rss-bridge-css-selector (home limit entry load-pages &rest args)
   "Convert any site to RSS feed using CSS selectors. The bridge first
