@@ -522,7 +522,7 @@ items are fetched from each feed."
            (goto-char (point-max)))
          entrys)))
     (when (null entrys)
-      (error "*Feed %s is broken.*" title))))
+      (user-error "*Feed %s is broken.*" title))))
 
 (defun mn/atom-boss-builder (title url buf)
   "Generate atom feeds for Boss ZhiPin."
