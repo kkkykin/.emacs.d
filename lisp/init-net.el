@@ -297,14 +297,14 @@
 (defun mn/rss-bridge-generator (bridge &optional proxy cache-timeout)
   "Generate atom feed via rss-bridge."
   (if-let* ((obj (url-generic-parse-url mn/rss-bridge-server))
-            (request (format "%s/?action=display&format=Atom&bridge=%s"
+            (request (format "%s/?action=display&format=Atom&bridge=%s&"
                              mn/rss-bridge-server bridge))
             (found (car (auth-source-search :host (url-host obj)
                                             :port (url-portspec obj)
                                             :max 1))))
       (replace-regexp-in-string
        "\\`https://\\(.+\\)"
-       (format "https://%s:%s@\\1&_noproxy=%s&_cache_timeout=%d"
+       (format "https://%s:%s@\\1&_noproxy=%s&_cache_timeout=%d&"
                (plist-get found :user) (auth-info-password found)
                (if proxy "off" "on") (if cache-timeout cache-timeout 1800))
        request)
@@ -313,17 +313,23 @@
 (defun mn/rss-bridge-wp (blog limit &optional content)
   "Returns the newest full posts of a WordPress powered website."
   (concat (mn/rss-bridge-generator "WordPressBridge")
-          "&url=" (url-hexify-string blog)
-          "&limit=" (number-to-string limit)
-          (when content (concat "&content_selector=" (url-hexify-string content)))))
+          (url-build-query-string
+           (cl-remove-if
+            (lambda (a) (eq (cadr a) nil))
+            `(("url" ,blog)
+              ("limit" ,limit)
+              ("content_selector" ,content))))))
 ;; todo
 ;; (defun mn/rss-bridge-filter ())
 
 (defun mn/rss-bridge-reducer (feed percentage)
   "Choose a percentage of a feed you want to see."
   (concat (mn/rss-bridge-generator "FeedReducerBridge")
-          "&url=" (url-hexify-string feed)
-          "&percentage=" (number-to-string percentage)))
+          (url-build-query-string
+           (cl-remove-if
+            (lambda (a) (eq (cadr a) nil))
+            `(("url" ,feed)
+              ("percentage" ,percentage))))))
 
 (defun mn/rss-bridge-css-expander (feed limit content &optional
                                         content-cleanup
@@ -342,46 +348,42 @@
               ("dont_expand_metadata" ,(when dont-expand-metadata "on"))
               ("discard_thumbnail" ,(when discard-thumbnail "on")))))))
 
-(defun mn/rss-bridge-css-selector (home limit entry load-pages &rest args)
+(cl-defun mn/rss-bridge-css-selector
+    ( home limit entry load-pages &key content title time time-fmt url
+      url-pattern title-cleanup content-cleanup cookie author cat rm-style)
   "Convert any site to RSS feed using CSS selectors. The bridge first
 selects the element describing the article entries. It then extracts
 the links to the articles from these elements. It then, depending on
 the setting 'load_pages', either parses the selected elements,
 or downloads the page for each article and parses those. Parsing the
 elements or page is done using the provided selectors."
-  (let ((content (plist-get args :content))
-        (title (plist-get args :title))
-        (time (plist-get args :time))
-        (time-fmt (plist-get args :time-fmt))
-        (url (plist-get args :url))
-        (url-pattern (plist-get args :url-pattern))
-        (title-cleanup (plist-get args :title-cleanup))
-        (content-cleanup (plist-get args :content-cleanup))
-        (cookie (plist-get args :cookie))
-        (author (plist-get args :author))
-        (cat (plist-get args :cat))
-        (rm-style (plist-get args :rm-style)))
-    (concat (mn/rss-bridge-generator "CssSelectorComplexBridge")
-            "&home_page=" (url-hexify-string home)
-            "&limit=" (number-to-string limit)
-            "&entry_element_selector=" (url-hexify-string entry)
-            "&use_article_pages=" (when load-pages "on")
-            (when content (concat "&article_page_content_selector=" (url-hexify-string content)))
-            (when title (concat "&title_selector=" (url-hexify-string title)))
-            (when time (concat "&time_selector=" (url-hexify-string time)))
-            (when time-fmt (concat "&time_format=" (url-hexify-string time-fmt)))
-            (when url (concat "&url_selector=" (url-hexify-string url)))
-            (when url-pattern (concat "&url_pattern=" (url-hexify-string url-pattern)))
-            (when title-cleanup (concat "&title_cleanup=" (url-hexify-string title-cleanup)))
-            (when content-cleanup (concat "&content_cleanup=" (url-hexify-string content-cleanup)))
-            (when cookie (concat "&cookie=" (url-hexify-string cookie)))
-            (when author (concat "&author_selector=" (url-hexify-string author)))
-            (when cat (concat "&category_selector=" (url-hexify-string cat)))
-            (concat "&remove_styling=" (when rm-style "on")))))
+  (concat (mn/rss-bridge-generator "CssSelectorComplexBridge")
+          (url-build-query-string
+           (cl-remove-if
+            (lambda (a) (eq (cadr a) nil))
+            `(("home_page" ,home)
+              ("limit" ,limit)
+              ("entry_element_selector" ,entry)
+              ("use_article_pages" ,(when load-pages "on"))
+              ("article_page_content_selector" ,content)
+              ("title_selector" ,title)
+              ("time_selector" ,time)
+              ("time_format" ,time-fmt)
+              ("url_selector" ,url)
+              ("url_pattern" ,url-pattern)
+              ("title_cleanup" ,title-cleanup)
+              ("content_cleanup" ,content-cleanup)
+              ("cookie" ,cookie)
+              ("author_selector" ,author)
+              ("category_selector" ,cat)
+              ("remove_styling" ,(when rm-style "on")))))))
 
 (defun mn/rss-bridge-merger (feeds limit name)
   "This bridge merges two or more feeds into a single feed. Max 10
 items are fetched from each feed."
+  (when (> (length feeds) 10)
+    (user-error "Feed: %s is reach Max feeds limit."
+                (propertize "aaa" 'face '(:inherit 'font-lock-warning-face))))
   (concat (mn/rss-bridge-generator "FeedMergeBridge")
           (let ((m 0))
             (mapconcat
