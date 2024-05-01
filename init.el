@@ -180,10 +180,11 @@
           . viper-change-state-to-insert))
   :bind
   (:map viper-insert-global-user-map
-        ("C-t" . transpose-chars)
-        ("C-d" . delete-char)
-        ("C-w" . kill-region)
-        ("C-v" . scroll-up))
+        ("<backspace>" . viper-exec-key-in-emacs)
+        ("C-t" . viper-exec-key-in-emacs)
+        ("C-d" . viper-exec-key-in-emacs)
+        ("C-w" . viper-exec-key-in-emacs)
+        ("C-v" . viper-exec-key-in-emacs))
   (:map viper-vi-global-user-map
         ("zE" . duplicate-dwim)
         ("zf" . org-open-at-point-global)
@@ -192,17 +193,20 @@
         ("zR" . rename-visited-file)
         ("zt" . transpose-sentences)
         ("zT" . transpose-paragraphs)
-        ("C-y" . yank)
-        ("C-f" . forward-char)
-        ("C-b" . backward-char)
-        ("C-e" . move-end-of-line)
-        ("C-u" . universal-argument)
-        ("M-p" . viper-prev-destructive-command)
-        ("M-n" . viper-next-destructive-command)
-        ("C-v" . scroll-up))
+        ("zp" . viper-prev-destructive-command)
+        ("zn" . viper-next-destructive-command)
+        ("C-y" . viper-exec-key-in-emacs)
+        ("C-f" . viper-exec-key-in-emacs)
+        ("C-b" . viper-exec-key-in-emacs)
+        ("C-e" . viper-exec-key-in-emacs)
+        ("C-u" . viper-exec-key-in-emacs)
+        ("C-v" . viper-exec-key-in-emacs))
   (:repeat-map my/viper-insert-repeat-map
                ("p" . viper-insert-prev-from-insertion-ring)
                ("n" . viper-insert-next-from-insertion-ring))
+  (:repeat-map my/viper-vi-repeat-map
+               ("p" . viper-prev-destructive-command)
+               ("n" . viper-next-destructive-command))
   :custom
   (viper-want-ctl-h-help t)
   (viper-no-multiple-ESC nil)
@@ -211,17 +215,23 @@
   :custom-face
   (viper-minibuffer-emacs ((t (:background "unspecified" :foreground "unspecified"))))
   :config
-  (keymap-unset viper-dired-modifier-map "/" t)
-  (fset 'viper-del-backward-char-in-insert 'backward-delete-char-untabify)
-  (with-eval-after-load 'elec-pair
-    (keymap-set viper-insert-global-user-map "<backspace>"
-                (alist-get 127 (cdr electric-pair-mode-map))))
   (put 'viper-setup-master-buffer 'safe-local-eval-function t)
   (put 'viper-mode-string 'risky-local-variable t)
   (add-face-text-property 0 (length viper-emacs-state-id) '(:inverse-video t) nil viper-emacs-state-id)
   (setq global-mode-string (delq 'viper-mode-string global-mode-string))
   (unless (memq 'viper-mode-string mode-line-format)
     (setcdr (cddr mode-line-format) (cons 'viper-mode-string (cdddr mode-line-format))))
+  (define-keymap :keymap viper-dired-modifier-map
+    "/" (lambda (&rest args)
+          (interactive "P")
+          (apply (if (eq major-mode 'wdired-mode)
+                     #'viper-exec-key-in-emacs #'viper-search-forward)
+                 args))
+    ":" (lambda (&rest args)
+          (interactive "P")
+          (apply (if (eq major-mode 'wdired-mode)
+                     #'viper-exec-key-in-emacs #'viper-ex)
+                 args)))
   (setopt
    viper-major-mode-modifier-list
    (append '((sql-interactive-mode insert-state viper-comint-mode-modifier-map)
