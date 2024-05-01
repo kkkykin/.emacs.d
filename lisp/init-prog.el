@@ -50,6 +50,49 @@
 (add-hook 'emacs-lisp-mode-hook 'mp/custom-imenu-exp)
 
 
+;; xref
+
+(defun mp/xref-which-function (file pos)
+  "Get function name from a marker in a file."
+  (with-current-buffer
+      (find-file-noselect file)
+    (xref--goto-char pos)
+    (which-function)))
+
+(defun mp/xref-put-function-name-work ()
+  "Put function name before all items."
+  (while (not (eobp))
+    (forward-line 1)
+    (when-let ((item (xref--item-at-point)))
+      (let* ((location (xref-item-location item))
+             (file (xref-location-group location))
+             (marker (xref-location-marker location))
+             (function-name (mp/xref-which-function file marker))
+             (ov (make-overlay (pos-bol) (1+ (pos-bol)) nil t))
+             (text (format "%s │" (or (string-pad function-name 18) ""))))
+        (overlay-put ov 'before-string
+                     (propertize text 'face 'font-lock-keyward-face))
+        (overlay-put ov 'evaporate t)))))
+
+(defun mp/xref-put-function-name (&optional arg)
+  "Put function name before items in current group. If called with
+  `universal-argument', apply to the entire buffer."
+  (interactive "P")
+  (save-excursion
+    (if arg
+        (progn
+          (goto-char (point-min))
+          (mp/xref-put-function-name-work))
+      (let ((max (or (and (xref--search-property 'xref-group) (point))
+                     (point-max))))
+        (xref--search-property 'xref-group t)
+        (with-restriction (point) max
+          (mp/xref-put-function-name-work))))))
+
+(with-eval-after-load 'xref
+  (define-keymap :keymap xref--xref-buffer-mode-map
+    "w" #'mp/xref-put-function-name))
+
 ;; sql
 
 (defun mp/sql-fix-imenu-exp ()
@@ -68,7 +111,7 @@
     (goto-char (point-min))
     (re-search-forward "^| \\([[:alnum:]_]+\\).+| PRI |")
     (match-string 1)))
-  
+
 (defun mp/sql-table-selector (name &optional arg)
   "Select data from NAME. Default select latest 10 records,
 with a positive argument, select latest (* 10 number) records;
@@ -102,7 +145,7 @@ with `universal argument', select all records."
     (sql-execute sqlbuf "SQL table selector"
                  "select * from %s;" nil
                  (mapconcat #'identity builder " "))))
-  
+
 (tempo-define-template
  "mp/sql-create-procedure"
  '(%""n

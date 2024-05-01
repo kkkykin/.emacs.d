@@ -545,6 +545,7 @@
   (show-paren-context-when-offscreen 'overlay))
 
 (use-package which-func :defer 5
+  :autoload which-function
   :unless my/sys-android-p
   :config
   (which-function-mode))
