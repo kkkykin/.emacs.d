@@ -7,6 +7,7 @@
 
 (defun mp/ts-mode-enable ()
   "Auto map available ts-mode."
+  (interactive)
   (dolist (lan (mapcar #'car treesit-language-source-alist))
     (if-let* ((avaip (treesit-language-available-p lan))
               (name (symbol-name lan))
