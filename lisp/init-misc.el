@@ -2,6 +2,8 @@
 ;;; Commentary:
 ;;; Code:
 
+(require 'cl-lib)
+
 (defvar-keymap my/global-prefix-map
   :doc "A keymap for myself."
   "/" #'webjump
@@ -35,28 +37,100 @@
   "u" #'mpc-update)
 (keymap-set ctl-x-map "c" my/mpc-prefix-map)
 
+
+;; theme
+
+(defcustom my/all-theme-list (custom-available-themes)
+  "list of Custom themes available for loading."
+  :group 'my
+  :type '(repeat symbol))
+
 (defcustom my/light-theme-list
-  '( adwaita dichromacy leuven modus-operandi-deuteranopia modus-operandi
-     modus-operandi-tinted modus-operandi-tritanopia tango
-     tsdh-light whiteboard)
+  (cl-intersection
+   my/all-theme-list
+   '( adwaita dichromacy leuven modus-operandi-deuteranopia modus-operandi
+      modus-operandi-tinted modus-operandi-tritanopia tango
+      tsdh-light whiteboard))
   "Built-in light themes."
   :group 'my
   :type '(repeat symbol))
 
 (defcustom my/dark-theme-list
-  '( deeper-blue leuven-dark manoj-dark misterioso
-     modus-vivendi-deuteranopia modus-vivendi
-     modus-vivendi-tinted modus-vivendi-tritanopia
-     tango-dark tsdh-dark wheatgrass wombat)
+  (cl-intersection
+   my/all-theme-list
+   '( deeper-blue leuven-dark manoj-dark misterioso
+      modus-vivendi-deuteranopia modus-vivendi
+      modus-vivendi-tinted modus-vivendi-tritanopia
+      tango-dark tsdh-dark wheatgrass wombat))
   "Built-in dark themes."
   :group 'my
   :type '(repeat symbol))
 
 (defcustom my/fonts-list
-  '("LXGW WenKai Mono" "Sarasa Mono SC" "Unifont-JP" "UnifontExMono")
+  (cl-intersection
+   (font-family-list)
+   (mapcar
+    #'car
+    '(("霞鹜文楷等宽" . "https://github.com/lxgw/LxgwWenKai/releases")
+      ("等距更纱黑体 SC" . "https://github.com/be5invis/Sarasa-Gothic/releases")
+      ("Unifont-JP" . "https://unifoundry.com/unifont/index.html")
+      ("UnifontExMono" . "https://github.com/stgiga/UnifontEX/releases")))
+   :test 'equal)
   "prefered fonts"
   :group 'my
   :type '(repeat string))
+
+(defun my/system-dark-mode-enabled-p ()
+  "Check if dark-mode is enabled."
+  (pcase system-type
+    ('windows-nt
+     (eql 0 (w32-read-registry 'HKCU "SOFTWARE/Microsoft/Windows/CurrentVersion/Themes/Personalize" "AppsUseLightTheme")))
+    (_ nil)))
+
+(defun my/set-theme (theme)
+  "Set one theme only."
+  (unless (memq theme custom-known-themes)
+    (load-theme theme t t))
+  (pcase theme
+    ('adwaita
+     (custom-theme-set-faces theme '(hl-line ((t (:extend t :background "navajo white"))))))
+    ('whiteboard
+     (custom-theme-set-faces theme '(hl-line ((t (:extend t :background "wheat"))))))
+    ('tango
+     (custom-theme-set-faces theme '(hl-line ((t (:extend t :background "cornsilk")))))))
+  (dolist (item custom-enabled-themes)
+    (disable-theme item))
+  (enable-theme theme))
+
+(defun my/shuffle-set-theme (theme-list)
+  "Shuffle set theme."
+  ;; (interactive
+  ;;  (list (completing-read "Load theme list: "
+  ;;                         '("my/light-theme-list"
+  ;;                           "my/dark-theme-list"))))
+  (let ((theme (seq-random-elt theme-list)))
+    (my/set-theme theme)
+    (message "Current theme: %s" (symbol-name theme))))
+
+(defun my/setup-faces ()
+  "Randomize setup faces."
+  (when (display-graphic-p)
+    (when my/fonts-list
+      (let* ((font (seq-random-elt my/fonts-list))
+             (size (cond ((string= font "霞鹜文楷等宽") '(26 14 18))
+                         ((string= font "等距更纱黑体 SC") '(24 14 17))
+                         ((string-prefix-p "Unifont" font) '(26 14 18))))
+             (height (cond ((string= font "霞鹜文楷等宽") '(198 108 140))
+                           ((string= font "等距更纱黑体 SC") '(188 108 130))
+                           ((string-prefix-p "Unifont" font) '(198 108 142)))))
+        (set-face-attribute 'default nil :font font :height
+                            (cond ((< (display-pixel-width) 1920) (car height))
+                                  ((> (display-pixel-width) 1920) (caddr height))
+                                  (t (cadr height))))))
+    (my/shuffle-set-theme (if (my/system-dark-mode-enabled-p)
+                              my/dark-theme-list
+                            my/light-theme-list))))
+(add-hook 'window-setup-hook #'my/setup-faces)
 
 
 ;; termux
@@ -123,69 +197,6 @@
       (let ((bookmark-alist new-local))
         (apply orig-fun args)))))
 (advice-add 'bookmark-save :around 'my/advice-bookmark-save)
-
-(defun my/system-dark-mode-enabled-p ()
-  "Check if dark-mode is enabled."
-  (pcase system-type
-    ('windows-nt
-     (string-search "0x1" (shell-command-to-string "reg query HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize /v AppsUseLightTheme")))))
-
-(defun my/set-theme (theme)
-  "Set one theme only."
-  (unless (memq theme custom-known-themes)
-    (load-theme theme))
-  (pcase theme
-    ('adwaita
-     (custom-theme-set-faces theme '(hl-line ((t (:extend t :background "navajo white"))))))
-    ('whiteboard
-     (custom-theme-set-faces theme '(hl-line ((t (:extend t :background "wheat"))))))
-    ('tango
-     (custom-theme-set-faces theme '(hl-line ((t (:extend t :background "cornsilk")))))))
-  (dolist (item custom-enabled-themes)
-    (disable-theme item))
-  (enable-theme theme))
-
-(defun my/shuffle-set-theme (theme-list)
-  "Shuffle set theme."
-  ;; (interactive
-  ;;  (list (completing-read "Load theme list: "
-  ;;                         '(my/light-theme-list
-  ;;                           my/dark-theme-list))))
-  (let* ((themes (remove (car custom-enabled-themes) theme-list))
-         (theme (cl-loop for item = (seq-random-elt themes)
-                         always themes
-                         do (delete item themes)
-                         when (memq item (custom-available-themes))
-                         return item)))
-    (my/set-theme theme)
-    (message "Current theme: %s" (symbol-name theme))))
-
-(defun my/setup-faces ()
-  "Randomize setup faces."
-  (when (display-graphic-p)
-    (let* ((fonts (remove (face-attribute 'default :family) my/fonts-list))
-           (font (cl-loop for ft = (seq-random-elt fonts)
-                          always fonts
-                          do (delete ft fonts)
-                          when (find-font (font-spec :name ft))
-                          return ft))
-           (size (cond ((string= font "LXGW WenKai Mono") '("26" "14" "18"))
-                       ((string= font "Sarasa Mono SC") '("24" "14" "17"))
-                       ((string-prefix-p "Unifont" font) '("26" "14" "18"))))
-           (height (cond ((string= font "LXGW WenKai Mono") '(198 108 140))
-                         ((string= font "Sarasa Mono SC") '(188 108 130))
-                         ((string-prefix-p "Unifont" font) '(198 108 142)))))
-      ;; (add-to-list 'default-frame-alist
-      ;;              `(font . ,(cond ((< (display-pixel-width) 1920) (concat font "-" (car size)))
-      ;;                              ((> (display-pixel-width) 1920) (concat font "-" (caddr size)))
-      ;;                              (t (concat font "-" (cadr size))))))
-      (set-face-attribute 'default nil :font font :height
-                          (cond ((< (display-pixel-width) 1920) (car height))
-                                ((> (display-pixel-width) 1920) (caddr height))
-                                (t (cadr height)))))
-
-    (my/shuffle-set-theme my/light-theme-list)))
-(add-hook 'window-setup-hook #'my/setup-faces)
 
 (defun my/advice-silence-messages (orig-fun &rest args)
   "Advice function that silences all messages in ORIG-FUN.
