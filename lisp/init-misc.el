@@ -300,74 +300,88 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
 
 
 ;; find & grep
-(defun my/advice-find-dired-with-command-maybe-fd (args)
-  "Use `fd' instead of `find', fix some syntax error."
-  (when-let* ((cmd (cadr args))
-              (fix-p (string-prefix-p "fd . \"(\"" cmd)))
-    (setcdr args
-            `(,(replace-regexp-in-string " \\. \\\"(\\\"\\(.+\\)\\\")\\\""
-                                         "\\1" cmd))))
-  args)
+
 (with-eval-after-load 'find-dired
   (when (string= find-program "fd")
-    (advice-add 'find-dired-with-command :filter-args #'my/advice-find-dired-with-command-maybe-fd)
+    (define-advice find-dired-with-command (:filter-args (args) maybe-fd)
+      "When use `fd' program instead of `find'."
+      (let ((cmd (cadr args)))
+        (cond
+         ((string-prefix-p "fd . \"(\"" cmd)
+          (setcdr
+           args
+           `(,(cond
+               ((string-prefix-p "fd . \"(\" -type f -exec " cmd)
+                (if (eq system-type 'windows-nt)
+                    (replace-regexp-in-string "fd \\. \\\"(\\\" -type f -exec ug -q \\(.+?\\) \\\"{}\\\" \\\";\\\".+-X \\(.+\\) {}.+"
+                                              "ug -l \\1 * | sed \"s$\\\\\\\\$/$g\" | xargs \\2" cmd)
+                  (replace-regexp-in-string "fd \\(\\(?:.+\\) \\(?:\\(?:\\\")\\\"\\)\\|)\\)\\) -X \\(.+\\)"
+                                            "find \\1 -exec \\2" cmd)))
+               (t
+                (replace-regexp-in-string " \\. \\\"(\\\"\\(.+\\)\\\")\\\""
+                                          "\\1" cmd))))
+           ))))
+      args)
     (setq find-name-arg "-g"
           find-ls-option '("-X ls -ldh {} ;" . "-ldh"))))
 
-(defun my/advice-rgrep-default-command-maybe-fd (oldfun &rest args)
-  "Use `fd' synyax."
-  (if (string-prefix-p "fd " grep-find-template)
-      (let* ((files (cadr args))
-             (dir (caddr args))
-             (grep-find-template
-              (string-replace
-               "<F>"
-               (shell-quote-argument
-                (concat ".*\\.("
-                        (mapconcat
-                         (lambda (x) (string-replace "*." "" x))
-                         (split-string files) "|")
-                        ")$")
-                grep-quoting-style)
-               grep-find-template))
-             (grep-find-template
-              (string-replace
-               "<X>"
-               (concat
-                (and grep-find-ignored-directories
-                     (concat
-                      (mapconcat
-                       (lambda (d) (concat "-E " (shell-quote-argument
-                                              (concat "*/" d)
-                                              grep-quoting-style)))
-                       (rgrep-find-ignored-directories dir)
-                       " ")
-                      " "))
-                (and grep-find-ignored-files
-                     (concat
-                      (mapconcat
-                       (lambda (ignore)
-                         (cond ((stringp ignore)
-                                (concat "-E " (shell-quote-argument
-                                               (concat "*." ignore)
-                                               grep-quoting-style)))
-                               ((consp ignore)
-                                (and (funcall (car ignore) dir)
-                                     (concat "-E "
-                                             (shell-quote-argument
-                                              (concat "*." (cdr ignore))
-                                              grep-quoting-style))))))
-                       grep-find-ignored-files
-                       " ")
-                      " ")))
-               grep-find-template)))
-        (apply oldfun args))
-    (apply oldfun args)))
-
 (with-eval-after-load 'grep
+  (defcustom ug-fd-command
+    '("fd -t f -X ug --color=auto -nH --null -e \"\" {} ;" . 43)
+    "`ug-fd' instead of `grep-find'")
+  (defcustom ug-fd-template
+    "fd --base-directory <D> -t f <X> <F> -X ug <C> -nH --null -e <R> {} ;"
+    "`ug-fd' instead of `grep-find'.")
+  (when (and (or (string= grep-program "ug")
+                 (executable-find "up"))
+             (or (string= find-program "fd")
+                 (executable-find "fd")))
+    (setq grep-find-command ug-fd-command
+          grep-find-template ug-fd-template))
+
   (when (string= find-program "fd")
-    (advice-add 'rgrep-default-command :around
-                #'my/advice-rgrep-default-command-maybe-fd)))
+    (define-advice rgrep-default-command (:around (oldfun re files dir) maybe-fd)
+      "Use `fd' syntax."
+      (if (string-prefix-p "fd " grep-find-template)
+          (let ((grep-find-template
+                 (string-replace
+                  "<X> <F>"
+                  (concat
+                   (shell-quote-argument
+                    (mapconcat
+                     (lambda (a)
+                       (format "(^%s$)"
+                               (mapconcat
+                                (lambda (b)
+                                  (pcase b (?* ".*") (?? ".")
+                                         (_ (regexp-quote (string b)))))
+                                a)))
+                     (split-string files) "|")
+                    grep-quoting-style)
+                   " "
+                   (when grep-find-ignored-directories
+                     (mapconcat
+                      (lambda (d)
+                        (concat "-E " (shell-quote-argument (concat "*/" d)
+                                                            grep-quoting-style)))
+                      (rgrep-find-ignored-directories dir)
+                      " "))
+                   " "
+                   (when grep-find-ignored-files
+                     (mapconcat
+                      (lambda (ignore)
+                        (cond
+                         ((stringp ignore)
+                          (concat "-E " (shell-quote-argument
+                                         ignore grep-quoting-style)))
+                         ((consp ignore)
+                          (when (funcall (car ignore) dir)
+                            (concat "-E " (shell-quote-argument
+                                           (cdr ignore) grep-quoting-style))))))
+                      grep-find-ignored-files " ")))
+                  grep-find-template)))
+            (funcall oldfun re files dir))
+        (funcall oldfun re files dir)))))
 
 
 ;; re-builder

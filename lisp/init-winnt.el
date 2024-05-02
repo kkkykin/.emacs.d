@@ -135,10 +135,6 @@
 (setq grep-program "ug"
       grep-use-null-device nil
       grep-highlight-matches t
-      grep-find-command
-      '("fd -t f -X ug --color=auto -nH --null -e \"\" {} ;" . 43)
-      grep-find-template
-      "fd --base-directory <D> <X> -t f <F> -X ug <C> -nH --null -e <R> {} ;"
       find-program "fd"
       default-process-coding-system '(utf-8-dos . utf-8-unix) ;; change this maybe break tramp sshx
       process-coding-system-alist
