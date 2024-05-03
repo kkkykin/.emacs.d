@@ -435,38 +435,29 @@ items are fetched from each feed."
                 ("code" ,(md5 (concat (url-filename url) code))))
               :key #'cadr)))))
 
-(defun mn/rss-hub-transform (url s-fmt &rest args)
+(cl-defun mn/rss-hub-transform
+    ( url s-fmt &key title item item-title item-title-a item-link
+      item-link-a item-desc iten-desc-a item-pub item-pub-a extra)
   "Pass URL and transformation rules to convert HTML/JSON into RSS."
-  (let ((title (plist-get args :t))
-        (item (plist-get args :i))
-        (item-title (plist-get args :it))
-        (item-title-a (plist-get args :ita))
-        (item-link (plist-get args :il))
-        (item-link-a (plist-get args :ila))
-        (item-desc (plist-get args :id))
-        (item-desc-a (plist-get args :ida))
-        (item-pub (plist-get args :ip))
-        (item-pub-a (plist-get args :ipa))
-        (extra (plist-get args :extra)))
-    (apply
-     #'mn/rss-hub-generator
-     (concat "rsshub/transform/" s-fmt "/" (url-hexify-string url) "/"
-             (string-join
-              (delq
-               nil
-               `(,(when title (concat "title=" (url-hexify-string title)))
-                 ,(when item (concat "item=" (url-hexify-string item)))
-                 ,(when item-title (concat "itemTitle=" (url-hexify-string item-title)))
-                 ,(when item-title-a (concat "itemTitleAttr=" (url-hexify-string item-title-a)))
-                 ,(when item-link (concat "itemLink=" (url-hexify-string item-link)))
-                 ,(when item-link-a (concat "itemLinkAttr=" (url-hexify-string item-link-a)))
-                 ,(when item-desc (concat "itemDesc=" (url-hexify-string item-desc)))
-                 ,(when item-desc-a (concat "itemDescAttr=" (url-hexify-string item-desc-a)))
-                 ,(when item-pub (concat "itemPubDate=" (url-hexify-string item-pub)))
-                 ,(when item-pub-a (concat "itemPubDateAttr=" (url-hexify-string item-pub-a)))))
-              "&"))
-     extra)
-    ))
+  (apply
+   #'mn/rss-hub-generator
+   (format "rsshub/transform/%s/%s/%s"
+           s-fmt (url-hexify-string url)
+           (url-build-query-string
+            (cl-delete-if
+             #'null
+             `(("title" ,title)
+               ("item" ,item)
+               ("itemTitle" ,item-title)
+               ("itemTitleAttr" ,item-title-a)
+               ("itemLink" ,item-link)
+               ("itemLinkAttr" ,item-link-a)
+               ("itemDesc" ,item-desc)
+               ("itemDescAttr" ,item-desc-a)
+               ("itemPubDate" ,item-pub)
+               ("itemPubDateAttr" ,item-pub-a))
+             :key #'cadr)))
+   extra))
 
 (defun mn/atom-builder (title link entrys &optional id updated author)
   "Create brief atom feeds."
