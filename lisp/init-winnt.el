@@ -91,8 +91,9 @@
 
 (defun mw/shell-mode-setup ()
   "Setup for shell-mode."
-  (add-hook 'comint-preoutput-filter-functions
-            #'mw/shell-coding-system-fix nil t))
+  (unless (file-remote-p default-directory)
+    (add-hook 'comint-preoutput-filter-functions
+              #'mw/shell-coding-system-fix nil t)))
 (add-hook 'shell-mode-hook #'mw/shell-mode-setup)
 
 (defun mw/run-bash ()
@@ -150,6 +151,13 @@
                                         "/wait \\1\\2" cmd)))
     args))
 
+
+;; tramp
+
+(with-eval-after-load 'tramp
+  (setq tramp-default-method "sshx"
+        tramp-use-connection-share nil))
+
 (setq grep-program "ug"
       grep-use-null-device nil
       grep-highlight-matches t
@@ -167,9 +175,7 @@
         ("mpv" utf-8 . ,locale-coding-system)
         ("sha256sum" utf-8 . ,locale-coding-system))
       file-name-coding-system locale-coding-system
-      shr-use-fonts nil
-      tramp-default-method "sshx"
-      tramp-use-connection-share nil)
+      shr-use-fonts nil)
 
 (setenv "HOME" (file-name-parent-directory user-emacs-directory))
 
