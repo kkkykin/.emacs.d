@@ -461,10 +461,10 @@ items are fetched from each feed."
 
 (defun mn/atom-builder (title link entrys &optional id updated author)
   "Create brief atom feeds."
-  (if-let* ((err entrys)
-            (dir (expand-file-name "builder" newsticker-dir))
+  (if-let* ((dir (expand-file-name "builder" newsticker-dir))
             (mkdir (or (make-directory dir t) t))
-            (log-path (expand-file-name (concat title (if entrys ".err" ".xml")) dir)))
+            (log-path (expand-file-name (concat title (if entrys ".xml" ".err")) dir))
+            (err entrys))
       (let ((updated (or updated (format-time-string "%FT%T%z")))
             (author (or author (url-host (url-generic-parse-url link))))
             (id (or id (concat "urn:uuid:" (my/generate-uuid (concat title link updated)))))
@@ -512,9 +512,9 @@ items are fetched from each feed."
                (goto-char (point-max)))
              entrys)))
         (write-region 1 (point-max) log-path))
-    (user-error "*Feed %s is broken.*" title)
     (write-region 1 (point-max) log-path)
-    (erase-buffer)))
+    (kill-current-buffer)
+    (user-error "*Feed %s is broken.*" title)))
 
 (defun mn/atom-boss-builder (title url buf)
   "Generate atom feeds for Boss ZhiPin."
