@@ -24,6 +24,24 @@
 
 ;;; Code:
 
+(require 'cl-lib)
+
+
+;; UWP
+
+(defun mw/uwp-visit-localhost (app)
+  "Make a UWP App visist localhost."
+  (interactive
+   (list
+    (completing-read "App: "
+                     (cl-delete-if
+                      (lambda (a) (member a '("." "..")))
+                      (directory-files
+                       (substitute-in-file-name
+                        "$USERPROFILE/AppData/Local/Packages"))))))
+  (call-process "CheckNetIsolation" nil nil nil
+                "LoopbackExempt" "-a" (concat "-n=" app)))
+
 
 ;; shell
 
