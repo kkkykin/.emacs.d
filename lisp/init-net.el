@@ -314,11 +314,12 @@
   "Returns the newest full posts of a WordPress powered website."
   (concat (mn/rss-bridge-generator "WordPressBridge")
           (url-build-query-string
-           (cl-remove-if
-            (lambda (a) (eq (cadr a) nil))
+           (cl-delete-if
+            #'null
             `(("url" ,blog)
               ("limit" ,limit)
-              ("content_selector" ,content))))))
+              ("content_selector" ,content))
+            :key #'cadr))))
 ;; todo
 ;; (defun mn/rss-bridge-filter ())
 
@@ -326,10 +327,11 @@
   "Choose a percentage of a feed you want to see."
   (concat (mn/rss-bridge-generator "FeedReducerBridge")
           (url-build-query-string
-           (cl-remove-if
-            (lambda (a) (eq (cadr a) nil))
+           (cl-delete-if
+            #'null
             `(("url" ,feed)
-              ("percentage" ,percentage))))))
+              ("percentage" ,percentage))
+            :key #'cadr))))
 
 (defun mn/rss-bridge-css-expander (feed limit content &optional
                                         content-cleanup
@@ -339,14 +341,15 @@
   (concat "https://rss-bridge.org/bridge01/?action=display&format=Atom&bridge=CssSelectorFeedExpanderBridge&"
           ;; (mn/rss-bridge-generator "CssSelectorFeedExpanderBridge")
           (url-build-query-string
-           (cl-remove-if
-            (lambda (a) (eq (cadr a) nil))
+           (cl-delete-if
+            #'null
             `(("feed" ,feed)
               ("limit" ,limit)
               ("content_selector" ,content)
               ("content_cleanup" ,content-cleanup)
               ("dont_expand_metadata" ,(when dont-expand-metadata "on"))
-              ("discard_thumbnail" ,(when discard-thumbnail "on")))))))
+              ("discard_thumbnail" ,(when discard-thumbnail "on")))
+            :key #'cadr))))
 
 (cl-defun mn/rss-bridge-css-selector
     ( home limit entry load-pages &key content title time time-fmt url
@@ -359,8 +362,8 @@ or downloads the page for each article and parses those. Parsing the
 elements or page is done using the provided selectors."
   (concat (mn/rss-bridge-generator "CssSelectorComplexBridge")
           (url-build-query-string
-           (cl-remove-if
-            (lambda (a) (eq (cadr a) nil))
+           (cl-delete-if
+            #'null
             `(("home_page" ,home)
               ("limit" ,limit)
               ("entry_element_selector" ,entry)
@@ -376,7 +379,8 @@ elements or page is done using the provided selectors."
               ("cookie" ,cookie)
               ("author_selector" ,author)
               ("category_selector" ,cat)
-              ("remove_styling" ,(when rm-style "on")))))))
+              ("remove_styling" ,(when rm-style "on")))
+            :key #'cadr))))
 
 (defun mn/rss-bridge-merger (feeds limit name)
   "This bridge merges two or more feeds into a single feed. Max 10
