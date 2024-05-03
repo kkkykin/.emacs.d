@@ -161,7 +161,10 @@
      (explicit-shell-file-name
       . ,(file-name-concat my/termux-root-directory "usr/bin/bash"))))
   (connection-local-set-profiles
-   '(:application tramp :user "termux")
+   ;; FIXME: If the username is not explicitly specified when accessing
+   ;; a remote host, the :user option does not work. Therefore, remember
+   ;; to use the 'sshx' method when accessing Termux, and 'scpx' otherwise.
+   '(:application tramp :protocol "sshx" :user "t")
    'tramp-connection-local-termux-profile))
 
 
