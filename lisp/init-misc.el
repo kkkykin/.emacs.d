@@ -265,6 +265,12 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
       (copy-file file new-file))
     (dired-revert)))
 
+(defun my/dired-goto-random-file ()
+  "Goto random file in current-dir."
+  (interactive nil dired-mode)
+  (dired-goto-file
+   (seq-random-elt (directory-files (dired-current-directory) t "^[^.]" t))))
+
 (defun my/advice-image-dired-create-thumb-maybe-gs (oldfun &rest args)
   (if (string= (file-name-extension (car args)) "pdf")
       (let ((image-dired-cmd-create-thumbnail-program "gs")
@@ -275,6 +281,8 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
 
 (with-eval-after-load 'dired
   (define-keymap :keymap dired-mode-map
+    "SPC" nil
+    "SPC r" #'my/dired-goto-random-file
     "E" #'my/dired-duplicate-file
     "f" #'my/dired-dwim))
 
