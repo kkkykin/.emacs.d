@@ -44,12 +44,14 @@
 
 (defun my/advice-comint-save-history-sentinel (proc event)
   "Save history if the default sentinel not save, then kill buffer."
-  (with-current-buffer (process-buffer proc)
-    (unless (or (null comint-input-ring-file-name)
-                (my/file-modified-recently-p comint-input-ring-file-name 5))
-      (comint-write-input-ring))
-    (when (string= event "finished\n")
-      (kill-buffer (current-buffer)))))
+  (when-let* ((buf (process-buffer proc))
+              (livep (buffer-live-p buf)))
+    (with-current-buffer buf
+      (unless (or (null comint-input-ring-file-name)
+                  (my/file-modified-recently-p comint-input-ring-file-name 5))
+        (comint-write-input-ring))
+      (when (string= event "finished\n")
+        (kill-current-buffer)))))
 
 (defun my/comint-save-history ()
   "Let all comint-mode save `input-ring' history cross session."
