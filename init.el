@@ -964,6 +964,7 @@
   (tab-bar-tab ((t (:inherit mode-line :box t))))
   (tab-bar-tab-inactive ((t (:inherit mode-line-inactive :box nil))))
   :config
+  (keymap-unset tab-bar-mode-map "C-<tab>")
   (tab-bar-history-mode))
 
 (use-package saveplace :defer 6
