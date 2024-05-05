@@ -33,3 +33,7 @@
 /comint/
 /eshell/lastdir
 /sql-history.eld
+/gnus/.newsrc.eld
+/gnus/.nnmail-cache
+/gnus/.newsrc
+/gnus/mbox/

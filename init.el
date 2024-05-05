@@ -916,8 +916,11 @@
     (setq ediff-split-window-function 'split-window-horizontally)))
 
 (use-package message
+  :hook (message-send . ispell-message)
   :custom
+  (message-server-alist '())
   (message-kill-buffer-on-exit t)
+  (message-send-mail-function 'smtpmail-send-it)
   (message-signature nil))
 
 (use-package rmail
@@ -926,9 +929,41 @@
   (send-mail-command 'smtpmail-send-it))
 
 (use-package gnus
+  :hook ((gnus-select-group . gnus-group-set-timestamp)
+         (gnus-group-mode . gnus-topic-mode)
+         (gnus-summary-exit . gnus-summary-bubble-group)
+         (gnus-configure-windows . gnus-tree-perhaps-minimize))
   :custom
-  (message-send-mail-function 'smtpmail-send-it)
-  (gnus-home-directory (expand-file-name "gnus/" user-emacs-directory)))
+  (gnus-home-directory (expand-file-name "gnus/" user-emacs-directory))
+  (gnus-directory (expand-file-name "News/" gnus-home-directory))
+  (gnus-init-file (expand-file-name ".gnus.gpg" gnus-home-directory))
+  (gnus-sieve-file (expand-file-name ".sieve" gnus-home-directory))
+  (gnus-select-method '(nntp "freenews.netfront.net"))
+  (gnus-use-full-window nil)
+  (gnus-save-newsrc-file nil)
+  (gnus-read-newsrc-file nil)
+  (gnus-use-trees t)
+  (gnus-asynchronous t)
+  (gnus-thread-sort-functions '((not gnus-thread-sort-by-number)
+                                gnus-thread-sort-by-score))
+  (gnus-refer-article-method '(current (nnweb "google" (nnweb-type google))))
+  (gnus-single-article-buffer t)
+  (gnus-message-archive-group nil)
+  (gnus-suppress-duplicates t)
+  (gnus-blocked-images "ads")
+  (nnmail-expiry-wait 'never)
+  (nnmail-expiry-target "Deleted Messages")
+  (mm-inline-large-images t)
+  (mm-file-name-rewrite-functions
+   '(mm-file-name-trim-whitespace
+     mm-file-name-collapse-whitespace
+     mm-file-name-replace-whitespace))
+  (send-mail-function 'smtpmail-send-it)
+  (smtpmail-stream-type 'ssl)
+  :config
+  (autoload 'gnus-tree-perhaps-minimize "gnus-salt")
+  (auto-image-file-mode)
+  (gnus-delay-initialize))
 
 (use-package remember
   :custom
