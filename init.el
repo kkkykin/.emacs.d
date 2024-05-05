@@ -676,6 +676,19 @@
   (newsticker-wget-name "curl")
   (newsticker-wget-arguments '("-Lkqsm30" "-A" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 Edg/124.0.0.0"))
   :config
+  (dolist (map (list newsticker-treeview-mode-map
+                     newsticker-treeview-list-mode-map
+                     newsticker-treeview-item-mode-map))
+    (define-keymap :keymap map
+      "n" #'newsticker-treeview-next-new-or-immortal-item
+      "p" #'newsticker-treeview-prev-new-or-immortal-item
+      "N" #'newsticker-treeview-next-item
+      "P" #'newsticker-treeview-prev-item))
+  (define-keymap :keymap newsticker-mode-map
+    "n" #'newsticker-next-new-item
+    "p" #'newsticker-previous-new-item
+    "N" #'newsticker-next-item
+    "P" #'newsticker-previous-item)
   (when (y-or-n-p-with-timeout "Do you want to run newsticker? " 30 t)
     (newsticker-start t)))
 
