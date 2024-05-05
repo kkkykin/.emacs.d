@@ -119,12 +119,20 @@
   (when (display-graphic-p)
     (when my/fonts-list
       (let* ((font (seq-random-elt my/fonts-list))
-             (size (cond ((string= font "霞鹜文楷等宽") '(26 14 18))
-                         ((string= font "等距更纱黑体 SC") '(24 14 17))
-                         ((string-prefix-p "Unifont" font) '(26 14 18))))
-             (height (cond ((string= font "霞鹜文楷等宽") '(198 108 140))
-                           ((string= font "等距更纱黑体 SC") '(188 108 130))
-                           ((string-prefix-p "Unifont" font) '(198 108 142)))))
+             (size (pcase font
+                     ((or "霞鹜文楷等宽" "LXGW WenKai Mono")
+                      '(26 14 18))
+                     ((or "等距更纱黑体 SC" "Sarasa Mono SC")
+                      '(24 14 17))
+                     ((guard (string-prefix-p "Unifont" font))
+                      '(26 14 18))))
+             (height (pcase font
+                       ((or "霞鹜文楷等宽" "LXGW WenKai Mono")
+                        '(198 108 140))
+                       ((or "等距更纱黑体 SC" "Sarasa Mono SC")
+                        '(188 108 130))
+                       ((guard (string-prefix-p "Unifont" font))
+                        '(198 108 142)))))
         (set-face-attribute 'default nil :font font :height
                             (cond ((< (display-pixel-width) 1920) (car height))
                                   ((> (display-pixel-width) 1920) (caddr height))
