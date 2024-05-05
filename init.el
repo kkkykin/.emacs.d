@@ -92,6 +92,10 @@
 (use-package transient
   :autoload transient-define-prefix)
 
+(use-package init-misc
+  :if (locate-library "init-misc")
+  :demand t)
+
 (use-package init-winnt :demand t
   :if (and my/sys-winnt-p (locate-library "init-winnt")))
 
@@ -100,10 +104,6 @@
 
 (use-package init-android :demand t
   :if (and my/sys-android-p (locate-library "init-android")))
-
-(use-package init-misc
-  :if (locate-library "init-misc")
-  :demand t)
 
 (use-package init-prog
   :if (locate-library "init-prog")
@@ -1017,7 +1017,10 @@
   (tab-bar-tab ((t (:inherit mode-line :box t))))
   (tab-bar-tab-inactive ((t (:inherit mode-line-inactive :box nil))))
   :config
-  (keymap-unset tab-bar-mode-map "C-<tab>")
+  (when (boundp 'tab-bar-mode-map)
+    (define-keymap :keymap tab-bar-mode-map
+      "C-<tab>" nil
+      "C-S-<tab>" nil))
   (tab-bar-history-mode))
 
 (use-package saveplace :defer 6
