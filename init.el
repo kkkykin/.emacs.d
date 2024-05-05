@@ -732,6 +732,10 @@
    (format "-o ControlPath=%s/ssh-ControlPath-%%r@%%h:%%p -o ControlMaster=auto -o ControlPersist=30m"
            temporary-file-directory)))
 
+(use-package sh-script
+  :hook (sh-base-mode . (lambda () (setq-local buffer-file-coding-system
+                                           'prefer-utf-8-unix))))
+
 (use-package shell
   :custom
   (shell-completion-execonly nil)
