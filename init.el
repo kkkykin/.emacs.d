@@ -227,11 +227,12 @@
           (apply (if (eq major-mode 'wdired-mode)
                      #'viper-exec-key-in-emacs #'viper-search-forward)
                  args))
-    ":" (lambda (&rest args)
-          (interactive "P")
-          (apply (if (eq major-mode 'wdired-mode)
-                     #'viper-exec-key-in-emacs #'viper-ex)
-                 args)))
+    ":" nil
+    "SPC :" (lambda (&rest args)
+              (interactive "P")
+              (apply (if (eq major-mode 'wdired-mode)
+                         #'viper-exec-key-in-emacs #'viper-ex)
+                     args)))
   (setopt
    viper-major-mode-modifier-list
    (append '((sql-interactive-mode insert-state viper-comint-mode-modifier-map)
@@ -513,9 +514,9 @@
                ("l" . windmove-display-right)
                ("k" . windmove-display-up)
                ("j" . windmove-display-down)
-               ("0" . windmove-display-same-window)
                ("f" . windmove-display-new-frame)
                ("t" . windmove-display-new-tab)
+               ("0" . delete-window)
                ("<" . scroll-left)
                (">" . scroll-right)
                ("v" . scroll-other-window)
