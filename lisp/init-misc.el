@@ -72,7 +72,9 @@
    (mapcar
     #'car
     '(("霞鹜文楷等宽" . "https://github.com/lxgw/LxgwWenKai/releases")
+      ("LXGW WenKai Mono")
       ("等距更纱黑体 SC" . "https://github.com/be5invis/Sarasa-Gothic/releases")
+      ("Sarasa Mono SC")
       ("Unifont-JP" . "https://unifoundry.com/unifont/index.html")
       ("UnifontExMono" . "https://github.com/stgiga/UnifontEX/releases")))
    :test 'equal)
