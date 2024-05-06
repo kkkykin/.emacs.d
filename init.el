@@ -1256,6 +1256,10 @@
   (setq org-babel-default-header-args
         (cons '(:noweb . "yes")
               (assq-delete-all :noweb org-babel-default-header-args)))
+  (with-eval-after-load 'ob-plantuml
+    (setq org-babel-default-header-args:plantuml
+          (cons '(:results . "verbatim")
+                (assq-delete-all :results org-babel-default-header-args:plantuml))))
   (org-babel-do-load-languages
    'org-babel-load-languages
    (seq-filter
