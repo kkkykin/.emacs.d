@@ -67,18 +67,13 @@
   :type '(repeat symbol))
 
 (defcustom my/fonts-list
-  (cl-intersection
-   (font-family-list)
-   (mapcar
-    #'car
-    '(("霞鹜文楷等宽" . "https://github.com/lxgw/LxgwWenKai/releases")
-      ("LXGW WenKai Mono")
-      ("等距更纱黑体 SC" . "https://github.com/be5invis/Sarasa-Gothic/releases")
-      ("Sarasa Mono SC")
-      ("Unifont-JP" . "https://unifoundry.com/unifont/index.html")
-      ("UnifontExMono" . "https://github.com/stgiga/UnifontEX/releases")))
-   :test 'equal)
-  "prefered fonts"
+  '(("霞鹜文楷等宽" . #1=(198 108 140 "https://github.com/lxgw/LxgwWenKai/releases"))
+    ("LXGW WenKai Mono" . #1#)
+    ("等距更纱黑体 SC" . #2=(188 108 130 "https://github.com/be5invis/Sarasa-Gothic/releases"))
+    ("Sarasa Mono SC" . #2#)
+    ("Unifont-JP" . (198 108 142 "https://unifoundry.com/unifont/index.html"))
+    ("UnifontExMono" . (198 108 142 "https://github.com/stgiga/UnifontEX/releases")))
+  "Fonts. Heights. Source."
   :group 'my
   :type '(repeat string))
 
@@ -117,26 +112,14 @@
 (defun my/setup-faces ()
   "Randomize setup faces."
   (when (display-graphic-p)
-    (when my/fonts-list
-      (let* ((font (seq-random-elt my/fonts-list))
-             (size (pcase font
-                     ((or "霞鹜文楷等宽" "LXGW WenKai Mono")
-                      '(26 14 18))
-                     ((or "等距更纱黑体 SC" "Sarasa Mono SC")
-                      '(24 14 17))
-                     ((guard (string-prefix-p "Unifont" font))
-                      '(26 14 18))))
-             (height (pcase font
-                       ((or "霞鹜文楷等宽" "LXGW WenKai Mono")
-                        '(198 108 140))
-                       ((or "等距更纱黑体 SC" "Sarasa Mono SC")
-                        '(188 108 130))
-                       ((guard (string-prefix-p "Unifont" font))
-                        '(198 108 142)))))
-        (set-face-attribute 'default nil :font font :height
-                            (cond ((< (display-pixel-width) 1920) (car height))
-                                  ((> (display-pixel-width) 1920) (caddr height))
-                                  (t (cadr height))))))
+    (when-let ((fonts (cl-intersection
+                       (font-family-list)
+                       (mapcar #'car my/fonts-list) :test 'equal)))
+      (let ((font (assoc (seq-random-elt fonts) my/fonts-list)))
+        (set-face-attribute 'default nil :font (car font) :height
+                            (cond ((< (display-pixel-width) 1920) (cadr font))
+                                  ((> (display-pixel-width) 1920) (cadddr font))
+                                  (t (caddr font))))))
     (my/shuffle-set-theme (if (my/system-dark-mode-enabled-p)
                               my/dark-theme-list
                             my/light-theme-list))))
