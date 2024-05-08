@@ -1152,7 +1152,7 @@
 (use-package org
   :init (setq org-directory "~/org")
   :custom
-  (org-popup-calendar-for-date-prompt nil)
+  (org-read-date-popup-calendar nil)
   ;; (org-replace-disputed-keys t "see `'org-disputed-keys'")
   (org-special-ctrl-a/e t)
   (org-special-ctrl-k t)
