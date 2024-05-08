@@ -1152,6 +1152,7 @@
 (use-package org
   :init (setq org-directory "~/org")
   :custom
+  (org-popup-calendar-for-date-prompt nil)
   ;; (org-replace-disputed-keys t "see `'org-disputed-keys'")
   (org-special-ctrl-a/e t)
   (org-special-ctrl-k t)
@@ -1191,6 +1192,14 @@
   (org-log-done 'time)
   (org-log-into-drawer t)
   :config (add-to-list 'org-modules 'org-id))
+
+(use-package org-clock
+  :custom
+  (org-clock-persist 'history)
+  (org-timer-default-timer 5)
+  :config
+  (put 'org-timer-default-timer 'safe-local-variable 'numberp)
+  (org-clock-persistence-insinuate))
 
 (use-package org-list
   :custom
