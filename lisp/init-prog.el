@@ -98,8 +98,9 @@
 (define-keymap :keymap occur-mode-map
   "w" #'mp/next-error-put-function-name)
 
-(define-keymap :keymap grep-mode-map
-  "w" #'mp/next-error-put-function-name)
+(with-eval-after-load 'grep
+  (define-keymap :keymap grep-mode-map
+    "w" #'mp/next-error-put-function-name))
 
 (defun mp/xref-which-function (file pos)
   "Get function name from a marker in a file."
