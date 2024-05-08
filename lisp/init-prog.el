@@ -51,7 +51,7 @@
 
 
 ;; xref
-
+;; todo: work on occur and grep
 (defun mp/xref-which-function (file pos)
   "Get function name from a marker in a file."
   (with-current-buffer
