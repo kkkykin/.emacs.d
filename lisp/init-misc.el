@@ -78,10 +78,19 @@
   :type '(repeat string))
 
 (defun my/system-dark-mode-enabled-p ()
-  "Check if dark-mode is enabled."
+  "Check if dark-mode is enabled. ref:
+https://github.com/LionyxML/auto-dark-emacs/blob/master/auto-dark.el"
   (pcase system-type
     ('windows-nt
-     (eql 0 (w32-read-registry 'HKCU "SOFTWARE/Microsoft/Windows/CurrentVersion/Themes/Personalize" "AppsUseLightTheme")))
+     (eq 0 (w32-read-registry 'HKCU "SOFTWARE/Microsoft/Windows/CurrentVersion/Themes/Personalize" "AppsUseLightTheme")))
+    ('gnu/linux
+     (eq 1 (caar (dbus-ignore-errors
+                   (dbus-call-method
+                    :session
+                    "org.freedesktop.portal.Desktop"
+                    "/org/freedesktop/portal/desktop"
+                    "org.freedesktop.portal.Settings" "Read"
+                    "org.freedesktop.appearance" "color-scheme")))))
     (_ nil)))
 
 (defun my/set-theme (theme)
