@@ -51,7 +51,56 @@
 
 
 ;; xref
-;; todo: work on occur and grep
+
+(defun mp/next-error-put-function-name-work ()
+  "Get function name and put to `next-error-last-buffer'."
+  (when-let ((func (which-function)))
+    (set-buffer next-error-last-buffer)
+    (let ((text (format "%s │" (string-pad (string-limit func 18) 18)))
+          (ov (make-overlay (pos-bol) (1+ (pos-bol)) nil t)))
+      (overlay-put ov 'before-string
+                   (propertize text 'face 'font-lock-keyward-face))
+      (overlay-put ov 'evaporate t)))
+  (set-buffer next-error-last-buffer))
+
+(defun mp/next-error-put-function-name (&optional arg)
+  "Put function name before all items."
+  (interactive "P")
+  (save-window-excursion
+    (save-excursion
+      (pcase major-mode
+        ('grep-mode
+         (widen)
+         (goto-char 1)
+         (let ((max (- (line-number-at-pos (point-max)) 7)))
+           (dotimes (i max)
+             (funcall next-error-function 1)
+             (mp/next-error-put-function-name-work))))
+        ('occur-mode
+         (if arg
+             (progn 
+               (widen)
+               (goto-char 1)
+               (while (not (condition-case t
+                               (funcall next-error-function 1)
+                             (error t)))
+                 (mp/next-error-put-function-name-work)))
+           (let ((back-cnt 2))
+             (or (re-search-forward "^[[:digit:]]+ matches .+ in buffer:" nil t)
+                 (and (goto-char (point-max)) (setq back-cnt 1)))
+             (let ((max (line-number-at-pos)))
+               (re-search-backward "^[[:digit:]]+ matches .+ in buffer:"
+                                   nil t back-cnt)
+               (dotimes (i (- max (line-number-at-pos) 1))
+                 (funcall next-error-function 1)
+                 (mp/next-error-put-function-name-work))))))))))
+
+(define-keymap :keymap occur-mode-map
+  "w" #'mp/next-error-put-function-name)
+
+(define-keymap :keymap grep-mode-map
+  "w" #'mp/next-error-put-function-name)
+
 (defun mp/xref-which-function (file pos)
   "Get function name from a marker in a file."
   (with-current-buffer
