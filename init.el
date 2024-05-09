@@ -24,6 +24,7 @@
   ([remap downcase-word] . downcase-dwim)
   ([remap capitalize-word] . capitalize-dwim)
   :custom
+  (face-font-rescale-alist '(("Courier" . 1.2)))
   (inhibit-splash-screen t)
   (indicate-buffer-boundaries 'left)
   (initial-major-mode 'fundamental-mode)
@@ -1210,7 +1211,10 @@
   :custom
   ;; (org-table-header-line-p t)
   (org-table-use-standard-references t)
-  (org-table-automatic-realign nil))
+  (org-table-automatic-realign nil)
+  :config
+  ;; https://emacs-china.org/t/org-9-6-5-org/24484
+  (advice-add #'org-string-width :before-until #'org--string-width-1))
 
 (use-package org-agenda
   :bind
