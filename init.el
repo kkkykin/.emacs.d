@@ -1023,8 +1023,7 @@
       "C-S-<tab>" nil))
   (tab-bar-history-mode))
 
-(use-package saveplace :defer 6
-  :config (save-place-mode))
+(use-package saveplace :hook (emacs-startup . save-place-mode))
 
 (use-package recentf :defer 1
   :config
