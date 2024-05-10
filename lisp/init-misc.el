@@ -48,9 +48,9 @@
 (defcustom my/light-theme-list
   (cl-intersection
    my/all-theme-list
-   '( adwaita dichromacy leuven modus-operandi-deuteranopia modus-operandi
-      modus-operandi-tinted modus-operandi-tritanopia tango
-      tsdh-light whiteboard))
+   '( adwaita default dichromacy leuven modus-operandi-deuteranopia
+      modus-operandi modus-operandi-tinted modus-operandi-tritanopia
+      tango tsdh-light whiteboard))
   "Built-in light themes."
   :group 'my
   :type '(repeat symbol))
@@ -66,26 +66,48 @@
   :group 'my
   :type '(repeat symbol))
 
+;; (defcustom my/fonts-list
+;;   '(("霞鹜文楷等宽" . #1=(198 108 140 "https://github.com/lxgw/LxgwWenKai/releases"))
+;;     ("LXGW WenKai Mono" . #1#)
+;;     ("等距更纱黑体 SC" . #2=(188 108 130 "https://github.com/be5invis/Sarasa-Gothic/releases"))
+;;     ("Sarasa Mono SC" . #2#)
+;;     ("Unifont-JP" . (198 108 142 "https://unifoundry.com/unifont/index.html"))
+;;     ("UnifontExMono" . (198 108 142 "https://github.com/stgiga/UnifontEX/releases")))
+;;   "Fonts. Heights. Source."
+;;   :group 'my
+;;   :type '(repeat string))
+
+;; (defun my/setup-faces ()
+;;   "Randomize setup faces."
+;;   (when (display-graphic-p)
+;;     (when-let ((fonts
+;;                 (cl-intersection
+;;                  (font-family-list)
+;;                  (mapcar #'car my/fonts-list) :test 'equal)))
+;;       (let ((font (assoc (seq-random-elt fonts) my/fonts-list)))
+;;         (set-face-attribute 'default nil :font (car font) :height
+;;                             (cond ((< (display-pixel-width) 1920) (cadr font))
+;;                                   ((> (display-pixel-width) 1920) (cadddr font))
+;;                                   (t (caddr font))))))
+;;     (my/shuffle-set-theme (if (my/system-dark-mode-enabled-p)
+;;                               my/dark-theme-list
+;;                             my/light-theme-list))))
+
 (defcustom my/fonts-list
-  (mapcar
-   (lambda (a)
-     (and
-      (font-spec :family a)
-      a))
-   (mapcar
-    #'car
-    '(("霞鹜文楷等宽" . #1=(198 108 140 "https://github.com/lxgw/LxgwWenKai/releases"))
-      ("LXGW WenKai Mono" . #1#)
-      ("等距更纱黑体 SC" . #2=(188 108 130 "https://github.com/be5invis/Sarasa-Gothic/releases"))
-      ("Sarasa Mono SC" . #2#)
-      ("Unifont-JP" . (198 108 142 "https://unifoundry.com/unifont/index.html"))
-      ("UnifontExMono" . (198 108 142 "https://github.com/stgiga/UnifontEX/releases")))))
+  (mapcar (lambda (a)
+            (font-spec :name
+                       (format "%s:pixelsize=%d" (car a)
+                               (pcase (display-pixel-width)
+                                 ((pred (> 1920)) (caadr a))
+                                 ((pred (< 1920)) (cddadr a))
+                                 (_ (cadadr a))))))
+          '(("LXGW WenKai Mono" (33 18 . 23) "https://github.com/lxgw/LxgwWenKai/releases")
+            ("Sarasa Mono SC" (32 18 . 22) "https://github.com/be5invis/Sarasa-Gothic/releases")
+            ("Unifont-JP" #1=(33 18 . 24) "https://unifoundry.com/unifont/index.html")
+            ("UnifontExMono" #1# "https://github.com/stgiga/UnifontEX/releases")))
   "Fonts. Heights. Source."
   :group 'my
   :type '(repeat string))
-
-(with-eval-after-load 'org-faces
-  (set-face-attribute 'org-table nil :font "LXGW WenKai Mono"))
 
 (defun my/system-dark-mode-enabled-p ()
   "Check if dark-mode is enabled. ref:
@@ -105,18 +127,19 @@ https://github.com/LionyxML/auto-dark-emacs/blob/master/auto-dark.el"
 
 (defun my/set-theme (theme)
   "Set one theme only."
-  (unless (memq theme custom-known-themes)
-    (load-theme theme t t))
-  (pcase theme
-    ('adwaita
-     (custom-theme-set-faces theme '(hl-line ((t (:extend t :background "navajo white"))))))
-    ('whiteboard
-     (custom-theme-set-faces theme '(hl-line ((t (:extend t :background "wheat"))))))
-    ('tango
-     (custom-theme-set-faces theme '(hl-line ((t (:extend t :background "cornsilk")))))))
-  (dolist (item custom-enabled-themes)
-    (disable-theme item))
-  (enable-theme theme))
+  (unless (eq theme 'default)
+    (unless (memq theme custom-known-themes)
+      (load-theme theme t t))
+    (pcase theme
+      ('adwaita
+       (custom-theme-set-faces theme '(hl-line ((t (:extend t :background "navajo white"))))))
+      ('whiteboard
+       (custom-theme-set-faces theme '(hl-line ((t (:extend t :background "wheat"))))))
+      ('tango
+       (custom-theme-set-faces theme '(hl-line ((t (:extend t :background "cornsilk")))))))
+    (dolist (item custom-enabled-themes)
+      (disable-theme item))
+    (enable-theme theme)))
 
 (defun my/shuffle-set-theme (theme-list)
   "Shuffle set theme."
@@ -128,26 +151,28 @@ https://github.com/LionyxML/auto-dark-emacs/blob/master/auto-dark.el"
     (my/set-theme theme)
     (message "Current theme: %s" (symbol-name theme))))
 
-;; (defun my/setup-faces ()
-;;   "Randomize setup faces."
-;;   (when (display-graphic-p)
-;;     (when-let ((fonts (cl-intersection
-;;                        (font-family-list)
-;;                        my/fonts-list :test 'equal)))
-;;       (let ((font (assoc (seq-random-elt fonts) my/fonts-list)))
-;;         (set-face-attribute 'default nil :font (car font) :height
-;;                             (cond ((< (display-pixel-width) 1920) (cadr font))
-;;                                   ((> (display-pixel-width) 1920) (cadddr font))
-;;                                   (t (caddr font))))))
-;;     (my/shuffle-set-theme (if (my/system-dark-mode-enabled-p)
-;;                               my/dark-theme-list
-;;                             my/light-theme-list))))
-;; (add-hook 'window-setup-hook #'my/setup-faces)
+(defun my/setup-faces ()
+  "Randomize setup faces."
+  (when (display-graphic-p)
+    (when-let ((fonts (mapcar (lambda (a) (and (find-font a) a)) my/fonts-list)))
+      (set-face-attribute 'default nil :font (seq-random-elt fonts)))
+    (my/shuffle-set-theme (if (my/system-dark-mode-enabled-p)
+                              my/dark-theme-list
+                            my/light-theme-list))))
+(add-hook 'window-setup-hook #'my/setup-faces)
 
-(defun my/set-font (&optional font)
+(defun my/set-font-current-buffer (&optional font)
   "Set font for current buffer."
   (interactive "P")
-  (face-remap-add-relative 'default '(:family "LXGW WenKai Mono" :height 140)))
+  (let ((fonts (pcase font
+                 ((pred stringp) (list font))
+                 ('nil '("Unifont-JP" "UnifontExMono"))
+                 ((pred listp) (list (completing-read
+                                      "Fonts: " (font-family-list)))))))
+    (when-let ((font (cl-intersection
+                      (font-family-list)
+                      fonts :test 'equal)))
+      (face-remap-add-relative 'default :family (car font)))))
 
 
 ;; termux

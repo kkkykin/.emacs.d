@@ -24,7 +24,6 @@
   ([remap downcase-word] . downcase-dwim)
   ([remap capitalize-word] . capitalize-dwim)
   :custom
-  (face-font-rescale-alist '(("Courier" . 1.2)))
   (inhibit-splash-screen t)
   (indicate-buffer-boundaries 'left)
   (initial-major-mode 'fundamental-mode)
