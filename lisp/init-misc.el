@@ -40,7 +40,7 @@
 
 ;; theme
 
-(defcustom my/all-theme-list (custom-available-themes)
+(defcustom my/all-theme-list (cons 'default (custom-available-themes))
   "list of Custom themes available for loading."
   :group 'my
   :type '(repeat symbol))
@@ -162,7 +162,8 @@ https://github.com/LionyxML/auto-dark-emacs/blob/master/auto-dark.el"
 (defun my/setup-faces ()
   "Randomize setup faces."
   (when (display-graphic-p)
-    (when-let ((fonts (mapcar (lambda (a) (and (find-font a) a)) my/fonts-list)))
+    (when-let ((fonts (delq nil (mapcar (lambda (a) (and (find-font a) a))
+                                        my/fonts-list))))
       (set-face-attribute 'default nil :font (seq-random-elt fonts)))
     (my/shuffle-set-theme)))
 (add-hook 'window-setup-hook #'my/setup-faces)
