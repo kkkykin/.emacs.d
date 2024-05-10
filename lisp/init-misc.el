@@ -127,7 +127,9 @@ https://github.com/LionyxML/auto-dark-emacs/blob/master/auto-dark.el"
 
 (defun my/set-theme (theme)
   "Set one theme only."
-  (unless (eq theme 'default)
+  (if (eq theme 'default)
+      (dolist (item custom-enabled-themes)
+        (disable-theme item))
     (unless (memq theme custom-known-themes)
       (load-theme theme t t))
     (pcase theme
@@ -141,13 +143,19 @@ https://github.com/LionyxML/auto-dark-emacs/blob/master/auto-dark.el"
       (disable-theme item))
     (enable-theme theme)))
 
-(defun my/shuffle-set-theme (theme-list)
+(defun my/shuffle-set-theme (&optional themes)
   "Shuffle set theme."
-  ;; (interactive
-  ;;  (list (completing-read "Load theme list: "
-  ;;                         '("my/light-theme-list"
-  ;;                           "my/dark-theme-list"))))
-  (let ((theme (seq-random-elt theme-list)))
+  (interactive "P")
+  (let* ((themes (pcase themes
+                   ('nil (if (my/system-dark-mode-enabled-p)
+                             my/dark-theme-list
+                           my/light-theme-list))
+                   ((guard (lambda (a) (consp arg)))
+                    (if (my/system-dark-mode-enabled-p)
+                        my/light-theme-list
+                      my/dark-theme-list))
+                   (_ themes)))
+         (theme (seq-random-elt themes)))
     (my/set-theme theme)
     (message "Current theme: %s" (symbol-name theme))))
 
@@ -156,9 +164,7 @@ https://github.com/LionyxML/auto-dark-emacs/blob/master/auto-dark.el"
   (when (display-graphic-p)
     (when-let ((fonts (mapcar (lambda (a) (and (find-font a) a)) my/fonts-list)))
       (set-face-attribute 'default nil :font (seq-random-elt fonts)))
-    (my/shuffle-set-theme (if (my/system-dark-mode-enabled-p)
-                              my/dark-theme-list
-                            my/light-theme-list))))
+    (my/shuffle-set-theme)))
 (add-hook 'window-setup-hook #'my/setup-faces)
 
 (defun my/set-font-current-buffer (&optional font)
