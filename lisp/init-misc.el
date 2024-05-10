@@ -85,7 +85,7 @@
   :type '(repeat string))
 
 (with-eval-after-load 'org-faces
-  (set-face-attribute 'org-table nil :font ()))
+  (set-face-attribute 'org-table nil :font "LXGW WenKai Mono"))
 
 (defun my/system-dark-mode-enabled-p ()
   "Check if dark-mode is enabled. ref:
