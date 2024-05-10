@@ -1211,9 +1211,10 @@
   ;; (org-table-header-line-p t)
   (org-table-use-standard-references t)
   (org-table-automatic-realign nil)
-  :config
+  ;; :config
   ;; https://emacs-china.org/t/org-9-6-5-org/24484
-  (advice-add #'org-string-width :before-until #'org--string-width-1))
+  ;; (advice-add #'org-string-width :before-until #'org--string-width-1)
+  )
 
 (use-package org-agenda
   :bind
