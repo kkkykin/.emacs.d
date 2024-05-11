@@ -94,17 +94,10 @@
 ;;                             my/light-theme-list))))
 
 (defcustom my/fonts-list
-  (mapcar (lambda (a)
-            (font-spec :name
-                       (format "%s:pixelsize=%d" (car a)
-                               (pcase (display-pixel-width)
-                                 ((pred (> 1920)) (caadr a))
-                                 ((pred (< 1920)) (cddadr a))
-                                 (_ (cadadr a))))))
-          '(("LXGW WenKai Mono" (33 18 . 23) "https://github.com/lxgw/LxgwWenKai/releases")
-            ("Sarasa Mono SC" (32 18 . 22) "https://github.com/be5invis/Sarasa-Gothic/releases")
-            ("Unifont-JP" #1=(33 18 . 24) "https://unifoundry.com/unifont/index.html")
-            ("UnifontExMono" #1# "https://github.com/stgiga/UnifontEX/releases")))
+  '(("LXGW WenKai Mono" (33 15 . 23) "https://github.com/lxgw/LxgwWenKai/releases")
+    ("Sarasa Mono SC" (32 15 . 22) "https://github.com/be5invis/Sarasa-Gothic/releases")
+    ("Unifont-JP" #1=(33 15 . 24) "https://unifoundry.com/unifont/index.html")
+    ("UnifontExMono" #1# "https://github.com/stgiga/UnifontEX/releases"))
   "Fonts. Heights. Source."
   :group 'my
   :type '(repeat string))
@@ -162,8 +155,18 @@ https://github.com/LionyxML/auto-dark-emacs/blob/master/auto-dark.el"
 (defun my/setup-faces ()
   "Randomize setup faces."
   (when (display-graphic-p)
-    (when-let ((fonts (delq nil (mapcar (lambda (a) (and (find-font a) a))
-                                        my/fonts-list))))
+    (when-let
+        ((fonts
+          (delq nil
+                (mapcar (lambda (a)
+                          (let ((b (font-spec :name
+                                              (format "%s:pixelsize=%d" (car a)
+                                                      (pcase (display-pixel-width)
+                                                        ((pred (> 1920)) (caadr a))
+                                                        ((pred (< 1920)) (cddadr a))
+                                                        (_ (cadadr a)))))))
+                            (and (find-font b) b)))
+                        my/fonts-list))))
       (set-face-attribute 'default nil :font (seq-random-elt fonts)))
     (my/shuffle-set-theme)))
 (add-hook 'window-setup-hook #'my/setup-faces)
