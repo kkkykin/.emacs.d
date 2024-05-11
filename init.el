@@ -879,6 +879,8 @@
 
 (use-package calendar
   :custom
+  (calendar-latitude 30.6)
+  (calendar-longitude 114.3)
   (calendar-chinese-all-holidays-flag t))
 
 (use-package image
