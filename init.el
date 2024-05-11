@@ -871,6 +871,25 @@
   :unless my/sys-android-p
   :bind ("<down-mouse-3>" . 'strokes-do-stroke))
 
+(use-package master
+  :bind
+  (:repeat-map my/master-repeat-map
+               "n" . 'master-says-scroll-up
+               "p" . 'master-says-scroll-down
+               "l" . 'master-says-recenter
+               "<" . 'master-says-beginning-of-buffer
+               ">" . 'master-says-end-of-buffer))
+
+(use-package scroll-all
+  :config
+  (define-advice scroll-all-check-to-scroll
+      (:before-while () support-other-scroll-command)
+    "Cua.."
+    (pcase this-command
+      ('cua-scroll-up (call-interactively 'scroll-all-page-down-all))
+      ('cua-scroll-down (call-interactively 'scroll-all-page-up-all))
+      (_ t))))
+
 (use-package flyspell
   :hook (text-mode
          (prog-mode . flyspell-prog-mode))

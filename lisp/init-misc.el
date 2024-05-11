@@ -548,6 +548,17 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
        :transient nil)]])
   (keymap-set isearch-mode-map "C-h t" 'my/isearch-menu))
 
+(defun isearch-other-window (regexp-p)
+    "Function to isearch-forward in the next window.
+With prefix arg REGEXP-P, perform a regular expression search.
+ref: https://karthinks.com/software/emacs-window-management-almanac/"
+    (interactive "P")
+    (unless (one-window-p)
+      (with-selected-window (other-window-for-scrolling)
+        (isearch-forward regexp-p))))
+
+(keymap-global-set "C-M-s" #'isearch-other-window)
+
 
 ;; repeat
 
