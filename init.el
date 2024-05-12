@@ -874,11 +874,11 @@
 (use-package master
   :bind
   (:repeat-map my/master-repeat-map
-               "n" . 'master-says-scroll-up
-               "p" . 'master-says-scroll-down
-               "l" . 'master-says-recenter
-               "<" . 'master-says-beginning-of-buffer
-               ">" . 'master-says-end-of-buffer))
+               ("n" . master-says-scroll-up)
+               ("p" . master-says-scroll-down)
+               ("l" . master-says-recenter)
+               ("<" . master-says-beginning-of-buffer)
+               (">" . master-says-end-of-buffer)))
 
 (use-package scroll-all
   :config
@@ -1416,12 +1416,15 @@
 
 (use-package denote
   :if (package-installed-p 'denote)
-  :bind (("C-c n n" . denote)
-         ("C-c n d" . denote-date)
-         ("C-c n t" . denote-type)
-         ("C-c n s" . denote-subdirectory)
-         ("C-c n f" . denote-open-or-create)
-         ("C-c n r" . denote-dired-rename-marked-files))
+  :bind
+  ("C-c n n" . denote)
+  ("C-c n d" . denote-date)
+  ("C-c n t" . denote-type)
+  ("C-c n s" . denote-subdirectory)
+  ("C-c n f" . denote-open-or-create)
+  ("C-c n r" . denote-dired-rename-marked-files)
+  (:map dired-mode-map
+        ("SPC r" . denote-rename-file))
   :init
   (with-eval-after-load 'org-capture
     (setq denote-org-capture-specifiers "%l\n%i\n%?")

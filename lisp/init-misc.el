@@ -334,7 +334,7 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
 (with-eval-after-load 'dired
   (define-keymap :keymap dired-mode-map
     "SPC" nil
-    "SPC r" #'my/dired-goto-random-file
+    "SPC R" #'my/dired-goto-random-file
     "E" #'my/dired-duplicate-file
     "f" #'my/dired-dwim))
 
