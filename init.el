@@ -1438,12 +1438,13 @@
                    :jump-to-captured t)))
   :custom
   (denote-known-keywords '("emacs" "entertainment" "reading" "studying" "work"))
+  (denote-date-prompt-use-org-read-date t)
   (denote-infer-keywords t)
   (denote-sort-keywords t)
   (denote-prompts '(title keywords))
   (denote-date-format nil)
-  (denote-dired-rename-expert nil)
   (denote-rename-buffer-format "[D] %t")
+  ;; (denote-silo-extras-directories)
   :hook
   ((dired-mode . denote-dired-mode)
    (find-file . denote-link-buttonize-buffer))
@@ -1451,6 +1452,12 @@
   (setq denote-directory (expand-file-name "~/org/"))
   (unless (file-exists-p denote-directory)
     (make-directory denote-directory))
+  (defun my/denote-region-org-structure-template (_beg _end)
+    (when (derived-mode-p 'org-mode)
+      (activate-mark)
+      (call-interactively 'org-insert-structure-template)))
+  (add-hook 'denote-region-after-new-note-functions #'my/denote-region-org-structure-template)
+  (require 'denote-silo-extras)
   (denote-rename-buffer-mode 1))
 
 ;; Popup completion-at-point
