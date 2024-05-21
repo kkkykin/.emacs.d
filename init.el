@@ -1438,6 +1438,7 @@
                    :kill-buffer t
                    :jump-to-captured t)))
   :custom
+  (denote-backlinks-show-context t)
   (denote-known-keywords '("emacs" "entertainment" "reading" "studying" "work"))
   (denote-date-prompt-use-org-read-date t)
   (denote-infer-keywords t)
