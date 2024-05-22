@@ -695,5 +695,32 @@ ref: https://karthinks.com/software/emacs-window-management-almanac/"
                           (substring xstr 20 32))))))
       (buffer-substring-no-properties 1 37))))
 
+
+;; pass
+(defun my/generate-pass (&optional arg)
+  "Generate password then copy to `kill-ring'. If call with
+`universal-argument' then insert into buffer instead of copy."
+  (interactive "P")
+  (let ((pass "")
+        (xc-program "keepassxc-cli")
+        (gpg-program "gpg")
+        (ssl-program "openssl")
+        (alnum "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"))
+    (setq pass
+          (cond
+           ((executable-find xc-program)
+            (car (process-lines xc-program "generate" "-lUnL15")))
+           ((executable-find gpg-program)
+            (car (process-lines gpg-program "--gen-random" "--armor" "1" "12")))
+           ((executable-find ssl-program)
+            (car (process-lines ssl-program "rand" "-base64" "12")))
+           (t (while-let ((enough (< (length pass) 15))
+                          (i (% (abs (random)) (length alnum))))
+                (setq pass (concat pass (substring alnum i (1+ i))))))))
+    (if arg
+        (insert pass)
+      (kill-new pass))))
+
+
 (provide 'init-misc)
 ;;; init-misc.el ends here
