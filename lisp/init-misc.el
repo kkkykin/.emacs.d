@@ -287,6 +287,50 @@ https://scripter.co/using-emacs-advice-to-silence-messages-from-functions"
 
 ;; dired
 
+(defvar my/archive-pass-history '("⑨")
+  "Archive password history.")
+(with-eval-after-load 'savehist
+  (add-to-list 'savehist-additional-variables 'my/archive-pass-history))
+
+(defun my/7z-extract-dwim (file &optional pass out-dir)
+  "Extract archive to directory if multi file in top dir."
+  (let* ((pass (concat "-p" pass))
+         (process-coding-system-alist `((,archive-7z-program utf-8 . ,locale-coding-system)))
+         (base (file-name-base file))
+         (buf (format "* 7z Extracting %s *" base))
+         (cmd `(,archive-7z-program "x" ,file "-aoa" ,pass)))
+    (with-current-buffer (get-buffer-create buf)
+      (when (process-live-p (get-buffer-process (current-buffer)))
+        (user-error "%s running another process."
+                    (propertize buf 'face 'font-lock-warning-face)))
+      (erase-buffer)
+      (call-process archive-7z-program nil t nil "l" file "-x!*\\*" pass)
+      (re-search-backward "\\([[:digit:]]+\\) files\\(?:, \\([[:digit:]]+\\) folders\\)?")
+      (when (< 1 (+ (string-to-number (match-string 1))
+                    (if-let ((dirs (match-string 2)))
+                        (string-to-number dirs)
+                      0)))
+        (setq cmd (append cmd (list (concat "-o" (or out-dir base))))))
+      (make-process
+       :name buf
+       :buffer (current-buffer)
+       :command cmd
+       :sentinel
+       (lambda (proc event)
+         (message (format "%s %s"
+                          (propertize (process-name proc)
+                                      'face 'font-lock-keyword-face)
+                          (string-trim-right event)))
+         (when (string= event "finished\n")
+           (kill-buffer (process-buffer proc))))))))
+
+(defun my/dired-7z-extract ()
+  "Async extract file in dired-mode."
+  (interactive nil dired-mode)
+  (let ((pass (completing-read "Password for archive: " my/archive-pass-history)))
+    (add-to-list 'my/archive-pass-history pass)
+    (my/7z-extract-dwim (dired-get-filename) pass)))
+
 (defun my/dired-dwim ()
   "start process with current file"
   (interactive)
@@ -333,6 +377,7 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
 
 (with-eval-after-load 'dired
   (define-keymap :keymap dired-mode-map
+    "z" #'my/dired-7z-extract
     "SPC" nil
     "SPC R" #'my/dired-goto-random-file
     "E" #'my/dired-duplicate-file
