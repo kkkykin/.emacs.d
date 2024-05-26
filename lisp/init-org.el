@@ -38,28 +38,29 @@ its subdirectories."
 (defun my/org-open-link-nearby (&optional arg)
   "Follow a link nearby like Org mode does."
   (interactive "P")
-  (unless (when (null arg)
-            (ignore-error user-error
-              (org-open-at-point-global)))
-    (let ((count (pcase arg
-                   ('- -1)
-                   ((guard (numberp arg)) arg)
-                   (_ 1)))
-          (org-link-elisp-confirm-function nil)
-          link)
-      (save-excursion
-        (re-search-forward org-link-any-re
-                           (when (use-region-p)
-                             (if (natnump count)
-                                 (region-end)
-                               (region-beginning)))
-                           t count)
-        (setq link (org-add-props (match-string-no-properties 0)
-                       nil 'face 'org-warning))
-        (if (and (string-match-p org-link-any-re link)
-                 (y-or-n-p (format "Open link: %s?" link)))
-            (org-link-open-from-string link)
-          (user-error "No link found"))))))
+  (condition-case nil
+      (org-open-at-point-global)
+    (user-error
+     (let ((count (pcase arg
+                    ('- -1)
+                    ((guard (numberp arg)) arg)
+                    (_ 1)))
+           (org-link-elisp-confirm-function nil)
+           (org-link-shell-confirm-function nil)
+           link)
+       (save-excursion
+         (re-search-forward org-link-any-re
+                            (when (use-region-p)
+                              (if (natnump count)
+                                  (region-end)
+                                (region-beginning)))
+                            t count)
+         (setq link (org-add-props (match-string-no-properties 0)
+                        nil 'face 'org-warning))
+         (if (and (string-match-p org-link-any-re link)
+                  (y-or-n-p (format "Open link: %s?" link)))
+             (org-link-open-from-string link)
+           (user-error "No link found")))))))
 
 (with-eval-after-load 'viper
   (keymap-substitute viper-vi-global-user-map
