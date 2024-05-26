@@ -673,6 +673,7 @@ Argument EVENT tells what has happened to the process."
   (dolist (fn '(newsticker--image-sentinel newsticker--sentinel-work))
     (advice-add fn :around #'my/advice-silence-messages))
   (make-directory (file-name-concat newsticker-dir "saved") t)
+  (auth-source-forget-all-cached)
   (load "init-rss.el.gpg" t t)
   (define-keymap :keymap newsticker-treeview-mode-map
     "DEL" #'mn/newsticker-treeview-prev-page))
