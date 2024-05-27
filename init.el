@@ -895,6 +895,8 @@
   :hook (text-mode
          (prog-mode . flyspell-prog-mode))
   :custom
+  (flyspell-mode-line-string nil)
+  (flyspell-use-meta-tab nil)
   (ispell-personal-dictionary (expand-file-name "dict.txt" user-emacs-directory)))
 
 (use-package calendar
