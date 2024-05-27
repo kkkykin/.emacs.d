@@ -299,12 +299,13 @@ https://scripter.co/using-emacs-advice-to-silence-messages-from-functions"
          (base (file-name-base file))
          (buf (format "* 7z Extracting %s *" base))
          (cmd `(,archive-7z-program "x" ,file "-aoa" ,pass)))
-    (with-current-buffer (get-buffer-create buf)
+    (with-current-buffer (get-buffer-create buf t)
       (when (process-live-p (get-buffer-process (current-buffer)))
         (user-error "%s running another process."
                     (propertize buf 'face 'font-lock-warning-face)))
       (erase-buffer)
-      (call-process archive-7z-program nil t nil "l" file "-x!*\\*" pass)
+      (call-process archive-7z-program nil t nil "l" file pass
+                    (if (eq system-type 'windows-nt) "-x!*\\*" "-x!*/*"))
       (re-search-backward "\\([[:digit:]]+\\) files\\(?:, \\([[:digit:]]+\\) folders\\)?")
       (when (< 1 (+ (string-to-number (match-string 1))
                     (if-let ((dirs (match-string 2)))
@@ -328,7 +329,8 @@ https://scripter.co/using-emacs-advice-to-silence-messages-from-functions"
   "Async extract file in dired-mode."
   (interactive nil dired-mode)
   (let ((pass (completing-read "Password for archive: " my/archive-pass-history)))
-    (add-to-list 'my/archive-pass-history pass)
+    (unless (string-empty-p pass)
+      (add-to-list 'my/archive-pass-history pass))
     (my/7z-extract-dwim (dired-get-filename) pass)))
 
 (defun my/dired-dwim ()
