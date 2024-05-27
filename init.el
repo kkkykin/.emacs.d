@@ -1233,6 +1233,7 @@
   :custom
   (org-clock-persist 'history)
   (org-timer-default-timer 5)
+  (org-clock-clocked-in-display 'frame-title)
   :config
   (put 'org-timer-default-timer 'safe-local-variable 'numberp)
   (org-clock-persistence-insinuate))
