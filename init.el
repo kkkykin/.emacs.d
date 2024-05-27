@@ -403,12 +403,25 @@
 (use-package electric
   :custom
   (electric-layout-rules '())
-  :hook
-  (((change-log-mode log-edit-mode) . electric-pair-local-mode)
-   ((text-mode fundamental-mode) . (lambda () (electric-pair-local-mode -1))))
   :config
-  (electric-pair-mode)
   (electric-layout-mode))
+
+(use-package elec-pair
+  :hook
+  ((change-log-mode log-edit-mode) . electric-pair-local-mode)
+  :config
+  (dolist (pair '((?’ . ?‘) (?” . ?“)))
+    (add-to-list 'electric-pair-pairs pair))
+  (define-advice electric-pair--insert (:around (orig-fn c) fix-curved-quotes)
+    "ref: https://emacs-china.org/t/electric-pair/16403/7"
+    (if-let* ((qpair (rassoc c electric-pair-pairs))
+              (reverse-p (and qpair (> (car qpair) (cdr qpair)))))
+        (run-with-timer 0 nil
+                        `(lambda ()
+                           (backward-char 1)
+                           (insert (char-to-string ,c))))
+      (funcall orig-fn c)))
+  (electric-pair-mode))
 
 (use-package windmove
   :unless my/sys-android-p
