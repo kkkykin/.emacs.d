@@ -333,15 +333,6 @@ https://scripter.co/using-emacs-advice-to-silence-messages-from-functions"
       (add-to-list 'my/archive-pass-history pass))
     (my/7z-extract-dwim (dired-get-filename) pass)))
 
-(defun my/dired-dwim ()
-  "start process with current file"
-  (interactive)
-  (let ((filename (dired-get-filename nil t)))
-    (when (eq filename nil)
-      (setq filename default-directory))
-    (my/mpv-intent filename))
-  )
-
 (defun my/dired-duplicate-file (arg)
   "Duplicate a file from dired with an incremented number.
 If ARG is provided, it sets the counter.
@@ -379,11 +370,11 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
 
 (with-eval-after-load 'dired
   (define-keymap :keymap dired-mode-map
-    "z" #'my/dired-7z-extract
+    ;; z f available
     "SPC" nil
-    "SPC R" #'my/dired-goto-random-file
-    "E" #'my/dired-duplicate-file
-    "f" #'my/dired-dwim))
+    "SPC d" #'my/dired-duplicate-file
+    "SPC z" #'my/dired-7z-extract
+    "SPC R" #'my/dired-goto-random-file))
 
 (with-eval-after-load 'image-dired
   (unless (executable-find "gm")
