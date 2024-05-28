@@ -54,6 +54,7 @@
   (kill-do-not-save-duplicates t)
   (duplicate-region-final-position 1)
   (indent-tabs-mode nil)
+  (delete-pair-blink-delay nil)
   (tab-width 4)
   (switch-to-buffer-obey-display-actions t)
   (shell-command-dont-erase-buffer 'end-last-out)
