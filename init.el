@@ -408,8 +408,9 @@
   (electric-layout-mode))
 
 (use-package elec-pair
-  :hook
-  ((change-log-mode log-edit-mode) . electric-pair-local-mode)
+  :hook (after-init . electric-pair-mode)
+  :custom
+  (electric-pair-inhibit-predicate 'electric-pair-conservative-inhibit)
   :config
   (dolist (pair '((?’ . ?‘) (?” . ?“)))
     (add-to-list 'electric-pair-pairs pair))
@@ -421,8 +422,7 @@
                         `(lambda ()
                            (backward-char 1)
                            (insert (char-to-string ,c))))
-      (funcall orig-fn c)))
-  (electric-pair-mode))
+      (funcall orig-fn c))))
 
 (use-package windmove
   :unless my/sys-android-p
@@ -595,7 +595,13 @@
 
 (use-package add-log
   :custom
-  (add-log-keep-changes-together t))
+  (add-log-keep-changes-together t)
+  :config
+  (modify-syntax-entry ?' "\"" change-log-mode-syntax-table))
+
+(use-package log-edit
+  :config
+  (modify-syntax-entry ?' "\"" log-edit-mode-syntax-table))
 
 (use-package python
   :custom
@@ -768,7 +774,9 @@
   (shell-completion-execonly nil)
   (shell-completion-fignore '("~" "#" "%"))
   (shell-get-old-input-include-continuation-lines t)
-  (shell-kill-buffer-on-exit t))
+  (shell-kill-buffer-on-exit t)
+  :config
+  (modify-syntax-entry ?' "\"" shell-mode-syntax-table))
 
 (use-package sql
   :bind
@@ -1102,6 +1110,7 @@
   (keymap-unset eshell-command-repeat-map "C-f")
   (keymap-unset eshell-prompt-repeat-map "C-n")
   (keymap-unset eshell-prompt-repeat-map "C-p")
+  (modify-syntax-entry ?' "\"" eshell-mode-syntax-table)
   (add-hook 'eshell-expand-input-functions #'eshell-expand-history-references)
   (dolist (mod '(eshell-smart eshell-elecslash eshell-tramp eshell-xtra))
     (add-to-list 'eshell-modules-list mod)))
@@ -1228,7 +1237,10 @@
                    ("reading")))
   (org-log-done 'time)
   (org-log-into-drawer t)
-  :config (add-to-list 'org-modules 'org-id))
+  :config
+  (modify-syntax-entry ?< "." org-mode-syntax-table)
+  (modify-syntax-entry ?> "." org-mode-syntax-table)
+  (add-to-list 'org-modules 'org-id))
 
 (use-package org-clock
   :custom
