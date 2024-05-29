@@ -429,6 +429,7 @@
   :unless my/sys-android-p
   :hook emacs-startup
   :custom
+  (windmove-default-keybindings 'control)
   (windmove-wrap-around t))
 
 (use-package server :defer 5
@@ -513,14 +514,14 @@
   (:repeat-map other-window-repeat-map
                ("<backspace>" . kill-buffer)
                ("S-<backspace>" . kill-buffer-and-window)
-               ("<left>" . windmove-left)
-               ("<right>" . windmove-right)
-               ("<up>" . windmove-up)
-               ("<down>" . windmove-down)
-               ("C-<left>" . windmove-delete-left)
-               ("C-<right>" . windmove-delete-right)
-               ("C-<up>" . windmove-delete-up)
-               ("C-<down>" . windmove-delete-down)
+               ("C-<left>" . windmove-left)
+               ("C-<right>" . windmove-right)
+               ("C-<up>" . windmove-up)
+               ("C-<down>" . windmove-down)
+               ("<left>" . windmove-delete-left)
+               ("<right>" . windmove-delete-right)
+               ("<up>" . windmove-delete-up)
+               ("<down>" . windmove-delete-down)
                ("C-h" . windmove-swap-states-left)
                ("C-l" . windmove-swap-states-right)
                ("C-k" . windmove-swap-states-up)
@@ -1314,6 +1315,33 @@
   (setcdr (assoc 'file org-link-frame-setup) 'find-file))
 
 (use-package ob
+  :bind
+  (:repeat-map my/ob-repeat-map
+               ("I" . org-babel-view-src-block-info)
+               ("Z" . org-babel-switch-to-session)
+               ("a" . org-babel-sha1-hash)
+               ("b" . org-babel-execute-buffer)
+               ("c" . org-babel-check-src-block)
+               ("d" . org-babel-demarcate-block)
+               ("e" . org-babel-execute-maybe)
+               ("f" . org-babel-tangle-file)
+               ("g" . org-babel-goto-named-src-block)
+               ("h" . org-babel-describe-bindings)
+               ("i" . org-babel-lob-ingest)
+               ("j" . org-babel-insert-header-arg)
+               ("k" . org-babel-remove-result-one-or-many)
+               ("l" . org-babel-load-in-session)
+               ("m" . org-babel-mark-block)
+               ("n" . org-babel-next-src-block)
+               ("o" . org-babel-open-src-block-result)
+               ("p" . org-babel-previous-src-block)
+               ("r" . org-babel-goto-named-result)
+               ("s" . org-babel-execute-subtree)
+               ("t" . org-babel-tangle)
+               ("u" . org-babel-goto-src-block-head)
+               ("v" . org-babel-expand-src-block)
+               ("x" . org-babel-do-key-sequence-in-edit-buffer)
+               ("z" . org-babel-switch-to-session-with-code))
   :custom
   (org-plantuml-exec-mode 'plantuml)
   :config
