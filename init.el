@@ -1649,4 +1649,71 @@
   (when my/sys-winnt-p
     (delete "--compressed" plz-curl-default-args)))
 
+(use-package keyfreq
+  :if (package-installed-p 'keyfreq)
+  :hook
+  (emacs-startup
+   (emacs-startup . keyfreq-autosave-mode))
+  :custom
+  ;; ref: https://github.com/redguardtoo/emacs.d/blob/master/lisp/init-keyfreq.el
+  (keyfreq-excluded-commands
+   '(clipboard-kill-ring-save
+     comint-send-input
+     delete-backward-char
+     electric-newline-and-maybe-indent
+     electric-pair-delete-pair
+     eval-buffer
+     exit-minibuffer
+     ffip
+     goto-line
+     hippie-expand
+     ignore
+     indent-new-comment-line
+     ispell-minor-check
+     js-mode
+     kill-sentence
+     left-char
+     minibuffer-complete
+     minibuffer-complete-and-exit
+     minibuffer-keyboard-quit
+     move-beginning-of-line
+     move-end-of-line
+     mwheel-scroll
+     newline-and-indent
+     package-menu-execute
+     pcomplete
+     push-button
+     pwd
+     quit-window
+     recenter-top-bottom
+     right-char
+     self-insert-command
+     suspend-frame
+     term-send-raw
+     undefined ;; lambda function
+     undo
+     undo-redo
+     yank))
+  (keyfreq-excluded-regexp
+   '("^\\(?:\\(?:delete\\)-\\)?backward-"
+     "^\\(?:\\(?:delete\\)-\\)?forward-"
+     "^\\(?:\\(?:eshell\\|comint\\)-\\)?next-"
+     "^\\(?:\\(?:eshell\\|comint\\)-\\)?previous-"
+     "^abort-"
+     "^cua-"
+     "^describe-"
+     "^dired"
+     "^gnus-"
+     "^icomplete-"
+     "^ido-"
+     "^isearch-"
+     "^keyboard-"
+     "^keyfreq-"
+     "^org-"
+     "^save-"
+     "^scroll-"
+     "^viper-"
+     "^y-or-n-"
+     "emms-")))
+
 ;;; init.el ends here
