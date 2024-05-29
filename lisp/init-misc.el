@@ -330,7 +330,7 @@ https://scripter.co/using-emacs-advice-to-silence-messages-from-functions"
   (interactive nil dired-mode)
   (let ((pass (completing-read "Password for archive: " my/archive-pass-history)))
     (unless (string-empty-p pass)
-      (add-to-list 'my/archive-pass-history pass))
+      (add-to-history 'my/archive-pass-history pass))
     (my/7z-extract-dwim (dired-get-filename) pass)))
 
 (defun my/dired-duplicate-file (arg)
