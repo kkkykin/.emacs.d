@@ -759,6 +759,14 @@ ref: https://karthinks.com/software/emacs-window-management-almanac/"
         (insert pass)
       (kill-new pass))))
 
+
+;; tools
+
+(defun my/pure-pure-pure-url (url)
+  "Remove invalid char in url."
+  (interactive (list (read-string "Url: " nil nil (current-kill 0 t))))
+  (kill-new (replace-regexp-in-string
+             (concat "[^" url-get-url-filename-chars "]+") "" url)))
 
 (provide 'init-misc)
 ;;; init-misc.el ends here
