@@ -429,8 +429,9 @@
   :unless my/sys-android-p
   :hook emacs-startup
   :custom
-  (windmove-default-keybindings 'control)
-  (windmove-wrap-around t))
+  (windmove-wrap-around t)
+  :config
+  (windmove-default-keybindings 'control))
 
 (use-package server :defer 5
   :config
