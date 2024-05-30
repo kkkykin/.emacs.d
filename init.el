@@ -1394,6 +1394,13 @@
                               ("" "fvextra" nil)))
   :config
   (with-eval-after-load 'ox-latex
+    (define-advice org-latex--inline-image
+        (:around (orig-fun link &rest args) force-absolute-path)
+      "Force use image absolute path for export."
+      (let ((raw-path (org-element-property :path link)))
+		(unless (file-name-absolute-p raw-path)
+		  (org-element-put-property link :path (expand-file-name raw-path))))
+      (apply orig-fun link args))
     (add-to-list 'org-latex-classes
                  '("ctexart" "\\documentclass[utf8]{ctexart}"
                    ("\\section{%s}" . "\\section*{%s}")
