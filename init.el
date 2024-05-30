@@ -1709,44 +1709,6 @@
    (emacs-startup . keyfreq-autosave-mode))
   :custom
   ;; ref: https://github.com/redguardtoo/emacs.d/blob/master/lisp/init-keyfreq.el
-  (keyfreq-excluded-commands
-   '(clipboard-kill-ring-save
-     comint-magic-space
-     comint-send-input
-     electric-newline-and-maybe-indent
-     electric-pair-delete-pair
-     eval-buffer
-     exit-minibuffer
-     ffip
-     goto-line
-     hippie-expand
-     ignore
-     indent-new-comment-line
-     ispell-minor-check
-     js-mode
-     kill-sentence
-     left-char
-     minibuffer-complete
-     minibuffer-complete-and-exit
-     minibuffer-keyboard-quit
-     move-beginning-of-line
-     move-end-of-line
-     mwheel-scroll
-     newline-and-indent
-     other-window
-     package-menu-execute
-     pcomplete
-     push-button
-     pwd
-     quit-window
-     recenter-top-bottom
-     right-char
-     suspend-frame
-     term-send-raw
-     undefined ;; lambda function
-     undo
-     undo-redo
-     yank))
   (keyfreq-excluded-regexp
    '("^abort-"
      "^cua-"
@@ -1768,6 +1730,45 @@
      "forward-"
      "next"
      "prev"
-     "self-insert")))
+     "self-insert"))
+  :config
+  (setq keyfreq-excluded-commands
+        '(clipboard-kill-ring-save
+          comint-magic-space
+          comint-send-input
+          electric-newline-and-maybe-indent
+          electric-pair-delete-pair
+          eval-buffer
+          exit-minibuffer
+          ffip
+          goto-line
+          hippie-expand
+          ignore
+          indent-new-comment-line
+          ispell-minor-check
+          js-mode
+          kill-sentence
+          left-char
+          minibuffer-complete
+          minibuffer-complete-and-exit
+          minibuffer-keyboard-quit
+          move-beginning-of-line
+          move-end-of-line
+          mwheel-scroll
+          newline-and-indent
+          other-window
+          package-menu-execute
+          pcomplete
+          push-button
+          pwd
+          quit-window
+          recenter-top-bottom
+          right-char
+          suspend-frame
+          term-send-raw
+          undefined ;; lambda function
+          undo
+          undo-redo
+          yank)))
 
 ;;; init.el ends here
