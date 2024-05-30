@@ -1711,6 +1711,7 @@
   ;; ref: https://github.com/redguardtoo/emacs.d/blob/master/lisp/init-keyfreq.el
   (keyfreq-excluded-commands
    '(clipboard-kill-ring-save
+     comint-magic-space
      comint-send-input
      electric-newline-and-maybe-indent
      electric-pair-delete-pair
@@ -1740,7 +1741,6 @@
      quit-window
      recenter-top-bottom
      right-char
-     self-insert-command
      suspend-frame
      term-send-raw
      undefined ;; lambda function
@@ -1767,6 +1767,7 @@
      "emms-"
      "forward-"
      "next"
-     "prev")))
+     "prev"
+     "self-insert")))
 
 ;;; init.el ends here
