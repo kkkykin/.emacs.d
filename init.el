@@ -1692,7 +1692,6 @@
   (keyfreq-excluded-commands
    '(clipboard-kill-ring-save
      comint-send-input
-     delete-backward-char
      electric-newline-and-maybe-indent
      electric-pair-delete-pair
      eval-buffer
@@ -1713,6 +1712,7 @@
      move-end-of-line
      mwheel-scroll
      newline-and-indent
+     other-window
      package-menu-execute
      pcomplete
      push-button
@@ -1728,11 +1728,7 @@
      undo-redo
      yank))
   (keyfreq-excluded-regexp
-   '("^\\(?:\\(?:delete\\)-\\)?backward-"
-     "^\\(?:\\(?:delete\\)-\\)?forward-"
-     "^\\(?:\\(?:eshell\\|comint\\)-\\)?next-"
-     "^\\(?:\\(?:eshell\\|comint\\)-\\)?previous-"
-     "^abort-"
+   '("^abort-"
      "^cua-"
      "^describe-"
      "^dired"
@@ -1747,6 +1743,10 @@
      "^scroll-"
      "^viper-"
      "^y-or-n-"
-     "emms-")))
+     "backward-"
+     "emms-"
+     "forward-"
+     "next"
+     "prev")))
 
 ;;; init.el ends here
