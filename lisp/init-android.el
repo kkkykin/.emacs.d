@@ -153,6 +153,7 @@ milliseconds"
 (setq select-enable-clipboard nil
       overriding-text-conversion-style nil
       temporary-file-directory my/termux-tmp-directory
+      Info-additional-directory-list (file-name-concat my/termux-root-directory "usr/share/info/")
       android-pass-multimedia-buttons-to-system t)
 
 (dolist (path '(".aria2/" ".gitconfig" ".gnupg/" ".ssh/"))
