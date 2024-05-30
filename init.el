@@ -806,28 +806,41 @@
   (dired-listing-switches "-lh")
   (dired-mouse-drag-files t)
   (delete-by-moving-to-trash t)
+  (dired-guess-shell-alist-user
+   `((,(rx ?. (| "rar" "zip" "7z" "iso" "cab") (? ".001") eos)
+      (format "%s x -spe -o\"%s\" -aoa -p⑨"
+              archive-7z-program (file-name-sans-extension file)))
+     ("\\.apk\\'"
+      (format "adb %sinstall"
+              (let ((devices
+                     (mapcar
+                      (lambda (a) (replace-regexp-in-string
+                               "[[:blank:]]+device$" "" a))
+                      (cl-delete-if-not
+                       (lambda (a) (string-suffix-p "device" a))
+                       (process-lines "adb" "devices")))))
+                (if (> 2 (length devices)) ""
+                  (format "-s \"%s\" "
+                          (completing-read "Device: " devices))))))
+     (,(rx ?. (| "tzst" "tar.zst") eos)
+      "zstd -dc ? | tar -xf -")
+     (,(rx ?. (| "mp4" "mkv" "avi" "webm" "flv" "m4v" "mov") eos)
+      "ffmpeg -hide_banner -y -strict 2 -hwaccel auto -i ? -vf \"scale='min(2560,iw)':-1\" -c:v hevc_nvenc -rc vbr -cq 19 -qmin 19 -qmax 19 -profile:v main10 -pix_fmt p010le -b:v 0K -bf:v 3 -b_ref_mode middle -temporal-aq 1 -rc-lookahead 32 -c:a libopus -b:a 128k -f mp4 ff-`?`")
+     (,(rx ?. (| "png" "jpeg" "jpg" "gif" "webp" "bmp") eos)
+      "ffmpeg -hide_banner -y -i ? -vf \"scale='min(4096,iw)':-1\" -c:v libaom-av1 -cpu-used 6 -row-mt 1 -tiles 2x2 -still-picture 1 -crf 20 -f avif ff-`?`")
+     (".*" (format "tar -cf - ? | zstd -o %s.tzst --long --ultra -9"
+                   (file-name-sans-extension file)))
+     (".*" (format "ls -lSR ? > %s.dired"
+                   (file-name-sans-extension file)))))
   (wdired-allow-to-change-permissions 'advanced)
   (wdired-use-interactive-rename t)
   :bind (:map dired-mode-map
               ("<mouse-2>" . dired-mouse-find-file))
   :config
   (when-let ((7z (or (executable-find "7z")
-                     (executable-find "7za")
-                     (executable-find "7zz"))))
-    (setq archive-7z-program (file-name-base 7z)))
-  (setq dired-guess-shell-alist-user
-        `(("\\.\\(rar\\|zip\\|7z\\|iso\\)\\(\\.001\\)?\\'"
-           ,(format "%s x -aoa" archive-7z-program))
-          ("\\.cab\\'" ,(format "%s x -aoa -ocabexpand" archive-7z-program))
-          ("\\.apk\\'" "adb install")
-          ("\\(?:\\.t\\(?:\\(?:ar\\.\\)?zst\\)\\)\\'"
-           "zstd -dc ? | tar -xf -")
-          ("\\.\\(mp4\\|mkv\\|avi\\|webm\\|flv\\|m4v\\|mov\\)\\'"
-           "ffmpeg -hide_banner -y -strict 2 -hwaccel auto -i ? -vf \"scale='min(2560,iw)':-1\" -c:v hevc_nvenc -rc vbr -cq 19 -qmin 19 -qmax 19 -profile:v main10 -pix_fmt p010le -b:v 0K -bf:v 3 -b_ref_mode middle -temporal-aq 1 -rc-lookahead 32 -c:a libopus -b:a 128k -f mp4 ff-`?`")
-          ("\\.\\(png\\|jpe?g\\|gif\\|webp\\|bmp\\)\\'"
-           "ffmpeg -hide_banner -y -i ? -vf \"scale='min(4096,iw)':-1\" -c:v libaom-av1 -cpu-used 6 -row-mt 1 -tiles 2x2 -still-picture 1 -crf 20 -f avif ff-`?`")
-          (".*" "tar -cf - ? | zstd -o `?`.tzst --long --ultra -9")
-          (".*" "ls -lSR ? > `?`.dired"))))
+                     (executable-find "7zz")
+                     (executable-find "7za"))))
+    (setq archive-7z-program (file-name-base 7z))))
 
 (use-package dired-aux
   :custom
