@@ -1307,6 +1307,10 @@
      ("wr" "Work report" entry (file+headline "work.org" "Reports")
       "** TODO %?\n%U\n%i\n%a"))))
 
+(use-package org-src
+  :custom
+  (org-src-preserve-indentation t))
+
 (use-package ol
   :commands org-insert-link-global
   :custom
