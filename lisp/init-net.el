@@ -110,7 +110,11 @@
   :type '(repeat string))
 
 (defcustom mn/proxy-domain
-  '("duckduckgo.com" "github.com" "google.com" "google.com.hk"
+  '("duckduckgo.com"
+    "github.com"
+    "google.com"
+    "google.com.hk"
+    "googleapis.com"
     "wikipedia.org")
   "Domain proxyed."
   :group 'my

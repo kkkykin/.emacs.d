@@ -1688,15 +1688,15 @@
   :init
   (require 'llm-gemini)
   (require 'llm-openai)
-  (setq ellama-provider
-        (make-llm-gemini :key (auth-source-pick-first-password :host "makersuite.google.com"))
-        ellama-translation-provider (make-llm-openai-compatible :url "http://127.0.0.1:7778")
-        ellama-providers
-        '(("gemini" . (make-llm-gemini :key (auth-source-pick-first-password :host "makersuite.google.com")))
-          ("local" . (make-llm-openai-compatible :url "http://127.0.0.1:7778"))))
   :custom
   (ellama-keymap-prefix "C-x y")
   (ellama-language "Chinese")
+  (ellama-provider
+   (make-llm-gemini :key (auth-source-pick-first-password :host "makersuite.google.com")))
+  (ellama-translation-provider (make-llm-openai-compatible :url "http://127.0.0.1:7778"))
+  (ellama-providers
+   `(("gemini" . ,(make-llm-gemini :key (auth-source-pick-first-password :host "makersuite.google.com")))
+     ("local" . ,(make-llm-openai-compatible :url "http://127.0.0.1:7778"))))
   (llm-warn-on-nonfree nil)
   :config
   (when my/sys-winnt-p
