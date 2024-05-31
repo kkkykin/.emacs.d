@@ -367,10 +367,36 @@
 
 (use-package isearch
   :custom
+  (search-ring-max 26)
+  (regexp-search-ring-max 26)
   (isearch-lazy-count t)
+  (isearch-allow-motion t)
   (isearch-allow-scroll t)
   (isearch-yank-on-move 'shift)
   (isearch-repeat-on-direction-change t))
+
+;; https://github.com/VernonGrant/discovering-emacs/blob/main/show-notes/4-using-whitespace-mode.md
+(use-package whitespace
+  :hook (emacs-startup . global-whitespace-mode)
+  :custom
+  (whitespace-style
+   '(face empty spaces tabs newline trailing tab-mark newline-mark))
+  (whitespace-display-mappings
+   '((space-mark ?\ [?·] [?.])
+     (space-mark ?\  [?¤] [?_])
+     (space-mark ?​ [?‸] [?.])
+     (newline-mark ?\n [?¬ ?\n] [?$ ?\n])
+     (newline-mark ?\r [?¶] [?#])
+     (tab-mark ?\t [?» ?\t] [?> ?\t])))
+  (whitespace-global-modes
+   '(not shell-mode
+         help-mode
+         magit-mode
+         magit-diff-mode
+         ibuffer-mode
+         dired-mode
+         occur-mode))
+  (whitespace-action '(cleanup auto-cleanup)))
 
 (use-package files
   :custom
