@@ -1363,6 +1363,10 @@
   :custom
   (org-plantuml-exec-mode 'plantuml)
   :config
+  (define-advice org-babel-eval-error-notify
+      (:before-until (exit-code &rest args) do-not-notify-if-ok)
+    "Do not display buffer and message me if everything alright."
+    (zerop exit-code))
   (setq org-babel-default-header-args
         (cons '(:noweb . "yes")
               (assq-delete-all :noweb org-babel-default-header-args)))
