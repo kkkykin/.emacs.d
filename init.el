@@ -1752,7 +1752,7 @@
      "^keyfreq-"
      "^org-"
      "^save-"
-     "^scroll-"
+     "scroll-\\(up\\|down\\)"
      "^viper-"
      "^y-or-n-"
      "backward-"
