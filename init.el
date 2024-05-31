@@ -319,7 +319,7 @@
   :unless my/sys-android-p
   :config
   (when (and battery-status-function
-             (not (string= "unknown" 
+             (not (string= "unknown"
                            (battery-format "%B"
                                            (funcall battery-status-function)))))
     (display-battery-mode 1)))
@@ -812,7 +812,7 @@
   (:map sql-mode-map
         ("C-c C-p" . sql-connect))
   (:map sql-interactive-mode-map
-        ("C-c C-y" . sql-copy-column) 
+        ("C-c C-y" . sql-copy-column)
         ("C-c C-k a" . sql-list-all)
         ("C-c C-k t" . sql-list-table))
   :custom
@@ -1441,8 +1441,8 @@
         (:around (orig-fun link &rest args) force-absolute-path)
       "Force use image absolute path for export."
       (let ((raw-path (org-element-property :path link)))
-		(unless (file-name-absolute-p raw-path)
-		  (org-element-put-property link :path (expand-file-name raw-path))))
+        (unless (file-name-absolute-p raw-path)
+          (org-element-put-property link :path (expand-file-name raw-path))))
       (apply orig-fun link args))
     (add-to-list 'org-latex-classes
                  '("ctexart" "\\documentclass[utf8]{ctexart}"
