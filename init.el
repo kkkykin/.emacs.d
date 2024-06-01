@@ -216,7 +216,7 @@
   (ex-cycle-other-window nil)
   (viper-syntax-preference 'emacs)
   :custom-face
-  (viper-minibuffer-emacs ((t (:background "unspecified" :foreground "unspecified"))))
+  (viper-minibuffer-emacs ((t (:background nil :foreground nil))))
   :config
   (put 'viper-setup-master-buffer 'safe-local-eval-function t)
   (put 'viper-mode-string 'risky-local-variable t)
