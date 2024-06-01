@@ -462,7 +462,7 @@
 
 (use-package server :defer 5
   :config
-  (unless (server-running-p)
+  (unless server-process
     (server-start)))
 
 (use-package autorevert
