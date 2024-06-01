@@ -381,6 +381,7 @@
   :custom
   (whitespace-style
    '(face empty spaces tabs newline trailing tab-mark newline-mark))
+  (whitespace-space-regexp "\\(^ +\\| +$\\)")
   (whitespace-display-mappings
    '((space-mark ?\ [?·] [?.])
      (space-mark ?\  [?¤] [?_])
