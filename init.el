@@ -160,6 +160,7 @@
 
 (use-package completion-preview
   :if (package-installed-p 'completion-preview)
+  :diminish
   :hook (prog-mode eshell-mode inferior-emacs-lisp-mode))
 
 (use-package viper
@@ -266,6 +267,7 @@
 
 (use-package eldoc
   :custom
+  (eldoc-minor-mode-string nil)
   (eldoc-echo-area-prefer-doc-buffer t)
   (eldoc-documentation-strategy 'eldoc-documentation-compose-eagerly)
   :config
@@ -348,6 +350,7 @@
 
 (use-package subword
   :unless my/sys-android-p
+  :diminish
   :hook prog-mode)
 
 (use-package glasses
@@ -378,6 +381,7 @@
 ;; https://github.com/VernonGrant/discovering-emacs/blob/main/show-notes/4-using-whitespace-mode.md
 (use-package whitespace
   :hook (emacs-startup . global-whitespace-mode)
+  :diminish
   :custom
   (whitespace-style
    '(face empty spaces tabs newline trailing tab-mark newline-mark))
@@ -579,6 +583,7 @@
 
 ;; https://karthinks.com/software/simple-folding-with-hideshow/
 (use-package hideshow
+  :diminish (hs-minor-mode . nil)
   :hook ((prog-mode . hs-minor-mode)
          ((ediff-prepare-buffer vc-before-checkin) . turn-off-hideshow)))
 
@@ -1801,5 +1806,10 @@
           undo
           undo-redo
           yank)))
+
+(use-package diminish
+  :if (package-installed-p 'diminish)
+  :config
+  (diminish 'visual-line-mode))
 
 ;;; init.el ends here
