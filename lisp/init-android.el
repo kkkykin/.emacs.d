@@ -1,6 +1,6 @@
 ;;; init-android.el --- android setup                -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2024  
+;; Copyright (C) 2024
 
 ;; Author:  <kkky@KKSBOW>
 ;; Keywords: local
@@ -20,7 +20,7 @@
 
 ;;; Commentary:
 
-;; 
+;; Setup for android device.
 
 ;;; Code:
 
@@ -130,18 +130,6 @@ milliseconds"
 
 
 (setenv "SSH_AUTH_SOCK" (string-trim-right (shell-command-to-string "gpgconf -L agent-ssh-socket")))
-
-(let ((move-to-header '( mode-line-frame-identification
-                         mode-line-buffer-identification "   "
-                         (project-mode-line project-mode-line-format)
-                         (vc-mode vc-mode) "  " mode-line-misc-info))
-      (headers (if header-line-format header-line-format '("%e")))
-      (modes (copy-sequence mode-line-format)))
-  (dolist (item move-to-header)
-    (setq modes (delete item modes)
-          headers (append headers (cons item nil))))
-  (setq-default mode-line-format modes
-                header-line-format headers))
 
 (add-hook 'focus-in-hook #'my/mini-screen-setup-maybe)
 

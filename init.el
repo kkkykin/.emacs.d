@@ -1112,7 +1112,6 @@
   (tab-bar-format '(tab-bar-format-global tab-bar-format-tabs-groups))
   (tab-bar-select-tab-modifiers '(control))
   (tab-bar-tab-hints t)
-  (tab-bar-close-button-show nil)
   (tab-bar-new-tab-to 'rightmost)
   (tab-bar-history-limit 100)
   :custom-face
@@ -1120,6 +1119,8 @@
   (tab-bar-tab ((t (:inherit mode-line :box t))))
   (tab-bar-tab-inactive ((t (:inherit mode-line-inactive :box nil))))
   :config
+  (unless my/sys-android-p
+    (setq tab-bar-close-button-show nil))
   (when (boundp 'tab-bar-mode-map)
     (define-keymap :keymap tab-bar-mode-map
       "C-<tab>" nil
@@ -1127,8 +1128,15 @@
   (tab-bar-history-mode))
 
 (use-package tab-line
-  :unless my/sys-android-p
-  :hook (emacs-startup . global-tab-line-mode)
+  :hook ((emacs-startup . global-tab-line-mode)
+         (global-tab-line-mode
+          . (lambda ()
+              (if global-tab-line-mode
+                  (delete 'mode-line-buffer-identification
+                          mode-line-format)
+                (setcdr (cdddr mode-line-format)
+                        (cons 'mode-line-buffer-identification
+                              (cddddr mode-line-format)))))))
   :bind
   (:map tab-line-mode-map
         ("C-<tab>" . tab-line-switch-to-next-tab)
@@ -1145,9 +1153,10 @@
      newsticker-treeview-item-mode
      newsticker-treeview-list-mode
      newsticker-treeview-mode))
-  (tab-line-new-button-show nil)
-  (tab-line-close-button-show nil)
   :config
+  (unless my/sys-android-p
+    (setq tab-line-new-button-show nil
+          tab-line-close-button-show nil))
   (defcustom my/tab-line-excluded-buffer-list
     `(,(rx (| "*Async-native-compile-log*"
               "*Pp Eval Output*")))
@@ -1169,7 +1178,6 @@
   :custom
   (switch-to-buffer-obey-display-actions t)
   (switch-to-buffer-in-dedicated-window 'pop)
-  (window-sides-slots '(0 0 1 1))
   (display-buffer-alist
    `(((or (major-mode . Info-mode)
           (major-mode . help-mode)
@@ -1179,7 +1187,9 @@
           (major-mode . man-mode)
           (major-mode . woman-mode)
           ,(rx bos ?* (| "Dictionary" "Shortdoc")))
-      display-buffer-in-side-window
+      (display-buffer-in-side-window
+       display-buffer-in-direction)
+      (direction . rightmost)
       (side . right)
       (window-width . 80))
      ((or "^\\*eldoc"
@@ -1197,7 +1207,10 @@
       (mode . ( proced-mode tabulated-list-mode xref--xref-buffer-mode
                 diff-mode grep-mode occur-mode))
       (inhibit-same-window . nil))
-     ("\\e?shell\\*\\'" display-buffer-in-side-window
+     ("\\e?shell\\*\\'"
+      (display-buffer-in-side-window
+       display-buffer-in-direction)
+      (direction . bottom)
       (window-height . 0.3))
      ((or ,(regexp-quote shell-command-buffer-name)
           ,(regexp-quote shell-command-buffer-name-async)
@@ -1209,7 +1222,10 @@
       (window-height . shrink-window-if-larger-than-buffer))
      ((major-mode . completion-list-mode)
       display-buffer-at-bottom
-      (window-height . shrink-window-if-larger-than-buffer)))))
+      (window-height . shrink-window-if-larger-than-buffer))))
+  :config
+  (unless my/sys-android-p
+    (setq window-sides-slots '(0 0 1 1))))
 
 (use-package saveplace :hook (emacs-startup . save-place-mode))
 
