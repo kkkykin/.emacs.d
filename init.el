@@ -56,7 +56,6 @@
   (indent-tabs-mode nil)
   (delete-pair-blink-delay nil)
   (tab-width 4)
-  (switch-to-buffer-obey-display-actions t)
   (shell-command-dont-erase-buffer 'end-last-out)
   (async-shell-command-buffer 'rename-buffer)
   (async-shell-command-display-buffer nil)
@@ -269,11 +268,7 @@
   :custom
   (eldoc-minor-mode-string nil)
   (eldoc-echo-area-prefer-doc-buffer t)
-  (eldoc-documentation-strategy 'eldoc-documentation-compose-eagerly)
-  :config
-  (add-to-list 'display-buffer-alist
-               '("^\\*eldoc for" display-buffer-at-bottom
-                 (window-height . 4))))
+  (eldoc-documentation-strategy 'eldoc-documentation-compose-eagerly))
 
 (use-package man
   :custom
@@ -1117,6 +1112,53 @@
       "C-S-<tab>" nil))
   (tab-bar-history-mode))
 
+(use-package window
+  :custom
+  (switch-to-buffer-obey-display-actions t)
+  (switch-to-buffer-in-dedicated-window 'pop)
+  (window-sides-slots '(0 0 1 1))
+  (display-buffer-alist
+   `(((or (major-mode . Info-mode)
+          (major-mode . help-mode)
+          (major-mode . apropos-mode)
+          (major-mode . emacs-news-mode)
+          (major-mode . emacs-news-view-mode)
+          (major-mode . man-mode)
+          (major-mode . woman-mode)
+          ,(rx bos ?* (| "Dictionary" "Shortdoc")))
+      display-buffer-in-side-window
+      (side . right)
+      (window-width . 80))
+     ((or (major-mode . proced-mode)
+          (derived-mode . tabulated-list-mode)
+          ,(rx (| "diff" "xref" "grep" "Occur") ?* eos))
+      (display-buffer-reuse-mode-window
+       display-buffer-in-direction)
+      (direction . leftmost)
+      (window-width . 80)
+      (mode . ( proced-mode tabulated-list-mode xref--xref-buffer-mode
+                diff-mode grep-mode occur-mode))
+      (inhibit-same-window . nil))
+     ("\\e?shell\\*\\'" display-buffer-in-side-window
+      (window-height . 0.3))
+     ((or ,(regexp-quote shell-command-buffer-name)
+          ,(regexp-quote shell-command-buffer-name-async)
+          "Eval Output\\*\\'")
+      (display-buffer-reuse-mode-window
+       display-buffer-at-bottom)
+      (mode . (shell-mode))
+      (inhibit-same-window . nil)
+      (window-height . shrink-window-if-larger-than-buffer))
+     ("^\\*Newsticker " display-buffer-in-tab
+      (tab-name "Newsticker"))
+     ("^\\*eldoc" display-buffer-below-selected
+      (window-height . shrink-window-if-larger-than-buffer))
+     ((or (major-mode . completion-list-mode)
+          (major-mode . bs-mode)
+          "^\\*Buffer List\\*\\'")
+      display-buffer-at-bottom
+      (window-height . shrink-window-if-larger-than-buffer)))))
+
 (use-package saveplace :hook (emacs-startup . save-place-mode))
 
 (use-package recentf :defer 1
@@ -1395,10 +1437,10 @@
   :custom
   (org-plantuml-exec-mode 'plantuml)
   :config
-  (define-advice org-babel-eval-error-notify
-      (:before-until (exit-code &rest args) do-not-notify-if-ok)
-    "Do not display buffer and message me if everything alright."
-    (zerop exit-code))
+  (add-to-list 'display-buffer-alist
+               `(,(regexp-quote org-babel-error-buffer-name)
+                 display-buffer-no-window
+                 (allow-no-window . t)))
   (setq org-babel-default-header-args
         (cons '(:noweb . "yes")
               (assq-delete-all :noweb org-babel-default-header-args)))
