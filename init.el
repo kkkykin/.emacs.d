@@ -330,15 +330,7 @@
   :unless my/sys-android-p
   :custom
   (display-line-numbers-type 'relative)
-  :hook ((emacs-startup . global-display-line-numbers-mode)
-         ((compilation-mode
-           help-mode
-           Info-mode
-           newsticker-mode
-           newsticker-treeview-mode
-           newsticker-treeview-item-mode
-           newsticker-treeview-list-mode)
-          . (lambda () (display-line-numbers-mode -1)))))
+  :hook (prog-mode text-mode))
 
 (use-package subword
   :unless my/sys-android-p
