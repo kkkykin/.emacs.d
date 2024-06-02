@@ -657,17 +657,17 @@
                 (bs-kill)
                 (ibuffer)
                 (ibuffer-switch-to-saved-filter-groups "default")))
-  (dolist (conf '(("dired" nil nil nil
+  (dolist (conf '(("project" nil nil nil
+                   (lambda (buf)
+                     (let ((proj (project-current nil)))
+                       (with-current-buffer buf
+                         (not (eq proj (project-current nil))))))
+                   bs--sort-by-mode)
+                  ("dired" nil nil nil
                    (lambda (buf)
                      (with-current-buffer buf
                        (not (eq major-mode 'dired-mode))))
-                   nil)
-                  ("SQL" nil nil nil
-                   (lambda (buf)
-                     (with-current-buffer buf
-                       (not (memq major-mode
-                                  '(sql-interactive-mode sql-mode)))))
-                   nil)))
+                   bs--sort-by-name)))
     (add-to-list 'bs-configurations conf t)))
 
 (use-package ibuffer
