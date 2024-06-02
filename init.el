@@ -1182,6 +1182,11 @@
       display-buffer-in-side-window
       (side . right)
       (window-width . 80))
+     ((or "^\\*eldoc"
+          (major-mode . bs-mode)
+          "^\\*Buffer List\\*\\'")
+      display-buffer-below-selected
+      (window-height . shrink-window-if-larger-than-buffer))
      ((or (major-mode . proced-mode)
           (derived-mode . tabulated-list-mode)
           ,(rx (| "diff" "xref" "grep" "Occur") ?* eos))
@@ -1202,13 +1207,7 @@
       (mode . (shell-mode))
       (inhibit-same-window . nil)
       (window-height . shrink-window-if-larger-than-buffer))
-     ("^\\*Newsticker " display-buffer-in-tab
-      (tab-name "Newsticker"))
-     ("^\\*eldoc" display-buffer-below-selected
-      (window-height . shrink-window-if-larger-than-buffer))
-     ((or (major-mode . completion-list-mode)
-          (major-mode . bs-mode)
-          "^\\*Buffer List\\*\\'")
+     ((major-mode . completion-list-mode)
       display-buffer-at-bottom
       (window-height . shrink-window-if-larger-than-buffer)))))
 
