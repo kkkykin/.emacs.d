@@ -1,6 +1,6 @@
 ;;; init-win.el --- windows setup                    -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2024  
+;; Copyright (C) 2024
 
 ;; Author:  <kkky@KKSBOW>
 ;; Keywords: local
@@ -20,7 +20,7 @@
 
 ;;; Commentary:
 
-;; 
+;;
 
 ;;; Code:
 
@@ -44,6 +44,8 @@
 
 
 ;; shell
+
+(defconst mw/vanilla-shell shell-file-name)
 
 (defun mw/cmdproxy-real-program-name (cmd)
   "Find invoked real program name in cmd."
@@ -104,10 +106,10 @@
 (defun mw/toggle-shell ()
   "Toggle shell between wsl bash and cmd"
   (interactive)
-  (if (string= shell-file-name "C:\\Windows\\system32\\bash.exe")
-      (setq shell-file-name mw/vanilla-shell)
-    (setq mw/vanilla-shell shell-file-name
-          shell-file-name "C:\\Windows\\system32\\bash.exe")))
+  (setq shell-file-name
+        (if (string= shell-file-name mw/vanilla-shell)
+            "C:/Windows/system32/bash.exe"
+          mw/vanilla-shell)))
 
 (defun mw/compilation-coding-system-fix ()
   "Fix stdout coding-system in compilation."
@@ -145,7 +147,7 @@
   (define-advice dired-shell-stuff-it (:filter-args (args) fix-seqentially-exec)
     "Fix `;' cannot sequentially execute command on windows."
     (when-let* ((cmd (car args))
-                (fix-p (string-match-p ";[ \t]*&?[ \t]*\\'" cmd))) 
+                (fix-p (string-match-p ";[ \t]*&?[ \t]*\\'" cmd)))
       (setcar args
               (replace-regexp-in-string "\\(.*\\);[ \t]*\\(&?[ \t]*\\)\\'"
                                         "/wait \\1\\2" cmd)))
