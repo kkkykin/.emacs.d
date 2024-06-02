@@ -1177,6 +1177,7 @@
 (use-package window
   :custom
   (switch-to-buffer-obey-display-actions t)
+  (window-sides-slots '(0 0 1 1))
   (switch-to-buffer-in-dedicated-window 'pop)
   (display-buffer-alist
    `(((or (major-mode . Info-mode)
@@ -1224,8 +1225,8 @@
       display-buffer-at-bottom
       (window-height . shrink-window-if-larger-than-buffer))))
   :config
-  (unless my/sys-android-p
-    (setq window-sides-slots '(0 0 1 1))))
+  (when my/sys-android-p
+    (setq window-sides-slots '(0 0 0 0))))
 
 (use-package saveplace :hook (emacs-startup . save-place-mode))
 
