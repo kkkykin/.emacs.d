@@ -659,17 +659,25 @@
                 (bs-kill)
                 (ibuffer)
                 (ibuffer-switch-to-saved-filter-groups "default")))
-  (dolist (conf '(("project" nil nil nil
+  (dolist (conf '(("tab-line" nil nil nil
                    (lambda (buf)
-                     (let ((proj (project-current nil)))
+                     (let ((gp (funcall tab-line-tabs-buffer-group-function
+                                        (current-buffer))))
                        (with-current-buffer buf
-                         (not (eq proj (project-current nil))))))
-                   bs--sort-by-mode)
+                         (not (equal gp (funcall tab-line-tabs-buffer-group-function
+                                                 buf))))))
+                   bs--sort-by-name)
                   ("dired" nil nil nil
                    (lambda (buf)
                      (with-current-buffer buf
                        (not (eq major-mode 'dired-mode))))
-                   bs--sort-by-name)))
+                   bs--sort-by-name)
+                  ("project" nil nil nil
+                   (lambda (buf)
+                     (let ((proj (project-current nil)))
+                       (with-current-buffer buf
+                         (not (eq proj (project-current nil))))))
+                   bs--sort-by-mode)))
     (add-to-list 'bs-configurations conf t)))
 
 (use-package ibuffer
