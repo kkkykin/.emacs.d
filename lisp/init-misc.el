@@ -96,8 +96,9 @@
 (defcustom my/fonts-list
   '(("LXGW WenKai Mono" (33 14 . 23) "https://github.com/lxgw/LxgwWenKai/releases")
     ("Sarasa Mono SC" (32 14 . 22) "https://github.com/be5invis/Sarasa-Gothic/releases")
-    ("Unifont-JP" #1=(33 14 . 24) "https://unifoundry.com/unifont/index.html")
-    ("UnifontExMono" #1# "https://github.com/stgiga/UnifontEX/releases"))
+    ;; ("Unifont-JP" #1=(33 14 . 24) "https://unifoundry.com/unifont/index.html")
+    ;; ("UnifontExMono" #1# "https://github.com/stgiga/UnifontEX/releases")
+    )
   "Fonts. Heights. Source."
   :group 'my
   :type '(repeat string))
@@ -236,7 +237,7 @@ https://github.com/LionyxML/auto-dark-emacs/blob/master/auto-dark.el"
 
 (defun my/advice-bookmark-save (orig-fun &rest args)
   "Do not save shared bookmarks to local bookmark file."
-  (with-temp-buffer 
+  (with-temp-buffer
     (insert-file-contents my/bookmark-shared-file)
     (let ((ori-shared (bookmark-alist-from-buffer))
           (new-local (copy-sequence bookmark-alist))
@@ -507,7 +508,7 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
       ("x"
        "Start ‘query-replace-regexp’"
        isearch-query-replace-regexp
-       :if-nil buffer-read-only     
+       :if-nil buffer-read-only
        :transient nil)]]
 
     [["Toggle"
