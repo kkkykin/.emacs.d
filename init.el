@@ -1171,7 +1171,8 @@
       (funcall 'tab-line-tabs-buffer-group-by-mode buffer)))
   (setq tab-line-tabs-buffer-group-function
         #'my/tab-line-tabs-buffer-group-by-mode-exclude-some-buffer)
-  (dolist (gp `((,(rx bos (| "news" "Dictionary" "Shortdoc")) . "Help")))
+  (dolist (gp `((,(rx bos (| "news" "dictionary" "shortdoc") eos) . "Help")
+                (,(rx (| (: "buffer" (| ?  "-selection-") "menu") "ibuffer") eos) . "BS")))
     (add-to-list 'tab-line-tabs-buffer-groups gp)))
 
 (use-package window
@@ -1196,7 +1197,8 @@
      ((or "^\\*eldoc"
           (major-mode . bs-mode)
           "^\\*Buffer List\\*\\'")
-      display-buffer-below-selected
+      (display-buffer-below-selected
+       display-buffer-at-bottom)
       (window-height . shrink-window-if-larger-than-buffer))
      ((or (major-mode . proced-mode)
           (derived-mode . tabulated-list-mode)
