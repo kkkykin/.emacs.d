@@ -479,6 +479,8 @@
            (not my/sys-android-p))
   :hook emacs-startup)
 
+(use-package quickurl)
+
 (use-package abbrev
   :custom
   (abbrev-suggest t))
@@ -1204,7 +1206,8 @@
 
 (use-package saveplace :hook (emacs-startup . save-place-mode))
 
-(use-package recentf :defer 1
+(use-package recentf
+  :hook emacs-startup
   :config
   (recentf-mode)
   :custom
