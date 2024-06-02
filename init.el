@@ -220,9 +220,6 @@
   (put 'viper-setup-master-buffer 'safe-local-eval-function t)
   (put 'viper-mode-string 'risky-local-variable t)
   (add-face-text-property 0 (length viper-emacs-state-id) '(:inverse-video t) nil viper-emacs-state-id)
-  (setq global-mode-string (delq 'viper-mode-string global-mode-string))
-  (unless (memq 'viper-mode-string mode-line-format)
-    (setcdr (cddr mode-line-format) (cons 'viper-mode-string (cdddr mode-line-format))))
   (define-keymap :keymap viper-dired-modifier-map
     "/" (lambda (&rest args)
           (interactive "P")
@@ -739,6 +736,15 @@
     "p" #'newsticker-previous-new-item
     "N" #'newsticker-next-item
     "P" #'newsticker-previous-item)
+  (define-advice newsticker--treeview-window-init (:before () display-in-new-tab)
+    "Display in new tab if not in new frame."
+    (unless newsticker-treeview-own-frame
+      (tab-bar-new-tab)))
+  (define-advice newsticker-treeview-quit (:after () close-created-tab)
+    "Close created tab for newsticker."
+    (unless (or newsticker-treeview-own-frame
+                (> 2 (length (funcall tab-bar-tabs-function))))
+      (tab-bar-close-tab)))
   (when (y-or-n-p-with-timeout "Do you want to run newsticker? " 30 t)
     (newsticker-start t)))
 
@@ -1089,14 +1095,20 @@
 (use-package ses)
 (use-package todo-mode)
 
-(use-package tab-bar :defer 2
+(use-package tab-bar
+  :hook emacs-startup
   :bind
+  (:repeat-map tab-bar-move-repeat-map
+               ("G" . tab-group)
+               ("0" . tab-close)
+               ("r" . tab-rename)
+               ("u" . tab-undo))
   (:repeat-map my/tab-bar-history-repeat-map
                ("<right>" . tab-bar-history-forward)
                ("<left>" . tab-bar-history-back))
   :custom
+  (tab-bar-format '(tab-bar-format-global tab-bar-format-tabs-groups))
   (tab-bar-select-tab-modifiers '(control))
-  (tab-bar-show 1)
   (tab-bar-tab-hints t)
   (tab-bar-close-button-show nil)
   (tab-bar-new-tab-to 'rightmost)
@@ -1111,6 +1123,45 @@
       "C-<tab>" nil
       "C-S-<tab>" nil))
   (tab-bar-history-mode))
+
+(use-package tab-line
+  :unless my/sys-android-p
+  :hook (emacs-startup . global-tab-line-mode)
+  :bind
+  (:map tab-line-mode-map
+        ("C-<tab>" . tab-line-switch-to-next-tab)
+        ("S-C-<tab>" . tab-line-switch-to-prev-tab)
+        ("C-x C-<left>" . nil)
+        ("C-x C-<right>" . nil)
+        ("C-x <left>" . nil)
+        ("C-x <right>" . nil))
+  :custom
+  (tab-line-tabs-function 'tab-line-tabs-buffer-groups)
+  (tab-line-exclude-modes
+   '(completion-list-mode
+     special-mode
+     newsticker-treeview-item-mode
+     newsticker-treeview-list-mode
+     newsticker-treeview-mode))
+  (tab-line-new-button-show nil)
+  (tab-line-close-button-show nil)
+  :config
+  (defcustom my/tab-line-excluded-buffer-list
+    `(,(rx (| "*Async-native-compile-log*"
+              "*Pp Eval Output*")))
+    "Buffer which never show in tab-line.")
+  (defun my/tab-line-tabs-buffer-group-by-mode-exclude-some-buffer
+      (&optional buffer)
+    "Exclude some buffer and group by mode."
+    (when-let* ((buf (or buffer (current-buffer)))
+                (exclude-p (cl-find-if-not
+                            (lambda (a) (buffer-match-p a buf))
+                            my/tab-line-excluded-buffer-list)))
+      (funcall 'tab-line-tabs-buffer-group-by-mode buffer)))
+  (setq tab-line-tabs-buffer-group-function
+        #'my/tab-line-tabs-buffer-group-by-mode-exclude-some-buffer)
+  (dolist (gp `((,(rx bos (| "news" "Dictionary" "Shortdoc")) . "Help")))
+    (add-to-list 'tab-line-tabs-buffer-groups gp)))
 
 (use-package window
   :custom
