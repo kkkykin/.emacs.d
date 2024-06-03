@@ -1287,6 +1287,14 @@
                   comint-osc-process-output))
       (add-hook 'comint-output-filter-functions hook)))
 
+(use-package compile
+  :custom
+  (compilation-environment '(("TERM=xterm-256color")))
+  (ansi-osc-for-compilation-buffer t)
+  :config
+  (add-hook 'compilation-filter-hook #'ansi-color-compilation-filter)
+  (add-hook 'compilation-filter-hook #'ansi-osc-compilation-filter))
+
 (use-package outline
   :custom
   (outline-minor-mode-use-buttons 'in-margins)
