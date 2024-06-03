@@ -552,6 +552,29 @@ ref: https://karthinks.com/software/emacs-window-management-almanac/"
 (keymap-global-set "C-M-s" #'isearch-other-window)
 
 
+;; tab-line
+
+(defcustom my/tab-line-excluded-buffer-list
+  `(,(rx (| "*Async-native-compile-log*"
+            "*Pp Eval Output*")))
+  "Buffer which never show in tab-line.")
+
+(defun my/tab-line-tabs-buffer-group-by-mode-exclude-some-buffer
+    (&optional buffer)
+  "Exclude some buffer and group by mode."
+  (when-let* ((buf (or buffer (current-buffer)))
+              (exclude-p (cl-find-if-not
+                          (lambda (a) (buffer-match-p a buf))
+                          my/tab-line-excluded-buffer-list)))
+    (if (boundp 'tab-line-tabs-buffer-group-by-mode)
+        (funcall 'tab-line-tabs-buffer-group-by-mode buf)
+      (let ((tab-line-tabs-buffer-group-function nil))
+        (funcall 'tab-line-tabs-buffer-group-name buf)))))
+
+(setq tab-line-tabs-buffer-group-function
+      #'my/tab-line-tabs-buffer-group-by-mode-exclude-some-buffer)
+
+
 ;; repeat
 
 (defvar-keymap my/structure-repeat-map

@@ -1137,6 +1137,10 @@
                 (setcdr (cdddr mode-line-format)
                         (cons 'mode-line-buffer-identification
                               (cddddr mode-line-format)))))))
+  :init
+  (when (version< emacs-version "30")
+    (defvar-keymap tab-line-mode-map
+      :doc "Keymap for keys of `tab-line-mode'."))
   :bind
   (:map tab-line-mode-map
         ("C-<tab>" . tab-line-switch-to-next-tab)
@@ -1157,20 +1161,6 @@
   (unless my/sys-android-p
     (setq tab-line-new-button-show nil
           tab-line-close-button-show nil))
-  (defcustom my/tab-line-excluded-buffer-list
-    `(,(rx (| "*Async-native-compile-log*"
-              "*Pp Eval Output*")))
-    "Buffer which never show in tab-line.")
-  (defun my/tab-line-tabs-buffer-group-by-mode-exclude-some-buffer
-      (&optional buffer)
-    "Exclude some buffer and group by mode."
-    (when-let* ((buf (or buffer (current-buffer)))
-                (exclude-p (cl-find-if-not
-                            (lambda (a) (buffer-match-p a buf))
-                            my/tab-line-excluded-buffer-list)))
-      (funcall 'tab-line-tabs-buffer-group-by-mode buffer)))
-  (setq tab-line-tabs-buffer-group-function
-        #'my/tab-line-tabs-buffer-group-by-mode-exclude-some-buffer)
   (dolist (gp `((,(rx bos (| "news" "dictionary" "shortdoc") eos) . "Help")
                 (,(rx (| (: "buffer" (| ?  "-selection-") "menu") "ibuffer") eos) . "BS")))
     (add-to-list 'tab-line-tabs-buffer-groups gp)))
