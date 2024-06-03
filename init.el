@@ -943,6 +943,8 @@
 ;; https://karthinks.com/software/different-strokes-for-different-folks/
 (use-package strokes
   :unless my/sys-android-p
+  :custom
+  (strokes-lighter nil)
   :bind ("<down-mouse-3>" . 'strokes-do-stroke))
 
 (use-package master
@@ -1042,6 +1044,7 @@
   :hook ((gnus-select-group . gnus-group-set-timestamp)
          (gnus-group-mode . gnus-topic-mode)
          (gnus-summary-exit . gnus-summary-bubble-group)
+         (gnus-after-exiting-gnus . tab-bar-close-tab)
          (gnus-configure-windows . gnus-tree-perhaps-minimize))
   :custom
   (gnus-home-directory (expand-file-name "gnus/" user-emacs-directory))
@@ -1155,18 +1158,27 @@
   (tab-line-exclude-modes
    '(completion-list-mode
      special-mode
+     gnus-server-mode
+     gnus-group-mode
+     gnus-summary-mode
+     gnus-tree-mode
+     gnus-article-mode
      newsticker-treeview-item-mode
      newsticker-treeview-list-mode
      newsticker-treeview-mode))
   :config
   (unless my/sys-android-p
     (setq tab-line-new-button-show nil
-          tab-line-close-button-show nil))
+          tab-line-close-button-show nil)))
+
+(use-package mouse
+  :config
   (dolist (gp `((,(rx bos (| "news" "dictionary" "shortdoc") eos) . "Help")
-                (,(rx "shell" eos) . "sh")
+                (,(rx (| (: "shell" eos) "IELM")) . "repl")
                 (,(rx bos "sql") . "SQL")
                 (,(rx (| (: "buffer" (| ?  "-selection-") "menu") "ibuffer") eos) . "BS")))
-    (add-to-list 'tab-line-tabs-buffer-groups gp)))
+    (add-to-list 'mouse-buffer-menu-mode-groups gp))
+  (setq tab-line-tabs-buffer-groups mouse-buffer-menu-mode-groups))
 
 (use-package window
   :custom
@@ -1185,6 +1197,9 @@
       (direction . rightmost)
       (side . right)
       (window-width . 80))
+     (,(rx bos ?* (| "Group" "Score" "Summary" "Article"))
+      display-buffer-in-tab
+      (tab-name . "*Gnus*"))
      ((or "^\\*eldoc"
           (major-mode . bs-mode)
           "^\\*Buffer List\\*\\'")
@@ -1193,6 +1208,7 @@
       (window-height . shrink-window-if-larger-than-buffer))
      ((or (major-mode . proced-mode)
           (derived-mode . tabulated-list-mode)
+          (major-mode . inferior-emacs-lisp-mode)
           ,(rx (| "diff" "xref" "grep" "Occur") ?* eos))
       (display-buffer-reuse-mode-window
        display-buffer-in-direction)
