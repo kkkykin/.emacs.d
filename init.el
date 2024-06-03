@@ -1164,6 +1164,7 @@
     (setq tab-line-new-button-show nil
           tab-line-close-button-show nil))
   (dolist (gp `((,(rx bos (| "news" "dictionary" "shortdoc") eos) . "Help")
+                (,(rx "shell" eos) . "sh")
                 (,(rx bos "sql") . "SQL")
                 (,(rx (| (: "buffer" (| ?  "-selection-") "menu") "ibuffer") eos) . "BS")))
     (add-to-list 'tab-line-tabs-buffer-groups gp)))
