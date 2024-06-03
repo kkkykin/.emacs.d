@@ -1180,9 +1180,7 @@
           (major-mode . apropos-mode)
           (major-mode . emacs-news-mode)
           (major-mode . emacs-news-view-mode)
-          (major-mode . man-mode)
-          (major-mode . woman-mode)
-          ,(rx bos ?* (| "Dictionary" "Shortdoc")))
+          ,(rx bos ?* (| (: (? "Wo") "Man") "Dictionary" "Shortdoc")))
       (display-buffer-in-side-window
        display-buffer-in-direction)
       (direction . rightmost)
