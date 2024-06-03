@@ -40,7 +40,6 @@
   (scroll-conservatively 97)
   (make-cursor-line-fully-visible nil)
   (blink-cursor-mode nil)
-  (line-number-mode nil)
   (column-number-mode t)
   (shift-select-mode nil)
   (global-prettify-symbols-mode t)
