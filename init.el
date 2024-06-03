@@ -678,7 +678,8 @@
                        (with-current-buffer buf
                          (not (eq proj (project-current nil))))))
                    bs--sort-by-mode)))
-    (add-to-list 'bs-configurations conf t)))
+    (add-to-list 'bs-configurations conf t))
+  (setq bs-default-configuration "tab-line"))
 
 (use-package ibuffer
   :custom
