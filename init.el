@@ -966,7 +966,7 @@
       (_ t))))
 
 (use-package flyspell
-  :hook (text-mode
+  :hook ((text-mode comint-mode eshell-mode)
          (prog-mode . flyspell-prog-mode))
   :custom
   (flyspell-mode-line-string nil)
