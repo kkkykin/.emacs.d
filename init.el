@@ -1144,7 +1144,8 @@
   :bind
   (:map tab-line-mode-map
         ("C-<tab>" . tab-line-switch-to-next-tab)
-        ("S-C-<tab>" . tab-line-switch-to-prev-tab)
+        ("C-S-<tab>" . tab-line-switch-to-prev-tab)
+        ("C-S-<iso-lefttab>" . tab-line-switch-to-prev-tab)
         ("C-x C-<left>" . nil)
         ("C-x C-<right>" . nil)
         ("C-x <left>" . nil)
@@ -1162,6 +1163,7 @@
     (setq tab-line-new-button-show nil
           tab-line-close-button-show nil))
   (dolist (gp `((,(rx bos (| "news" "dictionary" "shortdoc") eos) . "Help")
+                (,(rx bos "sql") . "SQL")
                 (,(rx (| (: "buffer" (| ?  "-selection-") "menu") "ibuffer") eos) . "BS")))
     (add-to-list 'tab-line-tabs-buffer-groups gp)))
 
