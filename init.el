@@ -448,6 +448,7 @@
   :hook emacs-startup
   :custom
   (windmove-wrap-around t)
+  (windmove-allow-all-windows t)
   :config
   (windmove-default-keybindings 'control))
 
