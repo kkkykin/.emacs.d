@@ -386,7 +386,9 @@
          ibuffer-mode
          dired-mode
          occur-mode))
-  (whitespace-action '(cleanup auto-cleanup)))
+  (whitespace-action '(cleanup auto-cleanup))
+  :config
+  (put 'whitespace-action 'safe-local-variable 'null))
 
 (use-package files
   :custom
