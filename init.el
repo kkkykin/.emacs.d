@@ -1027,7 +1027,10 @@
   (ediff-window-setup-function 'ediff-setup-windows-plain)
   :config
   (unless my/sys-android-p
-    (setq ediff-split-window-function 'split-window-horizontally)))
+    (setq ediff-split-window-function 'split-window-horizontally))
+  (add-hook 'ediff-before-setup-hook #'tab-bar-new-tab)
+  ;; close tab after 'ediff-cleanup-mess
+  (add-hook 'ediff-quit-hook #'tab-bar-close-tab 1))
 
 (use-package message
   :hook (message-send . ispell-message)
