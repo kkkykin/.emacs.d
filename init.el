@@ -651,11 +651,11 @@
 (use-package bs
   :bind
   ("C-x C-b" . bs-show)
-  ("C-x C-<left>" . bs-cycle-previous)
-  ("C-x C-<right>" . bs-cycle-next)
+  ("C-x <up>" . bs-cycle-previous)
+  ("C-x <down>" . bs-cycle-next)
   (:repeat-map my/bs-repeat-map
-               ("<left>" . bs-cycle-previous)
-               ("<right>" . bs-cycle-next))
+               ("<up>" . bs-cycle-previous)
+               ("<down>" . bs-cycle-next))
   :config
   (keymap-set bs-mode-map "i"
               (lambda () (interactive)
@@ -682,7 +682,8 @@
                          (not (eq proj (project-current nil))))))
                    bs--sort-by-mode)))
     (add-to-list 'bs-configurations conf t))
-  (setq bs-default-configuration "tab-line"))
+  (setq bs-default-configuration "tab-line"
+        bs-cycle-configuration-name "project"))
 
 (use-package ibuffer
   :custom
