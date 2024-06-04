@@ -258,7 +258,9 @@
         ("D" . 'info-apropos)
         ("M" . 'describe-keymap)
         ("z" . 'shortdoc)
-        ("Z" . 'apropos-library)))
+        ("Z" . 'apropos-library))
+  :config
+  (temp-buffer-resize-mode))
 
 (use-package eldoc
   :custom
@@ -384,7 +386,9 @@
          ibuffer-mode
          dired-mode
          occur-mode))
-  (whitespace-action '(cleanup auto-cleanup)))
+  (whitespace-action '(cleanup auto-cleanup))
+  :config
+  (put 'whitespace-action 'safe-local-variable 'null))
 
 (use-package files
   :custom
@@ -444,6 +448,7 @@
   :hook emacs-startup
   :custom
   (windmove-wrap-around t)
+  (windmove-allow-all-windows t)
   :config
   (windmove-default-keybindings 'control))
 
@@ -531,18 +536,14 @@
   (:repeat-map other-window-repeat-map
                ("<backspace>" . kill-buffer)
                ("S-<backspace>" . kill-buffer-and-window)
-               ("C-<left>" . windmove-left)
-               ("C-<right>" . windmove-right)
-               ("C-<up>" . windmove-up)
-               ("C-<down>" . windmove-down)
                ("<left>" . windmove-delete-left)
                ("<right>" . windmove-delete-right)
                ("<up>" . windmove-delete-up)
                ("<down>" . windmove-delete-down)
-               ("C-h" . windmove-swap-states-left)
-               ("C-l" . windmove-swap-states-right)
-               ("C-k" . windmove-swap-states-up)
-               ("C-j" . windmove-swap-states-down)
+               ("C-<left>" . windmove-swap-states-left)
+               ("C-<right>" . windmove-swap-states-right)
+               ("C-<up>" . windmove-swap-states-up)
+               ("C-<down>" . windmove-swap-states-down)
                ("h" . windmove-display-left)
                ("l" . windmove-display-right)
                ("k" . windmove-display-up)
@@ -647,11 +648,11 @@
 (use-package bs
   :bind
   ("C-x C-b" . bs-show)
-  ("C-x C-<left>" . bs-cycle-previous)
-  ("C-x C-<right>" . bs-cycle-next)
+  ("C-x <up>" . bs-cycle-previous)
+  ("C-x <down>" . bs-cycle-next)
   (:repeat-map my/bs-repeat-map
-               ("<left>" . bs-cycle-previous)
-               ("<right>" . bs-cycle-next))
+               ("<up>" . bs-cycle-previous)
+               ("<down>" . bs-cycle-next))
   :config
   (keymap-set bs-mode-map "i"
               (lambda () (interactive)
@@ -678,7 +679,8 @@
                          (not (eq proj (project-current nil))))))
                    bs--sort-by-mode)))
     (add-to-list 'bs-configurations conf t))
-  (setq bs-default-configuration "tab-line"))
+  (setq bs-default-configuration "tab-line"
+        bs-cycle-configuration-name "project"))
 
 (use-package ibuffer
   :custom
@@ -1025,7 +1027,10 @@
   (ediff-window-setup-function 'ediff-setup-windows-plain)
   :config
   (unless my/sys-android-p
-    (setq ediff-split-window-function 'split-window-horizontally)))
+    (setq ediff-split-window-function 'split-window-horizontally))
+  (add-hook 'ediff-before-setup-hook #'tab-bar-new-tab)
+  ;; close tab after 'ediff-cleanup-mess
+  (add-hook 'ediff-quit-hook #'tab-bar-close-tab 1))
 
 (use-package message
   :hook (message-send . ispell-message)
@@ -1182,6 +1187,7 @@
 
 (use-package window
   :custom
+  (fit-window-to-buffer-horizontally t)
   (switch-to-buffer-obey-display-actions t)
   (window-sides-slots '(0 0 1 1))
   (switch-to-buffer-in-dedicated-window 'pop)
@@ -1196,6 +1202,7 @@
        display-buffer-in-direction)
       (direction . rightmost)
       (side . right)
+      (window-parameters . ((no-other-window . t)))
       (window-width . 80))
      (,(rx bos ?* (| "Group" "Score" "Summary" "Article"))
       display-buffer-in-tab
@@ -1221,6 +1228,7 @@
       (display-buffer-in-side-window
        display-buffer-in-direction)
       (direction . bottom)
+      (window-parameters . ((no-other-window . t)))
       (window-height . 0.3))
      ((or ,(regexp-quote shell-command-buffer-name)
           ,(regexp-quote shell-command-buffer-name-async)
@@ -1346,7 +1354,26 @@
 (use-package shadowfile :defer 11
   :unless my/sys-android-p
   :config
-  (shadow-initialize))
+  (shadow-initialize)
+  (with-eval-after-load 'project
+    (cl-delete-if
+     (lambda (a) (member a '(buffer-file-name
+                        (and
+                         (major-mode . fundamental-mode)
+                         "\\`[^ ]"))))
+     project-kill-buffer-conditions)
+    (let ((shadow (rx bos (| (eval (file-name-nondirectory shadow-todo-file))
+                             (eval (file-name-nondirectory shadow-info-file)))
+                      eos)))
+      (dolist (k `((and buffer-file-name
+                        (not (and
+                              (major-mode . fundamental-mode)
+                              ,shadow)))
+                   (and
+                    (major-mode . fundamental-mode)
+                    "\\`[^ ]"
+                    (not ,shadow))))
+        (add-to-list 'project-kill-buffer-conditions k)))))
 
 (use-package treesit :defer 1
   :after prog-mode
