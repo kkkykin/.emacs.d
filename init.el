@@ -1398,6 +1398,10 @@
 
 (use-package org
   :init (setq org-directory "~/org")
+  :hook
+  (org-mode . (lambda ()
+                (modify-syntax-entry ?< "." org-mode-syntax-table)
+                (modify-syntax-entry ?> "." org-mode-syntax-table)))
   :custom
   (org-read-date-popup-calendar nil)
   ;; (org-replace-disputed-keys t "see `'org-disputed-keys'")
@@ -1439,9 +1443,7 @@
   (org-log-done 'time)
   (org-log-into-drawer t)
   :config
-  (modify-syntax-entry ?< "." org-mode-syntax-table)
-  (modify-syntax-entry ?> "." org-mode-syntax-table)
-  (add-to-list 'org-modules 'org-id))
+  (add-to-list 'org-modules 'org-tempo))
 
 (use-package org-clock
   :custom
