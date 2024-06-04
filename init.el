@@ -1598,13 +1598,26 @@
                               ("" "fvextra" nil)))
   :config
   (with-eval-after-load 'ox-latex
-    (define-advice org-latex--inline-image
-        (:around (orig-fun link &rest args) force-absolute-path)
-      "Force use image absolute path for export."
-      (let ((raw-path (org-element-property :path link)))
-        (unless (file-name-absolute-p raw-path)
-          (org-element-put-property link :path (expand-file-name raw-path))))
-      (apply orig-fun link args))
+    (defun my/org-latex-filter-link-path-fix (link backend info)
+      "Use correct path when export directory not `default-directory'."
+      (if-let ((need-fix (eq 'latex backend))
+               (out-file (plist-get info :output-file)))
+          (replace-regexp-in-string
+           "\\(\\includegraphics.+{\\)\\(.+\\)}"
+           (lambda (s)
+             (let ((link (match-string 2 s))
+                   (out-dir (file-name-directory
+                             (expand-file-name out-file))))
+               (string-replace
+                "\\" "\\\\"
+                (format "%s%s}"
+                        (match-string 1 s)
+                        (file-relative-name (expand-file-name link)
+                                            out-dir)))))
+           link)
+        link))
+    (add-hook 'org-export-filter-link-functions
+              #'my/org-latex-filter-link-path-fix)
     (add-to-list 'org-latex-classes
                  '("ctexart" "\\documentclass[utf8]{ctexart}"
                    ("\\section{%s}" . "\\section*{%s}")
