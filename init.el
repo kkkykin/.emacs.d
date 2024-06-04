@@ -258,7 +258,9 @@
         ("D" . 'info-apropos)
         ("M" . 'describe-keymap)
         ("z" . 'shortdoc)
-        ("Z" . 'apropos-library)))
+        ("Z" . 'apropos-library))
+  :config
+  (temp-buffer-resize-mode))
 
 (use-package eldoc
   :custom
