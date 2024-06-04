@@ -535,18 +535,14 @@
   (:repeat-map other-window-repeat-map
                ("<backspace>" . kill-buffer)
                ("S-<backspace>" . kill-buffer-and-window)
-               ("C-<left>" . windmove-left)
-               ("C-<right>" . windmove-right)
-               ("C-<up>" . windmove-up)
-               ("C-<down>" . windmove-down)
                ("<left>" . windmove-delete-left)
                ("<right>" . windmove-delete-right)
                ("<up>" . windmove-delete-up)
                ("<down>" . windmove-delete-down)
-               ("C-h" . windmove-swap-states-left)
-               ("C-l" . windmove-swap-states-right)
-               ("C-k" . windmove-swap-states-up)
-               ("C-j" . windmove-swap-states-down)
+               ("C-<left>" . windmove-swap-states-left)
+               ("C-<right>" . windmove-swap-states-right)
+               ("C-<up>" . windmove-swap-states-up)
+               ("C-<down>" . windmove-swap-states-down)
                ("h" . windmove-display-left)
                ("l" . windmove-display-right)
                ("k" . windmove-display-up)
@@ -1178,6 +1174,7 @@
 
 (use-package window
   :custom
+  (fit-window-to-buffer-horizontally t)
   (switch-to-buffer-obey-display-actions t)
   (window-sides-slots '(0 0 1 1))
   (switch-to-buffer-in-dedicated-window 'pop)
@@ -1192,6 +1189,7 @@
        display-buffer-in-direction)
       (direction . rightmost)
       (side . right)
+      (window-parameters . ((no-other-window . t)))
       (window-width . 80))
      ((or "^\\*eldoc"
           (major-mode . bs-mode)
@@ -1213,6 +1211,7 @@
       (display-buffer-in-side-window
        display-buffer-in-direction)
       (direction . bottom)
+      (window-parameters . ((no-other-window . t)))
       (window-height . 0.3))
      ((or ,(regexp-quote shell-command-buffer-name)
           ,(regexp-quote shell-command-buffer-name-async)
