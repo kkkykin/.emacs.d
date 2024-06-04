@@ -1358,22 +1358,19 @@
   (with-eval-after-load 'project
     (cl-delete-if
      (lambda (a) (member a '(buffer-file-name
-                        (and
-                         (major-mode . fundamental-mode)
-                         "\\`[^ ]"))))
+                         (and
+                          (major-mode . fundamental-mode)
+                          "\\`[^ ]"))))
      project-kill-buffer-conditions)
-    (let ((shadow (rx bos (| (eval (file-name-nondirectory shadow-todo-file))
-                             (eval (file-name-nondirectory shadow-info-file)))
-                      eos)))
-      (dolist (k `((and buffer-file-name
-                        (not (and
-                              (major-mode . fundamental-mode)
-                              ,shadow)))
-                   (and
-                    (major-mode . fundamental-mode)
-                    "\\`[^ ]"
-                    (not ,shadow))))
-        (add-to-list 'project-kill-buffer-conditions k)))))
+    (dolist (k '((and buffer-file-name
+                      (not (and
+                            (major-mode . fundamental-mode)
+                            #1="\\`\\(?:shadow\\(?:_todo\\|s\\)\\)\\'")))
+                 (and
+                  (major-mode . fundamental-mode)
+                  "\\`[^ ]"
+                  (not #1#))))
+      (add-to-list 'project-kill-buffer-conditions k))))
 
 (use-package treesit :defer 1
   :after prog-mode
