@@ -1314,7 +1314,7 @@
 
 (use-package compile
   :custom
-  (compilation-environment '(("TERM=xterm-256color")))
+  (compilation-environment '("TERM=xterm-256color"))
   (ansi-osc-for-compilation-buffer t)
   :config
   (add-hook 'compilation-filter-hook #'ansi-color-compilation-filter)
