@@ -1233,10 +1233,11 @@
       (window-height . 0.3))
      ((or ,(regexp-quote shell-command-buffer-name)
           ,(regexp-quote shell-command-buffer-name-async)
+          "\\`\\*Messages\\*\\'"
           "Eval Output\\*\\'")
       (display-buffer-reuse-mode-window
        display-buffer-at-bottom)
-      (mode . (shell-mode))
+      (mode . (shell-mode messages-buffer-mode))
       (inhibit-same-window . nil)
       (window-height . shrink-window-if-larger-than-buffer))
      ((major-mode . completion-list-mode)
