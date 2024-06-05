@@ -1885,7 +1885,7 @@
   (ellama-keymap-prefix "C-x y")
   (ellama-language "Chinese")
   (ellama-provider
-   (make-llm-gemini :key (auth-source-pick-first-password :host "makersuite.google.com")))
+   (make-llm-openai-compatible :url "http://127.0.0.1:7778"))
   (ellama-translation-provider (make-llm-openai-compatible :url "http://127.0.0.1:7778"))
   (ellama-providers
    `(("gemini" . ,(make-llm-gemini :key (auth-source-pick-first-password :host "makersuite.google.com")))
