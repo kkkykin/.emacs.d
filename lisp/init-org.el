@@ -1,6 +1,6 @@
 ;;; init-org.el --- Org related                      -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2024  
+;; Copyright (C) 2024
 
 ;; Author:  <kkky@KKSBOW>
 ;; Keywords: extensions
@@ -20,7 +20,7 @@
 
 ;;; Commentary:
 
-;; 
+;; Org related.
 
 ;;; Code:
 
@@ -66,6 +66,31 @@ its subdirectories."
   (keymap-substitute viper-vi-global-user-map
                      'org-open-at-point-global
                      'my/org-open-link-nearby))
+
+(with-eval-after-load 'ox-latex
+  (defun my/org-latex-filter-link-fix (link backend info)
+    "Use correct path when export directory not `default-directory'.
+     Append zero-width-space after link avoid error: No line here to end."
+    (concat
+     (if-let ((need-fix (eq 'latex backend))
+              (out-file (plist-get info :output-file)))
+         (replace-regexp-in-string
+          "\\(\\includegraphics.+{\\)\\(.+\\)}"
+          (lambda (s)
+            (let ((link (match-string 2 s))
+                  (out-dir (file-name-directory
+                            (expand-file-name out-file))))
+              (string-replace
+               "\\" "\\\\"
+               (format "%s%s}"
+                       (match-string 1 s)
+                       (file-relative-name (expand-file-name link)
+                                           out-dir)))))
+          link)
+       link)
+     "​"))
+  (add-hook 'org-export-filter-link-functions
+            #'my/org-latex-filter-link-fix))
 
 (provide 'init-org)
 ;;; init-org.el ends here
