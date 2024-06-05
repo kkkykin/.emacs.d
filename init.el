@@ -675,9 +675,16 @@
                    bs--sort-by-name)
                   ("project" nil nil nil
                    (lambda (buf)
-                     (let ((proj (project-current nil)))
-                       (with-current-buffer buf
-                         (not (eq proj (project-current nil))))))
+                     "ref: `project-buffers'"
+                     (let ((root
+                            (expand-file-name
+                             (file-name-as-directory
+                              (project-root (project-current nil))))))
+                       (not (string-prefix-p
+                             root
+                             (expand-file-name
+                              (buffer-local-value
+                               'default-directory buf))))))
                    bs--sort-by-mode)))
     (add-to-list 'bs-configurations conf t))
   (setq bs-default-configuration "tab-line"
