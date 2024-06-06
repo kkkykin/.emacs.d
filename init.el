@@ -1196,61 +1196,52 @@
 
 (use-package window
   :custom
+  (even-window-sizes nil)
   (fit-window-to-buffer-horizontally t)
-  (switch-to-buffer-obey-display-actions t)
-  (window-sides-slots '(0 0 1 1))
+  (window-sides-slots '(0 1 1 0))
   (switch-to-buffer-in-dedicated-window 'pop)
   (display-buffer-alist
-   `(((or (major-mode . Info-mode)
-          (major-mode . help-mode)
-          (major-mode . apropos-mode)
-          (major-mode . emacs-news-mode)
-          (major-mode . emacs-news-view-mode)
-          ,(rx bos ?* (| (: (? "Wo") "Man") "Dictionary" "Shortdoc")))
-      (display-buffer-in-side-window
-       display-buffer-in-direction)
-      (direction . rightmost)
-      (side . right)
-      (window-parameters . ((no-other-window . t)))
-      (window-width . 80))
-     ((or "^\\*eldoc"
-          (major-mode . bs-mode)
+   `(("^\\*eldoc for"
+      #1=display-buffer-below-selected
+      #11=(window-height . shrink-window-if-larger-than-buffer))
+     ((or (major-mode . bs-mode)
           "^\\*Buffer List\\*\\'")
-      (display-buffer-below-selected
-       display-buffer-at-bottom)
-      (window-height . shrink-window-if-larger-than-buffer))
-     ((or (major-mode . proced-mode)
-          (derived-mode . tabulated-list-mode)
-          (major-mode . inferior-emacs-lisp-mode)
-          ,(rx (| "diff" "xref" "grep" "Occur") ?* eos))
-      (display-buffer-reuse-mode-window
-       display-buffer-in-direction)
-      (direction . leftmost)
-      (window-width . 80)
-      (mode . ( proced-mode tabulated-list-mode xref--xref-buffer-mode
-                diff-mode grep-mode occur-mode))
-      (inhibit-same-window . nil))
-     ("\\e?shell\\*\\'"
-      (display-buffer-in-side-window
-       display-buffer-in-direction)
-      (direction . bottom)
-      (window-parameters . ((no-other-window . t)))
-      (window-height . 0.3))
+      #1# #11#)
      ((or ,(regexp-quote shell-command-buffer-name)
           ,(regexp-quote shell-command-buffer-name-async)
-          "\\`\\*Messages\\*\\'"
-          "Eval Output\\*\\'")
-      (display-buffer-reuse-mode-window
-       display-buffer-at-bottom)
-      (mode . (shell-mode messages-buffer-mode))
-      (inhibit-same-window . nil)
-      (window-height . shrink-window-if-larger-than-buffer))
+          ,(regexp-quote shell-command-default-error-buffer))
+      #1# #11#
+      #21=(inhibit-same-window . nil)
+      #41=(window-parameters . ((no-other-window . t))))
      ((major-mode . completion-list-mode)
-      display-buffer-at-bottom
-      (window-height . shrink-window-if-larger-than-buffer))))
+      #3=display-buffer-at-bottom #11#)))
   :config
-  (when my/sys-android-p
-    (setq window-sides-slots '(0 0 0 0))))
+  (if my/sys-android-p
+      (setq window-sides-slots '(0 0 0 0))
+    (dolist (v `(((or (major-mode . Info-mode)
+                      (major-mode . help-mode)
+                      (major-mode . apropos-mode)
+                      (major-mode . emacs-news-mode)
+                      (major-mode . emacs-news-view-mode)
+                      ,(rx bos ?* (| (: (? "Wo") "Man") "Dictionary" "Shortdoc")))
+                  #2=display-buffer-in-side-window
+                  (side . right)
+                  #41=(window-parameters . ((no-other-window . t)))
+                  #21=(window-width . 80))
+                 ((or (major-mode . proced-mode)
+                      (major-mode . inferior-emacs-lisp-mode)
+                      ,(rx (| "diff" "xref" "grep" "Occur") ?* eos))
+                  (display-buffer-reuse-mode-window
+                   display-buffer-in-direction)
+                  #21# (direction . leftmost)
+                  (mode . ( proced-mode xref--xref-buffer-mode
+                            diff-mode grep-mode occur-mode))
+                  #31=(inhibit-same-window . nil))
+                 ("\\e?shell\\*\\'"
+                  #2# #41#
+                  (side . top)
+                  #12=(window-height . 0.3))))
+      (add-to-list 'display-buffer-alist v))))
 
 (use-package saveplace :hook (emacs-startup . save-place-mode))
 
