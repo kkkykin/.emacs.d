@@ -1057,7 +1057,10 @@
   :hook ((gnus-select-group . gnus-group-set-timestamp)
          (gnus-group-mode . gnus-topic-mode)
          (gnus-summary-exit . gnus-summary-bubble-group)
-         (gnus-startup . tab-bar-new-tab)
+         (gnus-before-startup . (lambda ()
+                                  (tab-bar-history-back)
+                                  (tab-bar-switch-to-tab "*Gnus*")))
+         (gnus-before-resume . (lambda () (tab-bar-switch-to-tab "*Gnus*")))
          (gnus-after-exiting-gnus . tab-bar-close-tab)
          (gnus-configure-windows . gnus-tree-perhaps-minimize))
   :custom
