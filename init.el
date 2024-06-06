@@ -55,7 +55,7 @@
   (indent-tabs-mode nil)
   (delete-pair-blink-delay nil)
   (tab-width 4)
-  (shell-command-dont-erase-buffer 'end-last-out)
+  (shell-command-dont-erase-buffer 'beg-last-out)
   (async-shell-command-buffer 'rename-buffer)
   (async-shell-command-display-buffer nil)
   (shell-command-default-error-buffer "*Shell Command Error*")
@@ -852,7 +852,7 @@
   (dired-mouse-drag-files t)
   (delete-by-moving-to-trash t)
   (dired-guess-shell-alist-user
-   `((,(rx ?. (| "rar" "zip" "7z" "iso" "cab") (? ".001") eos)
+   `((,(rx ?. (| "rar" "zip" "7z" "iso" "cab" "apks") (? ".001") eos)
       (format "%s x -spe -o\"%s\" -aoa -p⑨"
               archive-7z-program (file-name-sans-extension file)))
      ("\\.apk\\'"
@@ -874,9 +874,11 @@
      (,(rx ?. (| "png" "jpeg" "jpg" "gif" "webp" "bmp") eos)
       "ffmpeg -hide_banner -y -i ? -vf \"scale='min(4096,iw)':-1\" -c:v libaom-av1 -cpu-used 6 -row-mt 1 -tiles 2x2 -still-picture 1 -crf 20 -f avif ff-`?`")
      (".*" (format "tar -cf - ? | zstd -o \"%s.tzst\" --long --ultra -9"
-                   (file-name-sans-extension file)))
+                   (if (file-directory-p file) file
+                     (file-name-sans-extension file))))
      (".*" (format "ls -lSR ? > \"%s.dired\""
-                   (file-name-sans-extension file)))))
+                   (if (file-directory-p file) file
+                     (file-name-sans-extension file))))))
   (wdired-allow-to-change-permissions 'advanced)
   (wdired-use-interactive-rename t)
   :bind (:map dired-mode-map
