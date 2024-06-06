@@ -1207,7 +1207,8 @@
   (switch-to-buffer-in-dedicated-window 'pop)
   (display-buffer-alist
    `(("^\\*eldoc for"
-      #1=display-buffer-below-selected
+      #1=(display-buffer-reuse-window
+          display-buffer-below-selected)
       #11=(window-height . shrink-window-if-larger-than-buffer))
      ((or (major-mode . bs-mode)
           "^\\*Buffer List\\*\\'")
