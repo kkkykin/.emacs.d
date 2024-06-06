@@ -1057,6 +1057,7 @@
   :hook ((gnus-select-group . gnus-group-set-timestamp)
          (gnus-group-mode . gnus-topic-mode)
          (gnus-summary-exit . gnus-summary-bubble-group)
+         (gnus-startup . tab-bar-new-tab)
          (gnus-after-exiting-gnus . tab-bar-close-tab)
          (gnus-configure-windows . gnus-tree-perhaps-minimize))
   :custom
@@ -1212,9 +1213,6 @@
       (side . right)
       (window-parameters . ((no-other-window . t)))
       (window-width . 80))
-     (,(rx bos ?* (| "Group" "Score" "Summary" "Article"))
-      display-buffer-in-tab
-      (tab-name . "*Gnus*"))
      ((or "^\\*eldoc"
           (major-mode . bs-mode)
           "^\\*Buffer List\\*\\'")
