@@ -686,7 +686,7 @@ Argument EVENT tells what has happened to the process."
 ;; eww
 
 (defun mn/url-redirect (url)
-  (cond 
+  (cond
    ((string-match "^https://github.com/\\(.+\\)/commit/\\(\\w+\\)$" url)
     (format "https://github.com/%s/commit/%s.patch"
             (match-string 1 url)
@@ -784,6 +784,27 @@ Argument EVENT tells what has happened to the process."
   (mn/get-bt-tracker "https://gitea.com/XIU2/TrackersListCollection/raw/branch/master/best_aria2.txt"))
 
 
+;; alist
+
+(defvar mn/alist-data-directory
+  (pcase system-type
+    ('windows-nt (substitute-in-file-name "$USERPROFILE/scoop/persist/alist/"))
+    (_ (expand-file-name "~/.config/alist/")))
+  "Where alist store data.")
+
+(defun mn/start-alist ()
+  "Start alist server."
+  (interactive)
+  (rename-file (expand-file-name "log/log.log" my/alist-data-directory)
+               (file-name-concat my/alist-data-directory "log" (format-time-string "%+4Y-%m-%d-%H-%M")))
+  (start-process "alist" nil "alist" "server"
+                 "--data" my/alist-data-directory)
+  (pcase system-type
+    ('android (android-notifications-notify
+               :title "alist"
+               :body "Click to stop alist."
+               :on-action (lambda (a b)
+                            (call-process "pkill" nil nil nil "alist"))))))
 
 (provide 'init-net)
 ;;; init-net.el ends here

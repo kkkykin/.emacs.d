@@ -178,7 +178,8 @@ milliseconds"
 (easy-menu-define bot-menu global-map
   "Menu for useful commands."
   '("Bot"
-    ["toggle sshd" my/toggle-sshd]))
+    ["toggle sshd" my/toggle-sshd]
+    ["Start alist" my/net-start-alist]))
 
 (setq select-enable-clipboard nil
       overriding-text-conversion-style nil
