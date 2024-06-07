@@ -90,27 +90,74 @@ milliseconds"
 
 ;; sshd
 
+(defvar my/sshd-pid-file
+  (file-name-concat my/termux-root-directory "usr/var/run/sshd.pid")
+  "sshd pid file.")
+
 (defvar my/sshd-timer nil
   "sshd timer object.")
-
-(defvar my/sshd-buffer-name "*sshd*"
-  "Default sshd buffer name.")
 
 (defun my/toggle-sshd ()
   "Toggle local sshd server."
   (interactive)
-  (if (buffer-live-p (get-buffer my/sshd-buffer-name))
+  (if (file-exists-p my/sshd-pid-file)
+      (progn
+        (delete-file my/sshd-pid-file)
+        (call-process "pkill" nil nil nil "sshd")
+        (when my/sshd-timer
+          (cancel-timer my/sshd-timer)))
+    (call-process "sshd")
+    (setq my/sshd-timer (run-at-time 300 300 #'my/sshd-handler))))
+
+(defun my/sshd-handler ()
+  "Kill sshd when no connection voer 5 min."
+  (if (file-exists-p my/sshd-pid-file)
+      (with-temp-buffer
+        (insert-file-contents-literally my/sshd-pid-file)
+        (let ((pid (string-to-number (string-trim-right (buffer-string))))
+              child)
+          (if (process-attributes pid)
+              (progn
+                (erase-buffer)
+                (call-process "logcat" nil (current-buffer) nil
+                              "-s" "sshd:*" "-d" "-v" "epoch")
+                (search-backward " I sshd    : Server listening on ")
+                (while (re-search-forward "^ *\\([.[:digit:]]+\\) +\\([[:digit:]]+\\).+?: \\(Accepted\\|Disconnected from\\)" nil t)
+                  (if (string= (match-string 3) "Accepted")
+                      (push (match-string 2) child)
+                    (setq child (delete (match-string 2) child))))
+                (when (and (null child)
+                           (< (string-to-number (match-string 1))
+                              (- (float-time) 300)))
+                  (signal-process pid 9)
+                  (delete-file my/sshd-pid-file)
+                  (cancel-timer my/sshd-timer)))
+            (cancel-timer my/sshd-timer)
+            (delete-file my/sshd-pid-file))))
+    (call-process "pkill" nil nil nil "sshd")
+    (cancel-timer my/sshd-timer)))
+
+(defvar my/dropbear-timer nil
+  "dropbear timer object.")
+
+(defvar my/dropbear-buffer-name "*dropbear*"
+  "Default dropbear buffer name.")
+
+(defun my/toggle-dropbear ()
+  "Toggle local dropbear server."
+  (interactive)
+  (if (buffer-live-p (get-buffer my/dropbear-buffer-name))
       (let ((kill-buffer-query-functions nil))
         (call-process-shell-command "pkill dropbear")
-        (kill-buffer my/sshd-buffer-name)
-        (cancel-timer my/sshd-timer))
-    (start-process "sshd" my/sshd-buffer-name "dropbear" "-F" "-w" "-s")
-    (setq my/sshd-timer (run-at-time 300 300 #'my/sshd-handler
-                                     (format-time-string "%G %b %d %T")))))
+        (kill-buffer my/dropbear-buffer-name)
+        (cancel-timer my/dropbear-timer))
+    (start-process "dropbear" my/dropbear-buffer-name "dropbear" "-F" "-w" "-s")
+    (setq my/dropbear-timer (run-at-time 300 300 #'my/dropbear-handler
+                                         (format-time-string "%G %b %d %T")))))
 
-(defun my/sshd-handler (exit)
-  "Kill sshd when no connection over 5 min."
-  (with-current-buffer my/sshd-buffer-name
+(defun my/dropbear-handler (exit)
+  "Kill dropbear when no connection over 5 min."
+  (with-current-buffer my/dropbear-buffer-name
     (goto-char (point-min))
     (let (child)
       (while (re-search-forward "^\\[\\([[:digit:]]+\\)\\] \\([[:alpha:]]\\{3\\} [[:digit:]]\\{2\\} [[:digit:]:]\\{8\\}\\) \\(Child\\|Exit\\)" nil t)
@@ -126,7 +173,7 @@ milliseconds"
                     (parse-time-string exit))
                    300)
                   nil))
-        (my/toggle-sshd)))))
+        (my/toggle-dropbear)))))
 
 
 (setenv "SSH_AUTH_SOCK" (string-trim-right (shell-command-to-string "gpgconf -L agent-ssh-socket")))
