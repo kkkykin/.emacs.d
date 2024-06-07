@@ -734,5 +734,23 @@ ref: https://karthinks.com/software/emacs-window-management-almanac/"
   (kill-new (replace-regexp-in-string
              (concat "[^" url-get-url-filename-chars "]+") "" url)))
 
+
+;; proc
+
+(defun my/get-pid-from-file (pid-file)
+  "Read and return the process ID (PID) from the given PID file.
+If the file doesn't exist or is not readable, return nil.
+If the file is empty or doesn't contain a valid integer, return nil.
+
+PID-FILE is the path to the file containing the process ID."
+  (when (file-readable-p pid-file)
+    (with-temp-buffer
+      (insert-file-contents-literally pid-file)
+      (let ((pid-string (buffer-string)))
+        (unless (string-empty-p pid-string)
+          (let ((pid (string-to-number pid-string)))
+            (when (and (integerp pid) (> pid 0))
+              pid)))))))
+
 (provide 'init-misc)
 ;;; init-misc.el ends here

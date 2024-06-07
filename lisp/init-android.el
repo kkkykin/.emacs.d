@@ -100,42 +100,37 @@ milliseconds"
 (defun my/toggle-sshd ()
   "Toggle local sshd server."
   (interactive)
-  (if (file-exists-p my/sshd-pid-file)
+  (if (process-attributes (or (my/get-pid-from-file my/sshd-pid-file) 0))
       (progn
         (delete-file my/sshd-pid-file)
         (call-process "pkill" nil nil nil "sshd")
         (when my/sshd-timer
           (cancel-timer my/sshd-timer)))
     (call-process "sshd")
-    (setq my/sshd-timer (run-at-time 300 300 #'my/sshd-handler))))
+    (setq my/sshd-timer (run-at-time 30 30 #'my/sshd-handler))))
 
 (defun my/sshd-handler ()
-  "Kill sshd when no connection voer 5 min."
-  (if (file-exists-p my/sshd-pid-file)
+  "Kill sshd when no connection over 5 min."
+  (if-let* ((pid (or (my/get-pid-from-file my/sshd-pid-file) 0))
+            (process-attributes pid))
       (with-temp-buffer
-        (insert-file-contents-literally my/sshd-pid-file)
-        (let ((pid (string-to-number (string-trim-right (buffer-string))))
-              child)
-          (if (process-attributes pid)
-              (progn
-                (erase-buffer)
-                (call-process "logcat" nil (current-buffer) nil
-                              "-s" "sshd:*" "-d" "-v" "epoch")
-                (search-backward " I sshd    : Server listening on ")
-                (while (re-search-forward "^ *\\([.[:digit:]]+\\) +\\([[:digit:]]+\\).+?: \\(Accepted\\|Disconnected from\\)" nil t)
-                  (if (string= (match-string 3) "Accepted")
-                      (push (match-string 2) child)
-                    (setq child (delete (match-string 2) child))))
-                (when (and (null child)
-                           (< (string-to-number (match-string 1))
-                              (- (float-time) 300)))
-                  (signal-process pid 9)
-                  (delete-file my/sshd-pid-file)
-                  (cancel-timer my/sshd-timer)))
-            (cancel-timer my/sshd-timer)
-            (delete-file my/sshd-pid-file))))
+        (call-process "logcat" nil (current-buffer) nil
+                      "-s" "sshd:*" "-d" "-v" "epoch")
+        (search-backward " I sshd    : Server listening on ")
+        (let (child)
+          (while (re-search-forward "^ *\\([.[:digit:]]+\\) +\\([[:digit:]]+\\).+?: \\(Accepted\\|Disconnected from\\)" nil t)
+            (if (string= (match-string 3) "Accepted")
+                (push (match-string 2) child)
+              (setq child (delete (match-string 2) child))))
+          (when (and (null child)
+                     (< (string-to-number (or (match-string 1) "0"))
+                        (- (float-time) 30)))
+            (signal-process pid 9)
+            (delete-file my/sshd-pid-file)
+            (cancel-timer my/sshd-timer))))
     (call-process "pkill" nil nil nil "sshd")
-    (cancel-timer my/sshd-timer)))
+    (cancel-timer my/sshd-timer)
+    (delete-file my/sshd-pid-file)))
 
 (defvar my/dropbear-timer nil
   "dropbear timer object.")
