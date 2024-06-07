@@ -116,9 +116,9 @@ milliseconds"
       (with-temp-buffer
         (call-process "logcat" nil (current-buffer) nil
                       "-s" "sshd:*" "-d" "-v" "epoch")
-        (search-backward " I sshd    : Server listening on ")
+        (search-backward " I sshd    : Server listening on " nil t)
         (let (child)
-          (while (re-search-forward "^ *\\([.[:digit:]]+\\) +\\([[:digit:]]+\\).+?: \\(Accepted\\|Disconnected from\\)" nil t)
+          (while (re-search-forward "^ *\\([.[:digit:]]+\\) +\\([[:digit:]]+\\).+? I sshd    : \\(Accepted\\|Disconnected from\\)" nil t)
             (if (string= (match-string 3) "Accepted")
                 (push (match-string 2) child)
               (setq child (delete (match-string 2) child))))
