@@ -107,7 +107,7 @@ milliseconds"
         (when my/sshd-timer
           (cancel-timer my/sshd-timer)))
     (call-process "sshd")
-    (setq my/sshd-timer (run-at-time 30 30 #'my/sshd-handler))))
+    (setq my/sshd-timer (run-at-time 300 300 #'my/sshd-handler))))
 
 (defun my/sshd-handler ()
   "Kill sshd when no connection over 5 min."
@@ -124,7 +124,7 @@ milliseconds"
               (setq child (delete (match-string 2) child))))
           (when (and (null child)
                      (< (string-to-number (or (match-string 1) "0"))
-                        (- (float-time) 30)))
+                        (- (float-time) 300)))
             (signal-process pid 9)
             (delete-file my/sshd-pid-file)
             (cancel-timer my/sshd-timer))))
