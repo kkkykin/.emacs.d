@@ -186,10 +186,12 @@ milliseconds"
       Info-default-directory-list `(,(file-name-concat my/termux-root-directory "usr/share/info/"))
       android-pass-multimedia-buttons-to-system t)
 
-(dolist (path '(".aria2/" ".gitconfig" ".gnupg/" ".ssh/"))
+(dolist (path '(".aria2/" ".gitconfig" ".gnupg/" ".ssh/" ".config/"))
   (make-symbolic-link (file-name-concat
                        my/termux-root-directory "home" path)
                       (file-name-concat "~" path) t))
+
+(setenv "XDG_CONFIG_HOME" (expand-file-name "~/.config/"))
 
 (define-key key-translation-map (kbd "<delete>") (kbd "<escape>"))
 (define-key key-translation-map (kbd "<deletechar>") (kbd "<escape>"))
