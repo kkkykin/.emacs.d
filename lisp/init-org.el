@@ -24,6 +24,21 @@
 
 ;;; Code:
 
+(with-eval-after-load 'org-tempo
+  (dolist (k '(("n" . "name")))
+    (add-to-list 'org-tempo-keywords-alist k))
+
+  "ref: `org-tempo-add-keyword'"
+  (tempo-define-template
+   "org-call"
+   '("#+call: "
+     (completing-read "Call src: " (org-babel-src-block-names))
+     "[" p "]()[]"
+     '>)
+   "<x"
+   "Insert a call keyword"
+   'org-tempo-tags))
+
 (defun org-dblock-write:file-finder (params)
   "Create a dynamic block for listing all matched files in a directory and
 its subdirectories."
