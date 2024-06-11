@@ -250,6 +250,7 @@
   (help-window-select t "Switch to help buffers automatically")
   (help-window-keep-selected t)
   (help-enable-symbol-autoload t)
+  (help-enable-variable-value-editing t)
   (apropos-sort-by-scores t)
   :bind
   (:map help-map
@@ -853,7 +854,7 @@
   (delete-by-moving-to-trash t)
   (dired-guess-shell-alist-user
    `((,(rx ?. (| "rar" "zip" "7z" "iso" "cab" "apks") (? ".001") eos)
-      (format "%s x -spe -o\"%s\" -aoa -p⑨"
+      #1=(format "%s x -spe -o\"%s\" -aoa -p⑨"
               archive-7z-program (file-name-sans-extension file)))
      ("\\.apk\\'"
       (format "adb %sinstall"
@@ -878,7 +879,8 @@
                      (file-name-sans-extension file))))
      (".*" (format "ls -lSR ? > \"%s.dired\""
                    (if (file-directory-p file) file
-                     (file-name-sans-extension file))))))
+                     (file-name-sans-extension file))))
+     (".*" #1#)))
   (wdired-allow-to-change-permissions 'advanced)
   (wdired-use-interactive-rename t)
   :bind (:map dired-mode-map
@@ -1261,6 +1263,9 @@
                      "/sshx:" ,(file-name-concat package-user-dir ".*-autoloads\\.el\\'"))))
 
 (use-package esh-mode
+  :hook
+  (eshell-mode . (setq-local imenu-generic-expression
+                             '(("Prompt" " $ \\(.*\\)" 1))))
   :bind
   (:map eshell-proc-mode-map
         ;; Kill eshell buffer if no process, like `comint-send-eof'
