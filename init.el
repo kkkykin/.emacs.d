@@ -1453,6 +1453,28 @@
   (org-log-done 'time)
   (org-log-into-drawer t)
   :config
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   (cl-delete-if-not
+    (lambda (pair)
+      (locate-library (concat "ob-" (symbol-name (car pair)))))
+    '((R . nil)
+      (ditaa . nil)
+      (dot . nil)
+      (emacs-lisp . t)
+      (gnuplot . t)
+      (haskell . nil)
+      (latex . t)
+      (ledger . nil)
+      (ocaml . nil)
+      (octave . nil)
+      (plantuml . t)
+      (python . t)
+      (ruby . nil)
+      (screen . nil)
+      (shell . t)
+      (sql . t)
+      (sqlite . t))))
   (add-to-list 'org-modules 'org-tempo))
 
 (use-package org-clock
@@ -1570,29 +1592,7 @@
   (with-eval-after-load 'ob-plantuml
     (setq org-babel-default-header-args:plantuml
           (cons '(:results . "verbatim")
-                (assq-delete-all :results org-babel-default-header-args:plantuml))))
-  (org-babel-do-load-languages
-   'org-babel-load-languages
-   (seq-filter
-    (lambda (pair)
-      (locate-library (concat "ob-" (symbol-name (car pair)))))
-    '((R . nil)
-      (ditaa . nil)
-      (dot . nil)
-      (emacs-lisp . t)
-      (gnuplot . t)
-      (haskell . nil)
-      (latex . t)
-      (ledger . nil)
-      (ocaml . nil)
-      (octave . nil)
-      (plantuml . t)
-      (python . t)
-      (ruby . nil)
-      (screen . nil)
-      (shell . t)
-      (sql . t)
-      (sqlite . t)))))
+                (assq-delete-all :results org-babel-default-header-args:plantuml)))))
 
 (use-package ox
   :custom
