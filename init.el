@@ -1264,8 +1264,9 @@
 
 (use-package esh-mode
   :hook
-  (eshell-mode . (setq-local imenu-generic-expression
-                             '(("Prompt" " $ \\(.*\\)" 1))))
+  (eshell-mode . (lambda ()
+                   (setq-local imenu-generic-expression
+                               '(("Prompt" " $ \\(.*\\)" 1)))))
   :bind
   (:map eshell-proc-mode-map
         ;; Kill eshell buffer if no process, like `comint-send-eof'
