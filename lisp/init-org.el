@@ -30,6 +30,14 @@
 
   "ref: `org-tempo-add-keyword'"
   (tempo-define-template
+   "org-noweb"
+   '("<<" (completing-read "insert or eval src: " (org-babel-src-block-names))
+     p ">>"
+     '>)
+   "<N"
+   "Insert a noweb block."
+   'org-tempo-tags)
+  (tempo-define-template
    "org-call"
    '("#+call: "
      (completing-read "Call src: " (org-babel-src-block-names))
