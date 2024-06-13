@@ -32,8 +32,7 @@
   (tempo-define-template
    "org-noweb"
    '("<<" (completing-read "insert or eval src: " (org-babel-src-block-names))
-     p ">>"
-     '>)
+     p ">>")
    "<N"
    "Insert a noweb block."
    'org-tempo-tags)
@@ -41,8 +40,7 @@
    "org-call"
    '("#+call: "
      (completing-read "Call src: " (org-babel-src-block-names))
-     "[" p "]()[]"
-     '>)
+     "[" p "]()[]")
    "<x"
    "Insert a call keyword"
    'org-tempo-tags))
