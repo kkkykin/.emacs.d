@@ -1563,16 +1563,16 @@
 (use-package ob
   :bind
   (:repeat-map my/ob-repeat-map
+               ("E" . org-edit-special)
                ("I" . org-babel-view-src-block-info)
+               ("N" . org-narrow-to-block)
                ("Z" . org-babel-switch-to-session)
                ("a" . org-babel-sha1-hash)
-               ("b" . org-babel-execute-buffer)
                ("c" . org-babel-check-src-block)
                ("d" . org-babel-demarcate-block)
                ("e" . org-babel-execute-maybe)
                ("f" . org-babel-tangle-file)
                ("g" . org-babel-goto-named-src-block)
-               ("h" . org-babel-describe-bindings)
                ("i" . org-babel-lob-ingest)
                ("j" . org-babel-insert-header-arg)
                ("k" . org-babel-remove-result-one-or-many)
@@ -1582,7 +1582,6 @@
                ("o" . org-babel-open-src-block-result)
                ("p" . org-babel-previous-src-block)
                ("r" . org-babel-goto-named-result)
-               ("s" . org-babel-execute-subtree)
                ("t" . org-babel-tangle)
                ("u" . org-babel-goto-src-block-head)
                ("v" . org-babel-expand-src-block)
