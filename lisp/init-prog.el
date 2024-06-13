@@ -78,7 +78,7 @@
              (mp/next-error-put-function-name-work))))
         ('occur-mode
          (if arg
-             (progn 
+             (progn
                (widen)
                (goto-char 1)
                (while (not (condition-case t
@@ -338,6 +338,10 @@ From https://christiantietze.de/posts/2024/01/emacs-sqlite-mode-open-sqlite-file
       (_ (format "%s(%s): " type (skeleton-read "Scope: "))))))
 (with-eval-after-load 'log-edit
   (add-hook 'log-edit-hook #'mp/vc-commit-template 1))
+
+(with-eval-after-load 'log-view
+  (define-keymap :keymap log-view-mode-map
+    "P" #'vc-push))
 
 
 (provide 'init-prog)
