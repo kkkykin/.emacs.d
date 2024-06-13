@@ -665,14 +665,13 @@
                    (lambda (buf)
                      (let ((gp (funcall tab-line-tabs-buffer-group-function
                                         (current-buffer))))
-                       (with-current-buffer buf
-                         (not (equal gp (funcall tab-line-tabs-buffer-group-function
-                                                 buf))))))
+                       (not (equal gp (funcall tab-line-tabs-buffer-group-function
+                                               buf)))))
                    bs--sort-by-name)
-                  ("dired" nil nil nil
-                   (lambda (buf)
-                     (with-current-buffer buf
-                       (not (eq major-mode 'dired-mode))))
+                  ("remote" nil nil nil
+                   (lambda (b)
+                     (not (file-remote-p (buffer-local-value
+                                          'default-directory b))))
                    bs--sort-by-name)
                   ("project" nil nil nil
                    (lambda (buf)
