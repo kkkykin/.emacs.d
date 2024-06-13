@@ -1422,6 +1422,8 @@
   (org-goto-auto-isearch nil)
   (org-goto-interface 'outline-path-completion)
   (org-default-notes-file (file-name-concat org-directory "inbox.org"))
+  (org-startup-folded t)
+  (org-cycle-hide-block-startup t)
   (org-refile-use-cache nil)
   (org-outline-path-complete-in-steps nil)
   (org-refile-use-outline-path 'file)
