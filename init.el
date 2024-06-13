@@ -854,13 +854,13 @@
   (dired-guess-shell-alist-user
    `((,(rx ?. (| "rar" "zip" "7z" "iso" "cab" "apks") (? ".001") eos)
       #1=(format "%s x -spe -o\"%s\" -aoa -p⑨"
-              archive-7z-program (file-name-sans-extension file)))
+                 archive-7z-program (file-name-sans-extension file)))
      ("\\.apk\\'"
       (format "adb %sinstall"
               (let ((devices
                      (mapcar
                       (lambda (a) (replace-regexp-in-string
-                               "[[:blank:]]+device$" "" a))
+                              "[[:blank:]]+device$" "" a))
                       (cl-delete-if-not
                        (lambda (a) (string-suffix-p "device" a))
                        (process-lines "adb" "devices")))))
@@ -882,8 +882,10 @@
      (".*" #1#)))
   (wdired-allow-to-change-permissions 'advanced)
   (wdired-use-interactive-rename t)
-  :bind (:map dired-mode-map
-              ("<mouse-2>" . dired-mouse-find-file))
+  :bind
+  (:map dired-mode-map
+        ("SPC a" . org-attach-dired-to-subtree)
+        ("<mouse-2>" . dired-mouse-find-file))
   :config
   (when-let ((7z (or (executable-find "7z")
                      (executable-find "7zz")
@@ -1477,6 +1479,12 @@
       (sql . t)
       (sqlite . t))))
   (add-to-list 'org-modules 'org-tempo))
+
+(use-package org-attach
+  :custom
+  (org-attach-archive-delete 'ask)
+  :config
+  (require 'org-attach-git))
 
 (use-package org-clock
   :custom
