@@ -867,6 +867,9 @@
                 (if (> 2 (length devices)) ""
                   (format "-s \"%s\" "
                           (completing-read "Device: " devices))))))
+     ("\\.apk\\'"
+      (format "apksigner sign --ks \"%s\" --ks-pass \"pass:emacs1\" --ks-key-alias \"Emacs keystore\""
+              my/emacs-keystore-file))
      (,(rx ?. (| "tzst" "tar.zst") eos)
       "zstd -dc ? | tar -xf -")
      (,(rx ?. (| "mp4" "mkv" "avi" "webm" "flv" "m4v" "mov") eos)

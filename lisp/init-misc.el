@@ -186,7 +186,42 @@ https://github.com/LionyxML/auto-dark-emacs/blob/master/auto-dark.el"
       (face-remap-add-relative 'default :family (car font)))))
 
 
-;; termux
+;; android
+
+(defcustom my/android-misc-files-directory
+  (locate-user-emacs-file "modules/android/")
+  "Directory to store miscellaneous Android-related files."
+  :group 'my
+  :type 'directory)
+
+(defcustom my/emacs-keystore-file
+  (expand-file-name "emacs-keystore" my/android-misc-files-directory)
+  "File path to save the emacs.keystore file."
+  :group 'my
+  :type 'file)
+
+(defcustom my/emacs-keystore-url
+  "https://git.savannah.gnu.org/cgit/emacs.git/plain/java/emacs.keystore"
+  "URL of the emacs.keystore file in the Emacs Git repository."
+  :type 'string
+  :group 'my)
+
+(defun my/download-emacs-keystore ()
+  "Download the emacs.keystore file from the Emacs Git repository asynchronously.
+The file will be saved to the `my/android-misc-files-directory' directory."
+  (interactive)
+  (unless (file-directory-p my/android-misc-files-directory)
+    (make-directory my/android-misc-files-directory t))
+  (let* ((curl-command (list "curl" "-f" "-o"
+                             my/emacs-keystore-file my/emacs-keystore-url))
+         (curl-process (apply #'start-process "downloading-emacs-ks" nil curl-command)))
+    (set-process-sentinel
+     curl-process
+     (lambda (process event)
+       (pcase event
+         ("finished\n"
+          (message "emacs.keystore downloaded to %s" my/emacs-keystore-file))
+         (_ (error "Failed to download emacs.keystore")))))))
 
 (defcustom my/termux-root-directory "/data/data/com.termux/files/"
   "Andriod termux root path."
