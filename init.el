@@ -855,6 +855,9 @@
    `((,(rx ?. (| "rar" "zip" "7z" "iso" "cab" "apks") (? ".001") eos)
       #1=(format "%s x -spe -o\"%s\" -aoa -p⑨"
                  archive-7z-program (file-name-sans-extension file)))
+     ("\\.docx?\\'"
+      (format "pandoc -o \"%s.org\""
+              (file-name-sans-extension file)))
      ("\\.apk\\'"
       (format "adb %sinstall"
               (let ((devices
