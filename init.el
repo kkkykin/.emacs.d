@@ -1526,8 +1526,7 @@
   (org-agenda-inhibit-startup t)
   ;; (org-agenda-use-tag-inheritance nil)
   ;; (org-agenda-ignore-properties '(effort appt stats category))
-  (org-agenda-files `(,org-default-notes-file
-                      ,(file-name-concat org-directory "todo")))
+  (org-agenda-files `(,(expand-file-name "agenda.org" org-directory)))
   (org-agenda-diary-file (file-name-concat org-directory "diary.org"))
   (org-agenda-custom-commands
    '(("n" "Agenda and All Todos"
@@ -1543,10 +1542,12 @@
   :custom
   (org-capture-templates
    '(("c" "Default Capture" entry (file "inbox.org")
+      "* %?\n%U\n%i")
+     ("a" "Agenda Capture" entry (file "agenda.org")
       "* TODO %?\n%U\n%i")
      ;; Capture and keep an org-link to the thing we're currently working with
      ("r" "Capture with Reference" entry (file "inbox.org")
-      "* TODO %?\n%U\n%i\n%a")
+      "* %?\n%U\n%i\n%a")
      ;; Define a section
      ("w" "Work")
      ("wm" "Work meeting" entry (file+headline "work.org" "Meetings")
