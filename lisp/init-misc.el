@@ -358,11 +358,46 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
         (apply oldfun args))
     (apply oldfun args)))
 
+(defun my/dired-open-with-pandoc (&optional from to output)
+  "Open the current file in Dired using pandoc and display the result in Org mode.
+Optional arguments:
+  FROM: Input format for pandoc (default: auto-detected).
+  TO: Output format for pandoc (default: org).
+  OUTPUT: Output destination for pandoc (default: display in buffer).
+ref: https://pandoc.org/MANUAL.html#general-options"
+  (interactive nil dired-mode)
+  (let* ((file (file-name-nondirectory (dired-get-file-for-visit)))
+         (buffer-name
+          (generate-new-buffer-name
+           (file-name-with-extension file (or to "org")))))
+    (with-current-buffer (get-buffer-create buffer-name)
+      (read-only-mode -1)
+      (apply #'call-process "pandoc" nil t nil file
+             (cl-delete-if
+              #'null
+              `(,(when from (concat "--from=" from))
+                "-t" ,(or to "org")
+                "-o" ,(or output "-"))))
+      (if output
+          (progn
+            (write-region nil nil buffer-name)
+            (find-file buffer-name))
+        (if to
+            (when-let* ((fn (intern (concat to "-mode")))
+                        (functionp fn))
+              (funcall fn))
+          (org-mode))
+        (read-only-mode)
+        (set-buffer-modified-p nil)
+        (goto-char (point-min))
+        (select-window (display-buffer (current-buffer)))))))
+
 (with-eval-after-load 'dired
   (define-keymap :keymap dired-mode-map
     ;; z f available
     "SPC" nil
     "SPC d" #'my/dired-duplicate-file
+    "SPC o" #'my/dired-open-with-pandoc
     "SPC R" #'my/dired-goto-random-file))
 
 (with-eval-after-load 'image-dired
