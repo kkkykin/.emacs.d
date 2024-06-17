@@ -1569,9 +1569,7 @@
 (use-package ob
   :bind
   (:repeat-map my/ob-repeat-map
-               ("E" . org-edit-special)
                ("I" . org-babel-view-src-block-info)
-               ("N" . org-narrow-to-block)
                ("Z" . org-babel-switch-to-session)
                ("a" . org-babel-sha1-hash)
                ("c" . org-babel-check-src-block)
@@ -1590,9 +1588,12 @@
                ("r" . org-babel-goto-named-result)
                ("t" . org-babel-tangle)
                ("u" . org-babel-goto-src-block-head)
-               ("v" . org-babel-expand-src-block)
                ("x" . org-babel-do-key-sequence-in-edit-buffer)
-               ("z" . org-babel-switch-to-session-with-code))
+               ("z" . org-babel-switch-to-session-with-code)
+               :exit
+               ("E" . org-edit-special)
+               ("N" . org-narrow-to-block)
+               ("v" . org-babel-expand-src-block))
   :custom
   (org-plantuml-exec-mode 'plantuml)
   :config

@@ -25,14 +25,16 @@
 ;;; Code:
 
 (with-eval-after-load 'org-tempo
-  (dolist (k '(("n" . "name")))
+  (dolist (k '(("d" . "header")
+               ("n" . "name")))
     (add-to-list 'org-tempo-keywords-alist k))
 
   "ref: `org-tempo-add-keyword'"
   (tempo-define-template
    "org-noweb"
-   '("<<" (completing-read "insert or eval src: " (org-babel-src-block-names))
-     p ">>")
+   '( org-babel-noweb-wrap-start
+      (completing-read "insert or eval src: " (org-babel-src-block-names))
+      p org-babel-noweb-wrap-end)
    "<N"
    "Insert a noweb block."
    'org-tempo-tags)
@@ -112,6 +114,16 @@ its subdirectories."
      "​"))
   (add-hook 'org-export-filter-link-functions
             #'my/org-latex-filter-link-fix))
+
+(with-eval-after-load 'org-src
+  (define-keymap :keymap org-src-mode-map
+    "C-x C-s" (lambda ()
+                (interactive)
+                (if (string-prefix-p "*Org-Babel Preview "
+                                     (buffer-name))
+                    (when (y-or-n-p "Are you sure want to save expanded buffer?")
+                      (org-edit-src-save))
+                  (org-edit-src-save)))))
 
 (provide 'init-org)
 ;;; init-org.el ends here
