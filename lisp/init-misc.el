@@ -822,5 +822,40 @@ PID-FILE is the path to the file containing the process ID."
             (when (and (integerp pid) (> pid 0))
               pid)))))))
 
+
+;; keymap
+
+;; ref: https://gist.github.com/jdtsmith/f41207cb0ddc7579ed648af1f69e2a0a
+(defvar-local my/custom-buffer-local-keys nil
+    "Key-bindings to be set up local to the current buffer.
+A single (KEY . BINDING) cons or list of such conses, of the form
+`bind-keys' accepts.  Set this as a file-local variable to make
+bindings local to that buffer only.")
+
+(put 'my/custom-buffer-local-keys 'safe-local-variable 'consp)
+
+(defun my/process-custom-buffer-local-keys ()
+  "Setup and enable a minor mode if `my/custom-buffer-local-keys' is non-nil."
+  (when (and (boundp 'my/custom-buffer-local-keys) my/custom-buffer-local-keys)
+    (let* ((mode-name (format "%s-custom-buffer-local" (buffer-name)))
+           (name (intern mode-name))
+           (map-name (format "%s-map" mode-name))
+           (map (intern map-name)))
+      (unless (boundp map)
+        (set map (make-sparse-keymap)))
+      (if (consp (car my/custom-buffer-local-keys))
+          (eval `(bind-keys :map ,map ,@my/custom-buffer-local-keys))
+        (eval `(bind-keys :map ,map ,my/custom-buffer-local-keys)))
+      (unless (boundp name)
+        (eval
+         `(define-minor-mode ,name
+            ,(concat
+              "Custom minor mode for buffer-local keys.\n"
+              "\\{" map-name "}")
+            :lighter "cusbuf" :keymap ,map)))
+      (funcall name t))))
+
+(add-hook 'hack-local-variables-hook #'my/process-custom-buffer-local-keys)
+
 (provide 'init-misc)
 ;;; init-misc.el ends here
