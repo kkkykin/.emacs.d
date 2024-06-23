@@ -1438,7 +1438,7 @@
   (org-outline-path-complete-in-steps nil)
   (org-refile-use-outline-path 'file)
   (org-archive-mark-done nil)
-  (org-archive-location "%s_archive::* Archive")
+  (org-archive-location "_archive/%s::* Archive")
   (org-use-fast-todo-selection 'expert)
   (org-treat-S-cursor-todo-selection-as-state-change nil)
   (org-todo-keywords
@@ -1742,6 +1742,7 @@
   (denote-prompts '(title keywords))
   (denote-date-format nil)
   (denote-rename-buffer-format "[D] %t")
+  (denote-excluded-directories-regexp "_archive")
   ;; (denote-silo-extras-directories)
   :hook
   ((dired-mode . denote-dired-mode)
