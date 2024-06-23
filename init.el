@@ -879,12 +879,14 @@
       "ffmpeg -hide_banner -y -strict 2 -hwaccel auto -i ? -vf \"scale='min(2560,iw)':-1\" -c:v hevc_nvenc -rc vbr -cq 19 -qmin 19 -qmax 19 -profile:v main10 -pix_fmt p010le -b:v 0K -bf:v 3 -b_ref_mode middle -temporal-aq 1 -rc-lookahead 32 -c:a libopus -b:a 128k -f mp4 ff-`?`")
      (,(rx ?. (| "png" "jpeg" "jpg" "gif" "webp" "bmp") eos)
       "ffmpeg -hide_banner -y -i ? -vf \"scale='min(4096,iw)':-1\" -c:v libaom-av1 -cpu-used 6 -row-mt 1 -tiles 2x2 -still-picture 1 -crf 20 -f avif ff-`?`")
-     (".*" (format "tar -cf - ? | zstd -o \"%s.tzst\" --long --ultra -9"
-                   (if (file-directory-p file) file
-                     (file-name-sans-extension file))))
-     (".*" (format "ls -lSR ? > \"%s.dired\""
-                   (if (file-directory-p file) file
-                     (file-name-sans-extension file))))
+     (".*" (format "tar -cf - ? | zstd -o %s --long --ultra -9 ;"
+                   (if (file-directory-p file) "`?`.tzst"
+                     (shell-quote-argument
+                      (file-name-with-extension file "tzst")))))
+     (".*" (format "ls -lSR ? > %s ;"
+                   (if (file-directory-p file) "`?`.dired"
+                     (shell-quote-argument
+                      (file-name-with-extension file "dired")))))
      (".*" #1#)))
   (wdired-allow-to-change-permissions 'advanced)
   (wdired-use-interactive-rename t)
@@ -1204,6 +1206,7 @@
   (dolist (gp `((,(rx bos (| "news" "dictionary" "shortdoc") eos) . "Help")
                 (,(rx (| (: "shell" eos) "IELM")) . "repl")
                 (,(rx bos "sql") . "SQL")
+                (,(rx bos "Dired") . "Dired")
                 (,(rx (| (: "buffer" (| ?  "-selection-") "menu") "ibuffer") eos) . "BS")))
     (add-to-list 'mouse-buffer-menu-mode-groups gp))
   (setq tab-line-tabs-buffer-groups mouse-buffer-menu-mode-groups))
