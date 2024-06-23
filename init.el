@@ -1989,4 +1989,8 @@
   :config
   (diminish 'visual-line-mode))
 
+;; https://www.ifarchive.org/indexes/if-archive/games/zcode/
+;; https://ifdb.org/
+(use-package malyon)
+
 ;;; init.el ends here
