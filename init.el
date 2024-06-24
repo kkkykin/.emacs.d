@@ -1994,4 +1994,7 @@
 ;; https://ifdb.org/
 (use-package malyon)
 
+(use-package el-search
+  :if (package-installed-p 'el-search))
+
 ;;; init.el ends here
