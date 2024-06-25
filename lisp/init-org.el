@@ -58,37 +58,78 @@ its subdirectories."
          (table (concat table-header table-rows)))
     (insert table)))
 
-(defun my/org-open-link-nearby (&optional arg)
-  "Follow a link nearby like Org mode does."
+(defun my/org-exec-link-or-babel-nearby (&optional arg)
+  "Execute a link or Babel block near the point in Org mode.
+Or execute a link near the point in all mode.
+
+This function tries to exec a link or babel at the current point.  If
+there is no link at the point, it searches forward for the nearest link
+or Babel block and prompts the user to open it or execute it.
+
+When ARG is provided:
+- If ARG is '-', search backward.
+- If ARG is a number, search that many occurrences forward or backward.
+- Otherwise, search forward.
+
+The function supports:
+- Org mode links
+- Babel calls
+- Inline Babel calls
+- Inline source blocks
+- Source blocks
+
+It handles region selection when searching:
+- If a region is active and COUNT is positive, it searches from the end
+of the region.
+- If COUNT is negative, it searches from the beginning of the region.
+
+If a link is found, the user is prompted to open it.
+If a Babel block is found, it is executed.
+
+In case no link or Babel block is found, a user error is signaled."
   (interactive "P")
   (condition-case nil
       (org-open-at-point-global)
     (user-error
      (let ((count (pcase arg
                     ('- -1)
-                    ((guard (numberp arg)) arg)
+                    ((pred numberp) arg)
                     (_ 1)))
-           (org-link-elisp-confirm-function nil)
-           (org-link-shell-confirm-function nil)
-           link)
-       (save-excursion
-         (re-search-forward org-link-any-re
-                            (when (use-region-p)
-                              (if (natnump count)
-                                  (region-end)
-                                (region-beginning)))
-                            t count)
-         (setq link (org-add-props (match-string-no-properties 0)
-                        nil 'face 'org-warning))
-         (if (and (string-match-p org-link-any-re link)
-                  (y-or-n-p (format "Open link: %s?" link)))
-             (org-link-open-from-string link)
-           (user-error "No link found")))))))
+           (orgp (eq major-mode 'org-mode)))
+       (if (and orgp
+                (org-element-type-p (org-element-context)
+                                    '( babel-call inline-babel-call
+                                       inline-src-block src-block)))
+           (or (org-babel-lob-execute-maybe) (org-babel-execute-src-block))
+         (save-excursion
+           (re-search-forward
+            (if orgp
+                (rx (| (regex org-link-any-re)
+                       (regex "\\(call\\|src\\)_\\|^[ \t]*#\\+\\(BEGIN_SRC\\|CALL:\\)")))
+              org-link-any-re)
+            (when (use-region-p)
+              (if (natnump count) (region-end) (region-beginning)))
+            t count)
+           (let ((link (match-string-no-properties 0))
+                 (ele (when orgp (org-element-context)))
+                 (org-link-elisp-confirm-function nil)
+                 (org-link-shell-confirm-function nil)
+                 (org-confirm-babel-evaluate t))
+             (cond
+              ((string-match-p org-link-any-re link)
+               (when (y-or-n-p
+                      (format "Open link: %s?"
+                              (org-add-props link nil 'face 'org-warning)))
+                 (org-link-open-from-string link)))
+              ((org-element-type-p ele '( inline-babel-call babel-call
+                                          inline-src-block src-block))
+               (or (org-babel-lob-execute-maybe) (org-babel-execute-src-block)))
+              (t (user-error "No link or babel found"))))))))))
 
 (with-eval-after-load 'viper
   (keymap-substitute viper-vi-global-user-map
                      'org-open-at-point-global
-                     'my/org-open-link-nearby))
+                     'my/org-exec-link-or-babel-nearby))
 
 (with-eval-after-load 'ox-latex
   (defun my/org-latex-filter-link-fix (link backend info)
