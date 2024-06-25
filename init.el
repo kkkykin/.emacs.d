@@ -757,6 +757,12 @@
     (unless (or newsticker-treeview-own-frame
                 (> 2 (length (funcall tab-bar-tabs-function))))
       (tab-bar-close-tab)))
+  (define-advice newsticker-get-news (:around (orig-fun &rest args) fix-default-directory)
+    "Fix issue where `newsticker-get-news' throws an error when the current
+directory is deleted.  This bind `default-directory' to `newsticker-dir'
+before calling the original function."
+    (let ((default-directory newsticker-dir))
+      (apply orig-fun args)))
   (when (y-or-n-p-with-timeout "Do you want to run newsticker? " 30 t)
     (newsticker-start t)))
 
