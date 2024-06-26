@@ -23,6 +23,13 @@
  (last-modified 26048 19271 754516 875000)
  (location . "https://nixos.org/manual/nixos/stable/")
  (handler . eww-bookmark-jump))
+("s/cmd"
+ (front-context-string . "A | B | C | D | ")
+ (rear-context-string . " command name.\n\n")
+ (position . 4570)
+ (last-modified 26235 49839 508781 474000)
+ (location . "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/windows-commands")
+ (handler . eww-bookmark-jump))
 ("s/man"
  (front-context-string . "                ")
  (rear-context-string)
