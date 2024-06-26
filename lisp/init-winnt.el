@@ -138,7 +138,16 @@
 
 ;; dired
 
+(defun mw/coding-system-fix ()
+  "Fix coding system after insert directory."
+  (goto-char (point-min))
+  (forward-line)
+  (let ((inhibit-read-only t))
+    (encode-coding-region (point) (point-max) locale-coding-system)
+    (decode-coding-region (point) (point-max) 'utf-8)))
+
 (with-eval-after-load 'dired-aux
+  (add-hook 'dired-after-readin-hook #'mw/coding-system-fix)
   (dolist (item `(("\\.exe\\'" .
                    ,(let ((cab (string-replace "/" "\\" (concat temporary-file-directory "cab-" (md5 (system-name))))))
                       (format "makecab %%i %s && copy /b/y \"%s\"+\"%s\" %%o & del /q/f \"%s\""
@@ -164,6 +173,7 @@
       grep-use-null-device nil
       grep-highlight-matches t
       find-program "fd"
+      ls-lisp-use-insert-directory-program t
       default-process-coding-system '(utf-8-dos . utf-8-unix) ;; change this maybe break tramp sshx
       process-coding-system-alist
       `(("cmdproxy" . ,locale-coding-system)
