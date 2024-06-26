@@ -749,7 +749,7 @@ If no custom prefix matches, it calls the original function."
       (pcase url
         ((rx bos " m " (+ (in alnum "\\-_")) eos)
          (replace-regexp-in-string "\\` m " "https://manned.org/man/" url))
-        ((rx bos " cmd " (+ (in alnum)) eos)
+        ((rx bos " c " (+ (in alnum)) eos)
          (replace-regexp-in-string "\\` c " "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/" url)))))
   (define-advice eww-retrieve (:around (orig-fun &rest args) curl-args)
     "Append curl arguments to eww-retrieve-command when retrieving."
@@ -757,7 +757,6 @@ If no custom prefix matches, it calls the original function."
            (append eww-retrieve-command
                    (cadr (mn/curl-parameters-dwim (car args))))))
       (apply orig-fun args)))
-  (advice-add 'eww-retrieve :around 'mn/advice-eww-retrieve)
   (add-to-list 'eww-url-transformers 'mn/url-redirect)
   (add-hook 'eww-after-render-hook #'mn/eww-render-hook))
 
