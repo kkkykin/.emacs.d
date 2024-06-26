@@ -704,40 +704,59 @@ Argument EVENT tells what has happened to the process."
                               "https://old.reddit.com" url))
    (t url)))
 
-(defun mn/advice-eww--dwim-expand-url (orig-fun &rest args)
-  "Maybe use other search-prefix instead of eww-search-prefix."
-  (let ((url (string-trim (car args))))
-    (cond ((string-match-p "\\`man [[:alpha:][:digit:]\\-_]+\\'" url)
-           (string-replace "man " "https://manned.org/man/" url))
-          (t (apply orig-fun args)))))
-
 (defun mn/eww-render-hook()
+  "This function is intended to be added to `eww-after-render-hook'.
+It applies specific rendering or major modes based on the URL or content
+of the current EWW buffer.
+
+The function checks the URL and applies the following rules:
+-  For specific documentation websites (manned.org, nixos.org, mojeek.com,
+   wireshark.org, nginx.org, learn.microsoft.com ...), it applies
+   `eww-readable' to improve readability.
+-  For '.patch' files, it switches to `diff-mode'.
+-  For '.el' files, it switches to `emacs-lisp-mode'.
+-  For '.rs' files, it switches to `rust-ts-mode'.
+-  For '.go' files, it switches to `go-ts-mode'."
   (when-let ((url (plist-get eww-data :url))
              (source (plist-get eww-data :source)))
-    (cond
-     ((string-match-p
-       (concat
-        "^https?://"
-        (rx
-         (| "manned.org/man/" "nixos.org/manual/nix/" "www.mojeek.com/search?"
-            "www.wireshark.org/docs/wsug_html_chunked/"
-            (: "nginx.org/en/docs/" (+ anychar) ".html"))))
-       url)
-      (eww-readable))
-     ((string-suffix-p ".patch" url) (diff-mode))
-     ((string-suffix-p ".el" url) (emacs-lisp-mode))
-     ((string-suffix-p ".rs" url) (rust-ts-mode))
-     ((string-suffix-p ".go" url) (go-ts-mode)))))
-
-(defun mn/advice-eww-retrieve (orig-fun &rest args)
-  "Append curl arguments to eww-retrieve-command when retrieving."
-  (let ((eww-retrieve-command
-         (append eww-retrieve-command
-                 (cadr (mn/curl-parameters-dwim (car args))))))
-    (apply orig-fun args)))
+    (pcase url
+      ("https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/windows-commands")
+      ((rx bos "http" (? ?s) "://"
+           (| "manned.org/man/" "nixos.org/manual/nix/" "www.mojeek.com/search?"
+              "www.wireshark.org/docs/wsug_html_chunked/"
+              (: "nginx.org/en/docs/" (+ anychar) ".html")
+              "learn.microsoft.com/en-us/windows-server/administration/windows-commands/"))
+       (eww-readable))
+      ((rx ?. "patch" eos) (diff-mode))
+      ((rx ?. "el" eos) (emacs-lisp-mode))
+      ((rx ?. "rs" eos) (rust-ts-mode))
+      ((rx ?. "go" eos) (go-ts-mode)))))
 
 (with-eval-after-load 'eww
-  (advice-add 'eww--dwim-expand-url :around 'mn/advice-eww--dwim-expand-url)
+  (define-advice eww--dwim-expand-url
+      (:before-until (&rest args) other-search-prefix)
+    "Expand URL with custom prefixes before falling back to original function.
+
+This advice intercepts calls to `eww--dwim-expand-url' and checks
+if the URL starts with certain prefixes. For example, if a match is found, it
+expands the URL according to predefined rules:
+
+- \" c \" prefix is expanded to \"https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/\"
+- \" m \" prefix is expanded to \"https://manned.org/man/\"
+
+If no custom prefix matches, it calls the original function."
+    (let ((url (string-trim-right (car args))))
+      (pcase url
+        ((rx bos " m " (+ (in alnum "\\-_")) eos)
+         (replace-regexp-in-string "\\` m " "https://manned.org/man/" url))
+        ((rx bos " cmd " (+ (in alnum)) eos)
+         (replace-regexp-in-string "\\` c " "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/" url)))))
+  (define-advice eww-retrieve (:around (orig-fun &rest args) curl-args)
+    "Append curl arguments to eww-retrieve-command when retrieving."
+    (let ((eww-retrieve-command
+           (append eww-retrieve-command
+                   (cadr (mn/curl-parameters-dwim (car args))))))
+      (apply orig-fun args)))
   (advice-add 'eww-retrieve :around 'mn/advice-eww-retrieve)
   (add-to-list 'eww-url-transformers 'mn/url-redirect)
   (add-hook 'eww-after-render-hook #'mn/eww-render-hook))
