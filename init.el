@@ -1579,7 +1579,6 @@ before calling the original function."
 (use-package ob
   :bind
   (:repeat-map my/ob-repeat-map
-               ("I" . org-babel-view-src-block-info)
                ("Z" . org-babel-switch-to-session)
                ("a" . org-babel-sha1-hash)
                ("c" . org-babel-check-src-block)
@@ -1602,6 +1601,7 @@ before calling the original function."
                ("z" . org-babel-switch-to-session-with-code)
                :exit
                ("E" . org-edit-special)
+               ("I" . org-babel-view-src-block-info)
                ("N" . org-narrow-to-block)
                ("v" . org-babel-expand-src-block))
   :custom
