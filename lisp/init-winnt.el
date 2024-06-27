@@ -68,10 +68,8 @@
   "Fix coding system by convert string."
   (if-let ((coding-system (mw/find-shell-command-coding-system input)))
       (decode-coding-string
-       (encode-coding-string
-        (decode-coding-string output (car coding-system))
-        (cdr coding-system))
-       'prefer-utf-8)
+       (encode-coding-string output (cdr coding-system))
+       (car coding-system))
     output))
 
 (defun mw/eshell-coding-system-fix (output)
