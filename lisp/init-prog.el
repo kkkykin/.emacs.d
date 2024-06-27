@@ -95,12 +95,14 @@
                  (funcall next-error-function 1)
                  (mp/next-error-put-function-name-work))))))))))
 
-(define-keymap :keymap occur-mode-map
-  "w" #'mp/next-error-put-function-name)
+(bind-keys
+ :map occur-mode-map
+ ("w" . mp/next-error-put-function-name))
 
 (with-eval-after-load 'grep
-  (define-keymap :keymap grep-mode-map
-    "w" #'mp/next-error-put-function-name))
+  (bind-keys
+   :map grep-mode-map
+   ("w" . mp/next-error-put-function-name)))
 
 (defun mp/xref-which-function (file pos)
   "Get function name from a marker in a file."
@@ -140,8 +142,9 @@
           (mp/xref-put-function-name-work))))))
 
 (with-eval-after-load 'xref
-  (define-keymap :keymap xref--xref-buffer-mode-map
-    "w" #'mp/xref-put-function-name))
+  (bind-keys
+   :map xref--xref-buffer-mode-map
+   ("w" . mp/xref-put-function-name)))
 
 ;; sql
 
@@ -292,10 +295,9 @@ with `universal argument', select all records."
   str & ": " "LOOP" \n "  "_ \n "END LOOP " str ";"\n)
 
 (with-eval-after-load 'sql
-  (define-keymap :keymap sql-mode-map
-    "C-c C-k s" #'mp/sql-table-selector)
-  (define-keymap :keymap sql-interactive-mode-map
-    "C-c C-k s" #'mp/sql-table-selector)
+  (bind-keys
+   :map my/sql-cc-ck-prefix-map
+   ("s" . mp/sql-table-selector))
   (define-abbrev-table 'sql-mode-abbrev-table
     '(("proc" #1="" tempo-template-mp/sql-create-procedure)
       ("fun" #1# tempo-template-mp/sql-create-function)
@@ -340,8 +342,9 @@ From https://christiantietze.de/posts/2024/01/emacs-sqlite-mode-open-sqlite-file
   (add-hook 'log-edit-hook #'mp/vc-commit-template 1))
 
 (with-eval-after-load 'log-view
-  (define-keymap :keymap log-view-mode-map
-    "P" #'vc-push))
+  (bind-keys
+   :map log-view-mode-map
+   ("P" . vc-push)))
 
 
 (provide 'init-prog)

@@ -679,8 +679,9 @@ Argument EVENT tells what has happened to the process."
   (make-directory (file-name-concat newsticker-dir "saved") t)
   (auth-source-forget-all-cached)
   (load "init-rss.el.gpg" t t)
-  (define-keymap :keymap newsticker-treeview-mode-map
-    "DEL" #'mn/newsticker-treeview-prev-page))
+  (bind-keys
+   :map newsticker-treeview-mode-map
+   ("DEL" . mn/newsticker-treeview-prev-page)))
 
 
 ;; eww

@@ -393,12 +393,14 @@ ref: https://pandoc.org/MANUAL.html#general-options"
         (select-window (display-buffer (current-buffer)))))))
 
 (with-eval-after-load 'dired
-  (define-keymap :keymap dired-mode-map
-    ;; z f available
-    "SPC" nil
-    "SPC d" #'my/dired-duplicate-file
-    "SPC o" #'my/dired-open-with-pandoc
-    "SPC R" #'my/dired-goto-random-file))
+  (bind-keys
+   :map dired-mode-map
+   ;; z f available
+   :prefix "SPC"
+   :prefix-map my/dired-spc-prefix-map
+   ("d" . my/dired-duplicate-file)
+   ("o" . my/dired-open-with-pandoc)
+   ("R" . my/dired-goto-random-file)))
 
 (with-eval-after-load 'image-dired
   (unless (executable-find "gm")
@@ -429,10 +431,10 @@ ref: https://pandoc.org/MANUAL.html#general-options"
     (error "Not a file")))
 
 (with-eval-after-load 'speedbar
-  (define-keymap
-    :keymap speedbar-file-key-map
-    "=" #'my/speedbar-item-diff
-    "(" #'my/speedbar-show-unknown-files))
+  (bind-keys
+    :map speedbar-file-key-map
+    ("=" . my/speedbar-item-diff)
+    ("(" . my/speedbar-show-unknown-files)))
 
 
 ;; find & grep
