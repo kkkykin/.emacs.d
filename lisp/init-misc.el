@@ -37,6 +37,12 @@
   "u" #'mpc-update)
 (keymap-set ctl-x-map "c" my/mpc-prefix-map)
 
+(defun my/always-yes (&rest args)
+  "ref: https://goykhman.ca/gene/blog/2024-06-09-always-yes-in-emacs-lisp.html"
+  (cl-letf (((symbol-function 'yes-or-no-p) #'always)
+            ((symbol-function 'y-or-n-p) #'always))
+    (funcall-interactively (car args) (cdr args))))
+
 
 ;; theme
 
