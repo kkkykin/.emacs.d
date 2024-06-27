@@ -157,14 +157,15 @@ In case no link or Babel block is found, a user error is signaled."
             #'my/org-latex-filter-link-fix))
 
 (with-eval-after-load 'org-src
-  (define-keymap :keymap org-src-mode-map
-    "C-x C-s" (lambda ()
-                (interactive)
-                (if (string-prefix-p "*Org-Babel Preview "
-                                     (buffer-name))
-                    (when (y-or-n-p "Are you sure want to save expanded buffer?")
-                      (org-edit-src-save))
-                  (org-edit-src-save)))))
+  (bind-keys
+   :map org-src-mode-map
+   ("C-x C-s" . (lambda ()
+                  (interactive)
+                  (if (string-prefix-p "*Org-Babel Preview "
+                                       (buffer-name))
+                      (when (y-or-n-p "Are you sure want to save expanded buffer?")
+                        (org-edit-src-save))
+                    (org-edit-src-save))))))
 
 (provide 'init-org)
 ;;; init-org.el ends here

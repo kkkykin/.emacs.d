@@ -37,6 +37,12 @@
   "u" #'mpc-update)
 (keymap-set ctl-x-map "c" my/mpc-prefix-map)
 
+(defun my/always-yes (&rest args)
+  "ref: https://goykhman.ca/gene/blog/2024-06-09-always-yes-in-emacs-lisp.html"
+  (cl-letf (((symbol-function 'yes-or-no-p) #'always)
+            ((symbol-function 'y-or-n-p) #'always))
+    (funcall-interactively (car args) (cdr args))))
+
 
 ;; theme
 
@@ -393,12 +399,14 @@ ref: https://pandoc.org/MANUAL.html#general-options"
         (select-window (display-buffer (current-buffer)))))))
 
 (with-eval-after-load 'dired
-  (define-keymap :keymap dired-mode-map
-    ;; z f available
-    "SPC" nil
-    "SPC d" #'my/dired-duplicate-file
-    "SPC o" #'my/dired-open-with-pandoc
-    "SPC R" #'my/dired-goto-random-file))
+  (bind-keys
+   :map dired-mode-map
+   ;; z f available
+   :prefix "SPC"
+   :prefix-map my/dired-spc-prefix-map
+   ("d" . my/dired-duplicate-file)
+   ("o" . my/dired-open-with-pandoc)
+   ("R" . my/dired-goto-random-file)))
 
 (with-eval-after-load 'image-dired
   (unless (executable-find "gm")
@@ -429,10 +437,10 @@ ref: https://pandoc.org/MANUAL.html#general-options"
     (error "Not a file")))
 
 (with-eval-after-load 'speedbar
-  (define-keymap
-    :keymap speedbar-file-key-map
-    "=" #'my/speedbar-item-diff
-    "(" #'my/speedbar-show-unknown-files))
+  (bind-keys
+    :map speedbar-file-key-map
+    ("=" . my/speedbar-item-diff)
+    ("(" . my/speedbar-show-unknown-files)))
 
 
 ;; find & grep
@@ -643,21 +651,6 @@ ref: https://karthinks.com/software/emacs-window-management-almanac/"
 
 (setq tab-line-tabs-buffer-group-function
       #'my/tab-line-tabs-buffer-group-by-mode-exclude-some-buffer)
-
-
-;; window
-
-(defun my/select-side-window (&optional side n frame)
-  "Select nth side window."
-  (if-let* ((windows (window-at-side-list frame side))
-            (window (or (nth (1- n) windows) (car (last windows)))))
-      (select-window window)
-    (user-error "No window here.")))
-(define-keymap :keymap ctl-x-map
-  "C-<up>" (lambda (&optional n) (interactive "p") (my/select-side-window 'top n))
-  "C-<down>" (lambda (&optional n) (interactive "p") (my/select-side-window 'bottom n))
-  "C-<left>" (lambda (&optional n) (interactive "p") (my/select-side-window 'left n))
-  "C-<right>" (lambda (&optional n) (interactive "p") (my/select-side-window 'right n)))
 
 
 ;; repeat

@@ -202,6 +202,20 @@
         ("C-e" . viper-exec-key-in-emacs)
         ("C-u" . viper-exec-key-in-emacs)
         ("C-v" . viper-exec-key-in-emacs))
+  ( :map viper-dired-modifier-map
+    ("/" . (lambda (&rest args)
+             (interactive "P")
+             (apply (if (eq major-mode 'wdired-mode)
+                        #'viper-exec-key-in-emacs #'viper-search-forward)
+                    args)))
+    (":" . nil)
+    :prefix "SPC"
+    :prefix-map my/dired-spc-prefix-map
+    (":" . (lambda (&rest args)
+             (interactive "P")
+             (apply (if (eq major-mode 'wdired-mode)
+                        #'viper-exec-key-in-emacs #'viper-ex)
+                    args))))
   (:repeat-map my/viper-insert-repeat-map
                ("p" . viper-insert-prev-from-insertion-ring)
                ("n" . viper-insert-next-from-insertion-ring))
@@ -219,18 +233,6 @@
   (put 'viper-setup-master-buffer 'safe-local-eval-function t)
   (put 'viper-mode-string 'risky-local-variable t)
   (add-face-text-property 0 (length viper-emacs-state-id) '(:inverse-video t) nil viper-emacs-state-id)
-  (define-keymap :keymap viper-dired-modifier-map
-    "/" (lambda (&rest args)
-          (interactive "P")
-          (apply (if (eq major-mode 'wdired-mode)
-                     #'viper-exec-key-in-emacs #'viper-search-forward)
-                 args))
-    ":" nil
-    "SPC :" (lambda (&rest args)
-              (interactive "P")
-              (apply (if (eq major-mode 'wdired-mode)
-                         #'viper-exec-key-in-emacs #'viper-ex)
-                     args)))
   (setopt
    viper-major-mode-modifier-list
    (append '((sql-interactive-mode insert-state viper-comint-mode-modifier-map)
@@ -724,6 +726,12 @@
             (name . "^\\*Newsticker"))))))
 
 (use-package newsticker :defer 5
+  :bind
+  ( :map newsticker-mode-map
+    ("n" . newsticker-next-new-item)
+    ("p" . newsticker-previous-new-item)
+    ("N" . newsticker-next-item)
+    ("P" . newsticker-previous-item))
   :custom
   (newsticker-obsolete-item-max-age 864000)
   (newsticker-treeview-date-format "%y.%m.%d, %H:%M")
@@ -738,16 +746,12 @@
   (dolist (map (list newsticker-treeview-mode-map
                      newsticker-treeview-list-mode-map
                      newsticker-treeview-item-mode-map))
-    (define-keymap :keymap map
-      "n" #'newsticker-treeview-next-new-or-immortal-item
-      "p" #'newsticker-treeview-prev-new-or-immortal-item
-      "N" #'newsticker-treeview-next-item
-      "P" #'newsticker-treeview-prev-item))
-  (define-keymap :keymap newsticker-mode-map
-    "n" #'newsticker-next-new-item
-    "p" #'newsticker-previous-new-item
-    "N" #'newsticker-next-item
-    "P" #'newsticker-previous-item)
+    (bind-keys
+     :map map
+     ("n" . newsticker-treeview-next-new-or-immortal-item)
+     ("p" . newsticker-treeview-prev-new-or-immortal-item)
+     ("N" . newsticker-treeview-next-item)
+     ("P" . newsticker-treeview-prev-item)))
   (define-advice newsticker--treeview-window-init (:before () display-in-new-tab)
     "Display in new tab if not in new frame."
     (unless newsticker-treeview-own-frame
@@ -834,20 +838,24 @@ before calling the original function."
 
 (use-package sql
   :bind
-  (:map sql-mode-map
-        ("C-c C-p" . sql-connect))
-  (:map sql-interactive-mode-map
-        ("C-c C-y" . sql-copy-column)
-        ("C-c C-k a" . sql-list-all)
-        ("C-c C-k t" . sql-list-table))
+  ( :map sql-mode-map
+    :prefix "C-c"
+    :prefix-map my/sql-cc-prefix-map
+    ("C-p" . sql-connect)
+    :prefix "C-c C-k"
+    :prefix-map my/sql-cc-ck-prefix-map
+    ("a" . sql-list-all)
+    ("t" . sql-list-table))
+  ( :map sql-interactive-mode-map
+    :prefix "C-c"
+    :prefix-map my/sqli-cc-prefix-map
+    ("C-y" . sql-copy-column)
+    ("C-w" . backward-kill-word)
+    ("C-l" . comint-dynamic-list-input-ring)
+    :prefix "C-c C-k"
+    :prefix-map my/sql-cc-ck-prefix-map)
   :custom
-  (sql-input-ring-file-name (locate-user-emacs-file "sql-history.eld"))
-  :config
-  (keymap-unset sql-interactive-mode-map "C-c C-l a")
-  (keymap-unset sql-interactive-mode-map "C-c C-l t")
-  (define-keymap :keymap sql-interactive-mode-map
-    "C-c C-w" #'backward-kill-word
-    "C-c C-l" #'comint-dynamic-list-input-ring))
+  (sql-input-ring-file-name (locate-user-emacs-file "sql-history.eld")))
 
 (use-package dired
   :custom
@@ -898,9 +906,11 @@ before calling the original function."
   (wdired-allow-to-change-permissions 'advanced)
   (wdired-use-interactive-rename t)
   :bind
-  (:map dired-mode-map
-        ("SPC a" . org-attach-dired-to-subtree)
-        ("<mouse-2>" . dired-mouse-find-file))
+  ( :map dired-mode-map
+    ("<mouse-2>" . dired-mouse-find-file)
+    :prefix "SPC"
+    :prefix-map my/dired-spc-prefix-map
+    ("a" . org-attach-dired-to-subtree))
   :config
   (when-let ((7z (or (executable-find "7z")
                      (executable-find "7zz")
@@ -1140,6 +1150,9 @@ before calling the original function."
 (use-package tab-bar
   :hook emacs-startup
   :bind
+  ( :map tab-bar-mode-map
+    ("C-<tab>" . nil)
+    ("C-S-<tab>" . nil))
   (:repeat-map tab-bar-move-repeat-map
                ("G" . tab-group)
                ("0" . tab-close)
@@ -1161,10 +1174,6 @@ before calling the original function."
   :config
   (unless my/sys-android-p
     (setq tab-bar-close-button-show nil))
-  (when (boundp 'tab-bar-mode-map)
-    (define-keymap :keymap tab-bar-mode-map
-      "C-<tab>" nil
-      "C-S-<tab>" nil))
   (tab-bar-history-mode))
 
 (use-package tab-line
@@ -1727,8 +1736,8 @@ before calling the original function."
   ("C-c n s" . denote-subdirectory)
   ("C-c n f" . denote-open-or-create)
   ("C-c n r" . denote-dired-rename-marked-files)
-  (:map dired-mode-map
-        ("SPC r" . denote-rename-file))
+  ( :map my/dired-spc-prefix-map
+    ("r" . denote-rename-file))
   :init
   (with-eval-after-load 'org-capture
     (setq denote-org-capture-specifiers "%l\n%i\n%?")
@@ -2001,7 +2010,13 @@ before calling the original function."
 ;; https://ifdb.org/
 (use-package malyon)
 
-(use-package el-search
-  :if (package-installed-p 'el-search))
+(use-package el-search :defer 1
+  :if (package-installed-p 'el-search)
+  :bind
+  ( :repeat-map my/el-search-repeat-map
+    ("s" . el-search-pattern)
+    ("r" . el-search-pattern-backward))
+  :config
+  (el-search-install-shift-bindings))
 
 ;;; init.el ends here
