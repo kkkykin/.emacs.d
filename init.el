@@ -863,7 +863,7 @@ before calling the original function."
   (dired-maybe-use-globstar t)
   (dired-dwim-target t)
   (dired-use-ls-dired t)
-  (dired-listing-switches "-lh")
+  (dired-listing-switches "-lL1Fhvog")
   (dired-mouse-drag-files t)
   (delete-by-moving-to-trash t)
   (dired-guess-shell-alist-user
