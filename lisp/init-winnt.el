@@ -154,9 +154,11 @@ command it is running.  It only applies the fix if the current
 (defun mw/dired-coding-system-fix ()
   "Fix coding system after insert directory."
   (goto-char (point-min))
-  (forward-line)
-  (let ((inhibit-read-only t))
-    (mw/coding-conv-region (point-min) locale-coding-system 'utf-8)))
+  (let ((inhibit-read-only t)
+        (min (pos-eol)))
+    (mw/coding-conv-region min locale-coding-system 'utf-8)
+    (dired-insert-set-properties min (point-max)))
+  (set-buffer-modified-p nil))
 
 (with-eval-after-load 'dired
   (add-hook 'dired-after-readin-hook #'mw/dired-coding-system-fix))
