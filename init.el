@@ -2009,7 +2009,13 @@ before calling the original function."
 ;; https://ifdb.org/
 (use-package malyon)
 
-(use-package el-search
-  :if (package-installed-p 'el-search))
+(use-package el-search :defer 1
+  :if (package-installed-p 'el-search)
+  :bind
+  ( :repeat-map my/el-search-repeat-map
+    ("s" . el-search-pattern)
+    ("r" . el-search-pattern-backward))
+  :config
+  (el-search-install-shift-bindings))
 
 ;;; init.el ends here
