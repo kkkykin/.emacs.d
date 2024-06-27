@@ -645,21 +645,6 @@ ref: https://karthinks.com/software/emacs-window-management-almanac/"
       #'my/tab-line-tabs-buffer-group-by-mode-exclude-some-buffer)
 
 
-;; window
-
-(defun my/select-side-window (&optional side n frame)
-  "Select nth side window."
-  (if-let* ((windows (window-at-side-list frame side))
-            (window (or (nth (1- n) windows) (car (last windows)))))
-      (select-window window)
-    (user-error "No window here.")))
-(define-keymap :keymap ctl-x-map
-  "C-<up>" (lambda (&optional n) (interactive "p") (my/select-side-window 'top n))
-  "C-<down>" (lambda (&optional n) (interactive "p") (my/select-side-window 'bottom n))
-  "C-<left>" (lambda (&optional n) (interactive "p") (my/select-side-window 'left n))
-  "C-<right>" (lambda (&optional n) (interactive "p") (my/select-side-window 'right n)))
-
-
 ;; repeat
 
 (defvar-keymap my/structure-repeat-map
