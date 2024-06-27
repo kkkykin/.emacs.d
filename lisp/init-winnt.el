@@ -25,6 +25,7 @@
 ;;; Code:
 
 (require 'cl-lib)
+(require 'derived)
 
 
 ;; UWP
@@ -58,18 +59,43 @@
   (let ((program (mw/cmdproxy-real-program-name command)))
     (find-operation-coding-system 'call-process program)))
 
-(define-advice shell-command (:around (orig-fun &rest args) fix-coding)
-  (let* ((coding-system (mw/find-shell-command-coding-system (car args)))
-         (coding-system-for-read (car coding-system))
-         (coding-system-for-write (cdr coding-system)))
-    (apply orig-fun args)))
+(define-advice shell-command-on-region (:around (orig-fun &rest args) fix-coding)
+  "Fix coding system for `shell-command-on-region' when not in a remote
+directory."
+  (if (file-remote-p default-directory)
+      (apply orig-fun args)
+    (let ((process-coding-system-alist
+           `(("cmdproxy" ,@(mw/find-shell-command-coding-system (caddr args))))))
+      (apply orig-fun args))))
 
-(defun mw/output-coding-system-fix (input output)
+(defun mw/proc-coding-system-fix (&optional proc ncmd)
+  "Fix the coding system for a process based on its command.
+
+This function sets the coding system for the process PROC based on the
+command it is running.  It only applies the fix if the current
+`default-directory' is local (i.e., not remote).
+
+- If PROC is not provided, it defaults to the process associated with
+  the current buffer.
+
+- If NCMD is provided, it specifies which element of the command list to
+  use for determining the coding system.  By default, it uses the fourth
+  element (index 3) of the command list."
+  (when-let* ((localp (not (file-remote-p default-directory)))
+              (proc (or proc (get-buffer-process (current-buffer))))
+              (cs (mw/find-shell-command-coding-system
+                   (nth (or ncmd 2) (process-command proc)))))
+    (set-process-coding-system proc (car cs) (cdr cs))))
+
+(dolist (h `(,(derived-mode-hook-name async-shell-command-mode)
+             compilation-start-hook))
+  (add-hook h #'mw/proc-coding-system-fix))
+
+(defun mw/output-coding-system-fix (cmd output)
   "Fix coding system by convert string."
-  (if-let ((coding-system (mw/find-shell-command-coding-system input)))
-      (decode-coding-string
-       (encode-coding-string output (cdr coding-system))
-       (car coding-system))
+  (if-let ((localp (not (file-remote-p default-directory)))
+           (cs (mw/find-shell-command-coding-system cmd)))
+      (decode-coding-string (encode-coding-string output (cdr cs)) (car cs))
     output))
 
 (defun mw/eshell-coding-system-fix (output)
@@ -91,9 +117,8 @@
 
 (defun mw/shell-mode-setup ()
   "Setup for shell-mode."
-  (unless (file-remote-p default-directory)
-    (add-hook 'comint-preoutput-filter-functions
-              #'mw/shell-coding-system-fix nil t)))
+  (add-hook 'comint-preoutput-filter-functions
+            #'mw/shell-coding-system-fix nil t))
 (add-hook 'shell-mode-hook #'mw/shell-mode-setup)
 
 (defun mw/run-bash ()
@@ -109,43 +134,34 @@
             "C:/Windows/system32/bash.exe"
           mw/vanilla-shell)))
 
-(defun mw/compilation-coding-system-fix ()
-  "Fix stdout coding-system in compilation."
-  (let ((coding-system (mw/find-shell-command-coding-system
-                        (car compilation-arguments))))
-    (setq-local coding-system-for-read (car coding-system)
-                coding-system-for-write (cdr coding-system))))
-(setq compilation-process-setup-function #'mw/compilation-coding-system-fix)
-
-(defun mw/grep-coding-system-fix ()
-  "Fix coding-system for grep."
-  (let ((coding-system (mw/find-shell-command-coding-system grep-program)))
-    (setq-local coding-system-for-read (car coding-system))))
-(add-hook 'grep-setup-hook #'mw/grep-coding-system-fix)
+(defun mw/coding-conv-region (min from to)
+  "Convert coding system between min and `point-max'."
+  (unless (file-remote-p default-directory)
+    (encode-coding-region min (point-max) from)
+    (decode-coding-region min (point-max) to)))
 
 (defun mw/find-dired-coding-system-fix ()
   "Fix coding-system for find-dired."
-  (let ((fixed (mw/output-coding-system-fix find-program (buffer-string))))
-    (delete-region (point-min) (point-max))
-    (insert fixed)))
+  (mw/coding-conv-region (point-min) locale-coding-system 'utf-8)
+  ;; call default `find-dired-refine-function'
+  (find-dired-sort-by-filename))
 (with-eval-after-load 'find-dired
-  (let ((ori find-dired-refine-function))
-    (setq find-dired-refine-function 'mw/find-dired-coding-system-fix)
-    (advice-add find-dired-refine-function :after ori)))
+  (setq find-dired-refine-function 'mw/find-dired-coding-system-fix))
 
 
 ;; dired
 
-(defun mw/coding-system-fix ()
+(defun mw/dired-coding-system-fix ()
   "Fix coding system after insert directory."
   (goto-char (point-min))
   (forward-line)
   (let ((inhibit-read-only t))
-    (encode-coding-region (point) (point-max) locale-coding-system)
-    (decode-coding-region (point) (point-max) 'utf-8)))
+    (mw/coding-conv-region (point-min) locale-coding-system 'utf-8)))
+
+(with-eval-after-load 'dired
+  (add-hook 'dired-after-readin-hook #'mw/dired-coding-system-fix))
 
 (with-eval-after-load 'dired-aux
-  (add-hook 'dired-after-readin-hook #'mw/coding-system-fix)
   (dolist (item `(("\\.exe\\'" .
                    ,(let ((cab (string-replace "/" "\\" (concat temporary-file-directory "cab-" (md5 (system-name))))))
                       (format "makecab %%i %s && copy /b/y \"%s\"+\"%s\" %%o & del /q/f \"%s\""
@@ -153,8 +169,8 @@
     (add-to-list 'dired-compress-files-alist item))
   (define-advice dired-shell-stuff-it (:filter-args (args) fix-seqentially-exec)
     "Fix `;' cannot sequentially execute command on windows."
-    (when-let* ((cmd (car args))
-                (fix-p (string-match-p ";[ \t]*&?[ \t]*\\'" cmd)))
+    (when-let* ((localp (not (file-remote-p default-directory)))
+                (cmd (car args)))
       (setcar args
               (replace-regexp-in-string "\\(.*\\);[ \t]*\\(&?[ \t]*\\)\\'"
                                         "/wait \\1\\2" cmd)))
