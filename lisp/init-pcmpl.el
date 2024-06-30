@@ -1,6 +1,6 @@
 ;;; init-pcmpl.el --- Completions for some tools             -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2024  
+;; Copyright (C) 2024
 
 ;; Keywords: abbrev, convenience, extensions, terminals, tools
 
@@ -91,7 +91,7 @@
                   :argument "'?\\(--?[[:alpha:]-]+\\)'?[ :]"
                   :narrow-start (format "^ %s "
                                         (pcase subcmd
-                                          ((or "install" 
+                                          ((or "install"
                                                "install-multiple")
                                            "install-multi-package")
                                           (_ subcmd)))
@@ -105,6 +105,10 @@
                                 (replace-regexp-in-string
                                  "\\(.+/\\)[^/]+\\'" "\"'\\1\'**\""
                                  (pcomplete-arg))))))))))
+
+(defun pcomplete/fd ()
+  "Completion for `fd'."
+  (pcomplete-here-using-help "fd --help"))
 
 (provide 'init-pcmpl)
 ;;; init-pcmpl.el ends here
