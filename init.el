@@ -200,6 +200,7 @@
                      (push event unread-command-events))
                  (insert initial-key)))))
     ("<backspace>" . viper-exec-key-in-emacs)
+    ("RET" . viper-exec-key-in-emacs)
     ("C-t" . viper-exec-key-in-emacs)
     ("C-d" . viper-exec-key-in-emacs)
     ("C-w" . (lambda (&rest args)
@@ -284,7 +285,7 @@
            viper-major-mode-modifier-list))
   (setq viper-insert-state-mode-list
         (append viper-insert-state-mode-list
-                '( vc-dir-mode)
+                '( log-view-mode vc-dir-mode)
                 viper-emacs-state-mode-list)
         viper-emacs-state-mode-list nil)
   (dolist (mode '( diff-mode dun-mode outline-mode reb-mode
