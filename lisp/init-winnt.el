@@ -161,6 +161,9 @@ command it is running.  It only applies the fix if the current
   (set-buffer-modified-p nil))
 
 (with-eval-after-load 'dired
+  (bind-keys
+   :map dired-mode-map
+   ("N" . woman-dired-find-file))
   (add-hook 'dired-after-readin-hook #'mw/dired-coding-system-fix))
 
 (with-eval-after-load 'dired-aux
