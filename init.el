@@ -124,6 +124,10 @@
   :if (locate-library "init-pcmpl")
   :after pcomplete :defer 0)
 
+(use-package init-viper
+  :if (locate-library "init-viper")
+  :after viper :defer 0)
+
 (use-package touch-screen
   :if my/sys-android-p
   :custom
@@ -162,46 +166,78 @@
   :hook (prog-mode eshell-mode inferior-emacs-lisp-mode))
 
 (use-package viper
-  :init (setq viper-inhibit-startup-message t
-              viper-expert-level 5
-              viper-vi-style-in-minibuffer nil
-              viper-vi-state-cursor-color nil
-              viper-buffer-search-char ?g
-              viper-case-fold-search t
-              viper-shift-width 2
-              viper-auto-indent t
-              viper-electric-mode t
-              viper-ex-style-motion nil
-              viper-ex-style-editing nil
-              viper-ESC-moves-cursor-back nil
-              viper-mode t)
+  :init
+  (setq my/extra-ex-token-alist
+        '(("tabe" (tab-new)) ("tabc" (tab-close)))
+        viper-inhibit-startup-message t
+        viper-expert-level 5
+        viper-vi-style-in-minibuffer nil
+        viper-vi-state-cursor-color nil
+        viper-buffer-search-char ?*
+        viper-case-fold-search t
+        viper-shift-width 2
+        viper-auto-indent t
+        viper-electric-mode t
+        viper-ex-style-motion nil
+        viper-ex-style-editing nil
+        viper-ESC-moves-cursor-back nil
+        viper-mode t)
   :hook (window-setup
          (( change-log-mode edebug-mode org-mode log-edit-mode)
           . viper-change-state-to-insert))
   :bind
-  (:map viper-insert-global-user-map
-        ("<backspace>" . viper-exec-key-in-emacs)
-        ("C-t" . viper-exec-key-in-emacs)
-        ("C-d" . viper-exec-key-in-emacs)
-        ("C-w" . viper-exec-key-in-emacs)
-        ("C-v" . viper-exec-key-in-emacs))
-  (:map viper-vi-global-user-map
-        ;; z available
-        ("SPC d" . duplicate-dwim)
-        ("SPC f" . org-open-at-point-global)
-        ("SPC L" . org-insert-link-global)
-        ("SPC r" . re-builder)
-        ("SPC R" . rename-visited-file)
-        ("SPC t" . transpose-sentences)
-        ("SPC T" . transpose-paragraphs)
-        ("SPC p" . viper-prev-destructive-command)
-        ("SPC n" . viper-next-destructive-command)
-        ("C-y" . viper-exec-key-in-emacs)
-        ("C-f" . viper-exec-key-in-emacs)
-        ("C-b" . viper-exec-key-in-emacs)
-        ("C-e" . viper-exec-key-in-emacs)
-        ("C-u" . viper-exec-key-in-emacs)
-        ("C-v" . viper-exec-key-in-emacs))
+  ( :map viper-insert-global-user-map
+    ("j" . (lambda ()
+             "ref: https://emacs.stackexchange.com/a/20024"
+             (interactive)
+             (let ((initial-key ?j)
+                   (final-key ?k)
+                   (event (read-event nil nil 0.1)))
+               (if event
+                   (if (and (characterp event) (= event final-key))
+                       (viper-change-state-to-vi)
+                     (insert initial-key)
+                     (push event unread-command-events))
+                 (insert initial-key)))))
+    ("<backspace>" . viper-exec-key-in-emacs)
+    ("C-t" . viper-exec-key-in-emacs)
+    ("C-d" . viper-exec-key-in-emacs)
+    ("C-w" . (lambda (&rest args)
+               (interactive "P")
+               (apply (if (use-region-p)
+                          #'viper-exec-key-in-emacs
+                        #'viper-delete-backward-word)
+                      args)))
+    ("C-v" . viper-exec-key-in-emacs))
+  ( :map viper-vi-global-user-map
+    ("C-u" . viper-exec-key-in-emacs)
+    ("C-v" . viper-exec-key-in-emacs)
+    :prefix "C-w"
+    :prefix-map my/viper-cw-prefix-map
+    ("h" . windmove-left)
+    ("l" . windmove-right)
+    ("k" . windmove-up)
+    ("j" . windmove-down)
+    :prefix "g"
+    :prefix-map my/viper-vi-g-prefix-map
+    ("g" . beginning-of-buffer)
+    ("t" . tab-bar-switch-to-next-tab)
+    ("T" . tab-bar-switch-to-prev-tab)
+    :prefix "SPC"
+    :prefix-map my/viper-vi-spc-prefix-map
+    ("d" . duplicate-dwim)
+    ("f" . org-open-at-point-global)
+    ("L" . org-insert-link-global)
+    ("r" . re-builder)
+    ("R" . rename-visited-file)
+    ("t" . transpose-sentences)
+    ("T" . transpose-paragraphs)
+    ("p" . viper-prev-destructive-command)
+    ("n" . viper-next-destructive-command)
+    :prefix "z"
+    :prefix-map my/viper-vi-z-prefix-map
+    ("z" . recenter)
+    ("T" . transpose-regions))
   ( :map viper-dired-modifier-map
     ("/" . (lambda (&rest args)
              (interactive "P")
@@ -230,6 +266,10 @@
   :custom-face
   (viper-minibuffer-emacs ((t (:background nil :foreground nil))))
   :config
+  (define-advice viper-ex (:around (orig-fun &rest args) more-token)
+    "More ex-token."
+    (let ((ex-token-alist (append my/extra-ex-token-alist ex-token-alist)))
+      (apply orig-fun args)))
   (put 'viper-setup-master-buffer 'safe-local-eval-function t)
   (put 'viper-mode-string 'risky-local-variable t)
   (add-face-text-property 0 (length viper-emacs-state-id) '(:inverse-video t) nil viper-emacs-state-id)
@@ -242,6 +282,11 @@
              (inferior-python-mode insert-state viper-comint-mode-modifier-map)
              (inferior-python-mode vi-state viper-comint-mode-modifier-map))
            viper-major-mode-modifier-list))
+  (setq viper-insert-state-mode-list
+        (append viper-insert-state-mode-list
+                '( vc-dir-mode)
+                viper-emacs-state-mode-list)
+        viper-emacs-state-mode-list nil)
   (dolist (mode '( diff-mode dun-mode outline-mode reb-mode
                    sql-interactive-mode))
     (setq viper-vi-state-mode-list (delq mode viper-vi-state-mode-list))
@@ -451,9 +496,7 @@
   :hook emacs-startup
   :custom
   (windmove-wrap-around t)
-  (windmove-allow-all-windows t)
-  :config
-  (windmove-default-keybindings 'control))
+  (windmove-allow-all-windows t))
 
 (use-package server :defer 5
   :config
