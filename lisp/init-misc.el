@@ -302,14 +302,8 @@ https://scripter.co/using-emacs-advice-to-silence-messages-from-functions"
         (message-log-max nil)) ;Don't show the messages in the *Messages* buffer
     (apply orig-fun args)))
 
-(defun my/rclone-quit ()
-  "Exit rclone safely."
-  (interactive)
-  (when-let* ((args '("rc" "core/quit"))
-              (auth (car (auth-source-search :max 1 :host "rclone.localhost")))
-              (args (append args `(,(format "--rc-user=%s" (plist-get auth :user))
-                                   ,(format "--rc-pass=%s" (auth-info-password auth))))))
-    (apply #'start-process "rclone-quit" nil "rclone" args)))
+
+;; adb
 
 (defun my/adb-am (action activity)
   "ADB am command."
