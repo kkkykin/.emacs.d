@@ -187,18 +187,21 @@
           . viper-change-state-to-insert))
   :bind
   ( :map viper-insert-global-user-map
-    ("j" . (lambda ()
+    ("j" . (lambda (&rest args)
              "ref: https://emacs.stackexchange.com/a/20024"
-             (interactive)
-             (let ((initial-key ?j)
-                   (final-key ?k)
-                   (event (read-event nil nil 0.1)))
-               (if event
-                   (if (and (characterp event) (= event final-key))
-                       (viper-change-state-to-vi)
-                     (insert initial-key)
-                     (push event unread-command-events))
-                 (insert initial-key)))))
+             (interactive "P")
+             (if (cl-member-if #'derived-mode-p
+                               '(special-mode dired-mode))
+                 (apply #'viper-exec-key-in-emacs args)
+               (let ((initial-key ?j)
+                     (final-key ?k)
+                     (event (read-event nil nil 0.1)))
+                 (if event
+                     (if (and (characterp event) (= event final-key))
+                         (viper-change-state-to-vi)
+                       (insert initial-key)
+                       (push event unread-command-events))
+                   (insert initial-key))))))
     ("<backspace>" . viper-exec-key-in-emacs)
     ("RET" . viper-exec-key-in-emacs)
     ("C-t" . viper-exec-key-in-emacs)
