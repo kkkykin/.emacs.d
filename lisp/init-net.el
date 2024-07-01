@@ -170,23 +170,29 @@
                              parameters))))
     (list url parameters)))
 
-(defun mn/advice-url-retrieve (orig-fun &rest args)
-  "Block, proxy, transform url."
-  (let* ((url (car args))
-         (host (url-host (url-generic-parse-url url))))
-    (cond ((string-match-p mn/block-domain-regexp host) nil)
-          ((string-match-p mn/proxy-domain-regexp host)
-           (let ((url-proxy-services
-                  `(("http" . ,mn/centaur-proxy)
-                    ("https" . ,mn/centaur-proxy))))
-             (apply orig-fun args)))
-          ((string-match-p mn/img-proxy-domain-regexp host)
-           (setcar args (string-replace "${href_ue}"
-                                        (url-hexify-string url)
-                                        mn/img-cdn-server))
-           (apply orig-fun args))
-          (t (apply orig-fun args)))))
-(advice-add #'url-retrieve-internal :around #'mn/advice-url-retrieve)
+(defun mn/url-find-proxy-for-url (urlobj host)
+  "Determine proxy settings for URL based on host and proxy services.
+
+This function is designed to be used as a custom
+`url-proxy-locator'.  It checks if the HOST matches the
+'yes_proxy' pattern in `url-proxy-services'.  If there's a match
+and a corresponding proxy is found for the URL type, it returns a
+proxy string. Otherwise, it returns \"DIRECT\" for direct
+connection.
+
+Arguments:
+URLOBJ: A URL object as returned by `url-generic-parse-url'.
+HOST: A string representing the hostname.
+
+Returns:
+A string either in the format \"PROXY host:port\" or \"DIRECT\"."
+  (if-let (((string-match-p
+             (alist-get "yes_proxy" url-proxy-services nil nil #'equal)
+             host))
+           (proxy (cdr (assoc (url-type urlobj) url-proxy-services))))
+      (concat "PROXY " proxy)
+    "DIRECT"))
+(setq url-proxy-locator #'mn/url-find-proxy-for-url)
 
 (defun mn/proxy-up-p (&optional proxy callback)
   "Test Proxy availability."
@@ -658,8 +664,7 @@ Argument EVENT tells what has happened to the process."
 
 (with-eval-after-load 'newsticker
   (setq newsticker-wget-arguments
-        (append `("--doh-url" ,mn/doh-server) newsticker-wget-arguments)
-        eww-retrieve-command (cons newsticker-wget-name newsticker-wget-arguments))
+        (append `("--doh-url" ,mn/doh-server) newsticker-wget-arguments))
 
   (define-advice newsticker--get-news-by-funcall
       (:around (orig-fun feed-name function) build-feeds)
@@ -754,10 +759,14 @@ If no custom prefix matches, it calls the original function."
          (replace-regexp-in-string "\\` c " "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/" url)))))
   (define-advice eww-retrieve (:around (orig-fun &rest args) curl-args)
     "Append curl arguments to eww-retrieve-command when retrieving."
-    (let ((eww-retrieve-command
-           (append eww-retrieve-command
-                   (cadr (mn/curl-parameters-dwim (car args))))))
-      (apply orig-fun args)))
+    (if-let* ((url (car args))
+              ((string-match-p
+                (rx ?. (| "pdf" "tar.gz") eos) url)))
+        (apply orig-fun args)
+      (let ((eww-retrieve-command
+             (append `(,newsticker-wget-name ,@newsticker-wget-arguments "-o-")
+                     (cadr (mn/curl-parameters-dwim url)))))
+        (apply orig-fun args))))
   (add-to-list 'eww-url-transformers 'mn/url-redirect)
   (add-hook 'eww-after-render-hook #'mn/eww-render-hook))
 
