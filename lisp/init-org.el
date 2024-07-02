@@ -126,6 +126,47 @@ In case no link or Babel block is found, a user error is signaled."
                (or (org-babel-lob-execute-maybe) (org-babel-execute-src-block)))
               (t (user-error "No link or babel found"))))))))))
 
+(defun my/org-babel-expand-src-block ()
+  "Expand the Org Babel source block at point.
+
+This function handles both named source blocks and inline source blocks.
+If the point is on a call to a named source block, it navigates to the
+named source block, processes its parameters, and then expands it.
+Otherwise, it expands the source block at point.
+
+When the point is on a call to a named source block:
+- Retrieve the context and the call information.
+- Navigate to the named source block.
+- Process the parameters of the named source block.
+- Expand the source block using `org-babel-expand-src-block`.
+
+If the point is not on a call to a named source block, simply expand the
+source block at point.
+
+Usage:
+- Place the cursor on a source block or a call to a named source block.
+- Call this function interactively to expand the source block.
+
+Example:
+Place the cursor on the following line and call `my/org-babel-expand-src-block`:
+#+CALL: your-named-src-block()
+
+This will navigate to `your-named-src-block`, process its parameters,
+and expand it."
+  (interactive)
+  (if-let* ((datum (org-element-context))
+            (info (org-babel-lob-get-info datum))
+            (name (org-element-property :call datum)))
+      (save-excursion
+        (org-babel-goto-named-src-block name)
+        (cl-callf org-babel-process-params (nth 2 info))
+        (call-interactively #'org-babel-expand-src-block nil
+                            (vector nil info)))
+    (call-interactively #'org-babel-expand-src-block)))
+
+(with-eval-after-load 'ob
+  (bind-key [remap org-babel-expand-src-block] #'my/org-babel-expand-src-block))
+
 (with-eval-after-load 'viper
   (keymap-substitute viper-vi-global-user-map
                      'org-open-at-point-global

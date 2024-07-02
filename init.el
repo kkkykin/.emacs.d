@@ -1656,15 +1656,6 @@ before calling the original function."
   (setq org-babel-default-header-args
         (cons '(:noweb . "yes")
               (assq-delete-all :noweb org-babel-default-header-args)))
-  (defun my/org-babel-expand-src-block ()
-    "Todo"
-    (interactive)
-    (if-let* ((datum (org-element-context))
-              (info (org-babel-lob-get-info datum)))
-        (progn
-          (cl-callf org-babel-process-params (nth 2 info))
-          (org-babel-expand-src-block nil info))
-      (org-babel-expand-src-block)))
   (with-eval-after-load 'ob-plantuml
     (setq org-babel-default-header-args:plantuml
           (cons '(:results . "verbatim")
