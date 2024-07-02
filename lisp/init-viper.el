@@ -27,6 +27,41 @@
 (require 'cl-lib)
 
 
+;; vi
+
+(defun my/open-with-vim (&optional file server)
+  "Open a FILE with Vim, optionally specifying a Vim SERVER.
+
+This function uses Vim's server mode to open a specified file or the
+current buffer's file in a running Vim instance. If no FILE is
+specified, the current buffer's file or the default directory is
+used. You can also optionally specify a Vim server name to target a
+specific Vim instance.
+
+When called interactively:
+- If FILE is provided (with a prefix argument), prompt the user to select a file.
+- If no FILE is provided, use the current buffer's file or the default directory.
+
+SERVER specifies the name of the Vim server to use. If no server name is
+provided, the default server name \"vi\" is used.
+
+Usage:
+- Call this function interactively to open the current buffer's file in Vim.
+- Call this function with a prefix argument to specify a file to open in Vim.
+- Optionally provide a server name to target a specific Vim instance."
+  (interactive "P")
+  (let ((file (or (when file (read-file-name "File: "))
+                 (buffer-file-name)
+                 default-directory)))
+   (call-process "vim" nil nil nil
+                "--servername" (or server "vi")
+                "--remote-silent" file)))
+
+(bind-keys
+ :map my/viper-vi-spc-prefix-map
+ ("v" . my/open-with-vim))
+
+
 ;; netrw
 
 (defvar my/dired-target-files nil
