@@ -1466,6 +1466,10 @@ before calling the original function."
   :custom
   (custom-buffer-done-kill t))
 
+(use-package table
+  :custom-face
+  (table-cell ((t (:inherit highlight :foreground nil :background nil)))))
+
 (use-package org
   :init (setq org-directory "~/org")
   :hook
