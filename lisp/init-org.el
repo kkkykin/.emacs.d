@@ -160,9 +160,8 @@ and expand it."
       (save-excursion
         (org-babel-goto-named-src-block name)
         (cl-callf org-babel-process-params (nth 2 info))
-        (call-interactively #'org-babel-expand-src-block nil
-                            (vector nil info)))
-    (call-interactively #'org-babel-expand-src-block)))
+        (funcall-interactively #'org-babel-expand-src-block nil info))
+    (funcall-interactively #'org-babel-expand-src-block)))
 
 (with-eval-after-load 'ob
   (bind-key [remap org-babel-expand-src-block] #'my/org-babel-expand-src-block))
