@@ -895,7 +895,7 @@ before calling the original function."
   (dired-maybe-use-globstar t)
   (dired-dwim-target t)
   (dired-use-ls-dired t)
-  (dired-listing-switches "-lH1oghv")
+  (dired-listing-switches "-lHoghv")
   (dired-mouse-drag-files t)
   (delete-by-moving-to-trash t)
   (dired-guess-shell-alist-user
