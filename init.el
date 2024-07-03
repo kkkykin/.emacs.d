@@ -1241,6 +1241,8 @@ before calling the original function."
      gnus-summary-mode
      gnus-tree-mode
      gnus-article-mode
+     calc-mode
+     calc-trail-mode
      newsticker-treeview-item-mode
      newsticker-treeview-list-mode
      newsticker-treeview-mode))
