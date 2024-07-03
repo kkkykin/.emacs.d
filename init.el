@@ -183,7 +183,7 @@
         viper-ESC-moves-cursor-back nil
         viper-mode t)
   :hook (window-setup
-         (( change-log-mode edebug-mode org-mode log-edit-mode)
+         (( change-log-mode edebug-mode org-mode org-capture-mode log-edit-mode)
           . viper-change-state-to-insert))
   :bind
   ( :map viper-insert-global-user-map
@@ -895,7 +895,7 @@ before calling the original function."
   (dired-maybe-use-globstar t)
   (dired-dwim-target t)
   (dired-use-ls-dired t)
-  (dired-listing-switches "-lH1oghv")
+  (dired-listing-switches "-lHoghv")
   (dired-mouse-drag-files t)
   (delete-by-moving-to-trash t)
   (dired-guess-shell-alist-user
@@ -1241,6 +1241,8 @@ before calling the original function."
      gnus-summary-mode
      gnus-tree-mode
      gnus-article-mode
+     calc-mode
+     calc-trail-mode
      newsticker-treeview-item-mode
      newsticker-treeview-list-mode
      newsticker-treeview-mode))

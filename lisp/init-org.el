@@ -167,11 +167,6 @@ and expand it."
 (with-eval-after-load 'ob
   (bind-key [remap org-babel-expand-src-block] #'my/org-babel-expand-src-block))
 
-(with-eval-after-load 'viper
-  (keymap-substitute viper-vi-global-user-map
-                     'org-open-at-point-global
-                     'my/org-exec-link-or-babel-nearby))
-
 (with-eval-after-load 'ox-latex
   (defun my/org-latex-filter-link-fix (link backend info)
     "Use correct path when export directory not `default-directory'.
@@ -197,16 +192,31 @@ and expand it."
   (add-hook 'org-export-filter-link-functions
             #'my/org-latex-filter-link-fix))
 
+(defun my/org-src-save-buffer ()
+  "Ask before save org-babel preview buffer."
+  (interactive)
+  (if (string-prefix-p "*Org-Babel Preview "
+                       (buffer-name))
+      (when (y-or-n-p "Are you sure want to save expanded buffer?")
+        (org-edit-src-save))
+    (org-edit-src-save)))
+
 (with-eval-after-load 'org-src
   (bind-keys
    :map org-src-mode-map
-   ("C-x C-s" . (lambda ()
-                  (interactive)
-                  (if (string-prefix-p "*Org-Babel Preview "
-                                       (buffer-name))
-                      (when (y-or-n-p "Are you sure want to save expanded buffer?")
-                        (org-edit-src-save))
-                    (org-edit-src-save))))))
+   ("C-x C-s" . my/org-src-save-buffer)))
+
+(defun my/viper-save-buffer (&rest args)
+  "Original `ex-write' not support `org-src-mode', use `save-buffer'
+instead."
+  (interactive "P")
+  (if org-src-mode (my/org-src-save-buffer) (ex-write nil)))
+
+(with-eval-after-load 'viper
+  (add-to-list 'my/extra-ex-token-alist '("w" (my/viper-save-buffer)))
+  (bind-keys
+   :map viper-vi-global-user-map
+   ([remap org-open-at-point-global] . my/org-exec-link-or-babel-nearby)))
 
 (provide 'init-org)
 ;;; init-org.el ends here
