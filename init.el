@@ -183,7 +183,7 @@
         viper-ESC-moves-cursor-back nil
         viper-mode t)
   :hook (window-setup
-         (( change-log-mode edebug-mode org-mode log-edit-mode)
+         (( change-log-mode edebug-mode org-mode org-capture-mode log-edit-mode)
           . viper-change-state-to-insert))
   :bind
   ( :map viper-insert-global-user-map
