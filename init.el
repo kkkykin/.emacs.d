@@ -1278,8 +1278,12 @@ before calling the original function."
      ((or ,(regexp-quote shell-command-buffer-name)
           ,(regexp-quote shell-command-buffer-name-async)
           ,(regexp-quote shell-command-default-error-buffer))
-      #1# #11#
-      #21=(inhibit-same-window . nil)
+      (display-buffer-reuse-window
+       display-buffer-reuse-mode-window
+       display-buffer-in-previous-window
+       display-buffer-below-selected)
+      (mode . (fundamental-mode shell-mode))
+      #11# #21=(inhibit-same-window . nil)
       #41=(window-parameters . ((no-other-window . t))))
      ((major-mode . completion-list-mode)
       #3=display-buffer-at-bottom #11#)))
@@ -1300,6 +1304,7 @@ before calling the original function."
                       (major-mode . inferior-emacs-lisp-mode)
                       ,(rx (| "diff" "xref" "grep" "Occur") ?* eos))
                   (display-buffer-reuse-mode-window
+                   display-buffer-in-previous-window
                    display-buffer-in-direction)
                   #21# (direction . leftmost)
                   (mode . ( proced-mode xref--xref-buffer-mode
@@ -1308,7 +1313,7 @@ before calling the original function."
                  ("\\e?shell\\*\\'"
                   #2# #41#
                   (side . top)
-                  #12=(window-height . 0.3))))
+                  #12=(window-height . 0.5))))
       (add-to-list 'display-buffer-alist v))))
 
 (use-package saveplace :hook (emacs-startup . save-place-mode))
