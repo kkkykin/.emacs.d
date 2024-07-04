@@ -273,7 +273,7 @@
            viper-major-mode-modifier-list))
   (setq viper-insert-state-mode-list
         (append viper-insert-state-mode-list
-                '( log-view-mode vc-dir-mode)
+                '( apropos-mode log-view-mode vc-dir-mode)
                 viper-emacs-state-mode-list)
         viper-emacs-state-mode-list nil)
   (dolist (mode '( diff-mode dun-mode outline-mode reb-mode
