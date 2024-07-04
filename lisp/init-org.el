@@ -201,6 +201,7 @@ and expand it."
     (org-edit-src-save)))
 
 (with-eval-after-load 'org-src
+  (add-to-list 'my/extra-ex-token-alist '("w" (my/viper-save-buffer)))
   (bind-keys
    :map org-src-mode-map
    ("C-x C-s" . my/org-src-save-buffer)))
@@ -212,7 +213,6 @@ instead."
   (if org-src-mode (my/org-src-save-buffer) (ex-write nil)))
 
 (with-eval-after-load 'viper
-  (add-to-list 'my/extra-ex-token-alist '("w" (my/viper-save-buffer)))
   (bind-keys
    :map viper-vi-global-user-map
    ([remap org-open-at-point-global] . my/org-exec-link-or-babel-nearby)))
