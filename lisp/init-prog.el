@@ -340,6 +340,10 @@ From https://christiantietze.de/posts/2024/01/emacs-sqlite-mode-open-sqlite-file
       (_ (format "%s(%s): " type (skeleton-read "Scope: "))))))
 (with-eval-after-load 'log-edit
   (add-hook 'log-edit-hook #'mp/vc-commit-template 1))
+(add-hook 'server-switch-hook
+          (lambda ()
+            (when (string-suffix-p "/.git/COMMIT_EDITMSG" (buffer-file-name))
+              (my/prog-vc-commit-template))))
 
 (with-eval-after-load 'log-view
   (bind-keys
