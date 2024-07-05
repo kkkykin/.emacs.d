@@ -68,7 +68,7 @@ directory."
            `(("cmdproxy" ,@(mw/find-shell-command-coding-system (caddr args))))))
       (apply orig-fun args))))
 
-(defun mw/proc-coding-system-fix (&optional proc ncmd)
+(defun mw/proc-coding-system-fix (&optional proc cmd)
   "Fix the coding system for a process based on its command.
 
 This function sets the coding system for the process PROC based on the
@@ -78,13 +78,13 @@ command it is running.  It only applies the fix if the current
 - If PROC is not provided, it defaults to the process associated with
   the current buffer.
 
-- If NCMD is provided, it specifies which element of the command list to
-  use for determining the coding system.  By default, it uses the fourth
-  element (index 3) of the command list."
-  (when-let* ((localp (not (file-remote-p default-directory)))
+- If CMD is provided, it use for determining the coding system.
+  By default, it uses the third element (index 2) of the process
+  command list."
+  (when-let* (((not (file-remote-p default-directory)))
               (proc (or proc (get-buffer-process (current-buffer))))
               (cs (mw/find-shell-command-coding-system
-                   (nth (or ncmd 2) (process-command proc)))))
+                   (or cmd (nth 2 (process-command proc))))))
     (set-process-coding-system proc (car cs) (cdr cs))))
 
 (dolist (h `(,(derived-mode-hook-name async-shell-command-mode)
@@ -115,10 +115,20 @@ command it is running.  It only applies the fix if the current
    (comint-previous-input-string 0)
    output))
 
+(defun mw/shell-change-cs-before-send-input (proc string)
+  (unless (mw/proc-coding-system-fix proc string)
+    (apply #'set-process-coding-system proc
+           (find-operation-coding-system
+            #'call-process (car (process-command proc)))))
+  (comint-simple-send proc string))
+
 (defun mw/shell-mode-setup ()
   "Setup for shell-mode."
-  (add-hook 'comint-preoutput-filter-functions
-            #'mw/shell-coding-system-fix nil t))
+  (setq comint-process-echoes t
+        comint-input-sender #'mw/shell-change-cs-before-send-input)
+  ;; (add-hook 'comint-preoutput-filter-functions
+  ;;           #'mw/shell-coding-system-fix nil t)
+  )
 (add-hook 'shell-mode-hook #'mw/shell-mode-setup)
 
 (defun mw/run-bash ()
