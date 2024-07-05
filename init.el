@@ -1327,8 +1327,7 @@ before calling the original function."
                             diff-mode grep-mode occur-mode))
                   #31=(inhibit-same-window . nil))
                  ("\\e?shell\\*\\'"
-                  #2# #41#
-                  (side . top)
+                  #2# (side . top)
                   #12=(window-height . 0.5))))
       (add-to-list 'display-buffer-alist v))))
 
