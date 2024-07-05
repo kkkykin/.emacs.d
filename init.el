@@ -26,7 +26,23 @@
   :custom
   (inhibit-splash-screen t)
   (indicate-buffer-boundaries 'left)
-  (initial-major-mode 'fundamental-mode)
+  (initial-major-mode 'org-mode)
+  (initial-scratch-message nil)
+  (initial-buffer-choice
+   (lambda ()
+     (with-current-buffer (get-scratch-buffer-create)
+       (let ((date (format-time-string "%F")))
+         (setq buffer-file-name
+               (expand-file-name
+                (format "scratchs/%s--%s.org" date
+                        (replace-regexp-in-string "\\*" "" (buffer-name)))
+                org-directory))
+         (when (file-readable-p buffer-file-name)
+           (insert-file-contents buffer-file-name))
+         (when (eq (buffer-size) 0)
+           (insert "* " date "\n")))
+       (set-buffer-modified-p nil)
+       (current-buffer))))
   (disabled-command-function nil)
   (system-time-locale "C")
   (use-dialog-box nil)
