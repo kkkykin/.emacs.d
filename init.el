@@ -1689,8 +1689,10 @@ before calling the original function."
                  display-buffer-no-window
                  (allow-no-window . t)))
   (setq org-babel-default-header-args
-        (cons '(:noweb . "yes")
-              (assq-delete-all :noweb org-babel-default-header-args)))
+        (append '((:noweb . "yes")
+                  (:results . "silent"))
+                (cl-delete-if (lambda (a) (memq a '(:noweb :results)))
+                              org-babel-default-header-args :key #'car)))
   (with-eval-after-load 'ob-plantuml
     (setq org-babel-default-header-args:plantuml
           (cons '(:results . "verbatim")
