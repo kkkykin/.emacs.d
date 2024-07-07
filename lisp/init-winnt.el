@@ -68,6 +68,16 @@ directory."
            `(("cmdproxy" ,@(mw/find-shell-command-coding-system (caddr args))))))
       (apply orig-fun args))))
 
+(with-eval-after-load 'ob-eval
+  (define-advice org-babel--shell-command-on-region (:around (orig-fun &rest args) fix-coding)
+    "Fix coding system for `org-babel--shell-command-on-region' when not in a
+remote directory."
+    (if (file-remote-p default-directory)
+        (apply orig-fun args)
+      (let ((process-coding-system-alist
+             `(("cmdproxy" ,@(mw/find-shell-command-coding-system (car args))))))
+        (apply orig-fun args)))))
+
 (defun mw/proc-coding-system-fix (&optional proc cmd)
   "Fix the coding system for a process based on its command.
 
@@ -81,11 +91,12 @@ command it is running.  It only applies the fix if the current
 - If CMD is provided, it use for determining the coding system.
   By default, it uses the third element (index 2) of the process
   command list."
-  (when-let* (((not (file-remote-p default-directory)))
-              (proc (or proc (get-buffer-process (current-buffer))))
-              (cs (mw/find-shell-command-coding-system
-                   (or cmd (nth 2 (process-command proc))))))
-    (set-process-coding-system proc (car cs) (cdr cs))))
+  (if-let* (((not (file-remote-p default-directory)))
+            (proc (or proc (get-buffer-process (current-buffer))))
+            (cs (mw/find-shell-command-coding-system
+                 (or cmd (nth 2 (process-command proc))))))
+      (set-process-coding-system proc (car cs) (cdr cs))
+    t))
 
 (dolist (h `(,(derived-mode-hook-name async-shell-command-mode)
              compilation-start-hook))
@@ -98,37 +109,40 @@ command it is running.  It only applies the fix if the current
       (decode-coding-string (encode-coding-string output (cdr cs)) (car cs))
     output))
 
-(defun mw/eshell-coding-system-fix (output)
-  "Fix stdout coding-system in eshell."
-  (if-let ((promptp (not (string-match-p
-                          (concat eshell-prompt-regexp "$") output)))
-           (command (condition-case nil
-                        (eshell-previous-input-string 0)
-                      (error nil))))
-      (mw/output-coding-system-fix command output)
-    output))
-(add-hook 'eshell-preoutput-filter-functions #'mw/eshell-coding-system-fix nil)
+(defun mw/eshell-change-cs-when-exec (proc)
+  "Change the coding system of the Eshell process PROC based on the command
+being executed.
 
-(defun mw/shell-coding-system-fix (output)
-  "Fix stdout coding-system in shell."
-  (mw/output-coding-system-fix
-   (comint-previous-input-string 0)
-   output))
+This function checks if the current directory is local (not remote). If
+so, it determines the appropriate coding system for the command being
+executed by the process PROC using `find-operation-coding-system`.  It
+then sets the process coding system for PROC to ensure correct encoding
+and decoding of input and output.
+
+The function is intended to be used with `eshell-exec-hook' to
+dynamically adjust the coding system for each command executed in
+Eshell."
+  (when-let (((not (file-remote-p default-directory)))
+             (cs (find-operation-coding-system
+                  #'call-process (car (process-command proc)))))
+    (set-process-coding-system proc (car cs) (cdr cs))))
+(add-hook 'eshell-exec-hook #'mw/eshell-change-cs-when-exec)
 
 (defun mw/shell-change-cs-before-send-input (proc string)
-  (unless (mw/proc-coding-system-fix proc string)
-    (apply #'set-process-coding-system proc
-           (find-operation-coding-system
-            #'call-process (car (process-command proc)))))
+  "See `mw/eshell-change-cs-when-exec'."
+  (when-let (((not (string-empty-p string)))
+             ((mw/proc-coding-system-fix proc string))
+             (cs (find-operation-coding-system
+                  #'call-process (car (process-command proc)))))
+    (set-process-coding-system proc (car cs) (cdr cs)))
   (comint-simple-send proc string))
 
 (defun mw/shell-mode-setup ()
   "Setup for shell-mode."
-  (setq comint-process-echoes t
-        comint-input-sender #'mw/shell-change-cs-before-send-input)
-  ;; (add-hook 'comint-preoutput-filter-functions
-  ;;           #'mw/shell-coding-system-fix nil t)
-  )
+  (when (string-match-p "cmdproxy"
+                        (or explicit-shell-file-name shell-file-name))
+    (setq comint-process-echoes t
+          comint-input-sender #'mw/shell-change-cs-before-send-input)))
 (add-hook 'shell-mode-hook #'mw/shell-mode-setup)
 
 (defun mw/run-bash ()
@@ -150,31 +164,18 @@ command it is running.  It only applies the fix if the current
     (encode-coding-region min (point-max) from)
     (decode-coding-region min (point-max) to)))
 
-(defun mw/find-dired-coding-system-fix ()
-  "Fix coding-system for find-dired."
-  (mw/coding-conv-region (point-min) locale-coding-system 'utf-8)
-  ;; call default `find-dired-refine-function'
-  (find-dired-sort-by-filename))
-(with-eval-after-load 'find-dired
-  (setq find-dired-refine-function 'mw/find-dired-coding-system-fix))
-
 
 ;; dired
 
-(defun mw/dired-coding-system-fix ()
-  "Fix coding system after insert directory."
-  (goto-char (point-min))
-  (let ((inhibit-read-only t)
-        (min (pos-eol)))
-    (mw/coding-conv-region min locale-coding-system 'utf-8)
-    (dired-insert-set-properties min (point-max)))
-  (set-buffer-modified-p nil))
+(define-advice insert-directory (:around (orig-fun &rest args) fix-cs)
+  "Force decode `ls' output with 'utf-8."
+  (let ((coding-system-for-read 'utf-8))
+    (apply orig-fun args)))
 
 (with-eval-after-load 'dired
   (bind-keys
    :map dired-mode-map
-   ("N" . woman-dired-find-file))
-  (add-hook 'dired-after-readin-hook #'mw/dired-coding-system-fix))
+   ("N" . woman-dired-find-file)))
 
 (with-eval-after-load 'dired-aux
   (dolist (item `(("\\.exe\\'" .
@@ -202,10 +203,12 @@ command it is running.  It only applies the fix if the current
       grep-use-null-device nil
       grep-highlight-matches t
       find-program "fd"
+      find-ls-option '("-X ls -ldh {} ; | iconv -f utf-8 -t gb18030 -cs" . "-ldh")
       ls-lisp-use-insert-directory-program t
       default-process-coding-system '(utf-8-dos . utf-8-unix) ;; change this maybe break tramp sshx
       process-coding-system-alist
       `(("cmdproxy" . ,locale-coding-system)
+        ("awk" utf-8 . ,locale-coding-system)
         ("curl" utf-8 . ,locale-coding-system)
         ("ffmpeg" utf-8 . ,locale-coding-system)
         (,find-program utf-8 . ,locale-coding-system)

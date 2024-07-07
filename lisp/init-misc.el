@@ -460,8 +460,7 @@ ref: https://pandoc.org/MANUAL.html#general-options"
                                           "\\1" cmd))))
            ))))
       args)
-    (setq find-name-arg "-g"
-          find-ls-option '("-X ls -ldh {} ;" . "-ldh"))))
+    (setq find-name-arg "-g")))
 
 (with-eval-after-load 'grep
   (defcustom ug-fd-command
