@@ -345,10 +345,11 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
     (dired-revert)))
 
 (defun my/dired-goto-random-file ()
-  "Goto random file in current-dir."
+  "Goto random file in current-buffer."
   (interactive nil dired-mode)
   (dired-goto-file
-   (seq-random-elt (directory-files (dired-current-directory) t "^[^.]" t))))
+   (seq-random-elt
+    (mapcan (lambda (a) (directory-files (car a) t "^[^.]" t)) dired-subdir-alist))))
 
 (defun my/advice-image-dired-create-thumb-maybe-gs (oldfun &rest args)
   (if (string= (file-name-extension (car args)) "pdf")
