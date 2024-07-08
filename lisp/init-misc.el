@@ -4,26 +4,6 @@
 
 (require 'cl-lib)
 
-(defvar-keymap my/global-prefix-map
-  :doc "A keymap for myself."
-  "/" #'webjump
-  "a" #'area2-download-list
-  "b" #'speedbar
-  "c" #'org-clock-in-last
-  "C" #'org-clock-in
-  "D" #'dictionary-search
-  "e" #'eshell
-  "l" #'org-store-link
-  "L" #'org-insert-link-global
-  "o" #'org-clock-out
-  "O" #'org-clock-goto
-  "P" #'proced
-  "r" #'recentf
-  "s" #'scratch-buffer
-  "t" #'tramp-cleanup-connection
-  "T" #'tramp-cleanup-some-buffers)
-(keymap-set ctl-x-map "j" my/global-prefix-map)
-
 (defvar-keymap my/mpc-prefix-map
   :doc "A keymap for mpc."
   "s" #'mpc-toggle-play
@@ -401,7 +381,7 @@ ref: https://pandoc.org/MANUAL.html#general-options"
    :prefix-map my/dired-spc-prefix-map
    ("d" . my/dired-duplicate-file)
    ("o" . my/dired-open-with-pandoc)
-   ("R" . my/dired-goto-random-file)))
+   ("s" . my/dired-goto-random-file)))
 
 (with-eval-after-load 'image-dired
   (unless (executable-find "gm")

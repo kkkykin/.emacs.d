@@ -23,6 +23,9 @@
   ([remap upcase-word] . upcase-dwim)
   ([remap downcase-word] . downcase-dwim)
   ([remap capitalize-word] . capitalize-dwim)
+  ( :prefix "C-x j"
+    :prefix-map my/global-prefix-map
+    ("s" . scratch-buffer))
   :custom
   (inhibit-splash-screen t)
   (indicate-buffer-boundaries 'left)
@@ -468,6 +471,9 @@
   (modifier-bar-mode))
 
 (use-package speedbar
+  :bind
+  ( :map my/global-prefix-map
+    ("b" . speedbar))
   :config
   (setopt speedbar-supported-extension-expressions
           (append '(".sql")
@@ -820,12 +826,12 @@ before calling the original function."
 
 (use-package eww
   :bind
-  (:map eww-bookmark-mode-map
-        ("n" . next-line)
-        ("p" . previous-line)
-        ("M-RET" . eww-open-in-new-buffer)
-        ("M-n" . eww-next-bookmark)
-        ("M-p" . eww-previous-bookmark))
+  ( :map eww-bookmark-mode-map
+    ("n" . next-line)
+    ("p" . previous-line)
+    ("M-RET" . eww-open-in-new-buffer)
+    ("M-n" . eww-next-bookmark)
+    ("M-p" . eww-previous-bookmark))
   :custom
   (eww-search-prefix "https://www.mojeek.com/search?newtab=1&cdate=1&qss=DuckDuckGo&date=1&sst=1&arc=none&q=" "https://wiby.org/?q=")
   (eww-auto-rename-buffer 'title)
@@ -837,6 +843,9 @@ before calling the original function."
 (use-package browse-url
   :hook ((text-mode . goto-address-mode)
          (prog-mode . goto-address-prog-mode))
+  :bind
+  ( :map my/global-prefix-map
+    ("/" . webjump))
   :custom
   (browse-url-handlers '(("\\`file:" . browse-url-default-browser)))
   :config
@@ -862,6 +871,10 @@ before calling the original function."
       (add-to-list 'webjump-sites web))))
 
 (use-package tramp
+  :bind
+  ( :map my/global-prefix-map
+    ("t" . tramp-cleanup-connection)
+    ("T" . tramp-cleanup-some-buffers))
   :custom
   (tramp-verbose 0)
   (tramp-use-scp-direct-remote-copying t)
@@ -1002,6 +1015,9 @@ before calling the original function."
   (advice-add 'archive-rar-extract :before-until #'archive-7z-extract))
 
 (use-package dictionary
+  :bind
+  ( :map my/global-prefix-map
+    ("D" . dictionary-search))
   :custom
   (dictionary-server "dict.tw")
   (dictionary-use-single-buffer t))
@@ -1180,6 +1196,9 @@ before calling the original function."
   (add-to-list 'remember-handler-functions 'remember-diary-extract-entries))
 
 (use-package proced
+  :bind
+  ( :map my/global-prefix-map
+    ("P" . proced))
   :custom
   (proced-goal-attribute nil)
   (proced-show-remote-processes t)
@@ -1335,6 +1354,9 @@ before calling the original function."
 
 (use-package recentf
   :hook emacs-startup
+  :bind
+  ( :map my/global-prefix-map
+    ("r" . recentf))
   :config
   (recentf-mode)
   :custom
@@ -1348,6 +1370,8 @@ before calling the original function."
                    (setq-local imenu-generic-expression
                                '(("Prompt" " $ \\(.*\\)" 1)))))
   :bind
+  ( :map my/global-prefix-map
+    ("e" . eshell))
   (:map eshell-proc-mode-map
         ;; Kill eshell buffer if no process, like `comint-send-eof'
         ("C-c C-d" . (lambda () (interactive)
@@ -1579,6 +1603,12 @@ before calling the original function."
   (require 'org-attach-git))
 
 (use-package org-clock
+  :bind
+  ( :map my/global-prefix-map
+    ("i" . org-clock-in)
+    ("I" . org-clock-in-last)
+    ("o" . org-clock-out)
+    ("O" . org-clock-goto))
   :custom
   (org-clock-persist 'history)
   (org-timer-default-timer 5)
@@ -1647,6 +1677,10 @@ before calling the original function."
 
 (use-package ol
   :commands org-insert-link-global
+  :bind
+  ( :map my/global-prefix-map
+    ("l" . org-store-link)
+    ("L" . org-insert-link-global))
   :custom
   (org-id-link-to-org-use-id 'create-if-interactive)
   (org-link-use-indirect-buffer-for-internals t)
@@ -1799,25 +1833,38 @@ before calling the original function."
 (use-package denote
   :if (package-installed-p 'denote)
   :bind
-  ("C-c n n" . denote)
-  ("C-c n d" . denote-date)
-  ("C-c n t" . denote-type)
-  ("C-c n s" . denote-subdirectory)
-  ("C-c n f" . denote-open-or-create)
-  ("C-c n r" . denote-dired-rename-marked-files)
+  ( :map my/global-prefix-map
+    ("n" . denote-open-or-create))
   ( :map my/dired-spc-prefix-map
-    ("r" . denote-rename-file))
+    ("r" . denote-dired-rename-files)
+    ("R" . denote-dired-rename-marked-files-with-keywords))
   :init
   (with-eval-after-load 'org-capture
-    (setq denote-org-capture-specifiers "%l\n%i\n%?")
-    (add-to-list 'org-capture-templates
-                 '("N" "New note (with denote.el)" plain
-                   (file denote-last-path)
-                   #'denote-org-capture
-                   :no-save t
-                   :immediate-finish nil
-                   :kill-buffer t
-                   :jump-to-captured t)))
+    (dolist (c '(("s" "denote subdir" plain
+                  (file denote-last-path)
+                  (function
+                   (lambda ()
+                     (denote-org-capture-with-prompts :title :keywords :subdirectory)))
+                  . #1=( :no-save t
+                         :immediate-finish nil
+                         :kill-buffer t
+                         :jump-to-captured t))
+                 ("d" "denote date" plain
+                  (file denote-last-path)
+                  (function
+                   (lambda ()
+                     (denote-org-capture-with-prompts :title :keywords :date)))
+                  . #1#)
+                 ("n" "denote" plain
+                  (file denote-last-path)
+                  #'denote-org-capture
+                  . #1#)
+                 ("j" "denote journal" entry
+                  (function denote-journal-extras-new-or-existing-entry)
+                  "* %<%T>\n%a\n%i\n%?"
+                  . #1#)))
+      (add-to-list 'org-capture-templates c))
+    (setq denote-org-capture-specifiers "%l\n%i\n%?"))
   :custom
   (denote-backlinks-show-context t)
   (denote-known-keywords '("emacs" "entertainment" "reading" "studying" "work"))
@@ -1949,6 +1996,9 @@ before calling the original function."
 
 (use-package aria2
   :if (package-installed-p 'aria2)
+  :bind
+  ( :map my/global-prefix-map
+    ("a" . aria2-download-list))
   :config
   (let ((auth (car (auth-source-search :host "aria2.localhost"))))
     (setq aria2-rcp-secret (auth-info-password auth)
