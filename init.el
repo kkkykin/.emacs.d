@@ -1641,13 +1641,13 @@ before calling the original function."
         ("C-c c" . org-capture))
   :custom
   (org-capture-templates
-   '(("c" "Default Capture" entry (file "inbox.org")
+   '(("c" "Default" entry (file "inbox.org")
       "* %?\n%U\n%i")
-     ("a" "Agenda Capture" entry (file "agenda.org")
+     ("a" "Agenda" entry (file "agenda.org")
       "* TODO %?\n%U\n%i")
-     ;; Capture and keep an org-link to the thing we're currently working with
-     ("r" "Capture with Reference" entry (file "inbox.org")
+     ("r" "Reference" entry (file "inbox.org")
       "* %?\n%U\n%i\n%a")
+     ("l" "Clocking" entry (clock) nil)
      ;; Define a section
      ("w" "Work")
      ("wm" "Work meeting" entry (file+headline "work.org" "Meetings")
