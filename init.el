@@ -1260,6 +1260,7 @@ before calling the original function."
      gnus-summary-mode
      gnus-tree-mode
      gnus-article-mode
+     calendar-mode
      calc-mode
      calc-trail-mode
      newsticker-treeview-item-mode
@@ -1519,6 +1520,7 @@ before calling the original function."
   (org-refile-use-cache nil)
   (org-outline-path-complete-in-steps nil)
   (org-refile-use-outline-path 'file)
+  (org-refile-allow-creating-parent-nodes 'confirm)
   (org-archive-mark-done nil)
   (org-archive-location "_archive/%s::* Archive")
   (org-use-fast-todo-selection 'expert)
@@ -1594,7 +1596,9 @@ before calling the original function."
     ("o" . org-clock-out)
     ("O" . org-clock-goto))
   :custom
+  (org-clock-out-remove-zero-time-clocks t)
   (org-clock-persist 'history)
+  (org-clock-in-resume t)
   (org-timer-default-timer 5)
   (org-clock-clocked-in-display 'frame-title)
   :config
@@ -1622,6 +1626,17 @@ before calling the original function."
   (:map global-map
         ("C-c a" . org-agenda))
   :custom
+  (org-agenda-compact-blocks t)
+  (org-agenda-sticky t)
+  (org-agenda-start-on-weekday nil)
+  (org-agenda-span 'day)
+  (org-agenda-sorting-strategy
+   '((agenda habit-down time-up user-defined-up effort-up category-keep)
+     (todo category-up effort-up)
+     (tags category-up effort-up)
+     (search category-up)))
+  (org-agenda-window-setup 'current-window)
+  (org-agenda-clockreport-parameter-plist '(:link t :maxlevel 3))
   (org-agenda-dim-blocked-tasks nil)
   (org-agenda-inhibit-startup t)
   ;; (org-agenda-use-tag-inheritance nil)
