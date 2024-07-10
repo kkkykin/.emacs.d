@@ -1727,6 +1727,9 @@ before calling the original function."
                 (cl-delete-if (lambda (a) (memq a '(:noweb :results)))
                               org-babel-default-header-args :key #'car)))
   (with-eval-after-load 'ob-plantuml
+    (define-advice org-babel-plantuml-make-body (:filter-return (body) start-at-begin)
+      "Move `@start' to first line, avoid define variable before start."
+      (replace-regexp-in-string "\\([^z-a]+\\)\\(^@start.+\\)" "\\2\n\\1" body))
     (setq org-babel-default-header-args:plantuml
           (cons '(:results . "replace verbatim")
                 (assq-delete-all :results org-babel-default-header-args:plantuml)))))
