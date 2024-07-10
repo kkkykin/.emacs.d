@@ -1728,7 +1728,7 @@ before calling the original function."
                               org-babel-default-header-args :key #'car)))
   (with-eval-after-load 'ob-plantuml
     (setq org-babel-default-header-args:plantuml
-          (cons '(:results . "verbatim")
+          (cons '(:results . "replace verbatim")
                 (assq-delete-all :results org-babel-default-header-args:plantuml)))))
 
 (use-package ox
