@@ -339,39 +339,32 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
         (apply oldfun args))
     (apply oldfun args)))
 
-(defun my/dired-open-with-pandoc (&optional from to output)
+(defun my/dired-open-with-pandoc (&optional from to)
   "Open the current file in Dired using pandoc and display the result in Org mode.
 Optional arguments:
   FROM: Input format for pandoc (default: auto-detected).
   TO: Output format for pandoc (default: org).
-  OUTPUT: Output destination for pandoc (default: display in buffer).
 ref: https://pandoc.org/MANUAL.html#general-options"
   (interactive nil dired-mode)
-  (let* ((file (file-name-nondirectory (dired-get-file-for-visit)))
-         (buffer-name
-          (generate-new-buffer-name
-           (file-name-with-extension file (or to "org")))))
+  (let* ((file (dired-get-file-for-visit))
+         (file-base (file-name-base file))
+         (tformat (or to "org"))
+         (buffer-name (generate-new-buffer-name
+                       (file-name-with-extension
+                        (concat file-base "--pandoc") tformat))))
     (with-current-buffer (get-buffer-create buffer-name)
-      (read-only-mode -1)
-      (apply #'call-process "pandoc" nil t nil file
+      (apply #'call-process "pandoc" nil t nil file "-o-"
              (cl-delete-if
               #'null
               `(,(when from (concat "--from=" from))
-                "-t" ,(or to "org")
-                "-o" ,(or output "-"))))
-      (if output
-          (progn
-            (write-region nil nil buffer-name)
-            (find-file buffer-name))
-        (if to
-            (when-let* ((fn (intern (concat to "-mode")))
-                        (functionp fn))
-              (funcall fn))
-          (org-mode))
-        (read-only-mode)
-        (set-buffer-modified-p nil)
-        (goto-char (point-min))
-        (select-window (display-buffer (current-buffer)))))))
+                "-t" ,tformat)))
+      (setq buffer-file-name
+            (expand-file-name buffer-name (file-name-directory file)))
+      (set-auto-mode)
+      (read-only-mode)
+      (set-buffer-modified-p nil)
+      (goto-char (point-min))
+      (select-window (display-buffer (current-buffer))))))
 
 (with-eval-after-load 'dired
   (bind-keys
