@@ -44,6 +44,7 @@
   (make-cursor-line-fully-visible nil)
   (blink-cursor-mode nil)
   (column-number-mode t)
+  (url-handler-mode t)
   (shift-select-mode nil)
   (global-prettify-symbols-mode t)
   (prettify-symbols-unprettify-at-point t)
