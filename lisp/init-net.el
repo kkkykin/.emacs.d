@@ -187,7 +187,7 @@ HOST: A string representing the hostname.
 Returns:
 A string either in the format \"PROXY host:port\" or \"DIRECT\"."
   (if-let (((string-match-p
-             (alist-get "yes_proxy" url-proxy-services nil nil #'equal)
+             (or (alist-get "yes_proxy" url-proxy-services nil nil #'equal) "")
              host))
            (proxy (cdr (assoc (url-type urlobj) url-proxy-services))))
       (concat "PROXY " proxy)
