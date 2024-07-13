@@ -1808,11 +1808,9 @@ before calling the original function."
   (when (package-installed-p 'html-ts-mode)
     (add-hook 'html-ts-mode-hook 'combobulate-mode)))
 
-(use-package anki-helper
-  :if (package-installed-p 'anki-helper)
-  :mode "\\.org\\'"
-  :vc (:url "https://github.com/Elilif/emacs-anki-helper")
-  :custom (anki-helper-default-deck "anki-helper"))
+(use-package anki-editor
+  :if (package-installed-p 'anki-editor)
+  :vc (:url "https://github.com/anki-editor/anki-editor" :rev :newest))
 
 (use-package gnuplot
   :if (package-installed-p 'gnuplot)
