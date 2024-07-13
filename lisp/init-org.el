@@ -170,24 +170,23 @@ and expand it."
   (defun my/org-latex-filter-link-fix (link backend info)
     "Use correct path when export directory not `default-directory'.
      Append zero-width-space after link avoid error: No line here to end."
-    (concat
-     (if-let ((need-fix (eq 'latex backend))
-              (out-file (plist-get info :output-file)))
-         (replace-regexp-in-string
-          "\\(\\includegraphics.+{\\)\\(.+\\)}"
-          (lambda (s)
-            (let ((link (match-string 2 s))
-                  (out-dir (file-name-directory
-                            (expand-file-name out-file))))
-              (string-replace
-               "\\" "\\\\"
-               (format "%s%s}"
-                       (match-string 1 s)
-                       (file-relative-name (expand-file-name link)
-                                           out-dir)))))
-          link)
-       link)
-     "​"))
+    (if-let ((need-fix (eq 'latex backend))
+             (out-file (plist-get info :output-file)))
+        (replace-regexp-in-string
+         "\\(\\includegraphics.+{\\)\\(.+\\)}\\([^z-a]+\\)"
+         (lambda (s)
+           (let ((link (match-string 2 s))
+                 (out-dir (file-name-directory
+                           (expand-file-name out-file))))
+             (string-replace
+              "\\" "\\\\"
+              (format "%s%s}%s​"
+                      (match-string 1 s)
+                      (file-relative-name (expand-file-name link)
+                                          out-dir)
+                      (match-string 3 s)))))
+         link)
+      link))
   (add-hook 'org-export-filter-link-functions
             #'my/org-latex-filter-link-fix))
 
