@@ -885,9 +885,7 @@ before calling the original function."
 (use-package sql
   :bind
   ( :map sql-mode-map
-    :prefix "C-c"
-    :prefix-map my/sql-cc-prefix-map
-    ("C-p" . sql-connect)
+    ("C-c C-p" . sql-connect)
     :prefix "C-c C-k"
     :prefix-map my/sql-cc-ck-prefix-map
     ("a" . sql-list-all)
