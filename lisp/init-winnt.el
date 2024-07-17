@@ -214,6 +214,7 @@ Eshell."
         (,find-program utf-8 . ,locale-coding-system)
         (,grep-program utf-8 . ,locale-coding-system)
         ("git" utf-8 . ,locale-coding-system)
+        ("tectonic" utf-8 . ,locale-coding-system)
         ("ls" utf-8 . ,locale-coding-system)
         ("pandoc" utf-8 . ,locale-coding-system)
         ("make" utf-8 . ,locale-coding-system)
