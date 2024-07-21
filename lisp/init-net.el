@@ -665,6 +665,11 @@ Argument EVENT tells what has happened to the process."
   (setq newsticker-wget-arguments
         (append `("--doh-url" ,mn/doh-server) newsticker-wget-arguments))
 
+  (define-advice newsticker--image-download-by-wget
+      (:around (orig-fun &rest args) with-default-dir)
+    (let ((default-directory newsticker-dir))
+      (apply orig-fun args)))
+
   (define-advice newsticker--get-news-by-funcall
       (:around (orig-fun feed-name function) build-feeds)
     "Get feeds maybe by build atom feeds.
