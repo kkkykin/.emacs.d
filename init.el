@@ -44,7 +44,6 @@
   (make-cursor-line-fully-visible nil)
   (blink-cursor-mode nil)
   (column-number-mode t)
-  (url-handler-mode t)
   (shift-select-mode nil)
   (global-prettify-symbols-mode t)
   (prettify-symbols-unprettify-at-point t)
@@ -952,6 +951,8 @@ before calling the original function."
   :bind
   ( :map dired-mode-map
     ("<mouse-2>" . dired-mouse-find-file)
+    ("C-p" . viper-previous-line)
+    ("C-n" . viper-next-line)
     :prefix "SPC"
     :prefix-map my/dired-spc-prefix-map
     ("a" . org-attach-dired-to-subtree))
@@ -1145,7 +1146,6 @@ before calling the original function."
   (gnus-directory (expand-file-name "News/" gnus-home-directory))
   (gnus-init-file (expand-file-name ".gnus.gpg" gnus-home-directory))
   (gnus-sieve-file (expand-file-name ".sieve" gnus-home-directory))
-  (gnus-select-method '(nntp "freenews.netfront.net"))
   (gnus-use-full-window nil)
   (gnus-save-newsrc-file nil)
   (gnus-read-newsrc-file nil)
