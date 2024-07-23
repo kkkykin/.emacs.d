@@ -53,25 +53,35 @@
 ;; occur
 
 (defun mp/grep-switch-to-occur (&optional nlines)
-  (interactive nil grep-mode)
+  "Switch from a `grep-mode' buffer to an `occur-mode' buffer.
+
+This function extracts the search pattern and the list of files from the
+current `grep-mode' buffer, then uses these to populate a new `occur-mode'
+buffer. The new buffer will contain occurrences of the search pattern in
+the specified files.
+
+NLINES specifies the number of context lines to include around each match
+(default is the prefix argument)."
+  (interactive "p" grep-mode)
   (save-excursion
-    (widen)
-    (goto-char (point-min))
-    (re-search-forward "default-directory: \"\\(.+\\)\"" (pos-eol))
-    (let ((parent (match-string-no-properties 1))
-          (re (cadr (member "-e" (split-string-shell-command
-                                  (car compilation-arguments)))))
-          bufs cur)
-      (forward-line 4)
-      (while (re-search-forward "^[^[:cntrl:]]+" nil t)
-        (when-let* ((base (match-string-no-properties 0))
-                    ((not (equal cur base)))
-                    (path (expand-file-name base parent))
-                    ((file-readable-p path)))
-          (setq cur base)
-          (push (or (get-file-buffer path) (find-file-noselect path t))
-                bufs)))
-      (occur-1 (read-regexp "Re: " re) nlines bufs "*grep-to-occur*"))))
+    (save-restriction
+      (widen)
+      (goto-char (point-min))
+      (re-search-forward "default-directory: \"\\(.+\\)\"" (pos-eol))
+      (let ((parent (match-string-no-properties 1))
+            (re (cadr (member "-e" (split-string-shell-command
+                                    (car compilation-arguments)))))
+            bufs cur)
+        (forward-line 4)
+        (while (re-search-forward "^[^\x000]+" nil t)
+          (when-let* ((base (match-string-no-properties 0))
+                      ((not (equal cur base)))
+                      (path (expand-file-name base parent))
+                      ((file-readable-p path)))
+            (setq cur base)
+            (push (or (get-file-buffer path) (find-file-noselect path t))
+                  bufs)))
+        (occur-1 (read-regexp "Re: " re) nlines bufs "*grep-to-occur*")))))
 
 (with-eval-after-load 'grep
   (bind-keys
