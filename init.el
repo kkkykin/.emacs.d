@@ -1082,8 +1082,7 @@ before calling the original function."
   (eglot-autoshutdown t)
   (eglot-report-progress nil)
   (eglot-send-changes-idle-time 0.1)
-  :config
-  (fset #'jsonrpc--log-event #'ignore))
+  (eglot-events-buffer-config '(:size 0 :format full)))
 
 (use-package smerge-mode
   :bind
