@@ -50,6 +50,35 @@
 (add-hook 'emacs-lisp-mode-hook 'mp/custom-imenu-exp)
 
 
+;; occur
+
+(defun mp/grep-switch-to-occur (&optional nlines)
+  (interactive nil grep-mode)
+  (save-excursion
+    (widen)
+    (goto-char (point-min))
+    (re-search-forward "default-directory: \"\\(.+\\)\"" (pos-eol))
+    (let ((parent (match-string-no-properties 1))
+          (re (cadr (member "-e" (split-string-shell-command
+                                  (car compilation-arguments)))))
+          bufs cur)
+      (forward-line 4)
+      (while (re-search-forward "^[^[:cntrl:]]+" nil t)
+        (when-let* ((base (match-string-no-properties 0))
+                    ((not (equal cur base)))
+                    (path (expand-file-name base parent))
+                    ((file-readable-p path)))
+          (setq cur base)
+          (push (or (get-file-buffer path) (find-file-noselect path t))
+                bufs)))
+      (occur-1 (read-regexp "Re: " re) nlines bufs "*grep-to-occur*"))))
+
+(with-eval-after-load 'grep
+  (bind-keys
+   :map grep-mode-map
+   ("C-c C-o" . mp/grep-switch-to-occur)))
+
+
 ;; xref
 
 (defun mp/next-error-put-function-name-work ()
