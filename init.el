@@ -236,14 +236,7 @@
              (apply (if (eq major-mode 'wdired-mode)
                         #'viper-exec-key-in-emacs #'viper-search-forward)
                     args)))
-    (":" . nil)
-    :prefix "SPC"
-    :prefix-map my/dired-spc-prefix-map
-    (":" . (lambda (&rest args)
-             (interactive "P")
-             (apply (if (eq major-mode 'wdired-mode)
-                        #'viper-exec-key-in-emacs #'viper-ex)
-                    args))))
+    (":" . nil))
   (:repeat-map my/viper-insert-repeat-map
                ("p" . viper-insert-prev-from-insertion-ring)
                ("n" . viper-insert-next-from-insertion-ring))
@@ -258,6 +251,14 @@
   :custom-face
   (viper-minibuffer-emacs ((t (:background nil :foreground nil))))
   :config
+  (with-eval-after-load 'dired
+    (bind-keys
+     :map my/dired-spc-prefix-map
+     (":" . (lambda (&rest args)
+              (interactive "P")
+              (apply (if (eq major-mode 'wdired-mode)
+                         #'viper-exec-key-in-emacs #'viper-ex)
+                     args)))))
   (define-advice viper-ex (:around (orig-fun &rest args) more-token)
     "More ex-token."
     (let ((ex-token-alist (append my/extra-ex-token-alist ex-token-alist)))
@@ -1833,10 +1834,12 @@ before calling the original function."
   :bind
   ( :map my/global-prefix-map
     ("n" . denote-open-or-create))
-  ( :map my/dired-spc-prefix-map
-    ("r" . denote-dired-rename-files)
-    ("R" . denote-dired-rename-marked-files-with-keywords))
   :init
+  (with-eval-after-load 'dired
+    (bind-keys
+     :map my/dired-spc-prefix-map
+     ("r" . denote-dired-rename-files)
+     ("R" . denote-dired-rename-marked-files-with-keywords)))
   (with-eval-after-load 'org-capture
     (dolist (c '(("s" "denote subdir" plain
                   (file denote-last-path)
