@@ -58,6 +58,21 @@ its subdirectories."
          (table (concat table-header table-rows)))
     (insert table)))
 
+(defun my/org-call-babel-at-point (&optional type position confirm)
+  (save-excursion
+    (when position (goto-char position))
+    (let ((org-confirm-babel-evaluate confirm))
+      (pcase type
+        ((or 'src-block 'inline-src-block) (org-babel-execute-src-block))
+        (_
+         (when-let* ((ele (org-element-at-point-no-context))
+                     (type (or type (org-element-type ele)))
+                     ((memq type '(babel-call inline-babel-call))))
+           ;; do not call `org-babel-lob-execute-maybe',
+           ;; it's always return t, but we need return.
+           (org-babel-execute-src-block
+            nil (org-babel-lob-get-info ele) nil type)))))))
+
 (defun my/org-exec-link-or-babel-nearby (&optional arg)
   "Execute a link or Babel block near the point in Org mode.
 Or execute a link near the point in all mode.
@@ -94,13 +109,13 @@ In case no link or Babel block is found, a user error is signaled."
      (let ((count (pcase arg
                     ('- -1)
                     ((pred numberp) arg)
-                    (_ 1)))
-           (orgp (eq major-mode 'org-mode)))
-       (if (and orgp
-                (org-element-type-p (org-element-context)
-                                    '( babel-call inline-babel-call
-                                       inline-src-block src-block)))
-           (or (org-babel-lob-execute-maybe) (org-babel-execute-src-block))
+                    (_ 1))))
+       (if-let ((orgp (eq major-mode 'org-mode))
+                (type (car
+                       (memq (org-element-type (org-element-at-point))
+                             '( babel-call inline-babel-call
+                                inline-src-block src-block)))))
+           (my/org-call-babel-at-point type)
          (save-excursion
            (re-search-forward
             (if orgp
@@ -110,21 +125,21 @@ In case no link or Babel block is found, a user error is signaled."
             (when (use-region-p)
               (if (natnump count) (region-end) (region-beginning)))
             t count)
-           (let ((link (match-string-no-properties 0))
-                 (ele (when orgp (org-element-context)))
-                 (org-link-elisp-confirm-function nil)
-                 (org-link-shell-confirm-function nil)
-                 (org-confirm-babel-evaluate t))
+           (let* ((link (match-string-no-properties 0))
+                  (ele (when orgp (org-element-at-point-no-context)))
+                  (type (org-element-type ele))
+                  (org-link-elisp-confirm-function nil)
+                  (org-link-shell-confirm-function nil))
              (cond
               ((string-match-p org-link-any-re link)
                (when (y-or-n-p
                       (format "Open link: %s?"
                               (org-add-props link nil 'face 'org-warning)))
                  (org-link-open-from-string link)))
-              ((org-element-type-p ele '( inline-babel-call babel-call
-                                          inline-src-block src-block))
-               (or (org-babel-lob-execute-maybe) (org-babel-execute-src-block)))
-              (t (user-error "No link or babel found"))))))))))
+              ((memq type '( inline-babel-call babel-call
+                             inline-src-block src-block))
+               (my/org-call-babel-at-point type nil t))
+              (t (user-error "No link or babel found")))))))))))
 
 (defun my/org-babel-expand-src-block ()
   "Expand the Org Babel source block at point.
@@ -163,8 +178,47 @@ and expand it."
         (funcall-interactively #'org-babel-expand-src-block nil info))
     (funcall-interactively #'org-babel-expand-src-block)))
 
+(defun my/org-babel-src-and-call-blocks (&optional file)
+  "Return the names of source and call blocks in FILE or the current
+buffer. ref: `org-babel-src-block-names'."
+  (with-current-buffer (if file (find-file-noselect file) (current-buffer))
+    (org-with-point-at 1
+      (let ((regexp "^[ \t]*#\\+\\(begin_src\\|call:\\) ")
+            (case-fold-search t)
+            blocks)
+        (while (re-search-forward regexp nil t)
+          (let ((element (org-element-at-point)))
+            (when (memq (org-element-type element)
+                        '(src-block babel-call))
+              (let ((name (org-element-property :name element)))
+                (when name (push (cons name (point)) blocks))))))
+        blocks))))
+
+(defun my/org-babel-execute-named-src-block (&optional name)
+  (interactive nil org-mode)
+  (save-excursion
+    (save-restriction
+      (widen)
+      (if name
+          (org-with-point-at 1
+            (catch 'found
+              (while (re-search-forward "^[ \t]*#\\+\\(begin_src\\|call:\\) " nil t)
+                (when-let* ((element (org-element-at-point))
+                            ((equal name (org-element-property :name element)))
+                            (type (org-element-type element))
+                            ((memq type '(src-block babel-call))))
+                  (throw 'found (my/org-call-babel-at-point type))))))
+        (if-let* ((blocks (my/org-babel-src-and-call-blocks))
+                  (name (completing-read "Src: " (mapcar #'car blocks)))
+                  (p (alist-get name blocks nil nil 'equal)))
+            (my/org-call-babel-at-point nil p)
+          (user-error "No blocks found."))))))
+
 (with-eval-after-load 'ob
-  (bind-key [remap org-babel-expand-src-block] #'my/org-babel-expand-src-block))
+  (bind-keys
+   :map org-babel-map
+   ([remap org-babel-expand-src-block] . my/org-babel-expand-src-block)
+   ("m" . my/org-babel-execute-named-src-block)))
 
 (with-eval-after-load 'ox-latex
   (defun my/org-latex-filter-link-fix (link backend info)
@@ -180,7 +234,7 @@ and expand it."
                            (expand-file-name out-file))))
              (string-replace
               "\\" "\\\\"
-              (format "%s%s}%s​"
+              (format "%s%s}%s\u200b"
                       (match-string 1 s)
                       (file-relative-name (expand-file-name link)
                                           out-dir)
