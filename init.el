@@ -1810,6 +1810,12 @@ before calling the original function."
   :if (package-installed-p 'anki-editor)
   :vc (:url "https://github.com/anki-editor/anki-editor" :rev :newest))
 
+(use-package plantuml-mode
+  :if (package-installed-p 'plantuml-mode)
+  :custom
+  (plantuml-default-exec-mode 'executable)
+  (plantuml-indent-level 2))
+
 (use-package gnuplot
   :if (package-installed-p 'gnuplot)
   :mode ("\\.gp\\'" . gnuplot-mode))
