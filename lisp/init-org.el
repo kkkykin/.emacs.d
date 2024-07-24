@@ -58,20 +58,44 @@ its subdirectories."
          (table (concat table-header table-rows)))
     (insert table)))
 
-(defun my/org-call-babel-at-point (&optional type position confirm)
+(defun my/org-call-babel-at-point (&optional type params position confirm)
+  "Execute the Babel block or call at point in Org mode.
+
+This function executes a Babel source block or a Babel call located at
+point, optionally moving to a specified position before executing.
+
+Optional argument TYPE specifies the type of element to execute. If not
+provided, the function determines the type based on the element at point.
+Supported types are 'src-block', 'inline-src-block', 'babel-call', and
+'inline-babel-call'.
+
+Optional argument PARAMS provides additional parameters to pass to the
+execution function.
+
+Optional argument POSITION, if non-nil, specifies the position to move to
+before executing the Babel block or call.
+
+Optional argument CONFIRM, if non-nil, overrides the value of
+`org-confirm-babel-evaluate', determining whether to ask for confirmation
+before executing the block.
+
+Example usage:
+- Execute a specific Babel call at a given position with confirmation:
+  (my/org-call-babel-at-point 'babel-call '((:var . \"a=\\\"ddd\\\"\"))
+  1234 t)."
   (save-excursion
     (when position (goto-char position))
     (let ((org-confirm-babel-evaluate confirm))
       (pcase type
-        ((or 'src-block 'inline-src-block) (org-babel-execute-src-block))
+        ((or 'src-block 'inline-src-block)
+         (org-babel-execute-src-block nil nil params))
         (_
          (when-let* ((ele (org-element-at-point-no-context))
                      (type (or type (org-element-type ele)))
                      ((memq type '(babel-call inline-babel-call))))
-           ;; do not call `org-babel-lob-execute-maybe',
-           ;; it's always return t, but we need return.
+           ;; ref: `org-babel-lob-execute-maybe'
            (org-babel-execute-src-block
-            nil (org-babel-lob-get-info ele) nil type)))))))
+            nil (org-babel-lob-get-info ele) params type)))))))
 
 (defun my/org-exec-link-or-babel-nearby (&optional arg)
   "Execute a link or Babel block near the point in Org mode.
@@ -138,8 +162,8 @@ In case no link or Babel block is found, a user error is signaled."
                  (org-link-open-from-string link)))
               ((memq type '( inline-babel-call babel-call
                              inline-src-block src-block))
-               (my/org-call-babel-at-point type nil t))
-              (t (user-error "No link or babel found")))))))))))
+               (my/org-call-babel-at-point type nil nil t))
+              (t (user-error "No link or babel found"))))))))))
 
 (defun my/org-babel-expand-src-block ()
   "Expand the Org Babel source block at point.
@@ -183,35 +207,55 @@ and expand it."
 buffer. ref: `org-babel-src-block-names'."
   (with-current-buffer (if file (find-file-noselect file) (current-buffer))
     (org-with-point-at 1
-      (let ((regexp "^[ \t]*#\\+\\(begin_src\\|call:\\) ")
-            (case-fold-search t)
+      (let ((case-fold-search t)
             blocks)
-        (while (re-search-forward regexp nil t)
-          (let ((element (org-element-at-point)))
+        (while (re-search-forward org-babel-src-name-regexp nil t)
+          (let ((element (org-element-at-point-no-context)))
             (when (memq (org-element-type element)
                         '(src-block babel-call))
               (let ((name (org-element-property :name element)))
                 (when name (push (cons name (point)) blocks))))))
         blocks))))
 
-(defun my/org-babel-execute-named-src-block (&optional name)
+(defun my/org-babel-execute-named-src-block (&optional name params)
+  "Execute a named Babel source block or call in the current Org buffer.
+
+This function searches for and executes a named Babel source block or call
+within the current Org buffer. If NAME is provided, it directly executes
+the block or call with the specified NAME. If NAME is not provided, it prompts
+the user to select from available blocks and calls within the buffer.
+
+Optional argument NAME specifies the name of the Babel source block or call
+to execute. If not provided, the function will prompt the user to select a name
+from the available blocks and calls.
+
+Optional argument PARAMS provides additional parameters to pass to the execution
+function. These parameters are merged with a default parameter that sets the
+`:results` property to \"silent\" to suppress output.
+
+Usage:
+- Execute a specific named Babel block: `M-x my/org-babel-execute-named-src-block`
+- Execute a named Babel block with additional parameters:
+  (my/org-babel-execute-named-src-block \"block-name\" '((:lexical . \"yes\")))."
   (interactive nil org-mode)
   (save-excursion
     (save-restriction
       (widen)
-      (if name
+      (if-let ((params (cons '(:results . "silent") params))
+               name)
           (org-with-point-at 1
             (catch 'found
-              (while (re-search-forward "^[ \t]*#\\+\\(begin_src\\|call:\\) " nil t)
-                (when-let* ((element (org-element-at-point))
-                            ((equal name (org-element-property :name element)))
-                            (type (org-element-type element))
-                            ((memq type '(src-block babel-call))))
-                  (throw 'found (my/org-call-babel-at-point type))))))
+              (let ((case-fold-search t))
+                (while (re-search-forward org-babel-src-name-regexp nil t)
+                  (when-let* ((element (org-element-at-point-no-context))
+                              ((equal name (org-element-property :name element)))
+                              (type (org-element-type element))
+                              ((memq type '(src-block babel-call))))
+                    (throw 'found (my/org-call-babel-at-point type params)))))))
         (if-let* ((blocks (my/org-babel-src-and-call-blocks))
                   (name (completing-read "Src: " (mapcar #'car blocks)))
                   (p (alist-get name blocks nil nil 'equal)))
-            (my/org-call-babel-at-point nil p)
+            (my/org-call-babel-at-point nil params p)
           (user-error "No blocks found."))))))
 
 (with-eval-after-load 'ob
