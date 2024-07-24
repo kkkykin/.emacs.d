@@ -180,7 +180,7 @@ and expand it."
                            (expand-file-name out-file))))
              (string-replace
               "\\" "\\\\"
-              (format "%s%s}%s​"
+              (format "%s%s}%s\u200b"
                       (match-string 1 s)
                       (file-relative-name (expand-file-name link)
                                           out-dir)
