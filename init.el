@@ -150,6 +150,7 @@
   ;; ver 30
   (minibuffer-visible-completions t)
   (minibuffer-regexp-mode t)
+  (completions-sort 'historical)
   :hook
   ((emacs-startup . minibuffer-electric-default-mode)
    (emacs-startup . savehist-mode)
@@ -311,6 +312,7 @@
 
 (use-package man
   :custom
+  (Man-support-remote-systems t)
   (Man-switches "-a"))
 
 (use-package info
@@ -455,6 +457,10 @@
   :config
   (modifier-bar-mode))
 
+(use-package imenu
+  :custom
+  (imenu-flatten 'prefix))
+
 (use-package speedbar
   :bind
   ( :map my/global-prefix-map
@@ -505,7 +511,12 @@
 
 (use-package diff
   :custom
+  (diff-refine-nonmodified t)
   (diff-add-log-use-relative-names t))
+
+(use-package grep
+  :custom
+  (grep-use-headings t))
 
 (use-package xref
   :init
@@ -523,7 +534,9 @@
 (use-package etags-regen
   :if (and (package-installed-p 'etags-regen)
            (not my/sys-android-p))
-  :hook emacs-startup)
+  :after project :defer 1
+  :config
+  (etags-regen-mode))
 
 (use-package quickurl)
 
@@ -646,8 +659,16 @@
 
 (use-package project
   :custom
+  (project-mode-line t)
+  (project-files-relative-names t)
   (project-vc-include-untracked nil)
   (project-kill-buffers-display-buffer-list t))
+
+(use-package editorconfig
+  :if (package-installed-p 'editorconfig)
+  :after project :defer 1
+  :config
+  (editorconfig-mode))
 
 (use-package vc
   :custom
@@ -764,6 +785,10 @@
            ("newsticker"
             (name . "^\\*Newsticker"))))))
 
+(use-package buff-menu
+  :custom
+  (Buffer-menu-group-by nil))
+
 (use-package newsticker :defer 5
   :bind
   ( :map newsticker-mode-map
@@ -864,10 +889,7 @@ before calling the original function."
   (tramp-verbose 0)
   (tramp-use-scp-direct-remote-copying t)
   (debug-ignored-errors (cons 'remote-file-error debug-ignored-errors))
-  (tramp-use-connection-share t)
-  (tramp-ssh-controlmaster-options
-   (format "-o ControlPath=%s/ssh-ControlPath-%%r@%%h:%%p -o ControlMaster=auto -o ControlPersist=30m"
-           temporary-file-directory)))
+  (tramp-use-connection-share t))
 
 (use-package sh-script
   :hook (sh-base-mode . (lambda () (setq-local buffer-file-coding-system
@@ -1133,7 +1155,6 @@ before calling the original function."
 
 (use-package gnus
   :hook ((gnus-select-group . gnus-group-set-timestamp)
-         (gnus-group-mode . gnus-topic-mode)
          (gnus-summary-exit . gnus-summary-bubble-group)
          (gnus-before-startup . (lambda ()
                                   (tab-bar-history-back)
