@@ -297,17 +297,29 @@ Usage:
         (org-edit-src-save))
     (org-edit-src-save)))
 
+(defun my/viper-save-buffer (&rest args)
+  "Save buffer in different modes, customized for Viper and Org interactions.
+
+This function provides a unified interface for saving buffers across
+different modes and special buffers in Emacs, particularly when using
+Viper mode and Org mode.
+
+It behaves differently based on the current context:
+1. In `org-src-mode', it calls `my/org-src-save-buffer'.
+2. In the \"*Edit Formulas*\" buffer, it finishes formula editing.
+3. In all other cases, it performs a Viper ex-mode write operation."
+  (interactive "P")
+  (cond
+   (org-src-mode (my/org-src-save-buffer))
+   ((string= (buffer-name) "*Edit Formulas*")
+    (apply #'org-table-fedit-finish args))
+   (t (ex-write nil))))
+
 (with-eval-after-load 'org-src
   (add-to-list 'my/extra-ex-token-alist '("w" (my/viper-save-buffer)))
   (bind-keys
    :map org-src-mode-map
    ("C-x C-s" . my/org-src-save-buffer)))
-
-(defun my/viper-save-buffer (&rest args)
-  "Original `ex-write' not support `org-src-mode', use `save-buffer'
-instead."
-  (interactive "P")
-  (if org-src-mode (my/org-src-save-buffer) (ex-write nil)))
 
 (with-eval-after-load 'viper
   (bind-keys
