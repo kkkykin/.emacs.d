@@ -91,8 +91,7 @@ Example usage:
          (org-babel-execute-src-block nil nil params))
         (_
          (when-let* ((ele (org-element-at-point-no-context))
-                     (type (or type (org-element-type ele)))
-                     ((memq type '(babel-call inline-babel-call))))
+                     (type (org-element-type ele)))
            ;; ref: `org-babel-lob-execute-maybe'
            (org-babel-execute-src-block
             nil (org-babel-lob-get-info ele) params type)))))))
