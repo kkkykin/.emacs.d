@@ -1525,6 +1525,13 @@ before calling the original function."
   (org-mode . (lambda ()
                 (modify-syntax-entry ?< "." org-mode-syntax-table)
                 (modify-syntax-entry ?> "." org-mode-syntax-table)))
+  :bind
+  ( :repeat-map my/org-block-repeat-map
+    ("f" . org-next-block)
+    ("b" . org-previous-block)
+    ("c" . org-fold-hide-block-toggle)
+    :exit
+    ("u" . org-up-element))
   :custom
   (org-read-date-popup-calendar nil)
   ;; (org-replace-disputed-keys t "see `'org-disputed-keys'")
