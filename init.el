@@ -1707,6 +1707,10 @@ before calling the original function."
   ( :map my/global-prefix-map
     ("l" . org-store-link)
     ("L" . org-insert-link-global))
+  ( :repeat-map my/org-link-repeat-map
+    ("n" . org-next-link)
+    ("p" . org-previous-link)
+    ("o" . org-open-at-point))
   :custom
   (org-id-link-to-org-use-id 'create-if-interactive)
   (org-link-use-indirect-buffer-for-internals t)
