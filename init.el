@@ -2046,7 +2046,20 @@ before calling the original function."
   :if (package-installed-p 'ox-pandoc)
   :after org
   :custom
-  (org-pandoc-options-for-latex-pdf '((pdf-engine . "tectonic"))))
+  (org-pandoc-options-for-latex-pdf '((pdf-engine . "tectonic")))
+  :config
+  (let ((ox-pandoc-dir (locate-user-emacs-file "3rd/ox-pandoc"))
+        args)
+    (when-let* ((lua-filter-dir (expand-file-name "lua-filters" ox-pandoc-dir))
+                ((file-readable-p lua-filter-dir))
+                (lua-filters (directory-files lua-filter-dir t "\\.lua$" t))
+                (lua-filter-arg (mapconcat #'identity lua-filters ":")))
+      (push (cons 'lua-filter lua-filter-arg) args))
+    (dolist (arg args)
+      (setq org-pandoc-options
+            (cons arg (assq-delete-all (car arg) org-pandoc-options))))))
+
+;; [[elisp:(custom-reevaluate-setting 'org-pandoc-options)]]
 
 (use-package nov
   :if (package-installed-p 'nov)
