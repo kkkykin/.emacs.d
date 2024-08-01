@@ -71,19 +71,25 @@ NLINES specifies the number of context lines to include around each match
       (let ((default-directory (match-string-no-properties 1))
             (re (cadr (member "-e" (split-string-shell-command
                                     (car compilation-arguments)))))
+            (search-args
+             (cond
+              ((or (< emacs-major-version 30)
+                   (and (boundp 'grep-use-headings) (null grep-use-headings)))
+               '(font-lock-face (compilation-info underline) t))
+              (grep-use-headings '(grep-heading))))
             files cur)
-        (forward-line 3)
-        (if (and (version< "30" emacs-version) grep-use-headings)
-            (while (zerop (forward-line))
-              (when (memq 'grep-heading (text-properties-at (point)))
-                (push (buffer-substring-no-properties (pos-bol) (pos-eol))
-                      files)))
-          (while (re-search-forward "^[^\x0]+" nil t)
-            (when-let* ((file (match-string-no-properties 0))
-                        ((not (equal cur file)))
-                        ((file-readable-p file)))
-              (setq cur base)
-              (push base files))))
+        (while-let ((match (apply #'text-property-search-forward search-args))
+                    (text (buffer-substring-no-properties
+                           (prop-match-beginning match)
+                           (prop-match-end match))))
+          (if (equal '(font-lock-face (compilation-info underline) t) search-args)
+              (when (not (equal cur text))
+                (setq cur text)
+                (push text files))
+            (push text files)))
+        (when (equal '(font-lock-face (compilation-info underline) t) search-args)
+          ;; remove "Grep finished with .."
+          (setq files (cdr files)))
         (occur-1 (read-regexp "Re: " re) nlines
                  (mapcar (lambda (file)
                            (or (get-file-buffer file)
