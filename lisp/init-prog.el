@@ -71,25 +71,24 @@ NLINES specifies the number of context lines to include around each match
       (let ((default-directory (match-string-no-properties 1))
             (re (cadr (member "-e" (split-string-shell-command
                                     (car compilation-arguments)))))
-            (search-args
+            (match-face
              (cond
               ((or (< emacs-major-version 30)
                    (and (boundp 'grep-use-headings) (null grep-use-headings)))
-               '(font-lock-face (compilation-info underline) t))
-              (grep-use-headings '(grep-heading))))
+               (cons grep-hit-face '(underline)))
+              (grep-use-headings 'grep-heading)))
             files cur)
-        (while-let ((match (apply #'text-property-search-forward search-args))
+        (while-let ((match (text-property-search-forward
+                            'font-lock-face match-face t))
                     (text (buffer-substring-no-properties
                            (prop-match-beginning match)
-                           (prop-match-end match))))
-          (if (equal '(font-lock-face (compilation-info underline) t) search-args)
-              (when (not (equal cur text))
-                (setq cur text)
-                (push text files))
-            (push text files)))
-        (when (equal '(font-lock-face (compilation-info underline) t) search-args)
-          ;; remove "Grep finished with .."
-          (setq files (cdr files)))
+                           (prop-match-end match)))
+                    ((not (string-prefix-p "Grep finished with " text))))
+          (if (equal 'grep-heading match-face)
+              (push text files)
+            (when (not (equal cur text))
+              (setq cur text)
+              (push text files))))
         (occur-1 (read-regexp "Re: " re) nlines
                  (mapcar (lambda (file)
                            (or (get-file-buffer file)
