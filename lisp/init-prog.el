@@ -52,54 +52,74 @@
 
 ;; occur
 
-(defun mp/grep-switch-to-occur (&optional nlines)
-  "Switch from a `grep-mode' buffer to an `occur-mode' buffer.
-
-This function extracts the search pattern and the list of files from the
-current `grep-mode' buffer, then uses these to populate a new `occur-mode'
-buffer. The new buffer will contain occurrences of the search pattern in
-the specified files.
-
-NLINES specifies the number of context lines to include around each match
-(default is the prefix argument)."
-  (interactive "p" grep-mode)
+(defun mp/grep-files ()
+  "Extract grep files from current buffer."
   (save-excursion
     (save-restriction
       (widen)
       (goto-char (point-min))
-      (re-search-forward "default-directory: \"\\(.+\\)\"" (pos-eol))
-      (let ((default-directory (match-string-no-properties 1))
-            (re (cadr (member "-e" (split-string-shell-command
-                                    (car compilation-arguments)))))
-            (match-face
-             (cond
-              ((or (< emacs-major-version 30)
-                   (and (boundp 'grep-use-headings) (null grep-use-headings)))
-               (cons grep-hit-face '(underline)))
-              (grep-use-headings 'grep-heading)))
-            files cur)
-        (while-let ((match (text-property-search-forward
-                            'font-lock-face match-face t))
-                    (text (buffer-substring-no-properties
-                           (prop-match-beginning match)
-                           (prop-match-end match)))
-                    ((not (string-prefix-p "Grep finished with " text))))
-          (if (equal 'grep-heading match-face)
-              (push text files)
-            (when (not (equal cur text))
-              (setq cur text)
-              (push text files))))
-        (occur-1 (read-regexp "Re: " re) nlines
-                 (mapcar (lambda (file)
-                           (or (get-file-buffer file)
-                               (find-file-noselect file t)))
-                         files)
-                 "*grep-to-occur*")))))
+      (when (re-search-forward "default-directory: \"\\(.+\\)\"" (pos-eol) t)
+        (let ((default-directory (match-string-no-properties 1))
+              (match-face
+               (if (and (>= emacs-major-version 30)
+                        (bound-and-true-p grep-use-headings))
+                   'grep-heading
+                 (cons grep-hit-face '(underline))))
+              files)
+          (while-let ((match (text-property-search-forward
+                              'font-lock-face match-face t))
+                      (text (buffer-substring-no-properties
+                             (prop-match-beginning match)
+                             (prop-match-end match)))
+                      ((not (string-prefix-p "Grep finished with " text))))
+            (push text files))
+          (mapcar #'expand-file-name (delete-dups files)))))))
+
+(defun mp/xref-files ()
+  "Extract xref files from current buffer."
+  (save-excursion
+    (save-restriction
+      (widen)
+      (goto-char (point-min))
+      (let (files)
+        (push (buffer-substring-no-properties (point) (pos-eol)) files)
+        (while (xref--search-property 'xref-group)
+          (push (buffer-substring-no-properties (point) (pos-eol)) files))
+        (mapcar #'expand-file-name files)))))
+
+(defun mp/switch-to-occur (&optional nlines)
+  "Switch to occur buffer for grep or xref results.
+NLINES is the number of context lines to show."
+  (interactive "P" grep-mode xref--xref-buffer-mode)
+  (when-let* ((files (pcase major-mode
+                      ('grep-mode (mp/grep-files))
+                      ('xref--xref-buffer-mode (mp/xref-files))))
+              ((consp files))
+              (re
+               (pcase major-mode
+                 ('grep-mode
+                  (cadr (member "-e" (split-string-shell-command
+                                      (car compilation-arguments)))))
+                 ('xref--xref-buffer-mode
+                  (car-safe (aref (aref xref--fetcher 2) 0)))
+                 (_ 'regexp-history-last)))
+              (regexp (read-regexp "Regexp" re))
+              (nlines (if (natnump nlines) nlines 0))
+              (buffers (mapcar (lambda (file)
+                                 (or (get-file-buffer file)
+                                     (find-file-noselect file t)))
+                               files)))
+    (occur-1 regexp nlines buffers "*switch-to-occur*")))
 
 (with-eval-after-load 'grep
   (bind-keys
    :map grep-mode-map
-   ("C-c C-o" . mp/grep-switch-to-occur)))
+   ("C-c C-o" . mp/switch-to-occur)))
+
+(with-eval-after-load 'xref
+  (bind-keys
+   :map xref--xref-buffer-mode-map
+   ("C-c C-o" . mp/switch-to-occur)))
 
 
 ;; xref
