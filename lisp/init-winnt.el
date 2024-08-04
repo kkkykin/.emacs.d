@@ -219,6 +219,8 @@ Eshell."
         ("pandoc" utf-8 . ,locale-coding-system)
         ("make" utf-8 . ,locale-coding-system)
         ("mpv" utf-8 . ,locale-coding-system)
+        ("mupdf" utf-8 . ,locale-coding-system)
+        ("mutool" utf-8 . ,locale-coding-system)
         ("sha256sum" utf-8 . ,locale-coding-system))
       file-name-coding-system locale-coding-system
       shr-use-fonts nil)
