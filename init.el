@@ -872,6 +872,9 @@ before calling the original function."
                    ("Bing" .
                     [simple-query "https://www.bing.com"
                                   "https://www.bing.com/search?q=" ""])
+                   ("Bili" .
+                    [simple-query "https://www.bilibili.com"
+                                  "https://search.bilibili.com/all?keyword=" ""])
                    ("NixPackage" .
                     [simple-query "https://search.nixos.org/packages"
                                   "https://search.nixos.org/packages?from=0&size=50&sort=relevance&type=packages&query=" ""])
