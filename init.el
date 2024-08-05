@@ -850,38 +850,42 @@ before calling the original function."
   (shr-blocked-images (concat "^https?://" (rx (| "www.baidu.com"))))
   :hook ((eww-bookmark-mode . (lambda () (setq-local goal-column (1+ (/ (window-width) 2)))))))
 
-(use-package browse-url
-  :hook ((text-mode . goto-address-mode)
-         (prog-mode . goto-address-prog-mode))
+(use-package webjump
   :bind
   ( :map my/global-prefix-map
     ("/" . webjump))
-  :custom
-  (browse-url-handlers '(("\\`file:" . browse-url-default-browser)))
   :config
-  (with-eval-after-load 'webjump
-    (dolist (web '(("Mojeek" .
-                    [simple-query "https://www.mojeek.com"
-                                  "https://www.mojeek.com/search?newtab=1&cdate=1&qss=Brave,DuckDuckGo,Google,Metager,Swisscows,Yandex,Yep&date=1&sst=1&arc=none&q=" ""])
-                   ("Yandex" .
-                    [simple-query "https://yandex.com"
-                                  "https://yandex.com/search/?text=" ""])
-                   ("Swisscows" .
-                    [simple-query "https://swisscows.com/"
-                                  "https://swisscows.com/en/web?query=" ""])
-                   ("Bing" .
-                    [simple-query "https://www.bing.com"
-                                  "https://www.bing.com/search?q=" ""])
-                   ("Bili" .
-                    [simple-query "https://www.bilibili.com"
-                                  "https://search.bilibili.com/all?keyword=" ""])
-                   ("NixPackage" .
-                    [simple-query "https://search.nixos.org/packages"
-                                  "https://search.nixos.org/packages?from=0&size=50&sort=relevance&type=packages&query=" ""])
-                   ("NixOption" .
-                    [simple-query "https://search.nixos.org/options"
-                                  "https://search.nixos.org/options?from=0&size=50&sort=relevance&type=packages&query=" ""])))
-      (add-to-list 'webjump-sites web))))
+  (dolist (web '(("Mojeek" .
+                  [simple-query "https://www.mojeek.com"
+                                "https://www.mojeek.com/search?newtab=1&cdate=1&qss=Brave,DuckDuckGo,Google,Metager,Swisscows,Yandex,Yep&date=1&sst=1&arc=none&q=" ""])
+                 ("Yandex" .
+                  [simple-query "https://yandex.com"
+                                "https://yandex.com/search/?text=" ""])
+                 ("Swisscows" .
+                  [simple-query "https://swisscows.com/"
+                                "https://swisscows.com/en/web?query=" ""])
+                 ("Bing" .
+                  [simple-query "https://www.bing.com"
+                                "https://www.bing.com/search?q=" ""])
+                 ("Bili" .
+                  [simple-query "https://www.bilibili.com"
+                                "https://search.bilibili.com/all?keyword=" ""])
+                 ("NixHome" .
+                  [simple-query "https://home-manager-options.extranix.com"
+                                "https://home-manager-options.extranix.com/?query=" ""])
+                 ("NixPackage" .
+                  [simple-query "https://search.nixos.org/packages"
+                                "https://search.nixos.org/packages?from=0&size=50&sort=relevance&type=packages&query=" ""])
+                 ("NixOption" .
+                  [simple-query "https://search.nixos.org/options"
+                                "https://search.nixos.org/options?from=0&size=50&sort=relevance&type=packages&query=" ""])))
+    (add-to-list 'webjump-sites web)))
+
+(use-package browse-url
+  :hook ((text-mode . goto-address-mode)
+         (prog-mode . goto-address-prog-mode))
+  :custom
+  (browse-url-handlers '(("\\`file:" . browse-url-default-browser))))
 
 (use-package tramp
   :bind
