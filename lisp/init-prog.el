@@ -273,13 +273,12 @@ with `universal argument', select all records."
 
 (tempo-define-template
  "mp/sql-create-procedure"
- '(%""n
-    "DROP PROCEDURE IF EXISTS " (P "Procedure name: " procedure) ";"n
+ '(%"DROP PROCEDURE IF EXISTS " (P "Procedure name: " procedure) ";"n
     "DELIMITER //"n
     "CREATE PROCEDURE " (s procedure) "("
     (let ((output '(l)))
       (while-let ((dir (completing-read "Direction: " '("IN" "OUT" "INOUT")))
-                  (emptyp (not (string= dir ""))))
+                  ((not (string-empty-p dir))))
         (setq output
               (append output
                       (list dir " " (read-no-blanks-input "Variable name: ") " "
@@ -287,7 +286,7 @@ with `universal argument', select all records."
       (if (equal output '(l))
           ", "
         output))
-    (delete-char -2) ")"n"COMMENT \""p"\""n
+    (delete-char -2) ")"n"COMMENT '"p"'"n
     "BEGIN"n n p n n"END//"n"DELIMITER ;"n)
  nil
  "Drop procedure if exists then create it.")
