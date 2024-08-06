@@ -62,6 +62,7 @@
   (async-shell-command-buffer 'rename-buffer)
   (async-shell-command-display-buffer nil)
   (shell-command-default-error-buffer "*Shell Command Error*")
+  (mail-user-agent 'gnus-user-agent)
   ;; (mouse-1-click-follows-link -450 "click set point, long press do action")
 
   ;; long line performance https://emacs-china.org/t/topic/25811/9
