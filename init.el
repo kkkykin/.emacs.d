@@ -1925,7 +1925,7 @@ before calling the original function."
   ;; (denote-silo-extras-directories)
   :hook
   ((dired-mode . denote-dired-mode)
-   (find-file . denote-link-buttonize-buffer))
+   (find-file . denote-fontify-links-mode-maybe))
   :config
   (setq denote-directory (expand-file-name "~/org/"))
   (unless (file-exists-p denote-directory)
