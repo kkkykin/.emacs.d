@@ -1636,8 +1636,9 @@ before calling the original function."
   (org-clock-in-resume t)
   (org-timer-default-timer 5)
   (org-clock-clocked-in-display 'frame-title)
+  :init
+  (put 'org-timer-default-timer 'safe-local-variable #'natnump)
   :config
-  (put 'org-timer-default-timer 'safe-local-variable 'numberp)
   (org-clock-persistence-insinuate))
 
 (use-package org-list
