@@ -1827,7 +1827,10 @@ before calling the original function."
 
 (use-package nix-ts-mode
   :if (package-installed-p 'nix-ts-mode)
-  :mode "\\.nix\\'")
+  :mode "\\.nix\\'"
+  :config
+  (with-eval-after-load 'org-src
+    (add-to-list 'org-src-lang-modes '("nix" . nix-ts))))
 
 (use-package html-ts-mode
   :if (package-installed-p 'html-ts-mode)
