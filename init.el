@@ -1593,7 +1593,6 @@ before calling the original function."
       (R . nil)
       (awk . t)
       (calc . t)
-      (comint . t)
       (ditaa . nil)
       (dot . nil)
       (emacs-lisp . t)
