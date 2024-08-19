@@ -1831,6 +1831,13 @@ before calling the original function."
 (use-package htmlize
   :if (package-installed-p 'htmlize))
 
+(use-package ahk-mode
+  :if (package-installed-p 'ahk-mode)
+  :mode "\\.ahk\\'"
+  :vc (:url "https://github.com/tu10ng/ahk-mode" :rev :newest)
+  :custom
+  (ahk-indent-offset 2))
+
 (use-package lua-ts-mode
   :mode "\\.lua\\'")
 
