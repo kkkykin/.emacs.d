@@ -48,6 +48,7 @@
   (global-prettify-symbols-mode t)
   (prettify-symbols-unprettify-at-point t)
   (use-short-answers t)
+  (y-or-n-p-use-read-key t)
   (word-wrap-by-category t)
   (custom-file (expand-file-name "custom.el" user-emacs-directory))
   (what-cursor-show-names t)
@@ -191,21 +192,20 @@
          (( change-log-mode edebug-mode org-mode org-capture-mode log-edit-mode)
           . viper-change-state-to-insert))
   :bind
+  ( :map viper-insert-basic-map
+    ("C-t" . nil)
+    ("C-d" . nil)
+    ("C-v" . nil)
+    ("C-w" . nil)
+    ("C-\\" . nil))
   ( :map viper-insert-global-user-map
     ("<backspace>" . viper-exec-key-in-emacs)
-    ("RET" . viper-exec-key-in-emacs)
-    ("C-t" . viper-exec-key-in-emacs)
-    ("C-d" . viper-exec-key-in-emacs)
-    ("C-w" . (lambda (&rest args)
-               (interactive "P")
-               (apply (if (use-region-p)
-                          #'viper-exec-key-in-emacs
-                        #'viper-delete-backward-word)
-                      args)))
-    ("C-v" . viper-exec-key-in-emacs))
+    ("RET" . viper-exec-key-in-emacs))
+  ( :map viper-vi-basic-map
+    ("C-u" . nil)
+    ("C-v" . nil)
+    ("C-\\" . nil))
   ( :map viper-vi-global-user-map
-    ("C-u" . viper-exec-key-in-emacs)
-    ("C-v" . viper-exec-key-in-emacs)
     :prefix "C-w"
     :prefix-map my/viper-cw-prefix-map
     ("h" . windmove-left)
@@ -262,9 +262,14 @@
                          #'viper-exec-key-in-emacs #'viper-ex)
                      args)))))
   (define-advice viper-ex (:around (orig-fun &rest args) more-token)
-    "More ex-token."
-    (let ((ex-token-alist (append my/extra-ex-token-alist ex-token-alist)))
-      (apply orig-fun args)))
+    "More ex-token, and `display-line-number-mode'."
+    (require 'display-line-numbers)
+    (display-line-numbers--turn-on)
+    (let ((ex-token-alist (append my/extra-ex-token-alist ex-token-alist))
+          (buf (current-buffer)))
+      (apply orig-fun args)
+      (with-current-buffer buf
+        (display-line-numbers-mode -1))))
   (put 'viper-setup-master-buffer 'safe-local-eval-function t)
   (put 'viper-mode-string 'risky-local-variable t)
   (add-face-text-property 0 (length viper-emacs-state-id) '(:inverse-video t) nil viper-emacs-state-id)
@@ -374,8 +379,7 @@
 (use-package display-line-numbers
   :unless my/sys-android-p
   :custom
-  (display-line-numbers-type 'relative)
-  :hook (prog-mode text-mode))
+  (display-line-numbers-type 'relative))
 
 (use-package subword
   :unless my/sys-android-p
@@ -1088,6 +1092,12 @@ before calling the original function."
 (use-package flyspell
   :hook ((text-mode comint-mode eshell-mode)
          (prog-mode . flyspell-prog-mode))
+  :bind
+  ( :map flyspell-mode-map
+    ("C-." . nil)
+    ("C-," . nil)
+    ("C-'" . flyspell-auto-correct-word)
+    ("C-\\" . flyspell-goto-next-error))
   :custom
   (flyspell-mode-line-string nil)
   (flyspell-use-meta-tab nil)
@@ -1865,18 +1875,55 @@ before calling the original function."
 
 ;; https://karthinks.com/software/avy-can-do-anything/
 (use-package avy
-  :if (package-installed-p 'avy))
+  :if (package-installed-p 'avy)
+  :bind
+  (("M-g M-g" . avy-goto-line)
+   ("C-," . avy-goto-char-timer))
+  ( :map isearch-mode-map
+    ("M-j" . avy-isearch))
+  ( :map my/global-prefix-map
+    ("?" . avy-resume))
+  :config
+  (defun avy-action-embark (pt)
+    (unwind-protect
+        (save-excursion
+          (goto-char pt)
+          (embark-act))
+      (select-window
+       (cdr (ring-ref avy-ring 0))))
+    t)
+  (setf (alist-get ?. avy-dispatch-alist) 'avy-action-embark))
 
-(use-package marginalia
-  :if (package-installed-p 'marginlia)
-  :bind (:map minibuffer-local-map
-              ("M-A" . marginalia-cycle))
-  :init
+(use-package marginalia :after embark :defer 0
+  :if (package-installed-p 'marginalia)
+  :bind
+  ( :map minibuffer-local-map
+    ("M-A" . marginalia-cycle))
+  :config
   (marginalia-mode))
 
 ;; https://karthinks.com/software/fifteen-ways-to-use-embark/
-(use-package embark
-  :if (package-installed-p 'embark))
+(use-package embark :after minibuffer :defer 1
+  :if (package-installed-p 'embark)
+  :bind
+  (("C-." . embark-act)
+   ("M-." . embark-dwim)
+   ("C-h B" . embark-bindings))
+  ( :map icomplete-fido-mode-map
+    ("C-." . nil)
+    :map icomplete-minibuffer-map
+    ("C-." . nil))
+  :custom
+  (embark-quit-after-action nil)
+  :config
+  (setq prefix-help-command #'embark-prefix-help-command)
+  (add-hook 'eldoc-documentation-functions #'embark-eldoc-first-target)
+  (when-let (mixed (memq 'embark-mixed-indicator embark-indicators))
+    (setcar mixed 'embark-minimal-indicator))
+  (add-to-list 'display-buffer-alist
+               '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
+                 nil
+                 (window-parameters (mode-line-format . none)))))
 
 (use-package denote
   :if (package-installed-p 'denote)
