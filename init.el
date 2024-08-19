@@ -413,7 +413,7 @@
 
 ;; https://github.com/VernonGrant/discovering-emacs/blob/main/show-notes/4-using-whitespace-mode.md
 (use-package whitespace
-  :hook (emacs-startup . global-whitespace-mode)
+  ;; :hook (emacs-startup . global-whitespace-mode)
   :diminish
   :custom
   (whitespace-style
