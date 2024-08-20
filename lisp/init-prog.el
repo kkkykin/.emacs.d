@@ -293,40 +293,28 @@ with `universal argument', select all records."
 
 (tempo-define-template
  "mp/sql-create-function"
- '(%""n
-    "DROP FUNCTION IF EXISTS " (P "Function name: " function) ";"n
+ '(%"DROP FUNCTION IF EXISTS " (P "Function name: " function) ";"n
     "DELIMITER //"n
     "CREATE FUNCTION " (s function) "("
     (let ((output '(l)))
       (while-let ((name (read-no-blanks-input "Variable name: "))
-                  (emptyp (not (string= name ""))))
-        (setq output
-              (append output
-                      (list name " "
-                            (upcase (read-no-blanks-input "Data type: "))
-                            ", "))))
-      (if (equal output '(l))
-          ", "
-        output))
+                  ((not (string-empty-p name)))
+                  (type (upcase (read-no-blanks-input "Data type: "))))
+        (setq output `(,@output ,(format "%s %s, " name type))))
+      (if (equal output '(l)) ", " output))
     (delete-char -2) ") RETURNS "
-    (let* ((return-var (read-no-blanks-input "Retunrs Variable: "
-                                             "data_output"))
+    (let* ((return-var (read-no-blanks-input "Retunrs Variable: " "_output"))
            (return-type (upcase (read-no-blanks-input "Retunrs Type: ")))
            (return-default (read-string "Returns Default Value: "))
-           (output `(l ,return-type n "COMMENT \"" p "\"" n)))
-      (while-let ((act (completing-read "Action: "
-                                        '("READS SQL DATA"
-                                          "MODIFIES SQL DATA"
-                                          "NO SQL")))
-                  (emptyp (not (string= act ""))))
-        (setq output
-              (append output
-                      `( ,act n "BEGIN" n "DECLARE " ,return-var
-                         " " ,return-type
-                         ,@(unless (string= "" return-default)
-                             (list " DEFAULT " return-default))
-                         ";" n n p n n "RETURN " ,return-var ";"))))
-      output)
+           (actions '("READS SQL DATA" "MODIFIES SQL DATA" "NO SQL"))
+           (output `(l ,return-type n "COMMENT '" p "'" n)))
+      (while-let ((act (completing-read "Action: " actions))
+                  ((not (string-empty-p act))))
+        (setq output `(,@output ,act n)))
+      `( ,@output "BEGIN" n "DECLARE " ,return-var " " ,return-type
+         ,@(unless (string-empty-p return-default)
+             (list " DEFAULT " return-default))
+         ";" n n p n n "RETURN " ,return-var ";"))
     n"END//"n"DELIMITER ;"n))
 
 (tempo-define-template
