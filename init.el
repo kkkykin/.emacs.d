@@ -435,7 +435,7 @@
          dired-mode
          occur-mode))
   (whitespace-action '(cleanup auto-cleanup))
-  :config
+  :init
   (put 'whitespace-action 'safe-local-variable 'null))
 
 (use-package files
