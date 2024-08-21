@@ -1096,6 +1096,7 @@ before calling the original function."
   ( :map flyspell-mode-map
     ("C-." . nil)
     ("C-," . nil)
+    ("C-c $" . nil)
     ("C-'" . flyspell-auto-correct-word)
     ("C-\\" . flyspell-goto-next-error))
   :custom
@@ -1544,6 +1545,12 @@ before calling the original function."
                 (modify-syntax-entry ?< "." org-mode-syntax-table)
                 (modify-syntax-entry ?> "." org-mode-syntax-table)))
   :bind
+  ( :map org-mode-map
+    ("C-," . nil)
+    ("C-'" . nil)
+    ("C-c $" . org-cycle-agenda-files))
+  ( :repeat-map my/org-cycle-repeat-map
+    ("$" . org-cycle-agenda-files))
   ( :repeat-map my/org-block-repeat-map
     ("f" . org-next-block)
     ("b" . org-previous-block)
