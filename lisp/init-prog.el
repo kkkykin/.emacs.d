@@ -306,7 +306,7 @@ with `universal argument', select all records."
     (let* ((return-var (read-no-blanks-input "Retunrs Variable: " "_output"))
            (return-type (upcase (read-no-blanks-input "Retunrs Type: ")))
            (return-default (read-string "Returns Default Value: "))
-           (actions '("READS SQL DATA" "MODIFIES SQL DATA" "NO SQL"))
+           (actions '("READS SQL DATA" "DETERMINISTIC" "NO SQL"))
            (output `(l ,return-type n "COMMENT '" p "'" n)))
       (while-let ((act (completing-read "Action: " actions))
                   ((not (string-empty-p act))))
