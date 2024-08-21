@@ -1102,6 +1102,7 @@ before calling the original function."
   :custom
   (flyspell-mode-line-string nil)
   (flyspell-use-meta-tab nil)
+  (flyspell-issue-message-flag nil)
   (ispell-personal-dictionary (expand-file-name "dict.txt" user-emacs-directory)))
 
 (use-package calendar
