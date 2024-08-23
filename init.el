@@ -935,6 +935,15 @@ before calling the original function."
   :custom
   (sql-input-ring-file-name (locate-user-emacs-file "sql-history.eld")))
 
+(use-package js
+  :custom
+  (js-indent-level 2)
+  :init
+  (with-eval-after-load 'autoinsert
+    (add-to-list 'auto-insert-alist
+                 '(("\\.js\\'" . "strict mode")
+                   nil "\"use strict\"" n "(() => {" n > _ 10 "})();"))))
+
 (use-package dired
   :custom
   (dired-movement-style 'cycle)
