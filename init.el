@@ -664,6 +664,7 @@
 
 (use-package project
   :custom
+  (project-vc-extra-root-markers '())
   (project-mode-line t)
   (project-files-relative-names t)
   (project-vc-include-untracked nil)
@@ -902,6 +903,11 @@ before calling the original function."
   (tramp-use-scp-direct-remote-copying t)
   (debug-ignored-errors (cons 'remote-file-error debug-ignored-errors))
   (tramp-use-connection-share t))
+
+(use-package cc-mode
+  :config
+  (define-abbrev-table 'c++-mode-abbrev-table
+    '(("mun" "[[maybe_unused]]"))))
 
 (use-package sh-script
   :hook (sh-base-mode . (lambda () (setq-local buffer-file-coding-system
@@ -1529,6 +1535,7 @@ before calling the original function."
           (python "https://github.com/tree-sitter/tree-sitter-python")
           (lua "https://github.com/MunifTanjim/tree-sitter-lua")
           (sql "https://github.com/DerekStride/tree-sitter-sql" "gh-pages")
+          (gdscript "https://github.com/PrestonKnopp/tree-sitter-gdscript")
           ;; ini
           (dockerfile "https://github.com/camdencheek/tree-sitter-dockerfile")
           (nix "https://github.com/nix-community/tree-sitter-nix")
@@ -1865,12 +1872,28 @@ before calling the original function."
   (with-eval-after-load 'org-src
     (add-to-list 'org-src-lang-modes '("nix" . nix-ts))))
 
-(use-package html-ts-mode
-  :if (package-installed-p 'html-ts-mode)
-  :mode "\\.html\\'"
-  :vc (:url "https://github.com/mickeynp/html-ts-mode")
+(use-package gdscript-mode
+  :if (package-installed-p 'gdscript-mode)
+  :custom
+  (gdscript-debug-port 6006)
+  (gdscript-use-tab-indents t)
+  (gdscript-indent-offset 2)
+  (gdscript-gdformat-save-and-format t)
   :config
-  (add-to-list 'major-mode-remap-alist '(mhtml-mode . html-ts-mode)))
+  (when (treesit-language-available-p 'gdscript)
+    (with-eval-after-load 'eglot
+      (setq eglot-server-programs
+            (cons '((gdscript-mode gdscript-ts-mode) "127.0.0.1" 6005)
+                  (assq-delete-all 'gdscript-mode eglot-server-programs))))
+    (add-to-list 'major-mode-remap-alist
+                 '(gdscript-mode . gdscript-ts-mode))))
+
+(use-package dape
+  :if (package-installed-p 'dape)
+  :custom
+  (dape-buffer-window-arrangement 'gud)
+  :config
+  (add-hook 'dape-compile-hook 'kill-buffer))
 
 (use-package combobulate
   :if (package-installed-p 'combobulate)
@@ -2271,5 +2294,19 @@ before calling the original function."
     ("r" . el-search-pattern-backward))
   :config
   (el-search-install-shift-bindings))
+
+(use-package atomic-chrome
+  :if (package-installed-p 'atomic-chrome)
+  :vc (:url "https://github.com/KarimAziev/atomic-chrome" :rev :newest)
+  :hook
+  (atomic-chrome-edit-done #'iconify-frame)
+  :custom
+  (atomic-chrome-buffer-open-style 'full)
+  (atomic-chrome-max-filename-size 120)
+  (atomic-chrome-url-major-mode-alist
+   '(("\\`https://www\\.freecodecamp\\.org/learn/javascript" . js-ts-mode)))
+  :config
+  (add-hook 'atomic-chrome-edit-mode-hook
+            (lambda () (when viper-mode (viper-mode))) 1))
 
 ;;; init.el ends here
