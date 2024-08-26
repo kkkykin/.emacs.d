@@ -1877,7 +1877,8 @@ before calling the original function."
   :custom
   (gdscript-debug-port 6006)
   (gdscript-use-tab-indents t)
-  (gdscript-indent-offset 2)
+  (gdscript-indent-offset 4)
+  (gdscript-godot-executable "godot-mono")
   (gdscript-gdformat-save-and-format t)
   :config
   (when (treesit-language-available-p 'gdscript)
