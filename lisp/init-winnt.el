@@ -247,6 +247,17 @@ Eshell."
         (setcar args (list vc-git-program (elt cmd 2) "-h"))))
     args))
 
+
+;; jsonrpc
+(with-eval-after-load 'gdscript-mode
+  (with-eval-after-load 'eglot
+    (define-advice jsonrpc--process-filter (:filter-args (args) fix-newline)
+      "gdscript eglot."
+      (when (string-match-p "\\` \\*EGLOT (.+/.*gdscript-.+) output\\*\\'"
+                            (buffer-name (process-buffer (car args))))
+        (setcdr args (list (string-replace "\n\n" "\r\n\r\n" (cadr args)))))
+      args)))
+
 (provide 'init-winnt)
 ;;; init-winnt.el ends here
 
