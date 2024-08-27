@@ -434,7 +434,7 @@
          ibuffer-mode
          dired-mode
          occur-mode))
-  (whitespace-action '(cleanup auto-cleanup))
+  (whitespace-action '(report-on-bogus))
   :init
   (put 'whitespace-action 'safe-local-variable 'null))
 
