@@ -77,7 +77,7 @@
   (defun my/defer-gc ()
     (setq gc-cons-threshold most-positive-fixnum))
   (defun my/do-restore-gc ()
-    (setq gc-cons-threshold 16777216))
+    (setq gc-cons-threshold 80000000))
   (defun my/restore-gc ()
     (run-at-time 1 nil #'my/do-restore-gc))
   (put 'buffer-file-coding-system 'safe-local-variable 'symbolp)
