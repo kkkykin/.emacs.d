@@ -27,6 +27,7 @@
     :prefix-map my/global-prefix-map
     ("s" . scratch-buffer))
   :custom
+  (read-process-output-max (* 1024 1024))
   (inhibit-splash-screen t)
   (indicate-buffer-boundaries 'left)
   (initial-major-mode 'fundamental-mode)
