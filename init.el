@@ -27,6 +27,7 @@
     :prefix-map my/global-prefix-map
     ("s" . scratch-buffer))
   :custom
+  (read-process-output-max (* 1024 1024))
   (inhibit-splash-screen t)
   (indicate-buffer-boundaries 'left)
   (initial-major-mode 'fundamental-mode)
@@ -76,7 +77,7 @@
   (defun my/defer-gc ()
     (setq gc-cons-threshold most-positive-fixnum))
   (defun my/do-restore-gc ()
-    (setq gc-cons-threshold 16777216))
+    (setq gc-cons-threshold 80000000))
   (defun my/restore-gc ()
     (run-at-time 1 nil #'my/do-restore-gc))
   (put 'buffer-file-coding-system 'safe-local-variable 'symbolp)
@@ -282,6 +283,8 @@
              (inferior-python-mode insert-state viper-comint-mode-modifier-map)
              (inferior-python-mode vi-state viper-comint-mode-modifier-map))
            viper-major-mode-modifier-list))
+  ;; check `viper-set-state-in-major-mode'
+  ;; vi => emacs => insert => emacs
   (setq viper-insert-state-mode-list
         (append viper-insert-state-mode-list
                 '( apropos-mode log-view-mode vc-dir-mode)
@@ -1340,7 +1343,7 @@ before calling the original function."
   :custom
   (even-window-sizes nil)
   (fit-window-to-buffer-horizontally t)
-  (window-sides-slots '(0 1 1 0))
+  (window-sides-slots '(0 2 1 2))
   (switch-to-buffer-in-dedicated-window 'pop)
   (display-buffer-alist
    `(("^\\*eldoc for"
@@ -1471,6 +1474,11 @@ before calling the original function."
   :config
   (add-hook 'compilation-filter-hook #'ansi-color-compilation-filter)
   (add-hook 'compilation-filter-hook #'ansi-osc-compilation-filter))
+
+(use-package gdb-mi
+  :custom
+  (gdb-many-windows t)
+  (gdb-show-main t))
 
 (use-package outline
   :custom

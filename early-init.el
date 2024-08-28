@@ -29,7 +29,7 @@
 (defvar my/file-name-handler-alist-cache file-name-handler-alist)
 (setq file-name-handler-alist nil)
 (defun my/restore-post-init-settings ()
-  (setq gc-cons-threshold 16777216 ; 16mb
+  (setq gc-cons-threshold 80000000
         gc-cons-percentage 0.1)
   (setq file-name-handler-alist my/file-name-handler-alist-cache))
 (add-hook 'emacs-startup-hook #'my/restore-post-init-settings)
