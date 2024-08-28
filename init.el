@@ -283,6 +283,8 @@
              (inferior-python-mode insert-state viper-comint-mode-modifier-map)
              (inferior-python-mode vi-state viper-comint-mode-modifier-map))
            viper-major-mode-modifier-list))
+  ;; check `viper-set-state-in-major-mode'
+  ;; vi => emacs => insert => emacs
   (setq viper-insert-state-mode-list
         (append viper-insert-state-mode-list
                 '( apropos-mode log-view-mode vc-dir-mode)
