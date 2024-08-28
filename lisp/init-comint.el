@@ -55,10 +55,11 @@
 
 (defun my/comint-save-history ()
   "Let all comint-mode save `input-ring' history cross session."
-  (let* ((proc (get-buffer-process (current-buffer)))
-         (program (file-name-base (car (process-command proc)))))
+  (when-let* ((proc (get-buffer-process (current-buffer)))
+              (program (car (process-command proc)))
+              (base (file-name-base program)))
     (setq-local comint-input-ring-file-name
-                (expand-file-name program my/comint-dir))
+                (expand-file-name base my/comint-dir))
     (comint-read-input-ring t)
     (add-function :after (process-sentinel proc)
                   #'my/advice-comint-save-history-sentinel)))
