@@ -1341,7 +1341,7 @@ before calling the original function."
   :custom
   (even-window-sizes nil)
   (fit-window-to-buffer-horizontally t)
-  (window-sides-slots '(0 1 1 0))
+  (window-sides-slots '(0 2 1 2))
   (switch-to-buffer-in-dedicated-window 'pop)
   (display-buffer-alist
    `(("^\\*eldoc for"
@@ -1472,6 +1472,11 @@ before calling the original function."
   :config
   (add-hook 'compilation-filter-hook #'ansi-color-compilation-filter)
   (add-hook 'compilation-filter-hook #'ansi-osc-compilation-filter))
+
+(use-package gdb-mi
+  :custom
+  (gdb-many-windows t)
+  (gdb-show-main t))
 
 (use-package outline
   :custom
