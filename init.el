@@ -1564,8 +1564,8 @@ before calling the original function."
   (table-cell ((t (:inherit highlight :foreground nil :background nil)))))
 
 (use-package calc
-  :custom
-  (calc-display-trail nil))
+  :config
+  (setq calc-display-trail nil))
 
 (use-package org
   :init (setq org-directory "~/org")
