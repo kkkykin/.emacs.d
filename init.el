@@ -1563,6 +1563,10 @@ before calling the original function."
   :custom-face
   (table-cell ((t (:inherit highlight :foreground nil :background nil)))))
 
+(use-package calc
+  :custom
+  (calc-display-trail nil))
+
 (use-package org
   :init (setq org-directory "~/org")
   :hook
