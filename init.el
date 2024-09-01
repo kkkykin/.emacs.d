@@ -712,7 +712,7 @@
                ("p" . flymake-goto-prev-error))
   :custom
   (flymake-mode-line-lighter "F")
-  (flymake-show-diagnostics-at-end-of-line t))
+  (flymake-show-diagnostics-at-end-of-line 'short))
 
 (use-package gud
   :custom
@@ -910,7 +910,8 @@ before calling the original function."
 (use-package cc-mode
   :config
   (define-abbrev-table 'c++-mode-abbrev-table
-    '(("mun" "[[maybe_unused]]"))))
+    '(("mun" "[[maybe_unused]]")
+      ("fall" "[[fallthrough]]"))))
 
 (use-package sh-script
   :hook (sh-base-mode . (lambda () (setq-local buffer-file-coding-system
