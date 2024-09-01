@@ -203,7 +203,7 @@ Eshell."
       grep-use-null-device nil
       grep-highlight-matches t
       find-program "fd"
-      find-ls-option '("-X ls -ldh {} ; | iconv -f utf-8 -t gb18030 -cs" . "-ldh")
+      find-ls-option '("-I -X ls -ldh {} ; | iconv -f utf-8 -t gb18030 -cs" . "-ldh")
       ls-lisp-use-insert-directory-program t
       default-process-coding-system '(utf-8-dos . utf-8-unix) ;; change this maybe break tramp sshx
       process-coding-system-alist

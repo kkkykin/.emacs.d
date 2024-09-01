@@ -438,10 +438,10 @@ ref: https://pandoc.org/MANUAL.html#general-options"
 
 (with-eval-after-load 'grep
   (defcustom ug-fd-command
-    '("fd -t f -X ug --color=auto -nH --null -e \"\" {} ;" . 43)
+    '("fd -I -t f -X ug --color=auto -nH --null -e \"\" {} ;" . 46)
     "`ug-fd' instead of `grep-find'")
   (defcustom ug-fd-template
-    "fd --base-directory <D> -t f <X> <F> -X ug <C> -nH --null -e <R> {} ;"
+    "fd -I --base-directory <D> -t f <X> <F> -X ug <C> -nH --null -e <R> {} ;"
     "`ug-fd' instead of `grep-find'.")
   (when (and (or (string= grep-program "ug")
                  (executable-find "up"))
