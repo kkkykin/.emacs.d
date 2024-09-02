@@ -2299,6 +2299,13 @@ before calling the original function."
 
 (use-package diminish
   :if (package-installed-p 'diminish)
+  :init
+  (with-eval-after-load 'completion-preview
+    (diminish 'completion-preview-mode))
+  (with-eval-after-load 'hideshow
+    (diminish 'hs-minor-mode))
+  (with-eval-after-load 'subword
+    (diminish 'subword-mode))
   :config
   (diminish 'visual-line-mode))
 
