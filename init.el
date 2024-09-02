@@ -170,6 +170,12 @@
 (use-package completion-preview
   :if (package-installed-p 'completion-preview)
   :diminish
+  :bind
+  ( :map completion-preview-active-mode-map
+    ("M-n" . completion-preview-next-candidate)
+    ("M-p" . completion-preview-prev-candidate)
+    ([remap forward-word] . completion-preview-insert-word)
+    ([remap forward-sexp] . completion-preview-insert-sexp))
   :hook (prog-mode eshell-mode inferior-emacs-lisp-mode))
 
 (use-package viper
