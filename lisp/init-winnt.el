@@ -206,6 +206,11 @@ Eshell."
       find-ls-option '("-I -X ls -ldh {} ; | iconv -f utf-8 -t gb18030 -cs" . "-ldh")
       ls-lisp-use-insert-directory-program t
       default-process-coding-system '(utf-8-dos . utf-8-unix) ;; change this maybe break tramp sshx
+      ispell-extra-args (list "--filter-path" (substitute-in-file-name "$USERPROFILE/scoop/apps/aspell/current/lib/aspell-0.60"))
+      Info-default-directory-list
+      (mapcar (lambda (a) (concat (getenv "USERPROFILE") "/scoop/apps/" a))
+              '("aspell/current/share/info"
+                "mingw-winlibs-llvm-ucrt/current/share/info"))
       process-coding-system-alist
       `(("cmdproxy" . ,locale-coding-system)
         ("awk" utf-8 . ,locale-coding-system)
