@@ -2136,6 +2136,18 @@ before calling the original function."
   :if (package-installed-p 'mpvi)
   :commands mpvi-open)
 
+(use-package devdocs-browser
+  :if (package-installed-p 'devdocs-browser)
+  :bind
+  (:map help-map
+        ("u" . devdocs-browser-open)
+        ("U" . devdocs-browser-open-in))
+  :config
+  (add-to-list 'browse-url-handlers
+               `(,(concat "\\`file://"
+                          (regexp-quote devdocs-browser-data-directory))
+                 . eww-browse-url)))
+
 (use-package devdocs
   :if (package-installed-p 'devdocs)
   :bind
