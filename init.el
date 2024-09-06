@@ -2145,6 +2145,8 @@ before calling the original function."
   :config
   (add-to-list 'browse-url-handlers
                `(,(concat "\\`file://"
+                          (when (memq system-type '(windows-nt ms-dos))
+                            "/")
                           (regexp-quote devdocs-browser-data-directory))
                  . eww-browse-url)))
 
@@ -2153,6 +2155,9 @@ before calling the original function."
   :bind
   (:map help-map
         ("u" . 'devdocs-lookup))
+  ( :map devdocs-mode-map
+    ("TAB" . shr-next-link)
+    ("M-TAB" . shr-previous-link))
   :hook
   ((python-mode . (lambda () (setq-local devdocs-current-docs '("python~3.10"))))))
 
