@@ -34,9 +34,9 @@
 (defcustom my/light-theme-list
   (cl-intersection
    my/all-theme-list
-   '( adwaita default dichromacy leuven modus-operandi-deuteranopia
-      modus-operandi modus-operandi-tinted modus-operandi-tritanopia
-      tango tsdh-light whiteboard))
+   '(;; adwaita default dichromacy leuven tango tsdh-light whiteboard
+     modus-operandi-deuteranopia modus-operandi modus-operandi-tinted
+     modus-operandi-tritanopia))
   "Built-in light themes."
   :group 'my
   :type '(repeat symbol))
