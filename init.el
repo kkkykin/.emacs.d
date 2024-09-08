@@ -555,6 +555,7 @@
 (use-package quickurl)
 
 (use-package abbrev
+  :diminish '(abbrev-mode . " A")
   :custom
   (abbrev-suggest t))
 
@@ -1147,7 +1148,11 @@ before calling the original function."
   (add-to-list 'image-file-name-extensions "avif"))
 
 (use-package eglot
+  :bind
+  ( :map eglot-mode-map
+    ([remap indent-region] . eglot-format))
   :custom
+  (eglot-menu-string "")
   (eglot-autoshutdown t)
   (eglot-report-progress nil)
   (eglot-send-changes-idle-time 0.1)
@@ -2318,6 +2323,8 @@ before calling the original function."
 (use-package diminish
   :if (package-installed-p 'diminish)
   :init
+  (with-eval-after-load 'abbrev
+    (diminish 'abbrev-mode " A"))
   (with-eval-after-load 'completion-preview
     (diminish 'completion-preview-mode))
   (with-eval-after-load 'hideshow

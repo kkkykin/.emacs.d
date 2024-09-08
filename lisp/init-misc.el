@@ -626,6 +626,8 @@ ref: https://karthinks.com/software/emacs-window-management-almanac/"
   :repeat (:enter ( treesit-beginning-of-defun beginning-of-defun
                     treesit-end-of-defun end-of-defun
                     indent-pp-sexp prog-indent-sexp
+                    c-beginning-of-defun c-end-of-defun
+                    c-awk-beginning-of-defun c-awk-end-of-defun
                     python-nav-backward-up-list backward-up-list
                     python-shell-send-defun eval-defun))
   "r" #'raise-sexp
@@ -683,6 +685,10 @@ ref: https://karthinks.com/software/emacs-window-management-almanac/"
         (pcase major-mode
           ((guard (memq major-mode '(python-ts-mode)))
            (treesit-beginning-of-defun))
+          ((guard (memq major-mode '(c++-mode c-mode)))
+           (c-beginning-of-defun))
+          ('awk-mode
+           (c-awk-beginning-of-defun))
           (_ (beginning-of-defun))))
   "e" (lambda ()
         (interactive)
@@ -690,6 +696,10 @@ ref: https://karthinks.com/software/emacs-window-management-almanac/"
         (pcase major-mode
           ((guard (memq major-mode '(python-ts-mode)))
            (treesit-end-of-defun))
+          ((guard (memq major-mode '(c++-mode c-mode)))
+           (c-end-of-defun))
+          ('awk-mode
+           (c-awk-end-of-defun))
           (_ (end-of-defun))))
   "x" (lambda ()
         (interactive)

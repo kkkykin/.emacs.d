@@ -112,6 +112,7 @@
 (defcustom mn/proxy-domain
   '("duckduckgo.com"
     "github.com"
+    "github.io"
     "google.com"
     "google.com.hk"
     "googleapis.com"
@@ -169,6 +170,12 @@
       (setq parameters (cons (format "-xhttp://%s" mn/centaur-proxy)
                              parameters))))
     (list url parameters)))
+
+(setq url-proxy-services
+        `(("http" . ,mn/centaur-proxy)
+          ("https" . ,mn/centaur-proxy)
+          ("yes_proxy" . ,mn/proxy-domain-regexp)
+          ("no_proxy" . "^\\(localhost\\|192.168.*\\|10.*\\)")))
 
 (defun mn/url-find-proxy-for-url (urlobj host)
   "Determine proxy settings for URL based on host and proxy services.
