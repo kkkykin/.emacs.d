@@ -1156,7 +1156,10 @@ before calling the original function."
   (eglot-autoshutdown t)
   (eglot-report-progress nil)
   (eglot-send-changes-idle-time 0.1)
-  (eglot-events-buffer-config '(:size 0 :format full)))
+  (eglot-events-buffer-config '(:size 0 :format full))
+  :config
+  (add-hook 'eglot-managed-mode-hook
+            (lambda () (setq-local project-mode-line (not (eglot-managed-p))))))
 
 (use-package smerge-mode
   :bind
