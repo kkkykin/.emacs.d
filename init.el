@@ -1960,6 +1960,11 @@ before calling the original function."
   ( :map my/global-prefix-map
     ("?" . avy-resume))
   :config
+  (defun my/avy-action-comment (pt)
+    (if (> pt (point))
+        (comment-or-uncomment-region (point) pt)
+      (comment-or-uncomment-region pt (point))))
+  (setf (alist-get ?\; avy-dispatch-alist) 'my/avy-action-comment)
   (defun avy-action-embark (pt)
     (unwind-protect
         (save-excursion
