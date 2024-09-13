@@ -35,21 +35,6 @@
   (mp/ts-mode-enable))
 
 
-;; imenu
-
-(defvar mp/elisp-imenu-generic-expression
-  '(("usep" "^\\s-*(\\use-package \\([[:alpha:]-]+\\)" 1)
-    ("tempo" "^\\s-*(\\tempo-define-template\n? *\"\\([[:alpha:]/-]+\\)" 1))
-  "Custom imenu generic expression for elisp.")
-
-(defun mp/custom-imenu-exp ()
-  "Add custom imenu expression for current major-mode."
-  (dolist (item (pcase major-mode
-                  ('emacs-lisp-mode mp/elisp-imenu-generic-expression)))
-    (add-to-list 'imenu-generic-expression item)))
-(add-hook 'emacs-lisp-mode-hook 'mp/custom-imenu-exp)
-
-
 ;; occur
 
 (defun mp/grep-files ()
