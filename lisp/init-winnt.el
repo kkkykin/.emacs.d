@@ -168,10 +168,13 @@ Eshell."
 ;; dired
 
 (define-advice insert-directory (:around (orig-fun &rest args) fix-cs)
-  "Force decode `ls' output with 'utf-8."
+  "Force decode `ls' output with 'utf-8. And fix `coreutils' --dired error."
   (let ((coding-system-for-read 'utf-8))
     (apply orig-fun args))
-  (while (search-backward "@ -> " nil t)
+  (while (re-search-backward
+          (rx (| (: ?/  eol)
+                 "@ -> "))
+          nil t)
     (remove-text-properties (match-beginning 0) (pos-eol)
                             '(dired-filename t))))
 
