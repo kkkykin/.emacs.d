@@ -35,6 +35,7 @@
   (system-time-locale "C")
   (use-dialog-box nil)
   (use-package-enable-imenu-support t)
+  (use-package-check-before-init t)
   (use-package-always-defer t)
   (truncate-lines t)
   (mark-ring-max 6)
