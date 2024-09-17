@@ -2061,6 +2061,12 @@ before calling the original function."
   ((dired-mode . denote-dired-mode)
    (find-file . denote-fontify-links-mode-maybe))
   :config
+  (define-advice denote-rename-file-and-buffer (:before-while (old new) rename-dir)
+    "Rename directory in dired."
+    (if (and (file-directory-p old)
+             (derived-mode-p 'dired-mode))
+        (dired-rename-file old new nil)
+      t))
   (setq denote-directory (expand-file-name "~/org/"))
   (unless (file-exists-p denote-directory)
     (make-directory denote-directory))
