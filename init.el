@@ -1562,6 +1562,7 @@ before calling the original function."
           (lua "https://github.com/MunifTanjim/tree-sitter-lua")
           (sql "https://github.com/DerekStride/tree-sitter-sql" "gh-pages")
           (gdscript "https://github.com/PrestonKnopp/tree-sitter-gdscript")
+          (rust "https://github.com/tree-sitter/tree-sitter-rust")
           ;; ini
           (dockerfile "https://github.com/camdencheek/tree-sitter-dockerfile")
           (nix "https://github.com/nix-community/tree-sitter-nix")
