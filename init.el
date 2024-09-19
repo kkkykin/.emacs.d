@@ -1564,6 +1564,7 @@ before calling the original function."
           (gdscript "https://github.com/PrestonKnopp/tree-sitter-gdscript")
           (rust "https://github.com/tree-sitter/tree-sitter-rust")
           ;; ini
+          (cmake "https://github.com/uyha/tree-sitter-cmake")
           (dockerfile "https://github.com/camdencheek/tree-sitter-dockerfile")
           (nix "https://github.com/nix-community/tree-sitter-nix")
           (yaml "https://github.com/ikatyang/tree-sitter-yaml")
@@ -1573,6 +1574,12 @@ before calling the original function."
           (css "https://github.com/tree-sitter/tree-sitter-css")
           (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
           (tsx . ("https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")))))
+
+(use-package cmake-ts-mode
+  :if (treesit-language-available-p 'cmake)
+  :init
+  (add-to-list 'auto-mode-alist
+               '("\\(?:CMakeLists\\.txt\\|\\.cmake\\)\\'" . cmake-ts-mode)))
 
 (use-package custom
   :custom
