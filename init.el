@@ -571,7 +571,10 @@
   :unless my/sys-android-p
   :hook emacs-startup
   :custom
-  (auto-insert-directory (file-name-concat user-emacs-directory "insert/")))
+  (auto-insert-directory (file-name-concat user-emacs-directory "insert/"))
+  :config
+  (add-to-list 'auto-insert-alist
+               '((makefile-mode . "cmake_launcher") . "Makefile_cmake")))
 
 (use-package copyright)
 (use-package executable)
@@ -1577,9 +1580,36 @@ before calling the original function."
 
 (use-package cmake-ts-mode
   :if (treesit-language-available-p 'cmake)
+  :mode "\\(?:CMakeLists\\.txt\\|\\.cmake\\)\\'"
   :init
-  (add-to-list 'auto-mode-alist
-               '("\\(?:CMakeLists\\.txt\\|\\.cmake\\)\\'" . cmake-ts-mode)))
+  ;; https://www.internalpointers.com/post/modern-cmake-beginner-introduction
+  ;; https://cliutils.gitlab.io/modern-cmake/README.html
+  (with-eval-after-load 'autoinsert
+    (add-to-list 'auto-insert-alist
+                 '("CMakeLists\\.txt\\'" "Project: "
+                   "cmake_minimum_required(VERSION 3.20)" n
+                   "project(" str n
+                   "        VERSION 0.1" n
+                   "        LANGUAGES "
+                   (setq v1 (completing-read "language: " '("CXX" "C"))) n
+                   ")" n n
+                   "set(CMAKE_EXPORT_COMPILE_COMMANDS ON)" n n
+                   "add_executable(" str ?\  _ ")" n n
+                   (when (string= v1 "CXX")
+                     (setq v1 "default_compiler_flags"
+                           v2 "cxx_std_23")
+                     (insert
+                      "add_library(" v1 " INTERFACE)\n"
+                      "set(gcc_like_cxx \"$<COMPILE_LANG_AND_ID:CXX,ARMClang,AppleClang,Clang,GNU,LCC>\")\n"
+                      "set(msvc_cxx \"$<COMPILE_LANG_AND_ID:CXX,MSVC>\")\n"
+                      "target_compile_features(" v1 " INTERFACE " v2 ")\n"
+                      "target_compile_options(" v1 " INTERFACE\n"
+                      "  \"$<${gcc_like_cxx}:$<BUILD_INTERFACE:-Wall;-Wextra;-Wshadow;-Wformat=2;-Wunused>>\"\n"
+                      "  \"$<${msvc_cxx}:$<BUILD_INTERFACE:-W3>>\"\n"
+                      ")\n\n"
+                      "target_compile_features(" str " PRIVATE " v2 ")\n"
+                      "target_link_libraries(" str " PUBLIC " v1 ")"))
+                   n))))
 
 (use-package custom
   :custom
@@ -2188,8 +2218,18 @@ before calling the original function."
   ( :map devdocs-mode-map
     ("TAB" . shr-next-link)
     ("M-TAB" . shr-previous-link))
+  :init
+  (defun my/devdocs-setup ()
+    (setq-local devdocs-current-docs
+                (pcase major-mode
+                  ((or 'c++-mode 'c++-ts-mode) '("cpp"))
+                  ('cmake-ts-mode '("cmake~3.26"))
+                  ('python-mode '("python~3.10")))))
   :hook
-  ((python-mode . (lambda () (setq-local devdocs-current-docs '("python~3.10"))))))
+  (( c++-mode c++-ts-mode
+     cmake-ts-mode
+     python-mode)
+   . my/devdocs-setup))
 
 (use-package xeft
   :if (package-installed-p 'xeft))
