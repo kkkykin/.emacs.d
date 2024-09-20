@@ -574,7 +574,7 @@
   (auto-insert-directory (file-name-concat user-emacs-directory "insert/"))
   :config
   (add-to-list 'auto-insert-alist
-               '((makefile-mode . "cmake_launcher") . "Makefile_cmake")))
+               '((makefile-mode . "cmake_launcher") . "cmake.make")))
 
 (use-package copyright)
 (use-package executable)
