@@ -175,9 +175,15 @@ milliseconds"
 
 (add-hook 'focus-in-hook #'my/mini-screen-setup-maybe)
 
+(defun my/stop-record-tracks ()
+  "Stop OpenTracks."
+  (interactive)
+  (my/rish-run "am force-stop de.dennisguse.opentracks"))
+
 (easy-menu-define bot-menu global-map
   "Menu for useful commands."
   '("Bot"
+    ["Stop Tracks" my/stop-record-tracks]
     ["toggle sshd" my/toggle-sshd]
     ["Start alist" my/net-start-alist]))
 
