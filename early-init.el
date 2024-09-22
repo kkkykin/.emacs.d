@@ -39,11 +39,6 @@
     (progn (setenv "PATH"
                    (format "%s:%s" "/data/data/com.termux/files/usr/bin"
                            (getenv "PATH")))
-           (setenv "LD_LIBRARY_PATH"
-                   (format "%s:%s"
-                           ;; "/system/lib64"
-                           "/data/data/com.termux/files/usr/lib"
-                           (getenv "LD_LIBRARY_PATH")))
            (setq image-scaling-factor 2)
            (push "/data/data/com.termux/files/usr/bin" exec-path)
            (make-symbolic-link "/storage/emulated/0/Fonts/" "~/fonts/" t))
