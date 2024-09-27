@@ -852,8 +852,20 @@ directory is deleted.  This bind `default-directory' to `newsticker-dir'
 before calling the original function."
     (let ((default-directory newsticker-dir))
       (apply orig-fun args)))
-  (when (y-or-n-p-with-timeout "Do you want to run newsticker? " 30 t)
-    (newsticker-start t)))
+
+  (defun my/init-and-start-newsticker (level)
+    (interactive "n\nPrivacy level: ")
+    ;; (auth-source-forget-all-cached)
+    (load "init-rss.el.gpg" t t)
+    (my/setup-news-url-list level)
+    (newsticker-start t))
+
+  (if (bound-and-true-p my/news-privacy-level)
+      (my/init-and-start-newsticker my/news-privacy-level)
+    (and (display-graphic-p)
+         (not (eq system-type 'android))
+         (y-or-n-p-with-timeout "Do you want to run newsticker? " 30 t)
+         (call-interactively #'my/init-and-start-newsticker))))
 
 (use-package eww
   :bind

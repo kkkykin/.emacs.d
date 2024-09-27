@@ -628,14 +628,6 @@ Argument EVENT tells what has happened to the process."
                                             newsticker--process-ids))
         (force-mode-line-update)))))
 
-(defun mn/advice-newsticker-list-set-start-time (&rest args)
-  "Newsticker retrieve feeds with interval start time."
-  (let ((counter 0))
-    (mapc (lambda (x)
-            (setcar (cddr x) counter)
-            (setq counter (+ counter 10)))
-          newsticker-url-list)))
-
 (defun mn/advice-newsticker--get-news-by-wget (args)
   (setcar (cddr args)
           (append (caddr args)
@@ -685,16 +677,13 @@ Argument EVENT tells what has happened to the process."
         (mn/newsticker--get-news-by-build
          feed-name (nth 5 item) (nth 4 item) (nth 6 item) (nth 7 item))
       (funcall orig-fun feed-name function)))
-
-  (advice-add 'newsticker-start :before #'mn/advice-newsticker-list-set-start-time)
+  
   (advice-add 'newsticker--image-download-by-url :around #'mn/advice-url-retrieve-with-timeout)
   (advice-add 'newsticker--get-news-by-wget :filter-args #'mn/advice-newsticker--get-news-by-wget)
   (advice-add 'newsticker-save-item :before-until #'mn/advice-newsticker-save-item)
   (dolist (fn '(newsticker--image-sentinel newsticker--sentinel-work))
     (advice-add fn :around #'my/advice-silence-messages))
   (make-directory (file-name-concat newsticker-dir "saved") t)
-  (auth-source-forget-all-cached)
-  (load "init-rss.el.gpg" t t)
   (bind-keys
    :map newsticker-treeview-mode-map
    ("DEL" . mn/newsticker-treeview-prev-page)))
