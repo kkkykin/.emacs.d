@@ -573,8 +573,10 @@
   :custom
   (auto-insert-directory (file-name-concat user-emacs-directory "insert/"))
   :config
-  (add-to-list 'auto-insert-alist
-               '((makefile-mode . "cmake_launcher") . "cmake.make")))
+  (dolist (template
+           '(((makefile-mode . "cmake_launcher") . "cmake.make")
+             (("\\.bash\\'" . "trap error") . "trap.bash")))
+    (add-to-list 'auto-insert-alist template)))
 
 (use-package copyright)
 (use-package executable)
