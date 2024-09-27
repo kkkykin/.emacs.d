@@ -854,7 +854,7 @@ before calling the original function."
       (apply orig-fun args)))
 
   (defun my/init-and-start-newsticker (level)
-    (interactive "n\nPrivacy level: ")
+    (interactive "nPrivacy level: ")
     ;; (auth-source-forget-all-cached)
     (load "init-rss.el.gpg" t t)
     (my/setup-news-url-list level)
