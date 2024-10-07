@@ -28,6 +28,7 @@
         (add-to-list 'auto-mode-alist
                      (pcase lan
                        ('yaml `("\\.ya?ml\\'" . ,ts-fn))
+                       ('rust `("\\.rs\\'" . ,ts-fn))
                        ('dockerfile `("\\(?:Dockerfile\\(?:\\..*\\)?\\|\\.[Dd]ockerfile\\)\\'" . ,ts-fn))
                        (_ `(,(format "\\.%s\\'" name) . ,ts-fn))))))))
 
