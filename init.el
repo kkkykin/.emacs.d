@@ -1638,7 +1638,9 @@ before calling the original function."
   (setq calc-display-trail nil))
 
 (use-package org
-  :init (setq org-directory "~/org")
+  :init
+  (setq org-directory "~/org")
+  (put 'org-reverse-note-order 'safe-local-variable 'booleanp)
   :hook
   (org-mode . (lambda ()
                 (modify-syntax-entry ?< "." org-mode-syntax-table)
