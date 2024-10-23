@@ -2301,12 +2301,11 @@ before calling the original function."
   (nov-unzip-args '("x" filename))
   :config
   ;; advice for 7z cli cannot split "-o" and `direcotry'
-  (advice-add 'nov-unzip-epub :around
-              (lambda (orig-fun &rest args)
-                (let ((nov-unzip-args
-                       (append nov-unzip-args
-                               (list (format "-o\"%s\"" (car args))))))
-                  (apply orig-fun args)))))
+  (define-advice nov-unzip-epub (:around (orig-fun &rest args) extract-with-7z)
+    (let ((nov-unzip-args
+           (append nov-unzip-args
+                   (list (format "-o%s" (car args))))))
+      (apply orig-fun args))))
 
 (use-package fdroid
   :if (package-installed-p 'fdroid)
