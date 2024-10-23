@@ -446,7 +446,7 @@ items are fetched from each feed."
                 ("filterout_description" ,fo-desc)
                 ("filterout_author" ,fo-author)
                 ("filterout_category" ,fo-cat)
-                ("image_hotlink_template" ,mn/img-cdn-server)
+                ;; ("image_hotlink_template" ,mn/img-cdn-server)
                 ("domain" ,domain)
                 ("code" ,(md5 (concat (url-filename url) code))))
               :key #'cadr)))))
