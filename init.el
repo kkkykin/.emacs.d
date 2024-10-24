@@ -499,15 +499,13 @@
   :config
   (dolist (pair '((?’ . ?‘) (?” . ?“)))
     (add-to-list 'electric-pair-pairs pair))
-  (define-advice electric-pair--insert (:around (orig-fn c) fix-curved-quotes)
+  (define-advice electric-pair--insert
+      (:around (orig-fn c &rest args) fix-curved-quotes)
     "ref: https://emacs-china.org/t/electric-pair/16403/7"
     (if-let* ((qpair (rassoc c electric-pair-pairs))
-              (reverse-p (and qpair (> (car qpair) (cdr qpair)))))
-        (run-with-timer 0 nil
-                        `(lambda ()
-                           (backward-char 1)
-                           (insert (char-to-string ,c))))
-      (funcall orig-fn c))))
+              ((> (car qpair) (cdr qpair))))
+        (run-with-timer 0 nil `(lambda () (backward-char 1) (insert ,c)))
+      (apply orig-fn c args))))
 
 (use-package windmove
   :unless my/sys-android-p
