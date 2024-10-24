@@ -1946,6 +1946,10 @@ before calling the original function."
   :custom
   (ahk-indent-offset 2))
 
+(use-package html-ts-mode
+  :init
+  (put 'html-ts-mode-indent-offset 'safe-local-variable #'natnump))
+
 (use-package lua-ts-mode
   :mode "\\.lua\\'")
 
