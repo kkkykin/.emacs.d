@@ -1167,9 +1167,9 @@ before calling the original function."
   (add-to-list 'image-file-name-extensions "avif"))
 
 (use-package eglot
-  :bind
-  ( :map eglot-mode-map
-    ([remap indent-region] . eglot-format))
+  ;; :bind
+  ;; ( :map eglot-mode-map
+  ;;   ([remap indent-region] . eglot-format))
   :custom
   (eglot-menu-string "")
   (eglot-autoshutdown t)
