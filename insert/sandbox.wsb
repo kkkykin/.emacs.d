@@ -1,0 +1,14 @@
+<Configuration>
+  <vGpu>${:gpu}</vGpu>
+  <Networking>${:net}</Networking>
+  <AudioInput>${:audio}</AudioInput>
+  <VideoInput>${:video}</VideoInput>
+  <ProtectedClient>${:protect}</ProtectedClient>
+  <PrinterRedirection>${:printer}</PrinterRedirection>
+  <ClipboardRedirection>${:clip}</ClipboardRedirection>
+  <MemoryInMB>${:memory}</MemoryInMB>
+  <LogonCommand>
+    <Command>${:cmd}</Command>
+  </LogonCommand>
+  <MappedFolders>${:map-dirs}</MappedFolders>
+</Configuration>

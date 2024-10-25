@@ -931,6 +931,9 @@ before calling the original function."
   (debug-ignored-errors (cons 'remote-file-error debug-ignored-errors))
   (tramp-use-connection-share t))
 
+(use-package nxml-mode
+  :mode "\\.wsb\\'")
+
 (use-package cc-mode
   :config
   (define-abbrev-table 'c++-mode-abbrev-table
