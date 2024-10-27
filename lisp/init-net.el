@@ -200,6 +200,102 @@ A string either in the format \"PROXY host:port\" or \"DIRECT\"."
     "DIRECT"))
 (setq url-proxy-locator #'mn/url-find-proxy-for-url)
 
+(defun mn/minify-js-buffer ()
+  "Minimize JavaScript content in the current buffer by removing comments
+and extra whitespace."
+  (interactive)
+  (save-excursion
+    (let ((content (buffer-substring-no-properties (point-min) (point-max))))
+      ;; Remove multi-line comments
+      (setq content (replace-regexp-in-string "/\\*\\(.\\|\n\\)*?\\*/" "" content))
+      ;; Remove single-line comments
+      (setq content (replace-regexp-in-string "//.*" "" content))
+      ;; Remove unnecessary whitespace (newlines, tabs, spaces)
+      (setq content (replace-regexp-in-string "[ \t\n]+" " " content))
+      ;; Remove whitespace around specific punctuation
+      (setq content (replace-regexp-in-string "\\s-*\\([{}();,:+]\\)\\s-*" "\\1" content))
+      ;; Remove extra spaces at the beginning and end of the buffer
+      (setq content (replace-regexp-in-string "^\\s-+\\|\\s-+$" "" content))
+      ;; Clear buffer and insert the optimized content
+      (delete-region (point-min) (point-max))
+      (insert content))))
+
+(with-eval-after-load 'autoinsert
+  (defvar mn/proxy-data-file (expand-file-name "data/proxy.gpg" auto-insert-directory)
+    "File for store proxy data."))
+
+(defun mn/add-domain-to-proxy (url)
+  "Add a domain to the SOCKS5 proxy rules in `mn/proxy-data-file`.
+
+This function takes a URL as input, extracts the domain, and adds it to
+the SOCKS5 proxy rules in the proxy data file. If the URL does not start
+with 'http', it prepends 'http://' to it. The function then reads the
+proxy data file, updates the SOCKS5 rules with the new domain, removes
+duplicates, sorts the rules, and saves the updated proxy data file.
+
+Arguments: url -- The URL from which to extract the domain to be added
+  to the proxy rules."
+  (interactive "surl: ")
+  (unless (string-prefix-p "http" url)
+    (setq url (concat "http://" url)))
+  (with-current-buffer (find-file-noselect mn/proxy-data-file)
+    (goto-char 1)
+    (let* ((host (url-host (url-generic-parse-url url)))
+           (domain (if (string-match "\\(?:[[:alnum:]-]+\\.\\)?\\([[:alnum:]-]+\\.[[:alnum:]]+\\)$" host)
+                       (match-string 1 host)
+                     host))
+           (proxy-rules (read (current-buffer)))
+           (host-rules (alist-get "hostRule" proxy-rules nil nil #'equal))
+           (socks5-rule (cl-find-if (lambda (a) (string-prefix-p "SOCKS5 " a)) host-rules :key #'car)))
+      (setcdr socks5-rule (cons (downcase domain) (cdr socks5-rule)))
+      (dolist (h host-rules)
+        (cl-delete-duplicates h)
+        (cl-sort h #'string<))
+      (erase-buffer)
+      (insert (prin1-to-string proxy-rules))
+      (save-buffer)
+      (message "%s added to proxy." domain)))
+  (mn/generate-pac-file))
+
+(defun mn/generate-pac-file ()
+  "Generate a PAC file from proxy rules and save it to a specified location.
+
+This function reads proxy rules from `mn/proxy-data-file`, processes the
+host and IP rules, and inserts them into a PAC file template. The
+resulting PAC file is then minified and saved to the specified location.
+
+Steps:
+1. Read the proxy rules from `mn/proxy-data-file`.
+2. Extract host and IP rules.
+3. Insert the rules into a PAC file template.
+4. Minify the JavaScript in the buffer.
+5. Save the buffer content to `~/www/wpad.dat` as the PAC file.
+
+ref:
+chrome://net-internals#proxy
+https://support.microsoft.com/en-us/topic/how-to-disable-automatic-proxy-caching-in-internet-explorer-92735c9c-8a26-d0d8-7f8a-1b46595cbaba"
+  (with-temp-buffer
+    (insert-file-contents-literally mn/proxy-data-file)
+    (when-let (((string-suffix-p ".gpg" mn/proxy-data-file))
+               (epa-replace-original-text t))
+      (epa-decrypt-region (point-min) (point-max)))
+    (let* ((proxy-rules (read (current-buffer)))
+           (host-rules (alist-get "hostRule" proxy-rules nil nil #'equal))
+           (ip-rules (alist-get "ipRule" proxy-rules nil nil #'equal)))
+      (erase-buffer)
+      (insert-file-contents-literally
+       (expand-file-name "wpad.pac" auto-insert-directory))
+      (delete-region (point-min) (pos-eol))
+      (insert "var hostRulesMap="
+              (json-encode
+               (mapcan (lambda (a)
+                         (let ((action (car a)))
+                           (mapcar (lambda (b) (cons b action)) (cdr a))))
+                       host-rules))
+              ";var ipRulesMap=" (json-encode ip-rules) ";"))
+    (mn/minify-js-buffer)
+    (write-region nil nil (expand-file-name "~/www/wpad.dat"))))
+
 (defun mn/proxy-up-p (&optional proxy callback)
   "Test Proxy availability."
   (interactive)
