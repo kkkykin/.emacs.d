@@ -7,8 +7,6 @@
   <PrinterRedirection>${:printer}</PrinterRedirection>
   <ClipboardRedirection>${:clip}</ClipboardRedirection>
   <MemoryInMB>${:memory}</MemoryInMB>
-  <LogonCommand>
-    <Command>${:cmd}</Command>
-  </LogonCommand>
+  <LogonCommand>${:cmds}</LogonCommand>
   <MappedFolders>${:map-dirs}</MappedFolders>
 </Configuration>
