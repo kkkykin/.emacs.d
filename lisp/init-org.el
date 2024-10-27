@@ -24,6 +24,19 @@
 
 ;;; Code:
 
+;; org-protocol
+
+(require 'org-protocol)
+
+(defun my/org-protocol-cookies-dumper (info)
+  (let ((parts (org-protocol-parse-parameters info t)))
+    (write-region (plist-get parts :cookies) nil
+                  (expand-file-name (plist-get parts :host) my/cookies-dir))))
+
+(add-to-list 'org-protocol-protocol-alist
+             '("cookies-dumper" :protocol "cookies-dumper"
+               :function my/org-protocol-cookies-dumper :kill-client t))
+
 (with-eval-after-load 'org-tempo
   (dolist (k '(("d" . "header")
                ("n" . "name")))
