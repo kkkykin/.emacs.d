@@ -1638,6 +1638,17 @@ before calling the original function."
   :config
   (setq calc-display-trail nil))
 
+(use-package appt
+  :custom
+  (appt-message-warning-time 60)
+  (appt-display-interval 1)
+  (appt-disp-window-function
+   (lambda (remaining new-time msg)
+     (notifications-notify
+      :title (message "In %s minutes" remaining)
+      :body msg
+      :urgency 'critical))))
+
 (use-package org
   :init
   (setq org-directory "~/org")
@@ -1802,7 +1813,9 @@ before calling the original function."
       ((agenda)
        (todo)))
      ("w" "Work" agenda ""
-      ((org-agenda-files '("work.org")))))))
+      ((org-agenda-files '("work.org"))))))
+  :config
+  (org-agenda-to-appt t))
 
 (use-package org-capture
   :bind
