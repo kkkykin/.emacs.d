@@ -112,7 +112,7 @@ NLINES is the number of context lines to show."
 
 (defun mp/next-error-put-function-name-work ()
   "Get function name and put to `next-error-last-buffer'."
-  (when-let ((func (which-function)))
+  (when-let* ((func (which-function)))
     (set-buffer next-error-last-buffer)
     (let ((text (format "%s │" (string-pad (string-limit func 18) 18)))
           (ov (make-overlay (pos-bol) (1+ (pos-bol)) nil t)))
@@ -173,7 +173,7 @@ NLINES is the number of context lines to show."
   "Put function name before all items."
   (while (not (eobp))
     (forward-line 1)
-    (when-let ((item (xref--item-at-point)))
+    (when-let* ((item (xref--item-at-point)))
       (let* ((location (xref-item-location item))
              (file (xref-location-group location))
              (marker (xref-location-marker location))

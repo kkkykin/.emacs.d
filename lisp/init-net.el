@@ -276,7 +276,7 @@ chrome://net-internals#proxy
 https://support.microsoft.com/en-us/topic/how-to-disable-automatic-proxy-caching-in-internet-explorer-92735c9c-8a26-d0d8-7f8a-1b46595cbaba"
   (with-temp-buffer
     (insert-file-contents-literally mn/proxy-data-file)
-    (when-let (((string-suffix-p ".gpg" mn/proxy-data-file))
+    (when-let* (((string-suffix-p ".gpg" mn/proxy-data-file))
                (epa-replace-original-text t))
       (epa-decrypt-region (point-min) (point-max)))
     (let* ((proxy-rules (read (current-buffer)))
@@ -819,7 +819,7 @@ The function checks the URL and applies the following rules:
 -  For '.el' files, it switches to `emacs-lisp-mode'.
 -  For '.rs' files, it switches to `rust-ts-mode'.
 -  For '.go' files, it switches to `go-ts-mode'."
-  (when-let ((url (plist-get eww-data :url))
+  (when-let* ((url (plist-get eww-data :url))
              (source (plist-get eww-data :source)))
     (pcase url
       ("https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/windows-commands")
@@ -892,7 +892,7 @@ If no custom prefix matches, it calls the original function."
   "Write tracker to aria2 conf file."
   (when (string= event "finished\n")
      (with-current-buffer (process-buffer proc)
-       (when-let ((getp (search-backward "announce" nil t))
+       (when-let* ((getp (search-backward "announce" nil t))
                   (start (pos-bol))
                   (end (pos-eol)))
          (with-current-buffer (find-file-noselect mn/aria2-conf-file)

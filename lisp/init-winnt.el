@@ -104,7 +104,7 @@ command it is running.  It only applies the fix if the current
 
 (defun mw/output-coding-system-fix (cmd output)
   "Fix coding system by convert string."
-  (if-let ((localp (not (file-remote-p default-directory)))
+  (if-let* ((localp (not (file-remote-p default-directory)))
            (cs (mw/find-shell-command-coding-system cmd)))
       (decode-coding-string (encode-coding-string output (cdr cs)) (car cs))
     output))
@@ -122,7 +122,7 @@ and decoding of input and output.
 The function is intended to be used with `eshell-exec-hook' to
 dynamically adjust the coding system for each command executed in
 Eshell."
-  (when-let (((not (file-remote-p default-directory)))
+  (when-let* (((not (file-remote-p default-directory)))
              (cs (find-operation-coding-system
                   #'call-process (car (process-command proc)))))
     (set-process-coding-system proc (car cs) (cdr cs))))
@@ -130,7 +130,7 @@ Eshell."
 
 (defun mw/shell-change-cs-before-send-input (proc string)
   "See `mw/eshell-change-cs-when-exec'."
-  (when-let (((not (string-empty-p string)))
+  (when-let* (((not (string-empty-p string)))
              ((mw/proc-coding-system-fix proc string))
              (cs (find-operation-coding-system
                   #'call-process (car (process-command proc)))))

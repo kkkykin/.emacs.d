@@ -146,7 +146,7 @@ In case no link or Babel block is found, a user error is signaled."
                     ('- -1)
                     ((pred numberp) arg)
                     (_ 1))))
-       (if-let ((orgp (eq major-mode 'org-mode))
+       (if-let* ((orgp (eq major-mode 'org-mode))
                 (type (car
                        (memq (org-element-type (org-element-at-point))
                              '( babel-call inline-babel-call
@@ -253,7 +253,7 @@ Usage:
   (save-excursion
     (save-restriction
       (widen)
-      (if-let ((params (cons '(:results . "silent") params))
+      (if-let* ((params (cons '(:results . "silent") params))
                name)
           (org-with-point-at 1
             (catch 'found
@@ -280,7 +280,7 @@ Usage:
   (defun my/org-latex-filter-link-fix (link backend info)
     "Use correct path when export directory not `default-directory'.
      Append zero-width-space after link avoid error: No line here to end."
-    (if-let ((need-fix (eq 'latex backend))
+    (if-let* ((need-fix (eq 'latex backend))
              (out-file (plist-get info :output-file)))
         (replace-regexp-in-string
          "\\(\\includegraphics.+{\\)\\(.+\\)}\\([^z-a]+\\)"

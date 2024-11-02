@@ -1039,7 +1039,7 @@ before calling the original function."
     :prefix-map my/dired-spc-prefix-map
     ("a" . org-attach-dired-to-subtree))
   :config
-  (when-let ((7z (or (executable-find "7z")
+  (when-let* ((7z (or (executable-find "7z")
                      (executable-find "7zz")
                      (executable-find "7za"))))
     (setq archive-7z-program (file-name-base 7z))))
@@ -2073,7 +2073,7 @@ before calling the original function."
   :config
   (setq prefix-help-command #'embark-prefix-help-command)
   (add-hook 'eldoc-documentation-functions #'embark-eldoc-first-target)
-  (when-let (mixed (memq 'embark-mixed-indicator embark-indicators))
+  (when-let* ((mixed (memq 'embark-mixed-indicator embark-indicators)))
     (setcar mixed 'embark-minimal-indicator))
   (add-to-list 'display-buffer-alist
                '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"

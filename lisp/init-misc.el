@@ -66,7 +66,7 @@
 ;; (defun my/setup-faces ()
 ;;   "Randomize setup faces."
 ;;   (when (display-graphic-p)
-;;     (when-let ((fonts
+;;     (when-let* ((fonts
 ;;                 (cl-intersection
 ;;                  (font-family-list)
 ;;                  (mapcar #'car my/fonts-list) :test 'equal)))
@@ -142,7 +142,7 @@ https://github.com/LionyxML/auto-dark-emacs/blob/master/auto-dark.el"
 (defun my/setup-faces ()
   "Randomize setup faces."
   (when (display-graphic-p)
-    (when-let
+    (when-let*
         ((fonts
           (delq nil
                 (mapcar (lambda (a)
@@ -166,7 +166,7 @@ https://github.com/LionyxML/auto-dark-emacs/blob/master/auto-dark.el"
                  ('nil '("Unifont-JP" "UnifontExMono"))
                  ((pred listp) (list (completing-read
                                       "Fonts: " (font-family-list)))))))
-    (when-let ((font (cl-intersection
+    (when-let* ((font (cl-intersection
                       (font-family-list)
                       fonts :test 'equal)))
       (face-remap-add-relative 'default :family (car font)))))
@@ -267,7 +267,7 @@ The file will be saved to the `my/android-misc-files-directory' directory."
         (when (string-prefix-p my/bookmark-shared-prefix (car bm))
           (setq new-local (delq bm new-local))
           (setq new-shared (cons bm new-shared))))
-      (when-let ((sorted (seq-sort-by #'car #'string< new-shared))
+      (when-let* ((sorted (seq-sort-by #'car #'string< new-shared))
                  (need-update-p (not (equal sorted ori-shared)))
                  (bookmark-alist sorted))
         (funcall orig-fun nil my/bookmark-shared-file nil))
