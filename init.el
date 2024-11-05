@@ -2276,8 +2276,17 @@ before calling the original function."
 
 (use-package disk-usage
   :if (package-installed-p 'disk-usage)
-  :custom
-  (disk-usage-find-command find-program))
+  :config
+  (when (eq system-type 'windows-nt)
+    (setq disk-usage-find-command "fd"
+          disk-usage-du-command "du")
+    (define-advice process-file (:filter-args (args) fd-syntax-fix)
+      "`fd' replacement."
+      (let ((arg (last args 2)))
+        (and (string= (car args) "fd")
+             (equal arg '("-type" "d"))
+             (setcar arg "-t")))
+      args)))
 
 (use-package aria2
   :if (package-installed-p 'aria2)
