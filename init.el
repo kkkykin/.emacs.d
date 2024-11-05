@@ -2354,6 +2354,8 @@ before calling the original function."
      ("local" . ,(make-llm-openai-compatible :url "http://127.0.0.1:7778"))))
   (llm-warn-on-nonfree nil)
   :config
+  (require 'init-llm)
+  (my/llm-server-start)
   (when my/sys-winnt-p
     (delete "--compressed" plz-curl-default-args)))
 
