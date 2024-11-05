@@ -1137,7 +1137,7 @@ before calling the original function."
       (_ t))))
 
 (use-package flyspell
-  :hook ((text-mode comint-mode eshell-mode)
+  :hook (text-mode
          (prog-mode . flyspell-prog-mode))
   :bind
   ( :map flyspell-mode-map
