@@ -1381,53 +1381,54 @@ before calling the original function."
   (fit-window-to-buffer-horizontally t)
   (window-sides-slots '(0 2 1 2))
   (switch-to-buffer-in-dedicated-window 'pop)
-  (display-buffer-alist
-   `(("^\\*eldoc for"
-      #1=(display-buffer-reuse-window
-          display-buffer-below-selected)
-      #11=(window-height . shrink-window-if-larger-than-buffer))
-     ((or (major-mode . bs-mode)
-          "^\\*Buffer List\\*\\'")
-      #1# #11#)
-     ((or ,(regexp-quote shell-command-buffer-name)
-          ,(regexp-quote shell-command-buffer-name-async)
-          ,(regexp-quote shell-command-default-error-buffer))
-      (display-buffer-reuse-window
-       display-buffer-reuse-mode-window
-       display-buffer-in-previous-window
-       display-buffer-below-selected)
-      (mode . (fundamental-mode shell-mode))
-      #11# #21=(inhibit-same-window . nil)
-      #41=(window-parameters . ((no-other-window . t))))
-     ((major-mode . completion-list-mode)
-      #3=display-buffer-at-bottom #11#)))
-  :config
-  (if my/sys-android-p
-      (setq window-sides-slots '(0 0 0 0))
-    (dolist (v `(((or (major-mode . Info-mode)
-                      (major-mode . help-mode)
-                      (major-mode . apropos-mode)
-                      (major-mode . emacs-news-mode)
-                      (major-mode . emacs-news-view-mode)
-                      ,(rx bos ?* (| (: (? "Wo") "Man") "Dictionary" "Shortdoc")))
-                  #2=display-buffer-in-side-window
-                  (side . right)
-                  #41=(window-parameters . ((no-other-window . t)))
-                  #21=(window-width . 80))
-                 ((or (major-mode . proced-mode)
-                      (major-mode . inferior-emacs-lisp-mode)
-                      ,(rx (| "diff" "xref" "grep" "Occur") ?* eos))
-                  (display-buffer-reuse-mode-window
-                   display-buffer-in-previous-window
-                   display-buffer-in-direction)
-                  #21# (direction . leftmost)
-                  (mode . ( proced-mode xref--xref-buffer-mode
-                            diff-mode grep-mode occur-mode))
-                  #31=(inhibit-same-window . nil))
-                 ("\\e?shell\\*\\'"
-                  #2# (side . top)
-                  #12=(window-height . 0.5))))
-      (add-to-list 'display-buffer-alist v))))
+  ;; (display-buffer-alist
+  ;;  `(("^\\*eldoc for"
+  ;;     #1=(display-buffer-reuse-window
+  ;;         display-buffer-below-selected)
+  ;;     #11=(window-height . shrink-window-if-larger-than-buffer))
+  ;;    ((or (major-mode . bs-mode)
+  ;;         "^\\*Buffer List\\*\\'")
+  ;;     #1# #11#)
+  ;;    ((or ,(regexp-quote shell-command-buffer-name)
+  ;;         ,(regexp-quote shell-command-buffer-name-async)
+  ;;         ,(regexp-quote shell-command-default-error-buffer))
+  ;;     (display-buffer-reuse-window
+  ;;      display-buffer-reuse-mode-window
+  ;;      display-buffer-in-previous-window
+  ;;      display-buffer-below-selected)
+  ;;     (mode . (fundamental-mode shell-mode))
+  ;;     #11# #21=(inhibit-same-window . nil)
+  ;;     #41=(window-parameters . ((no-other-window . t))))
+  ;;    ((major-mode . completion-list-mode)
+  ;;     #3=display-buffer-at-bottom #11#)))
+  ;; :config
+  ;; (if my/sys-android-p
+  ;;     (setq window-sides-slots '(0 0 0 0))
+  ;;   (dolist (v `(((or (major-mode . Info-mode)
+  ;;                     (major-mode . help-mode)
+  ;;                     (major-mode . apropos-mode)
+  ;;                     (major-mode . emacs-news-mode)
+  ;;                     (major-mode . emacs-news-view-mode)
+  ;;                     ,(rx bos ?* (| (: (? "Wo") "Man") "Dictionary" "Shortdoc")))
+  ;;                 #2=display-buffer-in-side-window
+  ;;                 (side . right)
+  ;;                 #41=(window-parameters . ((no-other-window . t)))
+  ;;                 #21=(window-width . 80))
+  ;;                ((or (major-mode . proced-mode)
+  ;;                     (major-mode . inferior-emacs-lisp-mode)
+  ;;                     ,(rx (| "diff" "xref" "grep" "Occur") ?* eos))
+  ;;                 (display-buffer-reuse-mode-window
+  ;;                  display-buffer-in-previous-window
+  ;;                  display-buffer-in-direction)
+  ;;                 #21# (direction . leftmost)
+  ;;                 (mode . ( proced-mode xref--xref-buffer-mode
+  ;;                           diff-mode grep-mode occur-mode))
+  ;;                 #31=(inhibit-same-window . nil))
+  ;;                ("\\e?shell\\*\\'"
+  ;;                 #2# (side . top)
+  ;;                 #12=(window-height . 0.5))))
+  ;;     (add-to-list 'display-buffer-alist v)))
+  )
 
 (use-package saveplace :hook (emacs-startup . save-place-mode))
 
@@ -1888,10 +1889,10 @@ before calling the original function."
   :custom
   (org-plantuml-exec-mode 'plantuml)
   :config
-  (add-to-list 'display-buffer-alist
-               `(,(regexp-quote org-babel-error-buffer-name)
-                 display-buffer-no-window
-                 (allow-no-window . t)))
+  ;; (add-to-list 'display-buffer-alist
+  ;;              `(,(regexp-quote org-babel-error-buffer-name)
+  ;;                display-buffer-no-window
+  ;;                (allow-no-window . t)))
   (setq org-babel-default-header-args
         (append '((:noweb . "yes")
                   (:results . "silent"))
