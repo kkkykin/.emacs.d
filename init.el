@@ -2072,7 +2072,8 @@ before calling the original function."
   (embark-quit-after-action nil)
   :config
   (setq prefix-help-command #'embark-prefix-help-command)
-  (add-hook 'eldoc-documentation-functions #'embark-eldoc-first-target)
+  ;; impact performance
+  ;; (add-hook 'eldoc-documentation-functions #'embark-eldoc-first-target)
   (when-let* ((mixed (memq 'embark-mixed-indicator embark-indicators)))
     (setcar mixed 'embark-minimal-indicator))
   (add-to-list 'display-buffer-alist
