@@ -31,6 +31,19 @@
   (setq which-func-display 'header))
 
 
+;; org
+
+(with-eval-after-load 'org-protocol
+  (define-advice org-protocol-check-filename-for-protocol
+      (:filter-args (args) compat-android)
+    "Remove prefix when called by intent."
+    (let ((h (getenv "HOME"))
+          (f (car args)))
+      (when (string-prefix-p (format "%s/%s:/" h org-protocol-the-protocol) f)
+        (setcar args (substring f (1+ (length h)))))
+      args)))
+
+
 ;; hardware
 
 (defun my/mini-screen-setup-maybe ()
