@@ -82,9 +82,9 @@
 (defcustom my/fonts-list
   '(("LXGW WenKai Mono" (33 14 . 23) "https://github.com/lxgw/LxgwWenKai/releases")
     ("Sarasa Mono SC" (32 14 . 22) "https://github.com/be5invis/Sarasa-Gothic/releases")
-    ;; ("Unifont-JP" #1=(33 14 . 24) "https://unifoundry.com/unifont/index.html")
-    ;; ("UnifontExMono" #1# "https://github.com/stgiga/UnifontEX/releases")
-    )
+    ("Maple Mono NF CN" (32 14 . 21) "https://github.com/subframe7536/maple-font/releases")
+    ("Unifont-JP" #1=(33 14 . 24) "https://unifoundry.com/unifont/index.html")
+    ("UnifontExMono" #1# "https://github.com/stgiga/UnifontEX/releases"))
   "Fonts. Heights. Source."
   :group 'my
   :type '(repeat string))
