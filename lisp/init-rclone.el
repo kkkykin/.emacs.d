@@ -113,5 +113,49 @@ variables."
   (interactive)
   (my/rclone-rc-contact "core/quit"))
 
+(defun my/rclone-directory-files-internal (fs remote &optional opt)
+  "Returns a list of files in the remote directory specified by `remote`.
+   The `fs` argument specifies the file system to use for the operation.
+   If `opt` is provided, it is passed as an additional option to the
+   operation."
+  (gethash "list"
+           (my/rclone-rc-contact "operations/list"
+                                 (json-encode `(("fs" . ,(concat fs ":"))
+                                                ("remote" . ,remote)
+                                                ("opt" . ,opt))))))
+
+(defun my/rclone-directory-files (fs remote &optional full)
+  "Return a list of names of files in rclone remote."
+  (mapcar (lambda (a)
+            (let ((f (gethash "Path" a)))
+              (if full (concat fs ":" f)
+                (file-name-nondirectory f))))
+          (my/rclone-directory-files-internal
+           fs remote '(("noModTime" . t) ("noMimeType" . t)))))
+
+(defun my/rclone-directory-files-recursively
+    (fs remote regexp &optional include-directorys)
+  "Return a list of names of files in rclone remote recursively."
+  (cl-delete-if-not
+   (lambda (a) (string-match-p regexp a))
+   (mapcar (lambda (a) (format "%s:%s" fs (gethash "Path" a)))
+           (my/rclone-directory-files-internal
+            fs remote
+            (let ((opt '(("noModTime" . t) ("recurse" . t) ("noMimeType" . t))))
+              (if include-directorys opt
+                (cons'("filesOnly" . t) opt)))))))
+
+(defun my/rclone-filelist-export (fs remote file &optional regexp prefix)
+  (write-region
+   (mapconcat (lambda (a)
+                (if prefix
+                    (replace-regexp-in-string
+                     (format "^%s:" fs) prefix a)
+                  a))
+              (my/rclone-directory-files-recursively
+               fs remote (or regexp ".*"))
+              "\n")
+   nil file))
+
 (provide 'init-rclone)
 ;;; init-rclone.el ends here
