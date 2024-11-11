@@ -273,7 +273,7 @@ Usage:
 (with-eval-after-load 'ob
   (bind-keys
    :map org-babel-map
-   ([remap org-babel-expand-src-block] . my/org-babel-expand-src-block)
+   ("v" . my/org-babel-expand-src-block)
    ("m" . my/org-babel-execute-named-src-block)))
 
 (with-eval-after-load 'ox-latex
