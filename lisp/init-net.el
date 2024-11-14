@@ -930,6 +930,66 @@ If no custom prefix matches, it calls the original function."
                :on-action (lambda (a b)
                             (call-process "pkill" nil nil nil "alist"))))))
 
+
+;; tcpdump
+
+(defun mn/string-to-hex (str)
+  "Convert string to hex string, each byte separated with spaces"
+  (mapconcat (lambda (c) (format "%02x" c))
+             (string-to-vector str) ""))
+
+(defun mn/get-chunk-size (remaining-bytes)
+  "Determine appropriate chunk size (1/2/4) for remaining bytes"
+  (cond
+   ((>= remaining-bytes 4) 4)
+   ((= remaining-bytes 3) (list 2 1))  ; split into 2+1
+   ((= remaining-bytes 2) 2)
+   ((= remaining-bytes 1) 1)
+   (t nil)))
+
+(defun mn/smart-split-hex (hex-str)
+  "Split hex string into chunks of valid sizes (1/2/4 bytes)"
+  (let ((result '())
+        (str hex-str))
+    (while (not (string-empty-p str))
+      (let* ((remaining-bytes (/ (length str) 2))
+             (chunk-size (if (listp (mn/get-chunk-size remaining-bytes))
+                             (car (mn/get-chunk-size remaining-bytes))
+                           (mn/get-chunk-size remaining-bytes)))
+             (hex-size (* chunk-size 2)))
+        (push (cons chunk-size (substring str 0 hex-size)) result)
+        (setq str (substring str hex-size))))
+    ;; Handle the case where we need an extra 1-byte chunk
+    (when (= (/ (length hex-str) 2) 3)
+      (let ((last-chunk (substring hex-str 4 6)))
+        (push (cons 1 last-chunk) result)))
+    (nreverse result)))
+
+(cl-defun mn/string-to-tcpdump-filter (string &optional (offset 0))
+  "It takes the string you enter, splits it into 1, 2, or 4 byte chunks,
+converts them to numbers, and creates a capture filter that matches
+those numbers at the offset you provide.
+
+ref: https://www.wireshark.org/tools/string-cf.html
+But the website have a bug, maybe it add offset by string instead of
+number."
+  (let* ((hex-str (mn/string-to-hex string))
+         (chunks (mn/smart-split-hex hex-str))
+         (header-calc "((tcp[12:1] & 0xf0) >> 2)"))
+    (mapconcat
+     (lambda (chunk)
+       (let* ((chunk-size (car chunk))
+              (chunk-hex (cdr chunk))
+              (filter
+               (format "tcp[(%s) + %d:%d] = 0x%s"
+                       header-calc
+                       offset
+                       chunk-size
+                       chunk-hex)))
+         (setq offset (+ offset chunk-size))
+         filter))
+     chunks " && ")))
+
 (provide 'init-net)
 ;;; init-net.el ends here
 
