@@ -224,6 +224,110 @@ and extra whitespace."
   (defvar mn/proxy-data-file (expand-file-name "data/proxy.gpg" auto-insert-directory)
     "File for store proxy data."))
 
+(defvar mn/url-proxy-rules-hash (make-hash-table :test 'equal)
+  "Hash table for storing domain proxy rules.")
+
+(defvar mn/ip-proxy-rules nil
+  "List of IP rules with CIDR matching.")
+
+(defun mn/parse-ipv4 (ip-str)
+  "Convert IPv4 string to integer."
+  (let ((parts (mapcar #'string-to-number (split-string ip-str "\\."))))
+    (cl-reduce (lambda (acc n) (+ (ash acc 8) n)) parts :initial-value 0)))
+
+(defun mn/parse-ipv6 (ip-str)
+  "Convert IPv6 string to list of 8 integers."
+  (let* ((parts (split-string ip-str ":"))
+         (parts-len (length parts))
+         (missing (- 8 parts-len))
+         expanded-parts)
+    ;; Handle :: expansion
+    (if (member "" parts)
+        (let* ((empty-index (cl-position "" parts :test 'equal))
+               (head (cl-subseq parts 0 empty-index))
+               (tail (cl-subseq parts (1+ empty-index)))
+               (zeros (make-list (1+ (- 8 (length head) (length tail))) "0")))
+          (setq expanded-parts (append head zeros tail)))
+      (setq expanded-parts parts))
+    ;; Convert to integers
+    (mapcar (lambda (p) (string-to-number (if (string-empty-p p) "0" p) 16))
+            expanded-parts)))
+
+(defun mn/ip-in-network-p (ip-str network-str)
+  "Check if IP is in CIDR network range."
+  (if (string-match-p ":" ip-str)
+      ;; IPv6
+      (let* ((parts (split-string network-str "/"))
+             (network (car parts))
+             (prefix (string-to-number (cadr parts)))
+             (ip-parts (mn/parse-ipv6 ip-str))
+             (net-parts (mn/parse-ipv6 network)))
+        (cl-loop for i from 0 to 7
+                 for ip-part = (nth i ip-parts)
+                 for net-part = (nth i net-parts)
+                 for part-prefix = (- prefix (* i 16))
+                 always (if (<= part-prefix 0)
+                           t
+                         (= (ash ip-part (- 16 (min 16 part-prefix)))
+                            (ash net-part (- 16 (min 16 part-prefix)))))))
+    ;; IPv4
+    (let* ((parts (split-string network-str "/"))
+           (network (mn/parse-ipv4 (car parts)))
+           (prefix (string-to-number (cadr parts)))
+           (ip (mn/parse-ipv4 ip-str))
+           (mask (- (ash 1 32) (ash 1 (- 32 prefix)))))
+      (= (logand ip mask) (logand network mask)))))
+
+(defun mn/init-proxy-rules (rules)
+  "Initialize proxy rules from the given rules list."
+  (clrhash mn/url-proxy-rules-hash)
+  (setq mn/ip-proxy-rules nil)
+  
+  ;; Process host rules
+  (dolist (host-rule-group (cdr (assoc "hostRule" rules)))
+    (let ((proxy (car host-rule-group))
+          (domains (cdr host-rule-group)))
+      (dolist (domain domains)
+        (puthash domain proxy mn/url-proxy-rules-hash))))
+  
+  ;; Process IP rules
+  (dolist (ip-rule-group (cdr (assoc "ipRule" rules)))
+    (let ((proxy (car ip-rule-group))
+          (networks (cdr ip-rule-group)))
+      (dolist (network networks)
+        (push (cons network proxy) mn/ip-proxy-rules)))))
+
+(defun mn/match-proxy-rule (url)
+  "Match URL or IP against proxy rules. Returns proxy string or \"DIRECT\"."
+  (if-let ((host (url-host (url-generic-parse-url url)))
+           ((string-match-p "^[0-9a-fA-F:.]+$" host)))
+      ;; IP address matching
+      (let ((matching-rule
+             (cl-find-if
+              (lambda (rule)
+                (condition-case nil
+                    (mn/ip-in-network-p host (car rule))
+                  (error nil)))
+              mn/ip-proxy-rules)))
+        (if matching-rule
+            (cdr matching-rule)
+          "DIRECT"))
+    ;; Domain matching
+    (let* ((parts (split-string host "\\."))
+           (len (length parts))
+           found)
+      ;; Try matching from most specific to least specific
+      (while (and (> len 0) (not found))
+        (setq found (gethash (string-join (last parts len) ".")
+                             mn/url-proxy-rules-hash))
+        (setq len (1- len)))
+      (or found "DIRECT"))))
+
+(with-eval-after-load 'url
+  (with-current-buffer (find-file-noselect mn/proxy-data-file)
+    (goto-char 1)
+    (mn/init-proxy-rules (read (current-buffer)))))
+
 (defun mn/add-domain-to-proxy (url)
   "Add a domain to the SOCKS5 proxy rules in `mn/proxy-data-file`.
 
