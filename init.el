@@ -728,7 +728,10 @@
 
 (use-package gud
   :custom
-  (gud-highlight-current-line t))
+  (gud-highlight-current-line t)
+  (gud-pdb-command-name "python -X utf-8 -m pdb")
+  :config
+  (modify-syntax-entry ?' "\"" gud-mode-syntax-table))
 
 (use-package bs
   :bind
@@ -1015,8 +1018,17 @@ before calling the original function."
               my/emacs-keystore-file))
      (,(rx ?. (| "tzst" "tar.zst") eos)
       "zstd -dc ? | tar -xf -")
+     (,(rx ?. (| "srt") eos)
+      (apply #'format
+             "ffmpeg -hide_banner -itsoffset 0 -i ? -i %s -c copy -disposition:s:0 default -c:s mov_text %s"
+             (mapcar #'shell-quote-argument
+                     (if-let* ((f (car kill-ring))
+                               ((file-exists-p f)))
+                         (list f (concat "ff-" (file-name-nondirectory f)))
+                       (make-vector 2 (file-name-with-extension file "mp4"))))))
      (,(rx ?. (| "mp4" "mkv" "avi" "webm" "flv" "m4v" "mov") eos)
-      "ffmpeg -hide_banner -y -strict 2 -hwaccel auto -i ? -vf \"scale='min(2560,iw)':-1\" -c:v hevc_nvenc -rc vbr -cq 19 -qmin 19 -qmax 19 -profile:v main10 -pix_fmt p010le -b:v 0K -bf:v 3 -b_ref_mode middle -temporal-aq 1 -rc-lookahead 32 -c:a libopus -b:a 128k -f mp4 ff-`?`")
+      ;; https://docs.nvidia.com/video-technologies/video-codec-sdk/12.0/ffmpeg-with-nvidia-gpu/index.html#command-line-for-latency-tolerant-high-quality-transcoding
+      "ffmpeg -hide_banner -y -i ? -c:a libopus -b:a 128k -c:v hevc_nvenc -vf \"scale='min(2560,iw):-1\" -rc vbr -cq 28 -b:v 0 -bufsize 15M -maxrate 15M -g 250 -bf 3 -b_ref_mode 2 -temporal-aq 1 -rc-lookahead 20 -i_qfactor 0.75 -b_qfactor 1.1 -fps_mode passthrough ff-`?`")
      (,(rx ?. (| "png" "jpeg" "jpg" "gif" "webp" "bmp") eos)
       "ffmpeg -hide_banner -y -i ? -vf \"scale='min(4096,iw)':-1\" -c:v libaom-av1 -cpu-used 6 -row-mt 1 -tiles 2x2 -still-picture 1 -crf 20 -f avif ff-`?`")
      (".*" (format "tar -cf - ? | zstd -o %s --long --ultra -9 ;"
@@ -2260,7 +2272,7 @@ before calling the original function."
                 (pcase major-mode
                   ((or 'c++-mode 'c++-ts-mode) '("cpp"))
                   ('cmake-ts-mode '("cmake~3.26"))
-                  ('python-mode '("python~3.10")))))
+                  ('python-mode '("python~3.12")))))
   :hook
   (( c++-mode c++-ts-mode
      cmake-ts-mode
