@@ -103,127 +103,6 @@
 
 ;; proxy
 
-(defcustom mn/block-domain
-  '("blogs.reimu.net")
-  "Domain blocked."
-  :group 'my
-  :type '(repeat string))
-
-(defcustom mn/proxy-domain
-  '("duckduckgo.com"
-    "github.com"
-    "github.io"
-    "google.com"
-    "google.com.hk"
-    "googleapis.com"
-    "wikipedia.org")
-  "Domain proxyed."
-  :group 'my
-  :type '(repeat string))
-
-(defcustom mn/img-proxy-domain
-  '("saxyit.com" "reimu.net" "img.piclabo.xyz" "trts.baishancdnx.cn"
-    "www.skidrowreloaded.com" "riotpixels.net" "www.hacg.mov"
-    "mooc-image.nosdn.127.net")
-  "Img domain proxyed."
-  :group 'my
-  :type '(repeat string))
-
-(defcustom mn/block-domain-regexp
-  (rx (| ?. bos) (regex (regexp-opt mn/block-domain)) eos)
-  "Regexp for domain blocked."
-  :group 'my
-  :type 'regexp)
-
-(defcustom mn/proxy-domain-regexp
-  (rx (| ?. bos) (regex (regexp-opt mn/proxy-domain)) eos)
-  "Regexp for domain through proxy."
-  :group 'my
-  :type 'regexp)
-
-(defcustom mn/img-proxy-domain-regexp
-  (rx (| ?. bos) (regex (regexp-opt mn/img-proxy-domain)) eos)
-  "Regexp for img domain through proxy."
-  :group 'my
-  :type 'regexp)
-
-(defcustom mn/centaur-proxy "127.0.0.1:10808"
-  "Set HTTP/HTTPS proxy."
-  :group 'my
-  :type 'string)
-
-(defcustom mn/centaur-socks-proxy "127.0.0.1:10807"
-  "Set SOCKS proxy."
-  :group 'my
-  :type 'string)
-
-(defun mn/curl-parameters-dwim (url &optional blockable-p &rest args)
-  "Generate explicit parameters for curl."
-  (let ((url url)
-        (host (url-host (url-generic-parse-url url)))
-        parameters)
-    (cond
-     ((and blockable-p
-           (string-match-p mn/block-domain-regexp host))
-      (setq url "127.0.0.1"))
-     ((string-match-p mn/proxy-domain-regexp host)
-      (setq parameters (cons (format "-xhttp://%s" mn/centaur-proxy)
-                             parameters))))
-    (list url parameters)))
-
-(setq url-proxy-services
-        `(("http" . ,mn/centaur-proxy)
-          ("https" . ,mn/centaur-proxy)
-          ("yes_proxy" . ,mn/proxy-domain-regexp)
-          ("no_proxy" . "^\\(localhost\\|192.168.*\\|10.*\\)")))
-
-(defun mn/url-find-proxy-for-url (urlobj host)
-  "Determine proxy settings for URL based on host and proxy services.
-
-This function is designed to be used as a custom
-`url-proxy-locator'.  It checks if the HOST matches the
-'yes_proxy' pattern in `url-proxy-services'.  If there's a match
-and a corresponding proxy is found for the URL type, it returns a
-proxy string. Otherwise, it returns \"DIRECT\" for direct
-connection.
-
-Arguments:
-URLOBJ: A URL object as returned by `url-generic-parse-url'.
-HOST: A string representing the hostname.
-
-Returns:
-A string either in the format \"PROXY host:port\" or \"DIRECT\"."
-  (if-let* ((s (alist-get "yes_proxy" url-proxy-services nil nil #'equal))
-            ((string-match-p s host))
-            (proxy (cdr (assoc (url-type urlobj) url-proxy-services))))
-      (concat "PROXY " proxy)
-    "DIRECT"))
-(setq url-proxy-locator #'mn/url-find-proxy-for-url)
-
-(defun mn/minify-js-buffer ()
-  "Minimize JavaScript content in the current buffer by removing comments
-and extra whitespace."
-  (interactive)
-  (save-excursion
-    (let ((content (buffer-substring-no-properties (point-min) (point-max))))
-      ;; Remove multi-line comments
-      (setq content (replace-regexp-in-string "/\\*\\(.\\|\n\\)*?\\*/" "" content))
-      ;; Remove single-line comments
-      (setq content (replace-regexp-in-string "//.*" "" content))
-      ;; Remove unnecessary whitespace (newlines, tabs, spaces)
-      (setq content (replace-regexp-in-string "[ \t\n]+" " " content))
-      ;; Remove whitespace around specific punctuation
-      (setq content (replace-regexp-in-string "\\s-*\\([{}();,:+]\\)\\s-*" "\\1" content))
-      ;; Remove extra spaces at the beginning and end of the buffer
-      (setq content (replace-regexp-in-string "^\\s-+\\|\\s-+$" "" content))
-      ;; Clear buffer and insert the optimized content
-      (delete-region (point-min) (point-max))
-      (insert content))))
-
-(with-eval-after-load 'autoinsert
-  (defvar mn/proxy-data-file (expand-file-name "data/proxy.gpg" auto-insert-directory)
-    "File for store proxy data."))
-
 (defvar mn/url-proxy-rules-hash (make-hash-table :test 'equal)
   "Hash table for storing domain proxy rules.")
 
@@ -297,21 +176,19 @@ and extra whitespace."
       (dolist (network networks)
         (push (cons network proxy) mn/ip-proxy-rules)))))
 
-(defun mn/match-proxy-rule (url)
+(defun mn/match-proxy-rule (urlobj host)
   "Match URL or IP against proxy rules. Returns proxy string or \"DIRECT\"."
-  (if-let ((host (url-host (url-generic-parse-url url)))
-           ((string-match-p "^[0-9a-fA-F:.]+$" host)))
+  (if (string-match-p "^\\([0-9.]+\\)\\|\\([0-9a-fA-F:]+\\)$" host)
       ;; IP address matching
-      (let ((matching-rule
-             (cl-find-if
-              (lambda (rule)
-                (condition-case nil
-                    (mn/ip-in-network-p host (car rule))
-                  (error nil)))
-              mn/ip-proxy-rules)))
-        (if matching-rule
-            (cdr matching-rule)
-          "DIRECT"))
+      (if-let* ((matching-rule
+                 (cl-find-if
+                  (lambda (rule)
+                    (condition-case nil
+                        (mn/ip-in-network-p host (car rule))
+                      (error nil)))
+                  mn/ip-proxy-rules)))
+          (cdr matching-rule)
+        "DIRECT")
     ;; Domain matching
     (let* ((parts (split-string host "\\."))
            (len (length parts))
@@ -323,10 +200,53 @@ and extra whitespace."
         (setq len (1- len)))
       (or found "DIRECT"))))
 
-(with-eval-after-load 'url
-  (with-current-buffer (find-file-noselect mn/proxy-data-file)
-    (goto-char 1)
-    (mn/init-proxy-rules (read (current-buffer)))))
+(defvar mn/url-history '())
+(defun mn/url-proxy-locator (urlobj host)
+  "Determine proxy settings for URL based on host and proxy services."
+  (when debug-on-error
+    (push (cons (float-time) (url-recreate-url urlobj)) mn/url-history))
+  (replace-regexp-in-string "^SOCKS5 " "PROXY " (mn/match-proxy-rule urlobj host)))
+(setq url-proxy-locator #'mn/url-proxy-locator)
+
+(defun mn/curl-parameters-dwim (url &rest args)
+  "Generate explicit parameters for curl."
+  (let* ((urlobj (url-generic-parse-url url))
+         (proxy (mn/match-proxy-rule urlobj (url-host urlobj)))
+         parameters)
+    (if (string= "DIRECT" proxy)
+        (setq parameters (list "-x" ""))
+      (let* ((u (string-split proxy " "))
+             (prefix (if (string= "PROXY" (car u)) "http://" "socks5h://")))
+        (setq parameters (list (concat "-x" prefix (cadr u))))))
+    (list url parameters)))
+
+(with-eval-after-load 'autoinsert
+  (defvar mn/proxy-data-file (expand-file-name "data/proxy.gpg" auto-insert-directory)
+    "File for store proxy data.")
+  (with-eval-after-load 'epa
+    (with-current-buffer (find-file-noselect mn/proxy-data-file)
+      (goto-char 1)
+      (mn/init-proxy-rules (read (current-buffer))))))
+
+(defun mn/minify-js-buffer ()
+  "Minimize JavaScript content in the current buffer by removing comments
+and extra whitespace."
+  (interactive)
+  (save-excursion
+    (let ((content (buffer-substring-no-properties (point-min) (point-max))))
+      ;; Remove multi-line comments
+      (setq content (replace-regexp-in-string "/\\*\\(.\\|\n\\)*?\\*/" "" content))
+      ;; Remove single-line comments
+      (setq content (replace-regexp-in-string "//.*" "" content))
+      ;; Remove unnecessary whitespace (newlines, tabs, spaces)
+      (setq content (replace-regexp-in-string "[ \t\n]+" " " content))
+      ;; Remove whitespace around specific punctuation
+      (setq content (replace-regexp-in-string "\\s-*\\([{}();,:+]\\)\\s-*" "\\1" content))
+      ;; Remove extra spaces at the beginning and end of the buffer
+      (setq content (replace-regexp-in-string "^\\s-+\\|\\s-+$" "" content))
+      ;; Clear buffer and insert the optimized content
+      (delete-region (point-min) (point-max))
+      (insert content))))
 
 (defun mn/add-domain-to-proxy (url)
   "Add a domain to the SOCKS5 proxy rules in `mn/proxy-data-file`.
@@ -358,6 +278,7 @@ Arguments: url -- The URL from which to extract the domain to be added
       (erase-buffer)
       (insert (prin1-to-string proxy-rules))
       (save-buffer)
+      (mn/init-proxy-rules proxy-rules)
       (message "%s added to proxy." domain)))
   (mn/generate-pac-file))
 
@@ -877,8 +798,16 @@ Argument EVENT tells what has happened to the process."
         (mn/newsticker--get-news-by-build
          feed-name (nth 5 item) (nth 4 item) (nth 6 item) (nth 7 item))
       (funcall orig-fun feed-name function)))
+
+  (define-advice newsticker--image-download-by-url
+      (:around (orig-fun &rest args) setup-retrieve)
+    "Set up for retrieve."
+    (let ((url-request-extra-headers
+           (pcase (url-host (url-generic-parse-url (nth 3 args)))
+             ("attach.52pojie.cn" '(("Referer" . "https://www.52pojie.cn/")))
+             (_ nil))))
+      (apply orig-fun args)))
   
-  (advice-add 'newsticker--image-download-by-url :around #'mn/advice-url-retrieve-with-timeout)
   (advice-add 'newsticker--get-news-by-wget :filter-args #'mn/advice-newsticker--get-news-by-wget)
   (advice-add 'newsticker-save-item :before-until #'mn/advice-newsticker-save-item)
   (dolist (fn '(newsticker--image-sentinel newsticker--sentinel-work))
