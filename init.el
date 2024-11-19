@@ -712,7 +712,9 @@
   :custom
   (python-indent-block-paren-deeper t)
   (python-shell-interpreter-args "-i -X utf-8")
-  (python-shell-dedicated t))
+  (python-shell-dedicated t)
+  :config
+  (modify-syntax-entry ?' "\"" inferior-python-mode-syntax-table))
 
 (use-package flymake
   :hook sh-mode
