@@ -711,7 +711,7 @@
 (use-package python
   :custom
   (python-indent-block-paren-deeper t)
-  (python-shell-interpreter-args "-i -X utf-8")
+  (python-shell-interpreter-args "-i -X utf8")
   (python-shell-dedicated t)
   :config
   (modify-syntax-entry ?' "\"" inferior-python-mode-syntax-table))
@@ -731,7 +731,7 @@
 (use-package gud
   :custom
   (gud-highlight-current-line t)
-  (gud-pdb-command-name "python -X utf-8 -m pdb")
+  (gud-pdb-command-name "python -X utf8 -m pdb")
   :config
   (modify-syntax-entry ?' "\"" gud-mode-syntax-table))
 
