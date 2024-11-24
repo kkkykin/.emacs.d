@@ -31,7 +31,8 @@
 (defun my/org-protocol-cookies-dumper (info)
   (let ((parts (org-protocol-parse-parameters info t)))
     (write-region (plist-get parts :cookies) nil
-                  (expand-file-name (plist-get parts :host) my/cookies-dir))))
+                  (expand-file-name (plist-get parts :host) my/cookies-dir)))
+  (server-delete-client (car server-clients)))
 
 (add-to-list 'org-protocol-protocol-alist
              '("cookies-dumper" :protocol "cookies-dumper"
