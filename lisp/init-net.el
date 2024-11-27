@@ -3,6 +3,7 @@
 ;;; Code:
 
 (require 'cl-lib)
+(require 'nsm)
 
 ;; url
 
@@ -109,53 +110,47 @@
 (defvar mn/ip-proxy-rules nil
   "List of IP rules with CIDR matching.")
 
-(defun mn/parse-ipv4 (ip-str)
-  "Convert IPv4 string to integer."
-  (let ((parts (mapcar #'string-to-number (split-string ip-str "\\."))))
-    (cl-reduce (lambda (acc n) (+ (ash acc 8) n)) parts :initial-value 0)))
+(defun mn/generate-ipv4-mask (prefix-len)
+  "Generate IPv4 netmask vector for given prefix length."
+  (let ((mask (make-vector 4 0)))
+    (dotimes (i 4)
+      (let ((bits (- prefix-len (* i 8))))
+        (cond 
+         ((>= bits 8) (aset mask i 255))
+         ((> bits 0) (aset mask i (logand (lsh 255 (- 8 bits)) 255)))
+         (t (aset mask i 0)))))
+    mask))
 
-(defun mn/parse-ipv6 (ip-str)
-  "Convert IPv6 string to list of 8 integers."
-  (let* ((parts (split-string ip-str ":"))
-         (parts-len (length parts))
-         (missing (- 8 parts-len))
-         expanded-parts)
-    ;; Handle :: expansion
-    (if (member "" parts)
-        (let* ((empty-index (cl-position "" parts :test 'equal))
-               (head (cl-subseq parts 0 empty-index))
-               (tail (cl-subseq parts (1+ empty-index)))
-               (zeros (make-list (1+ (- 8 (length head) (length tail))) "0")))
-          (setq expanded-parts (append head zeros tail)))
-      (setq expanded-parts parts))
-    ;; Convert to integers
-    (mapcar (lambda (p) (string-to-number (if (string-empty-p p) "0" p) 16))
-            expanded-parts)))
+(defun mn/generate-ipv6-mask (prefix-len)
+  "Generate IPv6 netmask vector for given prefix length."
+  (let* ((mask (make-vector 8 0))
+         (full-groups (/ prefix-len 16))
+         (remainder-bits (% prefix-len 16)))
+    ;; Fill full groups
+    (dotimes (i full-groups)
+      (aset mask i 65535))  ; 0xFFFF
+    
+    ;; Handle partial group if any
+    (when (> remainder-bits 0)
+      (aset mask full-groups 
+            (logand 65535
+                   (ash #xFFFF (- remainder-bits 16)))))
+    mask))
 
-(defun mn/ip-in-network-p (ip-str network-str)
-  "Check if IP is in CIDR network range."
-  (if (string-match-p ":" ip-str)
-      ;; IPv6
-      (let* ((parts (split-string network-str "/"))
-             (network (car parts))
-             (prefix (string-to-number (cadr parts)))
-             (ip-parts (mn/parse-ipv6 ip-str))
-             (net-parts (mn/parse-ipv6 network)))
-        (cl-loop for i from 0 to 7
-                 for ip-part = (nth i ip-parts)
-                 for net-part = (nth i net-parts)
-                 for part-prefix = (- prefix (* i 16))
-                 always (if (<= part-prefix 0)
-                           t
-                         (= (ash ip-part (- 16 (min 16 part-prefix)))
-                            (ash net-part (- 16 (min 16 part-prefix)))))))
-    ;; IPv4
-    (let* ((parts (split-string network-str "/"))
-           (network (mn/parse-ipv4 (car parts)))
-           (prefix (string-to-number (cadr parts)))
-           (ip (mn/parse-ipv4 ip-str))
-           (mask (- (ash 1 32) (ash 1 (- 32 prefix)))))
-      (= (logand ip mask) (logand network mask)))))
+(defun mn/cidr-to-ip-mask (cidr)
+  "Convert CIDR notation (IPv4 or IPv6) to a list of IP and netmask vectors."
+  (if (string-match "\\(.+\\)/\\([0-9]+\\)" cidr)
+      (let* ((ip (match-string 1 cidr))
+             (prefix-len (string-to-number (match-string 2 cidr)))
+             (is-ipv6 (string-match ":" ip))
+             (ip-vec (substring
+                      (car (network-lookup-address-info
+                            ip (if is-ipv6 'ipv6 'ipv4) 'numeric))
+                      0 -1))
+             (mask (if is-ipv6 (generate-ipv6-mask prefix-len)
+                     (generate-ipv4-mask prefix-len))))
+        (cons ip-vec mask))
+    (error "Invalid CIDR notation")))
 
 (defun mn/init-proxy-rules (rules)
   "Initialize proxy rules from the given rules list."
@@ -172,9 +167,9 @@
   ;; Process IP rules
   (dolist (ip-rule-group (cdr (assoc "ipRule" rules)))
     (let ((proxy (car ip-rule-group))
-          (networks (cdr ip-rule-group)))
-      (dolist (network networks)
-        (push (cons network proxy) mn/ip-proxy-rules)))))
+          (cidrs (cdr ip-rule-group)))
+      (dolist (cidr cidrs)
+        (push (cons (mn/cidr-to-ip-mask cidr) proxy) mn/ip-proxy-rules)))))
 
 (defun mn/match-proxy-rule (urlobj host)
   "Match URL or IP against proxy rules. Returns proxy string or \"DIRECT\"."
@@ -183,9 +178,7 @@
       (if-let* ((matching-rule
                  (cl-find-if
                   (lambda (rule)
-                    (condition-case nil
-                        (mn/ip-in-network-p host (car rule))
-                      (error nil)))
+                    (nsm-network-same-subnet (caar rule) (cdar rule) host))
                   mn/ip-proxy-rules)))
           (cdr matching-rule)
         "DIRECT")
