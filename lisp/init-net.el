@@ -147,8 +147,8 @@
                       (car (network-lookup-address-info
                             ip (if is-ipv6 'ipv6 'ipv4) 'numeric))
                       0 -1))
-             (mask (if is-ipv6 (generate-ipv6-mask prefix-len)
-                     (generate-ipv4-mask prefix-len))))
+             (mask (if is-ipv6 (mn/generate-ipv6-mask prefix-len)
+                     (mn/generate-ipv4-mask prefix-len))))
         (cons ip-vec mask))
     (error "Invalid CIDR notation")))
 
