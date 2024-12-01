@@ -277,8 +277,9 @@
     (let ((ex-token-alist (append my/extra-ex-token-alist ex-token-alist))
           (buf (current-buffer)))
       (apply orig-fun args)
-      (with-current-buffer buf
-        (display-line-numbers-mode -1))))
+      (when (buffer-live-p buf)
+        (with-current-buffer buf
+          (display-line-numbers-mode -1)))))
   (put 'viper-setup-master-buffer 'safe-local-eval-function t)
   (put 'viper-mode-string 'risky-local-variable t)
   (add-face-text-property 0 (length viper-emacs-state-id) '(:inverse-video t) nil viper-emacs-state-id)
