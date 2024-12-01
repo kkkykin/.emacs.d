@@ -775,6 +775,29 @@ ref: https://karthinks.com/software/emacs-window-management-almanac/"
              (concat "[^" url-get-url-filename-chars "]+") "" url)))
 
 
+;; life
+
+(defun my/notification-notify (title message &rest params)
+  "Send system notification with TITLE and MESSAGE based on current OS.
+   On windows, an active notification must be removed by calling
+   `w32-notification-close' before a new one can be shown."
+  (let ((notify-fn (pcase system-type
+                     ('android #'android-notifications-notify)
+                     ('windows-nt #'w32-notification-notify)
+                     ('gnu/linux #'notifications-notify))))
+    (apply notify-fn :title title :body message params)))
+
+(defun my/drink-water-reminder ()
+  "Send a notification to remind drinking water."
+  (let ((id (my/notification-notify
+             "💧 Drink Water Reminder"
+             "It's time to drink some water! Stay hydrated!")))
+    (pcase system-type
+      ('windows-nt (w32-notification-close id))
+      (_ nil))))
+(run-at-time t 3600 #'my/drink-water-reminder)
+
+
 ;; proc
 
 (defun my/get-pid-from-file (pid-file)
