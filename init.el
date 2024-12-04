@@ -466,6 +466,10 @@
   (add-to-list 'auto-mode-alist
                '("[^/]\\.dired\\'" . dired-virtual-mode)))
 
+(use-package tooltip
+  :custom
+  (tooltip-mode nil))
+
 (use-package tool-bar
   :if my/sys-android-p
   :custom
