@@ -259,9 +259,9 @@ with `universal argument', select all records."
 
 (tempo-define-template
  "mp/sql-create-procedure"
- '(%"DROP PROCEDURE IF EXISTS " (P "Procedure name: " procedure) ";"n
-    "DELIMITER //"n
-    "CREATE PROCEDURE " (s procedure) "("
+ '(%"DROP PROCEDURE IF EXISTS `" (P "Procedure name: " procedure) "`;"n
+    "DELIMITER ;;"n
+    "CREATE PROCEDURE `" (s procedure) "`("
     (let ((output '(l)))
       (while-let ((dir (completing-read "Direction: " '("IN" "OUT" "INOUT")))
                   ((not (string-empty-p dir))))
@@ -273,15 +273,15 @@ with `universal argument', select all records."
           ", "
         output))
     (delete-char -2) ")"n"COMMENT '"p"'"n
-    "BEGIN"n n p n n"END//"n"DELIMITER ;"n)
+    "BEGIN"n n p n n"END;;"n"DELIMITER ;"n)
  nil
  "Drop procedure if exists then create it.")
 
 (tempo-define-template
  "mp/sql-create-function"
- '(%"DROP FUNCTION IF EXISTS " (P "Function name: " function) ";"n
-    "DELIMITER //"n
-    "CREATE FUNCTION " (s function) "("
+ '(%"DROP FUNCTION IF EXISTS `" (P "Function name: " function) "`;"n
+    "DELIMITER ;;"n
+    "CREATE FUNCTION `" (s function) "`("
     (let ((output '(l)))
       (while-let ((name (read-no-blanks-input "Variable name: "))
                   ((not (string-empty-p name)))
@@ -301,7 +301,7 @@ with `universal argument', select all records."
          ,@(unless (string-empty-p return-default)
              (list " DEFAULT " return-default))
          ";" n n p n n "RETURN " ,return-var ";"))
-    n"END//"n"DELIMITER ;"n))
+    n"END;;"n"DELIMITER ;"n))
 
 (tempo-define-template
  "mp/sql-if"
