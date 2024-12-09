@@ -81,6 +81,17 @@
             (url-queue-timeout 30))
     (apply orig-fun args)))
 
+(define-advice url-retrieve-internal (:around (orig-fun &rest args) custom)
+  "Custom retrieve by url."
+  (pcase (car args)
+    ((rx bos "https://attach.52pojie.cn/")
+     (let ((url-request-extra-headers
+            (append
+             '(("Referer" . "https://www.52pojie.cn/"))
+             url-request-extra-headers)))
+       (apply orig-fun args)))
+    (_ (apply orig-fun args))))
+
 (defun mn/url-http-parse-response ()
   "Parse http response, From 'https://emacs-china.org/t/elisp-http/18432/2'."
   (set-buffer-multibyte t)
