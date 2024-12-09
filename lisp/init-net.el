@@ -789,11 +789,6 @@ Argument EVENT tells what has happened to the process."
   (setq newsticker-wget-arguments
         (append `("--doh-url" ,mn/doh-server) newsticker-wget-arguments))
 
-  (define-advice newsticker--image-download-by-wget
-      (:around (orig-fun &rest args) with-default-dir)
-    (let ((default-directory newsticker-dir))
-      (apply orig-fun args)))
-
   (define-advice newsticker--get-news-by-funcall
       (:around (orig-fun feed-name function) build-feeds)
     "Get feeds maybe by build atom feeds.
@@ -802,15 +797,6 @@ Argument EVENT tells what has happened to the process."
         (mn/newsticker--get-news-by-build
          feed-name (nth 5 item) (nth 4 item) (nth 6 item) (nth 7 item))
       (funcall orig-fun feed-name function)))
-
-  (define-advice newsticker--image-download-by-url
-      (:around (orig-fun &rest args) setup-retrieve)
-    "Set up for retrieve."
-    (let ((url-request-extra-headers
-           (pcase (url-host (url-generic-parse-url (nth 3 args)))
-             ("attach.52pojie.cn" '(("Referer" . "https://www.52pojie.cn/")))
-             (_ nil))))
-      (apply orig-fun args)))
   
   (advice-add 'newsticker--get-news-by-wget :filter-args #'mn/advice-newsticker--get-news-by-wget)
   (advice-add 'newsticker-save-item :before-until #'mn/advice-newsticker-save-item)
