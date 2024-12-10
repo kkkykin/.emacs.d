@@ -286,6 +286,10 @@ Arguments: url -- The URL from which to extract the domain to be added
       (message "%s added to proxy." domain)))
   (mn/generate-pac-file))
 
+(defcustom mn/pac-file-path (expand-file-name "~/www/wpad.dat")
+  "Where to store pac file."
+  :type 'file)
+
 (defun mn/generate-pac-file ()
   "Generate a PAC file from proxy rules and save it to a specified location.
 
@@ -298,7 +302,7 @@ Steps:
 2. Extract host and IP rules.
 3. Insert the rules into a PAC file template.
 4. Minify the JavaScript in the buffer.
-5. Save the buffer content to `~/www/wpad.dat` as the PAC file.
+5. Save the buffer content to `mn/pac-file-path' as the PAC file.
 
 ref:
 chrome://net-internals#proxy
@@ -323,7 +327,7 @@ https://support.microsoft.com/en-us/topic/how-to-disable-automatic-proxy-caching
                        host-rules))
               ";var ipRulesMap=" (json-encode ip-rules) ";"))
     (mn/minify-js-buffer)
-    (write-region nil nil (expand-file-name "~/www/wpad.dat"))))
+    (write-region nil nil mn/pac-file-path)))
 
 (defun mn/proxy-up-p (&optional proxy callback)
   "Test Proxy availability."
