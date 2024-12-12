@@ -1764,7 +1764,8 @@ before calling the original function."
       (shell . t)
       (sql . t)
       (sqlite . t))))
-  (add-to-list 'org-modules 'org-tempo))
+  (dolist (mod '(org-tempo org-crypt))
+    (add-to-list 'org-modules mod)))
 
 (use-package org-attach
   :custom
@@ -1789,6 +1790,11 @@ before calling the original function."
   (put 'org-timer-default-timer 'safe-local-variable #'natnump)
   :config
   (org-clock-persistence-insinuate))
+
+(use-package org-crypt
+  :config
+  (org-crypt-use-before-save-magic)
+  (add-to-list 'org-tags-exclude-from-inheritance org-crypt-tag-matcher))
 
 (use-package org-list
   :custom
