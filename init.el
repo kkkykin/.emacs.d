@@ -2111,8 +2111,10 @@ before calling the original function."
   :if (package-installed-p 'denote)
   :bind
   ( :map my/global-prefix-map
-    ("n" . denote-open-or-create))
+    ("n" . denote-open-or-create)
+    ("N" . denote-silo-extras-open-or-create))
   :init
+  (put 'denote-directory 'safe-local-variable 'stringp)
   (with-eval-after-load 'dired
     (bind-keys
      :map my/dired-spc-prefix-map
@@ -2154,18 +2156,20 @@ before calling the original function."
   (denote-date-format nil)
   (denote-rename-buffer-format "[D] %t")
   (denote-excluded-directories-regexp "_archive")
-  ;; (denote-silo-extras-directories)
   :hook
   ((dired-mode . denote-dired-mode)
    (find-file . denote-fontify-links-mode-maybe))
   :config
+  (require 'denote-silo-extras)
+  (setq denote-directory org-directory
+        denote-silo-extras-directories (list (expand-file-name "~/.config")
+                                             org-directory))
   (define-advice denote-rename-file-and-buffer (:before-while (old new) rename-dir)
     "Rename directory in dired."
     (if (and (file-directory-p old)
              (derived-mode-p 'dired-mode))
         (dired-rename-file old new nil)
       t))
-  (setq denote-directory (expand-file-name "~/org/"))
   (unless (file-exists-p denote-directory)
     (make-directory denote-directory))
   (defun my/denote-region-org-structure-template (_beg _end)
@@ -2173,7 +2177,6 @@ before calling the original function."
       (activate-mark)
       (call-interactively 'org-insert-structure-template)))
   (add-hook 'denote-region-after-new-note-functions #'my/denote-region-org-structure-template)
-  (require 'denote-silo-extras)
   (denote-rename-buffer-mode 1))
 
 ;; Popup completion-at-point
