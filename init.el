@@ -83,6 +83,7 @@
   (defun my/restore-gc ()
     (run-at-time 1 nil #'my/do-restore-gc))
   (put 'buffer-file-coding-system 'safe-local-variable 'symbolp)
+  (put 'buffer-auto-save-file-name 'safe-local-variable 'null)
   (prefer-coding-system 'utf-8)
   (set-charset-priority 'unicode))
 
@@ -1792,8 +1793,15 @@ before calling the original function."
   (org-clock-persistence-insinuate))
 
 (use-package org-crypt
+  :bind
+  ( :map org-mode-map
+    ("C-c C-/" . (lambda (_) (interactive "P")
+                   (if _
+                       (org-decrypt-entries)
+                     (org-decrypt-entry)))))
   :config
   (org-crypt-use-before-save-magic)
+  (add-to-list 'org-tag-alist (cons org-crypt-tag-matcher ?c) t)
   (add-to-list 'org-tags-exclude-from-inheritance org-crypt-tag-matcher))
 
 (use-package org-list
