@@ -164,6 +164,9 @@ Eshell."
     (encode-coding-region min (point-max) from)
     (decode-coding-region min (point-max) to)))
 
+(define-advice epg-encrypt-string (:filter-return (s) remove-\r)
+  (string-replace (string ?\r ?\n) (string ?\n) s))
+
 
 ;; sandbox
 
