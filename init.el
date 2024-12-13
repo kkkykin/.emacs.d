@@ -1873,7 +1873,11 @@ before calling the original function."
 
 (use-package org-src
   :custom
-  (org-src-preserve-indentation t))
+  (org-src-preserve-indentation t)
+  :config
+  (dolist (l '(("json" . json-ts)
+               ("yml" . yaml-ts)))
+    (add-to-list 'org-src-lang-modes l)))
 
 (use-package ol
   :commands org-insert-link-global
@@ -1931,6 +1935,12 @@ before calling the original function."
                   (:results . "silent"))
                 (cl-delete-if (lambda (a) (memq a '(:noweb :results)))
                               org-babel-default-header-args :key #'car)))
+  (with-eval-after-load 'ob-org
+    (dolist (l '("conf" "json" "text" "yml"))
+      (dolist (f '("org-babel-expand-body"
+                   "org-babel-execute"))
+        (defalias (intern (format "%s:%s" f l))
+          (intern (concat f ":org"))))))
   (with-eval-after-load 'ob-plantuml
     (define-advice org-babel-plantuml-make-body (:filter-return (body) start-at-begin)
       "Move `@start' to first line, avoid define variable before start."
