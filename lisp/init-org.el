@@ -28,7 +28,7 @@
 
 (require 'org-protocol)
 
-(defun my/org-protocol-cookies-dumper (info)
+(defun mo/protocol-cookies-dumper (info)
   (let ((parts (org-protocol-parse-parameters info t)))
     (write-region (plist-get parts :cookies) nil
                   (expand-file-name (plist-get parts :host) my/cookies-dir)))
@@ -36,7 +36,7 @@
 
 (add-to-list 'org-protocol-protocol-alist
              '("cookies-dumper" :protocol "cookies-dumper"
-               :function my/org-protocol-cookies-dumper :kill-client t))
+               :function mo/protocol-cookies-dumper :kill-client t))
 
 (with-eval-after-load 'org-tempo
   (dolist (k '(("d" . "header")
@@ -72,7 +72,33 @@ its subdirectories."
          (table (concat table-header table-rows)))
     (insert table)))
 
-(defun my/org-call-babel-at-point (&optional type params position confirm)
+(defun mo/table-select (value-ref tbl key-ref key-value)
+  "Select values from a table based on a key.
+
+VALUE-REF(Must contains \"%d\") is the reference to the value in the table TBL.
+KEY-REF is the reference to the key in the table TBL.
+KEY-VALUE is the value to search for in the key column.
+
+This function resolves the references to the value and key columns,
+finds the position of KEY-VALUE in the key column, and returns the
+corresponding value from the value column.
+
+For example:
+#+name: digit
+|   1 | one |
+| www | two |
+
+(my/org-table-select \"%d,1\" \"digit\" \",0\" 1) => \"one\"
+(my/org-table-select \"%d,1\" \"digit\" \",0\" \"www\") => \"two\"
+"
+  (org-babel-ref-resolve
+   (format (format "%s[%s]" tbl value-ref)
+           (cl-position key-value
+                        (org-babel-ref-resolve
+                         (format "%s[%s]" tbl key-ref))
+                        :test #'equal))))
+
+(defun mo/call-babel-at-point (&optional type params position confirm)
   "Execute the Babel block or call at point in Org mode.
 
 This function executes a Babel source block or a Babel call located at
@@ -95,7 +121,7 @@ before executing the block.
 
 Example usage:
 - Execute a specific Babel call at a given position with confirmation:
-  (my/org-call-babel-at-point 'babel-call '((:var . \"a=\\\"ddd\\\"\"))
+  (mo/call-babel-at-point 'babel-call '((:var . \"a=\\\"ddd\\\"\"))
   1234 t)."
   (save-excursion
     (when position (goto-char position))
@@ -110,7 +136,7 @@ Example usage:
            (org-babel-execute-src-block
             nil (org-babel-lob-get-info ele) params type)))))))
 
-(defun my/org-exec-link-or-babel-nearby (&optional arg)
+(defun mo/exec-link-or-babel-nearby (&optional arg)
   "Execute a link or Babel block near the point in Org mode.
 Or execute a link near the point in all mode.
 
@@ -152,7 +178,7 @@ In case no link or Babel block is found, a user error is signaled."
                        (memq (org-element-type (org-element-at-point))
                              '( babel-call inline-babel-call
                                 inline-src-block src-block)))))
-           (my/org-call-babel-at-point type)
+           (mo/call-babel-at-point type)
          (save-excursion
            (re-search-forward
             (if orgp
@@ -175,10 +201,10 @@ In case no link or Babel block is found, a user error is signaled."
                  (org-link-open-from-string link)))
               ((memq type '( inline-babel-call babel-call
                              inline-src-block src-block))
-               (my/org-call-babel-at-point type nil nil t))
+               (mo/call-babel-at-point type nil nil t))
               (t (user-error "No link or babel found"))))))))))
 
-(defun my/org-babel-expand-src-block ()
+(defun mo/babel-expand-src-block ()
   "Expand the Org Babel source block at point.
 
 This function handles both named source blocks and inline source blocks.
@@ -200,7 +226,7 @@ Usage:
 - Call this function interactively to expand the source block.
 
 Example:
-Place the cursor on the following line and call `my/org-babel-expand-src-block`:
+Place the cursor on the following line and call `mo/babel-expand-src-block`:
 #+CALL: your-named-src-block()
 
 This will navigate to `your-named-src-block`, process its parameters,
@@ -215,7 +241,7 @@ and expand it."
         (funcall-interactively #'org-babel-expand-src-block nil info))
     (funcall-interactively #'org-babel-expand-src-block)))
 
-(defun my/org-babel-src-and-call-blocks (&optional file)
+(defun mo/babel-src-and-call-blocks (&optional file)
   "Return the names of source and call blocks in FILE or the current
 buffer. ref: `org-babel-src-block-names'."
   (with-current-buffer (if file (find-file-noselect file) (current-buffer))
@@ -230,7 +256,7 @@ buffer. ref: `org-babel-src-block-names'."
                 (when name (push (cons name (point)) blocks))))))
         blocks))))
 
-(defun my/org-babel-execute-named-src-block (&optional name params)
+(defun mo/babel-execute-named-src-block (&optional name params)
   "Execute a named Babel source block or call in the current Org buffer.
 
 This function searches for and executes a named Babel source block or call
@@ -247,9 +273,9 @@ function. These parameters are merged with a default parameter that sets the
 `:results` property to \"silent\" to suppress output.
 
 Usage:
-- Execute a specific named Babel block: `M-x my/org-babel-execute-named-src-block`
+- Execute a specific named Babel block: `M-x mo/babel-execute-named-src-block`
 - Execute a named Babel block with additional parameters:
-  (my/org-babel-execute-named-src-block \"block-name\" '((:lexical . \"yes\")))."
+  (mo/babel-execute-named-src-block \"block-name\" '((:lexical . \"yes\")))."
   (interactive nil org-mode)
   (save-excursion
     (save-restriction
@@ -264,21 +290,21 @@ Usage:
                               ((equal name (org-element-property :name element)))
                               (type (org-element-type element))
                               ((memq type '(src-block babel-call))))
-                    (throw 'found (my/org-call-babel-at-point type params)))))))
-        (if-let* ((blocks (my/org-babel-src-and-call-blocks))
+                    (throw 'found (mo/call-babel-at-point type params)))))))
+        (if-let* ((blocks (mo/babel-src-and-call-blocks))
                   (name (completing-read "Src: " (mapcar #'car blocks)))
                   (p (alist-get name blocks nil nil 'equal)))
-            (my/org-call-babel-at-point nil params p)
+            (mo/call-babel-at-point nil params p)
           (user-error "No blocks found."))))))
 
 (with-eval-after-load 'ob
   (bind-keys
    :map org-babel-map
-   ("v" . my/org-babel-expand-src-block)
-   ("m" . my/org-babel-execute-named-src-block)))
+   ("v" . mo/babel-expand-src-block)
+   ("m" . mo/babel-execute-named-src-block)))
 
 (with-eval-after-load 'ox-latex
-  (defun my/org-latex-filter-link-fix (link backend info)
+  (defun mo/latex-filter-link-fix (link backend info)
     "Use correct path when export directory not `default-directory'.
      Append zero-width-space after link avoid error: No line here to end."
     (if-let* ((need-fix (eq 'latex backend))
@@ -299,9 +325,9 @@ Usage:
          link)
       link))
   (add-hook 'org-export-filter-link-functions
-            #'my/org-latex-filter-link-fix))
+            #'mo/latex-filter-link-fix))
 
-(defun my/org-src-save-buffer ()
+(defun mo/src-save-buffer ()
   "Ask before save org-babel preview buffer."
   (interactive)
   (if (string-prefix-p "*Org-Babel Preview "
@@ -318,12 +344,12 @@ different modes and special buffers in Emacs, particularly when using
 Viper mode and Org mode.
 
 It behaves differently based on the current context:
-1. In `org-src-mode', it calls `my/org-src-save-buffer'.
+1. In `org-src-mode', it calls `mo/src-save-buffer'.
 2. In the \"*Edit Formulas*\" buffer, it finishes formula editing.
 3. In all other cases, it performs a Viper ex-mode write operation."
   (interactive "P")
   (cond
-   (org-src-mode (my/org-src-save-buffer))
+   (org-src-mode (mo/src-save-buffer))
    ((string= (buffer-name) "*Edit Formulas*")
     (apply #'org-table-fedit-finish args))
    (t (ex-write nil))))
@@ -332,12 +358,16 @@ It behaves differently based on the current context:
   (add-to-list 'my/extra-ex-token-alist '("w" (my/viper-save-buffer)))
   (bind-keys
    :map org-src-mode-map
-   ("C-x C-s" . my/org-src-save-buffer)))
+   ("C-x C-s" . mo/src-save-buffer)))
 
 (with-eval-after-load 'viper
   (bind-keys
    :map viper-vi-global-user-map
-   ([remap org-open-at-point-global] . my/org-exec-link-or-babel-nearby)))
+   ([remap org-open-at-point-global] . mo/exec-link-or-babel-nearby)))
 
 (provide 'init-org)
 ;;; init-org.el ends here
+
+;; Local Variables:
+;; read-symbol-shorthands: (("mo/" . "my/org-"))
+;; End:
