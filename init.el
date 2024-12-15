@@ -2306,17 +2306,17 @@ before calling the original function."
     ("TAB" . shr-next-link)
     ("M-TAB" . shr-previous-link))
   :init
+  (put 'devdocs-current-docs 'safe-local-variable 'listp)
   (defun my/devdocs-setup ()
-    (setq-local devdocs-current-docs
-                (pcase major-mode
-                  ((or 'c++-mode 'c++-ts-mode) '("cpp"))
-                  ('cmake-ts-mode '("cmake~3.26"))
-                  ('python-mode '("python~3.12")))))
+    (unless (bound-and-true-p devdocs-current-docs)
+      (setq-local devdocs-current-docs
+                  (pcase major-mode
+                    ((or 'c++-mode 'c++-ts-mode) '("cpp"))
+                    ('cmake-ts-mode '("cmake~3.26"))
+                    ((guard (derived-mode-p 'js-base-mode)) '("javascript"))
+                    ((guard (derived-mode-p 'python-base-mode)) '("python~3.12"))))))
   :hook
-  (( c++-mode c++-ts-mode
-     cmake-ts-mode
-     python-mode)
-   . my/devdocs-setup))
+  (after-change-major-mode-hook . my/devdocs-setup))
 
 (use-package xeft
   :if (package-installed-p 'xeft))
