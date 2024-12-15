@@ -464,8 +464,9 @@
   (auto-save-file-name-transforms
    `((".*" ,temporary-file-directory t)))
   :config
-  (add-to-list 'auto-mode-alist
-               '("[^/]\\.dired\\'" . dired-virtual-mode)))
+  (dolist (m '(("[^/]\\.dired\\'" . dired-virtual-mode)
+               ("/hosts\\'" . conf-mode)))
+    (add-to-list 'auto-mode-alist m)))
 
 (use-package tooltip
   :custom
