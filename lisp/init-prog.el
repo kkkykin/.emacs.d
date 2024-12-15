@@ -388,6 +388,8 @@ From https://christiantietze.de/posts/2024/01/emacs-sqlite-mode-open-sqlite-file
 (add-hook 'server-switch-hook
           (lambda ()
             (when (string-suffix-p "/.git/COMMIT_EDITMSG" (buffer-file-name))
+              (when viper-mode
+                (viper-change-state-to-insert))
               (my/prog-vc-commit-template))))
 
 (with-eval-after-load 'log-view
