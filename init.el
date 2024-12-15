@@ -1878,6 +1878,8 @@ before calling the original function."
   (org-src-preserve-indentation t)
   :config
   (dolist (l '(("json" . json-ts)
+               ("lua" . lua-ts)
+               ("py" . python-ts)
                ("yml" . yaml-ts)))
     (add-to-list 'org-src-lang-modes l)))
 
@@ -1927,6 +1929,7 @@ before calling the original function."
                ("v" . org-babel-expand-src-block))
   :custom
   (org-plantuml-exec-mode 'plantuml)
+  (org-babel-lua-mode 'lua-ts-mode)
   :config
   ;; (add-to-list 'display-buffer-alist
   ;;              `(,(regexp-quote org-babel-error-buffer-name)
