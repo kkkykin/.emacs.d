@@ -1369,6 +1369,7 @@ before calling the original function."
   (tab-line-tabs-function 'tab-line-tabs-buffer-groups)
   (tab-line-exclude-modes
    '(completion-list-mode
+     reb-mode
      special-mode
      gnus-server-mode
      gnus-group-mode
