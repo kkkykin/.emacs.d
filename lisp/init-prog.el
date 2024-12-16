@@ -385,12 +385,20 @@ From https://christiantietze.de/posts/2024/01/emacs-sqlite-mode-open-sqlite-file
       (_ (format "%s(%s): " type (skeleton-read "Scope: "))))))
 (with-eval-after-load 'log-edit
   (add-hook 'log-edit-hook #'mp/vc-commit-template 1))
-(add-hook 'server-switch-hook
-          (lambda ()
-            (when (string-suffix-p "/.git/COMMIT_EDITMSG" (buffer-file-name))
-              (when viper-mode
-                (viper-change-state-to-insert))
-              (my/prog-vc-commit-template))))
+
+(defun mp/git-commit-message-setup ()
+  "Default insert state, and emulate vc-commit."
+  (when (string-suffix-p "/.git/COMMIT_EDITMSG" (buffer-file-name))
+    (when viper-mode
+      (viper-change-state-to-insert))
+    (when (fboundp 'my/process-custom-buffer-local-keys)
+      (setq-local my/custom-buffer-local-keys
+                  '(("C-c C-c" . server-edit)
+                    ("C-c C-k" . (lambda () (interactive) (erase-buffer) (server-edit)))))
+      (my/process-custom-buffer-local-keys))
+    (my/prog-vc-commit-template)))
+
+(add-hook 'server-switch-hook #'mp/git-commit-message-setup)
 
 (with-eval-after-load 'log-view
   (bind-keys
