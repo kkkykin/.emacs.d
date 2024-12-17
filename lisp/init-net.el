@@ -219,7 +219,20 @@
     (list url parameters)))
 
 (defcustom mn/dotfiles-dir (expand-file-name "~/.config")
-  "Dotfiles dir.")
+  "Dotfiles dir."
+  :type 'directory
+  :set (lambda (sym val)
+         (set-default sym val)
+         (custom-reevaluate-setting 'mn/pac-data-file)))
+
+(defcustom mn/pac-data-file (expand-file-name "surfingkeys/pac.json.gpg" mn/dotfiles-dir)
+  "PAC data file path."
+  :type 'file)
+
+(with-eval-after-load 'url
+  (with-current-buffer (find-file-noselect mn/pac-data-file)
+    (goto-char 1)
+    (mn/init-proxy-rules (json-parse-buffer))))
 
 (defun mn/add-domain-to-proxy (hostname)
   "Add a domain to the proxy rules.
