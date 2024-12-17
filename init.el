@@ -1614,6 +1614,7 @@ before calling the original function."
           (html "https://github.com/tree-sitter/tree-sitter-html")
           (css "https://github.com/tree-sitter/tree-sitter-css")
           (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
+          (jsdoc "https://github.com/tree-sitter/tree-sitter-jsdoc")
           (tsx . ("https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")))))
 
 (use-package cmake-ts-mode
