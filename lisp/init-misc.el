@@ -497,6 +497,14 @@ ref: https://pandoc.org/MANUAL.html#general-options"
 
 ;; re-builder
 
+(defun my/wildcards-to-regexp (wildcards)
+  "Convert a list of wildcard patterns to a regexp string."
+  (mapconcat 
+   (lambda (pattern)
+     (string-replace "*" ".*" (string-replace "." "\\." pattern)))
+   wildcards
+   "\\|"))
+
 (defun my/reb-copy-match (&optional group)
   "Copy current match strings into the `kill-ring'. With
 `universal-argument' select nth group. Default copy first group."

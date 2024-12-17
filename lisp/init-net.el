@@ -115,11 +115,11 @@
 
 ;; proxy
 
-(defvar mn/url-proxy-rules-hash (make-hash-table :test 'equal)
+(defvar mn/proxy-rules-hash (make-hash-table :test 'equal)
   "Hash table for storing domain proxy rules.")
 
-(defvar mn/ip-proxy-rules nil
-  "List of IP rules with CIDR matching.")
+(defvar mn/proxy-rules-patterns nil
+  "List of regexp proxy rules.")
 
 (defun mn/generate-ipv4-mask (prefix-len)
   "Generate IPv4 netmask vector for given prefix length."
@@ -165,44 +165,38 @@
 
 (defun mn/init-proxy-rules (rules)
   "Initialize proxy rules from the given rules list."
-  (clrhash mn/url-proxy-rules-hash)
-  (setq mn/ip-proxy-rules nil)
+  (clrhash mn/proxy-rules-hash)
+  (setq mn/proxy-rules-patterns nil)
   
-  ;; Process host rules
-  (dolist (host-rule-group (cdr (assoc "hostRule" rules)))
-    (let ((proxy (car host-rule-group))
-          (domains (cdr host-rule-group)))
-      (dolist (domain domains)
-        (puthash domain proxy mn/url-proxy-rules-hash))))
-  
-  ;; Process IP rules
-  (dolist (ip-rule-group (cdr (assoc "ipRule" rules)))
-    (let ((proxy (car ip-rule-group))
-          (cidrs (cdr ip-rule-group)))
-      (dolist (cidr cidrs)
-        (push (cons (mn/cidr-to-ip-mask cidr) proxy) mn/ip-proxy-rules)))))
+  (let ((proxys (gethash "proxy" rules))
+        (autoproxy_hosts (gethash "autoproxy_hosts" rules)))
+    (dotimes (i (length proxys))
+      (let ((proxy (elt proxys i))
+            (hosts (elt autoproxy_hosts i))
+            wildcards)
+        (mapc (lambda (host)
+                (if (seq-position host ?*)
+                    (push host wildcards)
+                  (puthash host proxy mn/proxy-rules-hash)))
+              hosts)
+        (when wildcards
+          (push (cons (my/wildcards-to-regexp wildcards) proxy)
+                mn/proxy-rules-patterns))))))
 
 (defun mn/match-proxy-rule (urlobj host)
-  "Match URL or IP against proxy rules. Returns proxy string or \"DIRECT\"."
-  (if (string-match-p "^\\([0-9.]+\\)\\|\\([0-9a-fA-F:]+\\)$" host)
-      ;; IP address matching
-      (if-let* ((matching-rule
-                 (cl-find-if
-                  (lambda (rule)
-                    (nsm-network-same-subnet (caar rule) (cdar rule) host))
-                  mn/ip-proxy-rules)))
-          (cdr matching-rule)
-        "DIRECT")
-    ;; Domain matching
-    (let* ((parts (split-string host "\\."))
-           (len (length parts))
-           found)
-      ;; Try matching from most specific to least specific
-      (while (and (> len 0) (not found))
-        (setq found (gethash (string-join (last parts len) ".")
-                             mn/url-proxy-rules-hash))
-        (setq len (1- len)))
-      (or found "DIRECT"))))
+  "Match URL against proxy rules. Returns proxy string or \"DIRECT\"."
+  (let* ((parts (split-string host "\\."))
+         (len (length parts)))
+    (or (catch 'found
+          (while (> len 0)
+            (if-let* ((fd (gethash (string-join (last parts len) ".")
+                                   mn/proxy-rules-hash)))
+                (throw 'found fd)
+              (setq len (1- len))))
+          (dolist (r mn/proxy-rules-patterns)
+            (when (string-match-p (car r) host)
+              (throw 'found (cdr r)))))
+        "DIRECT")))
 
 (defvar mn/url-history '())
 (defun mn/url-proxy-locator (urlobj host)
@@ -224,110 +218,49 @@
         (setq parameters (list (concat "-x" prefix (cadr u))))))
     (list url parameters)))
 
-(with-eval-after-load 'autoinsert
-  (defvar mn/proxy-data-file (expand-file-name "data/proxy.gpg" auto-insert-directory)
-    "File for store proxy data.")
-  (with-eval-after-load 'epa
-    (with-current-buffer (find-file-noselect mn/proxy-data-file)
-      (goto-char 1)
-      (mn/init-proxy-rules (read (current-buffer))))))
+(defcustom mn/dotfiles-dir (expand-file-name "~/.config")
+  "Dotfiles dir.")
 
-(defun mn/minify-js-buffer ()
-  "Minimize JavaScript content in the current buffer by removing comments
-and extra whitespace."
-  (interactive)
-  (save-excursion
-    (let ((content (buffer-substring-no-properties (point-min) (point-max))))
-      ;; Remove multi-line comments
-      (setq content (replace-regexp-in-string "/\\*\\(.\\|\n\\)*?\\*/" "" content))
-      ;; Remove single-line comments
-      (setq content (replace-regexp-in-string "//.*" "" content))
-      ;; Remove unnecessary whitespace (newlines, tabs, spaces)
-      (setq content (replace-regexp-in-string "[ \t\n]+" " " content))
-      ;; Remove whitespace around specific punctuation
-      (setq content (replace-regexp-in-string "\\s-*\\([{}();,:+]\\)\\s-*" "\\1" content))
-      ;; Remove extra spaces at the beginning and end of the buffer
-      (setq content (replace-regexp-in-string "^\\s-+\\|\\s-+$" "" content))
-      ;; Clear buffer and insert the optimized content
-      (delete-region (point-min) (point-max))
-      (insert content))))
+(defun mn/add-domain-to-proxy (hostname)
+  "Add a domain to the proxy rules.
 
-(defun mn/add-domain-to-proxy (url)
-  "Add a domain to the SOCKS5 proxy rules in `mn/proxy-data-file`.
-
-This function takes a URL as input, extracts the domain, and adds it to
-the SOCKS5 proxy rules in the proxy data file. If the URL does not start
-with 'http', it prepends 'http://' to it. The function then reads the
-proxy data file, updates the SOCKS5 rules with the new domain, removes
-duplicates, sorts the rules, and saves the updated proxy data file.
-
-Arguments: url -- The URL from which to extract the domain to be added
-  to the proxy rules."
-  (interactive "surl: ")
-  (unless (string-prefix-p "http" url)
-    (setq url (concat "http://" url)))
-  (with-current-buffer (find-file-noselect mn/proxy-data-file)
+This function takes a HOSTNAME as input and adds it to the first proxy
+rules in the proxy data file."
+  (interactive "shostname: ")
+  (with-current-buffer (find-file-noselect
+                        (expand-file-name "surfingkeys/pac.json.gpg"
+                                          mn/dotfiles-dir))
     (goto-char 1)
-    (let* ((host (url-host (url-generic-parse-url url)))
-           (domain (if (string-match "\\(?:[[:alnum:]-]+\\.\\)?\\([[:alnum:]-]+\\.[[:alnum:]]+\\)$" host)
-                       (match-string 1 host)
-                     host))
-           (proxy-rules (read (current-buffer)))
-           (host-rules (alist-get "hostRule" proxy-rules nil nil #'equal))
-           (socks5-rule (cl-find-if (lambda (a) (string-prefix-p "SOCKS5 " a)) host-rules :key #'car)))
-      (setcdr socks5-rule (cons (downcase domain) (cdr socks5-rule)))
-      (dolist (h host-rules)
-        (cl-delete-duplicates h :test #'string=)
-        (cl-sort (cdr h) #'string<))
+    (let* ((cfg (json-parse-buffer))
+           (autoproxy_hosts (gethash "autoproxy_hosts" cfg)))
+      (setf (aref autoproxy_hosts 0)
+            (vconcat (vector hostname) (aref autoproxy_hosts 0)))
+      (puthash "autoproxy_hosts"
+               (cl-map #'vector (lambda (h)
+                                  (cl-sort
+                                   (cl-remove-duplicates h :test #'string=)
+                                   #'string<))
+                       autoproxy_hosts)
+               cfg)
       (erase-buffer)
-      (insert (prin1-to-string proxy-rules))
+      (insert (json-serialize cfg))
       (save-buffer)
-      (mn/init-proxy-rules proxy-rules)
-      (message "%s added to proxy." domain)))
-  (mn/generate-pac-file))
-
-(defcustom mn/pac-file-path (expand-file-name "~/www/wpad.dat")
-  "Where to store pac file."
-  :type 'file)
+      (mn/init-proxy-rules cfg)
+      (message "%s added to proxy." hostname))
+    (mn/generate-pac-file)))
 
 (defun mn/generate-pac-file ()
-  "Generate a PAC file from proxy rules and save it to a specified location.
-
-This function reads proxy rules from `mn/proxy-data-file`, processes the
-host and IP rules, and inserts them into a PAC file template. The
-resulting PAC file is then minified and saved to the specified location.
-
-Steps:
-1. Read the proxy rules from `mn/proxy-data-file`.
-2. Extract host and IP rules.
-3. Insert the rules into a PAC file template.
-4. Minify the JavaScript in the buffer.
-5. Save the buffer content to `mn/pac-file-path' as the PAC file.
+  "Generate a PAC file by tangle surfingkeys config.
 
 ref:
 chrome://net-internals#proxy
 https://support.microsoft.com/en-us/topic/how-to-disable-automatic-proxy-caching-in-internet-explorer-92735c9c-8a26-d0d8-7f8a-1b46595cbaba"
-  (with-temp-buffer
-    (insert-file-contents-literally mn/proxy-data-file)
-    (when-let* (((string-suffix-p ".gpg" mn/proxy-data-file))
-               (epa-replace-original-text t))
-      (epa-decrypt-region (point-min) (point-max)))
-    (let* ((proxy-rules (read (current-buffer)))
-           (host-rules (alist-get "hostRule" proxy-rules nil nil #'equal))
-           (ip-rules (alist-get "ipRule" proxy-rules nil nil #'equal)))
-      (erase-buffer)
-      (insert-file-contents-literally
-       (expand-file-name "wpad.pac" auto-insert-directory))
-      (delete-region (point-min) (pos-eol))
-      (insert "var hostRulesMap="
-              (json-encode
-               (mapcan (lambda (a)
-                         (let ((action (car a)))
-                           (mapcar (lambda (b) (cons b action)) (cdr a))))
-                       host-rules))
-              ";var ipRulesMap=" (json-encode ip-rules) ";"))
-    (mn/minify-js-buffer)
-    (write-region nil nil mn/pac-file-path)))
+  (let (org-confirm-babel-evaluate)
+    (org-babel-tangle-file
+     (expand-file-name
+      "surfingkeys/20241214T081602--surfingkeys__browser.org"
+      my/dotfiles-dir)
+     nil "^javascript$")))
 
 (defun mn/proxy-up-p (&optional proxy callback)
   "Test Proxy availability."
