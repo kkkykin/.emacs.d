@@ -163,7 +163,7 @@
         (cons ip-vec mask))
     (error "Invalid CIDR notation")))
 
-(defun mn/init-proxy-rules (rules)
+(defun mn/init-proxy-rules-1 (rules)
   "Initialize proxy rules from the given rules list."
   (clrhash mn/proxy-rules-hash)
   (setq mn/proxy-rules-patterns nil)
@@ -223,16 +223,25 @@
   :type 'directory
   :set (lambda (sym val)
          (set-default sym val)
-         (custom-reevaluate-setting 'mn/pac-data-file)))
+         (let ((pac 'mn/pac-data-file))
+           (and (boundp pac)
+                (custom-reevaluate-setting pac)))))
 
 (defcustom mn/pac-data-file (expand-file-name "surfingkeys/pac.json.gpg" mn/dotfiles-dir)
   "PAC data file path."
   :type 'file)
 
-(with-eval-after-load 'url
-  (with-current-buffer (find-file-noselect mn/pac-data-file)
+(defun mn/init-proxy-rules ()
+  (with-temp-buffer
+    (insert-file-contents-literally mn/pac-data-file)
+    (when (string-suffix-p ".gpg" mn/pac-data-file)
+      (let ((epa-replace-original-text t))
+        (epa-decrypt-region (point-min) (point-max))))
     (goto-char 1)
-    (mn/init-proxy-rules (json-parse-buffer))))
+    (mn/init-proxy-rules-1 (json-parse-buffer))))
+
+(with-eval-after-load 'epa
+  (run-with-idle-timer 10 nil #'mn/init-proxy-rules))
 
 (defun mn/add-domain-to-proxy (hostname)
   "Add a domain to the proxy rules.
@@ -258,7 +267,7 @@ rules in the proxy data file."
       (erase-buffer)
       (insert (json-serialize cfg))
       (save-buffer)
-      (mn/init-proxy-rules cfg)
+      (mn/init-proxy-rules-1 cfg)
       (message "%s added to proxy." hostname))
     (mn/generate-pac-file)))
 
