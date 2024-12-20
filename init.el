@@ -1756,6 +1756,7 @@ before calling the original function."
       (js . t)
       (latex . nil)
       (ledger . nil)
+      (lua . t)
       (makefile . t)
       (ocaml . nil)
       (octave . nil)
