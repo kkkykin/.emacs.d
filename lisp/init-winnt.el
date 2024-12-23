@@ -254,7 +254,7 @@ https://learn.microsoft.com/en-us/windows/security/application-security/applicat
 
 (with-eval-after-load 'dired
   (add-to-list 'dired-guess-shell-alist-user
-               '("\\.exe\\'" "innounp -xobupxyg688.com"))
+               '("\\.exe\\'" "innounp -x -o -b -u -pxyg688.com"))
   (bind-keys
    :map dired-mode-map
    ("N" . woman-dired-find-file)))
