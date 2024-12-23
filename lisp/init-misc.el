@@ -366,6 +366,13 @@ ref: https://pandoc.org/MANUAL.html#general-options"
       (goto-char (point-min))
       (select-window (display-buffer (current-buffer))))))
 
+(defun my/shell-do-open (&optional arg)
+  "Open file's directory using an external program. If called with
+`universal-argument', then open file."
+  (interactive "P")
+  (let ((file (buffer-file-name)))
+    (shell-command-do-open (list (if arg file (file-name-directory file))))))
+
 (with-eval-after-load 'dired
   (bind-keys
    :map dired-mode-map
@@ -375,6 +382,12 @@ ref: https://pandoc.org/MANUAL.html#general-options"
    ("d" . my/dired-duplicate-file)
    ("o" . my/dired-open-with-pandoc)
    ("s" . my/dired-goto-random-file)))
+
+(with-eval-after-load 'dired-aux
+  (when (fboundp #'shell-command-do-open)
+    (bind-keys
+     :map my/global-prefix-map
+     ("E" . my/shell-do-open))))
 
 (with-eval-after-load 'image-dired
   (unless (executable-find "gm")
