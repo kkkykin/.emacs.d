@@ -1003,6 +1003,7 @@ before calling the original function."
   (dired-ls-F-marks-symlinks t)
   (dired-mouse-drag-files t)
   (delete-by-moving-to-trash t)
+  (dired-hide-details-hide-absolute-location t)
   (dired-guess-shell-alist-user
    `((,(rx ?. (| "rar" "zip" "7z" "iso" "cab" "apks") (? ".001") eos)
       #1=(format "%s x -spe -o\"%s\" -aoa -p⑨"
