@@ -367,6 +367,40 @@ From https://christiantietze.de/posts/2024/01/emacs-sqlite-mode-open-sqlite-file
 
 ;; vc
 
+(defun mp/vc-dir-copy-filename-as-kill (&optional arg)
+  "ref: `dired-copy-filename-as-kill'"
+  (interactive "P" vc-dir-mode)
+  (let* ((sfiles (or (vc-dir-marked-only-files-and-states)
+                     (list (cons (vc-dir-current-file) nil))))
+         (files
+          (if arg
+              (cond ((zerop (prefix-numeric-value arg))
+                     (mapcar #'car sfiles))
+                    ((consp arg)
+                     (mapcar (lambda (f) (file-name-nondirectory (car f))) sfiles))
+                    (t (mapcar (lambda (f) (file-relative-name (car f)))
+                               sfiles)))
+            (mapcar (lambda (f) (file-relative-name (car f))) sfiles)))
+         (string
+          (if (length= files 1)
+              (car files)
+            (mapconcat (lambda (file)
+                         (if (string-match-p "[ \"']" file)
+                             (format "%S" file)
+                           file))
+                       files
+                       " "))))
+    (unless (string= string "")
+      (if (eq last-command 'kill-region)
+          (kill-append string nil)
+        (kill-new string))
+      (message "%s" string))))
+
+(with-eval-after-load 'vc-dir
+  (bind-keys
+   :map vc-dir-mode-map
+   ("w" . mp/vc-dir-copy-filename-as-kill)))
+
 (define-skeleton mp/vc-commit-template
   "VC Conventional Commits.
    https://www.conventionalcommits.org/en/v1.0.0/"
