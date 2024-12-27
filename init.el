@@ -1663,16 +1663,12 @@ before calling the original function."
   :config
   (setq calc-display-trail nil))
 
-(use-package appt
+(use-package appt :defer 2
   :custom
   (appt-message-warning-time 60)
-  (appt-display-interval 1)
-  (appt-disp-window-function
-   (lambda (remaining new-time msg)
-     (notifications-notify
-      :title (message "In %s minutes" remaining)
-      :body msg
-      :urgency 'critical))))
+  (appt-display-interval 5)
+  :config
+  (appt-activate 1))
 
 (use-package org
   :init

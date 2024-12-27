@@ -796,27 +796,43 @@ ref: https://karthinks.com/software/emacs-window-management-almanac/"
              (concat "[^" url-get-url-filename-chars "]+") "" url)))
 
 
-;; life
+;; appt
 
-(defun my/notification-notify (title message &rest params)
-  "Send system notification with TITLE and MESSAGE based on current OS.
+(defun my/notification-notify (title body &rest params)
+  "Send system notification with TITLE and BODY based on current OS.
    On windows, an active notification must be removed by calling
    `w32-notification-close' before a new one can be shown."
-  (let ((notify-fn (pcase system-type
-                     ('android #'android-notifications-notify)
-                     ('windows-nt #'w32-notification-notify)
-                     ('gnu/linux #'notifications-notify))))
-    (apply notify-fn :title title :body message params)))
+  (when-let* ((notify-fn (pcase system-type
+                           ('android #'android-notifications-notify)
+                           ('windows-nt #'w32-notification-notify)
+                           ('gnu/linux #'notifications-notify)))
+              (id (apply notify-fn :title title :body body params))
+              (timeout (plist-get params :timeout))
+              ((eq system-type 'windows-nt)))
+    (run-with-timer timeout nil (lambda () (w32-notification-close id)))))
 
-(defun my/drink-water-reminder ()
-  "Send a notification to remind drinking water."
-  (let ((id (my/notification-notify
-             "💧 Drink Water Reminder"
-             "It's time to drink some water! Stay hydrated!")))
-    (pcase system-type
-      ('windows-nt (w32-notification-close id))
-      (_ nil))))
-(run-at-time t 3600 #'my/drink-water-reminder)
+(defun my/appt-notification-notify (min-to-app new-time appt-msg)
+  "Display appointment due in MIN-TO-APP (a string) minutes.
+NEW-TIME is a string giving the current date.
+Displays the appointment message APPT-MSG via notification."
+  (my/notifications-notify
+   :title (message "In %s minutes" min-to-app)
+   :body appt-msg
+   :urgency 'critical
+   :replaces-id 71
+   :timeout 0))
+
+(defun my/appt-habits ()
+  "Add some habits to appointments."
+  (dolist (h (number-sequence 8 23))
+    (appt-add (format "%d:00" h) "💧 Stay hydrated!" 0)))
+
+(with-eval-after-load 'appt
+  (setq appt-disp-window-function #'my/appt-notification-notify)
+  (my/appt-habits))
+
+(with-eval-after-load 'midnight
+  (add-hook 'midnight-hook #'my/appt-habits))
 
 
 ;; proc
