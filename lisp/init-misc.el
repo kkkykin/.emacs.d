@@ -798,7 +798,7 @@ ref: https://karthinks.com/software/emacs-window-management-almanac/"
 
 ;; appt
 
-(defun my/notification-notify (title body &rest params)
+(defun my/notifications-notify (title body &rest params)
   "Send system notification with TITLE and BODY based on current OS.
    On windows, an active notification must be removed by calling
    `w32-notification-close' before a new one can be shown."
