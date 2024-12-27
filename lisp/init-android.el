@@ -46,7 +46,7 @@
 
 ;; hardware
 
-(defun my/mini-screen-setup-maybe ()
+(defun ma/mini-screen-setup-maybe ()
   "Setup for mini screen mobile."
   (if (= (display-pixel-height) 260)
       (modifier-bar-mode -1)
@@ -59,7 +59,7 @@
   (add-hook 'dired-mode-hook 'dired-hide-details-mode))
 
 ;; todo
-(defun my/mpv-intent (scheme &optional sub)
+(defun ma/mpv-intent (scheme &optional sub)
   "http://mpv-android.github.io/mpv-android/intent.html
 am: [-e|--es <EXTRA_KEY> <EXTRA_STRING_VALUE> ...]  filepath
 scheme: rtmp, rtmps, rtp, rtsp, mms, mmst, mmsh, tcp, udp,
@@ -80,7 +80,7 @@ milliseconds"
                      "is.xyz.mpv/is.xyz.mpv.MPVActivity"
                      "-e" "filepath" url))))
 
-(defun my/fooview-run (cmd)
+(defun ma/fooview-run (cmd)
   "Run fooview action."
   ;; (start-process "fooview-run" nil "am" "start"
   ;;                (format "intent:#Intent;action=com.fooview.android.intent.RUN_WORKFLOW;component=com.fooview.android.fooview/.ShortcutProxyActivity;S.action=%s;end" cmd))
@@ -88,43 +88,43 @@ milliseconds"
                  "com.fooview.android.intent.RUN_WORKFLOW" "-e" "action"
                  cmd "com.fooview.android.fooview/.ShortcutProxyActivity"))
 
-(defun my/rish-run (cmd)
+(defun ma/rish-run (cmd)
   "Run command with rish."
   (start-process "rish-run" nil "rish" "-c" cmd))
 
-(defun my/normal-keyboard ()
+(defun ma/normal-keyboard ()
   "Enable normal keyboard on android."
-  (my/rish-run "ime set com.samsung.android.honeyboard/.service.HoneyBoardService"))
+  (ma/rish-run "ime set com.samsung.android.honeyboard/.service.HoneyBoardService"))
 
-(defun my/bare-keyboard ()
+(defun ma/bare-keyboard ()
   "Enable bare keyboard on android."
-  (my/rish-run "ime set keepass2android.keepass2android/keepass2android.softkeyboard.KP2AKeyboard"))
+  (ma/rish-run "ime set keepass2android.keepass2android/keepass2android.softkeyboard.KP2AKeyboard"))
 
 
 ;; sshd
 
-(defvar my/sshd-pid-file
+(defvar ma/sshd-pid-file
   (file-name-concat my/termux-root-directory "usr/var/run/sshd.pid")
   "sshd pid file.")
 
-(defvar my/sshd-timer nil
+(defvar ma/sshd-timer nil
   "sshd timer object.")
 
-(defun my/toggle-sshd ()
+(defun ma/toggle-sshd ()
   "Toggle local sshd server."
   (interactive)
-  (if (process-attributes (or (my/get-pid-from-file my/sshd-pid-file) 0))
+  (if (process-attributes (or (my/get-pid-from-file ma/sshd-pid-file) 0))
       (progn
-        (delete-file my/sshd-pid-file)
+        (delete-file ma/sshd-pid-file)
         (call-process "pkill" nil nil nil "sshd")
-        (when my/sshd-timer
-          (cancel-timer my/sshd-timer)))
+        (when ma/sshd-timer
+          (cancel-timer ma/sshd-timer)))
     (call-process "sshd")
-    (setq my/sshd-timer (run-at-time 300 300 #'my/sshd-handler))))
+    (setq ma/sshd-timer (run-at-time 300 300 #'ma/sshd-handler))))
 
-(defun my/sshd-handler ()
+(defun ma/sshd-handler ()
   "Kill sshd when no connection over 5 min."
-  (if-let* ((pid (or (my/get-pid-from-file my/sshd-pid-file) 0))
+  (if-let* ((pid (or (my/get-pid-from-file ma/sshd-pid-file) 0))
             (process-attributes pid))
       (with-temp-buffer
         (call-process "logcat" nil (current-buffer) nil
@@ -139,33 +139,33 @@ milliseconds"
                      (< (string-to-number (or (match-string 1) "0"))
                         (- (float-time) 300)))
             (signal-process pid 9)
-            (delete-file my/sshd-pid-file)
-            (cancel-timer my/sshd-timer))))
+            (delete-file ma/sshd-pid-file)
+            (cancel-timer ma/sshd-timer))))
     (call-process "pkill" nil nil nil "sshd")
-    (cancel-timer my/sshd-timer)
-    (delete-file my/sshd-pid-file)))
+    (cancel-timer ma/sshd-timer)
+    (delete-file ma/sshd-pid-file)))
 
-(defvar my/dropbear-timer nil
+(defvar ma/dropbear-timer nil
   "dropbear timer object.")
 
-(defvar my/dropbear-buffer-name "*dropbear*"
+(defvar ma/dropbear-buffer-name "*dropbear*"
   "Default dropbear buffer name.")
 
-(defun my/toggle-dropbear ()
+(defun ma/toggle-dropbear ()
   "Toggle local dropbear server."
   (interactive)
-  (if (buffer-live-p (get-buffer my/dropbear-buffer-name))
+  (if (buffer-live-p (get-buffer ma/dropbear-buffer-name))
       (let ((kill-buffer-query-functions nil))
         (call-process-shell-command "pkill dropbear")
-        (kill-buffer my/dropbear-buffer-name)
-        (cancel-timer my/dropbear-timer))
-    (start-process "dropbear" my/dropbear-buffer-name "dropbear" "-F" "-w" "-s")
-    (setq my/dropbear-timer (run-at-time 300 300 #'my/dropbear-handler
+        (kill-buffer ma/dropbear-buffer-name)
+        (cancel-timer ma/dropbear-timer))
+    (start-process "dropbear" ma/dropbear-buffer-name "dropbear" "-F" "-w" "-s")
+    (setq ma/dropbear-timer (run-at-time 300 300 #'ma/dropbear-handler
                                          (format-time-string "%G %b %d %T")))))
 
-(defun my/dropbear-handler (exit)
+(defun ma/dropbear-handler (exit)
   "Kill dropbear when no connection over 5 min."
-  (with-current-buffer my/dropbear-buffer-name
+  (with-current-buffer ma/dropbear-buffer-name
     (goto-char (point-min))
     (let (child)
       (while (re-search-forward "^\\[\\([[:digit:]]+\\)\\] \\([[:alpha:]]\\{3\\} [[:digit:]]\\{2\\} [[:digit:]:]\\{8\\}\\) \\(Child\\|Exit\\)" nil t)
@@ -181,19 +181,19 @@ milliseconds"
                     (parse-time-string exit))
                    300)
                   nil))
-        (my/toggle-dropbear)))))
+        (ma/toggle-dropbear)))))
 
 
 ;; termux
 
-(cl-defun my/termux-toast
+(cl-defun ma/termux-toast
     (text &optional (bgcolor "gray") (color "white") (gravity "middle") short)
   "termux-toast wrapper."
   (let ((args (list "-b" bgcolor "-c" color "-g" gravity text)))
     (and short (push "-s" args))
     (apply #'start-process "termux-toast" nil "termux-toast" args)))
 
-(cl-defun my/termux-notifications-notify
+(cl-defun ma/termux-notifications-notify
     ( &key title body replaces-id timeout urgency app-icon
       image-path suppress-sound category on-close actions led-color
       led-off led-on group channel action ongoing alert-once)
@@ -248,18 +248,18 @@ Other parameters map to termux-notification CLI options."
 
 (setenv "SSH_AUTH_SOCK" (string-trim-right (shell-command-to-string "gpgconf -L agent-ssh-socket")))
 
-(add-hook 'focus-in-hook #'my/mini-screen-setup-maybe)
+(add-hook 'focus-in-hook #'ma/mini-screen-setup-maybe)
 
-(defun my/stop-record-tracks ()
+(defun ma/stop-record-tracks ()
   "Stop OpenTracks."
   (interactive)
-  (my/rish-run "am force-stop de.dennisguse.opentracks"))
+  (ma/rish-run "am force-stop de.dennisguse.opentracks"))
 
 (easy-menu-define bot-menu global-map
   "Menu for useful commands."
   '("Bot"
-    ["Stop Tracks" my/stop-record-tracks]
-    ["toggle sshd" my/toggle-sshd]
+    ["Stop Tracks" ma/stop-record-tracks]
+    ["toggle sshd" ma/toggle-sshd]
     ["Start alist" my/net-start-alist]))
 
 (setq select-enable-clipboard nil
@@ -283,3 +283,7 @@ Other parameters map to termux-notification CLI options."
 
 (provide 'init-android)
 ;;; init-android.el ends here
+
+;; Local Variables:
+;; read-symbol-shorthands: (("ma/" . "my/android-"))
+;; End:
