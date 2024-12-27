@@ -814,13 +814,19 @@ ref: https://karthinks.com/software/emacs-window-management-almanac/"
 (defun my/appt-notification-notify (min-to-app new-time appt-msg)
   "Display appointment due in MIN-TO-APP (a string) minutes.
 NEW-TIME is a string giving the current date.
-Displays the appointment message APPT-MSG via notification."
-  (my/notifications-notify
-   :title (message "In %s minutes" min-to-app)
-   :body appt-msg
-   :urgency 'critical
-   :replaces-id 71
-   :timeout 0))
+Displays the appointment message APPT-MSG via notification.
+ref: `appt-disp-window'"
+  (let ((timeout (if (eq system-type 'windows-nt) 0
+                   (* 1000 appt-display-duration))))
+    (and (listp min-to-app)
+         (setq min-to-app (number-to-string appt-display-interval)
+               appt-msg (mapconcat #'identity appt-msg "\n")))
+    (my/notifications-notify
+     :title (message "In %s minutes" min-to-app)
+     :body appt-msg
+     :urgency 'critical
+     :replaces-id 100
+     :timeout timeout)))
 
 (defun my/appt-habits ()
   "Add some habits to appointments."
