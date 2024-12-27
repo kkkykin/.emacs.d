@@ -184,6 +184,68 @@ milliseconds"
         (my/toggle-dropbear)))))
 
 
+;; termux
+
+(cl-defun my/termux-toast
+    (text &optional (bgcolor "gray") (color "white") (gravity "middle") short)
+  "termux-toast wrapper."
+  (let ((args (list "-b" bgcolor "-c" color "-g" gravity text)))
+    (and short (push "-s" args))
+    (apply #'start-process "termux-toast" nil "termux-toast" args)))
+
+(cl-defun my/termux-notifications-notify
+    ( &key title body replaces-id timeout urgency app-icon
+      image-path suppress-sound category on-close actions led-color
+      led-off led-on group channel action ongoing alert-once)
+  "Send notification via termux-notification with specified parameters.
+TITLE is the notification title
+BODY is the notification content
+REPLACES-ID is the ID to replace existing notification
+TIMEOUT specifies when to remove the notification (need REPLACES-ID)
+Other parameters map to termux-notification CLI options."
+  (let (args)
+    (cl-macrolet ((add-arg (key val)
+                    `(when ,val (setq args (append (list ,key ,val) args)))))
+      (add-arg "-t" title)
+      (add-arg "-c" body)
+      (add-arg "-i" replaces-id)
+      (add-arg "--priority" urgency)
+      (add-arg "--icon" app-icon)
+      (add-arg "--image-path" image-path)
+      (add-arg "--type" category)
+      (add-arg "--on-delete" on-close)
+      (add-arg "--led-color" led-color)
+      (add-arg "--led-off" led-off)
+      (add-arg "--led-on" led-on)
+      (add-arg "--group" group)
+      (add-arg "--channel" channel)
+      (add-arg "--action" action)
+    
+      (seq-do-indexed
+       (lambda (b i)
+         (add-arg (format "--button%d-action" (1+ i)) (cadr b))
+         (add-arg (format "--button%d" (1+ i)) (car b)))
+       (seq-take (seq-split actions 2) 3))
+    
+      (unless suppress-sound
+        (push "--sound" args))
+      (when ongoing
+        (push "--ongoing" args))
+      (when alert-once
+        (push "--alert-once" args)))
+  
+    (let ((proc (apply #'start-process "termux-notification" nil
+                       "termux-notification" args)))
+      ;; Set up removal timer if timeout specified
+      (when (and proc timeout replaces-id)
+        (run-with-timer
+         timeout nil
+         (lambda ()
+           (start-process "remove-termux-notification" nil
+                          "termux-notification-remove" replaces-id))))
+      proc)))
+
+
 (setenv "SSH_AUTH_SOCK" (string-trim-right (shell-command-to-string "gpgconf -L agent-ssh-socket")))
 
 (add-hook 'focus-in-hook #'my/mini-screen-setup-maybe)
