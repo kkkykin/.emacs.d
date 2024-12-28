@@ -822,8 +822,8 @@ ref: `appt-disp-window'"
          (setq min-to-app (number-to-string appt-display-interval)
                appt-msg (mapconcat #'identity appt-msg "\n")))
     (my/notifications-notify
-     :title (message "In %s minutes" min-to-app)
-     :body appt-msg
+     (message "In %s minutes" min-to-app)
+     appt-msg
      :urgency 'critical
      :replaces-id 100
      :timeout timeout)))
