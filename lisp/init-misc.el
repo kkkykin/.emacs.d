@@ -816,8 +816,7 @@ ref: https://karthinks.com/software/emacs-window-management-almanac/"
 NEW-TIME is a string giving the current date.
 Displays the appointment message APPT-MSG via notification.
 ref: `appt-disp-window'"
-  (let ((timeout (if (eq system-type 'windows-nt) 0
-                   (* 1000 appt-display-duration))))
+  (let ((timeout (and (eq system-type 'windows-nt) 0)))
     (and (listp min-to-app)
          (setq min-to-app (number-to-string appt-display-interval)
                appt-msg (mapconcat #'identity appt-msg "\n")))
