@@ -241,7 +241,8 @@
     (mn/init-proxy-rules-1 (json-parse-buffer))))
 
 (with-eval-after-load 'epa
-  (run-with-idle-timer 10 nil #'mn/init-proxy-rules))
+  (unless (eq system-type 'android)
+    (run-with-idle-timer 10 nil #'mn/init-proxy-rules)))
 
 (defun mn/add-domain-to-proxy (hostname)
   "Add a domain to the proxy rules.
