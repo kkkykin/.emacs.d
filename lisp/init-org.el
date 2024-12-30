@@ -303,6 +303,24 @@ Usage:
    ("v" . mo/babel-expand-src-block)
    ("m" . mo/babel-execute-named-src-block)))
 
+(defvar mo/tangle-default-dir "_tangle"
+  "Default directory for tangled code blocks.
+When no TANGLE-DIR property is specified in the Org file, code blocks
+will be tangled to this directory relative to the Org file's location.")
+
+(defun mo/by-tangle-dir (&optional name no-inherit)
+  "Generate absolute file path for tangling the source block at point.
+
+This function determines the tangle destination by combining:
+1. The target directory: either from TANGLE-DIR property (inherited or not
+inherited) or `mo/tangle-default-dir'.
+2. The filename: either from NAME parameter or the source block's NAME property.
+
+ref: https://emacs-china.org/t/header-args-property/27494/2"
+  (expand-file-name
+   (or name (org-element-property :name (org-element-at-point-no-context)))
+   (or (org-entry-get nil "TANGLE-DIR" (not no-inherit)) mo/tangle-default-dir)))
+
 (with-eval-after-load 'ox-latex
   (defun mo/latex-filter-link-fix (link backend info)
     "Use correct path when export directory not `default-directory'.
