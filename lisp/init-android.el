@@ -263,6 +263,7 @@ Other parameters map to termux-notification CLI options."
     ["Start alist" my/net-start-alist]))
 
 (setq select-enable-clipboard nil
+      shell-file-name (expand-file-name "usr/bin/bash" my/termux-root-directory)
       overriding-text-conversion-style nil
       temporary-file-directory my/termux-tmp-directory
       Info-default-directory-list `(,(file-name-concat my/termux-root-directory "usr/share/info/"))
