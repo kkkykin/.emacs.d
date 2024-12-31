@@ -321,6 +321,30 @@ ref: https://emacs-china.org/t/header-args-property/27494/2"
    (or name (org-element-property :name (org-element-at-point-no-context)))
    (or (org-entry-get nil "TANGLE-DIR" (not no-inherit)) mo/tangle-default-dir)))
 
+(with-eval-after-load 'ox-pandoc
+  (defun mo/pandoc-options-fix (body backend info)
+    "Fix OPTIONS metadata when export org via pandoc.
+
+This function ensures proper handling of export options when exporting
+org-mode using the pandoc backend. It prepends the necessary OPTIONS
+metadata to the exported content."
+    (if (eq 'pandoc backend)
+        (let ((options-string
+               (string-join
+                (cl-loop for opt in org-export-options-alist
+                         for key = (nth 2 opt)
+                         for value = (plist-get info (car opt))
+                         when key
+                         collect (format "%s:%S" key value))
+                " ")))
+          (format "#+OPTIONS: %s\n%s" options-string
+                  (if (memq 'subtree (plist-get info :export-options))
+                      body
+                    (replace-regexp-in-string "^#\\+options:.+" "" body))))
+      body))
+  (add-hook 'org-export-filter-final-output-functions
+            #'mo/pandoc-options-fix))
+
 (with-eval-after-load 'ox-latex
   (defun mo/latex-filter-link-fix (link backend info)
     "Use correct path when export directory not `default-directory'.
