@@ -2374,11 +2374,21 @@ before calling the original function."
 ;; [[elisp:(custom-reevaluate-setting 'org-pandoc-options)]]
 
 (use-package nov
+  ;; https://emacs-china.org/t/emacs-epub/4713/12
   :if (package-installed-p 'nov)
   :mode ("\\.epub\\'" . nov-mode)
   :custom
   (nov-unzip-program archive-7z-program)
   (nov-unzip-args '("x" filename))
+  :bind
+  ( :map nov-mode-map
+    ("i" . (lambda ()
+             (interactive)
+             (let ((v 'nov-header-line-format))
+               (if (local-variable-p v)
+                   (kill-local-variable v)
+                 (setq-local nov-header-line-format nil))
+               (nov-render-document)))))
   :config
   ;; advice for 7z cli cannot split "-o" and `direcotry'
   (define-advice nov-unzip-epub (:around (orig-fun &rest args) extract-with-7z)
