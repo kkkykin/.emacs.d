@@ -2382,14 +2382,21 @@ before calling the original function."
   (nov-unzip-args '("x" filename))
   :bind
   ( :map nov-mode-map
-    ("i" . (lambda ()
-             (interactive)
-             (let ((v 'nov-header-line-format))
-               (if (local-variable-p v)
-                   (kill-local-variable v)
-                 (setq-local nov-header-line-format nil))
-               (nov-render-document)))))
+    ("<left>" . nov-scroll-down)
+    ("<right>" . nov-scroll-up)
+    ("k" . kill-current-buffer)
+    ("&" . my/shell-do-open))
   :config
+  (defun my/nov-toggle-header-line ()
+    (interactive)
+    (let ((v 'nov-header-line-format))
+      (if (local-variable-p v)
+          (kill-local-variable v)
+        (setq-local nov-header-line-format nil))
+      (nov-render-document)))
+  (bind-keys
+   :map nov-mode-map
+   ("i" . my/nov-toggle-header-line))
   ;; advice for 7z cli cannot split "-o" and `direcotry'
   (define-advice nov-unzip-epub (:around (orig-fun &rest args) extract-with-7z)
     (let ((nov-unzip-args
