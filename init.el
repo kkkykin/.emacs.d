@@ -100,6 +100,9 @@
 (use-package transient
   :autoload transient-define-prefix)
 
+(use-package mode-local
+  :autoload mode-local-bind)
+
 (use-package init-misc
   :if (locate-library "init-misc")
   :demand t)
@@ -893,7 +896,9 @@ before calling the original function."
   (shr-cookie-policy nil)
   (shr-use-xwidgets-for-media t)
   (shr-blocked-images (concat "^https?://" (rx (| "www.baidu.com"))))
-  :hook ((eww-bookmark-mode . (lambda () (setq-local goal-column (1+ (/ (window-width) 2)))))))
+  :config
+  (setq-mode-local eww-bookmark-mode
+                   goal-column (1+ (/ (window-width) 2))))
 
 (use-package webjump
   :bind
@@ -953,8 +958,9 @@ before calling the original function."
       ("fall" "[[fallthrough]]"))))
 
 (use-package sh-script
-  :hook (sh-base-mode . (lambda () (setq-local buffer-file-coding-system
-                                           'prefer-utf-8-unix))))
+  :config
+  (setq-mode-local sh-base-mode
+                   buffer-file-coding-system 'prefer-utf-8-unix))
 
 (use-package shell
   :custom
@@ -1101,6 +1107,12 @@ before calling the original function."
   ;; use 7z manipulate rar archive
   (advice-add 'archive-rar-summarize :before-until #'archive-7z-summarize)
   (advice-add 'archive-rar-extract :before-until #'archive-7z-extract))
+
+(use-package hexl-mode
+  :bind
+  ( :map hexl-mode-map
+    :prefix "C-h"
+    :prefix-map help-map))
 
 (use-package dictionary
   :bind
@@ -1468,10 +1480,6 @@ before calling the original function."
                      "/sshx:" ,(file-name-concat package-user-dir ".*-autoloads\\.el\\'"))))
 
 (use-package esh-mode
-  :hook
-  (eshell-mode . (lambda ()
-                   (setq-local imenu-generic-expression
-                               '(("Prompt" " $ \\(.*\\)" 1)))))
   :bind
   ( :map my/global-prefix-map
     ("e" . eshell))
@@ -1500,6 +1508,8 @@ before calling the original function."
   (eshell-pushd-dextract t)
   (eshell-scroll-to-bottom-on-output 'others)
   :config
+  (setq-mode-local eshell-mode
+                   imenu-generic-expression '(("Prompt" " $ \\(.*\\)" 1)))
   (keymap-unset eshell-command-repeat-map "C-b")
   (keymap-unset eshell-command-repeat-map "C-f")
   (keymap-unset eshell-prompt-repeat-map "C-n")
@@ -1936,8 +1946,11 @@ before calling the original function."
   ;;                (allow-no-window . t)))
   (setq org-babel-default-header-args
         (append '((:noweb . "yes")
+                  (:comments . "link")
+                  (:eval . "never-export")
                   (:results . "silent"))
-                (cl-delete-if (lambda (a) (memq a '(:noweb :results)))
+                (cl-delete-if (lambda (a) (memq a '( :noweb :results
+                                                :comments :eval)))
                               org-babel-default-header-args :key #'car)))
   (with-eval-after-load 'ob-org
     (dolist (l '("conf" "json" "text" "yml"))
@@ -2306,16 +2319,17 @@ before calling the original function."
     ("M-TAB" . shr-previous-link))
   :init
   (put 'devdocs-current-docs 'safe-local-variable 'listp)
-  (defun my/devdocs-setup ()
-    (unless (bound-and-true-p devdocs-current-docs)
-      (setq-local devdocs-current-docs
-                  (pcase major-mode
-                    ((or 'c++-mode 'c++-ts-mode) '("cpp"))
-                    ('cmake-ts-mode '("cmake~3.26"))
-                    ((guard (derived-mode-p 'js-base-mode)) '("javascript"))
-                    ((guard (derived-mode-p 'python-base-mode)) '("python~3.12"))))))
-  :hook
-  (after-change-major-mode-hook . my/devdocs-setup))
+  (cl-loop
+   for (langs . docs)
+   in '(((c-mode c-ts-mode) "c")
+        ((c++-mode c++-ts-mode) "cpp")
+        ((python-base-mode) "python")
+        ((html-mode html-ts-mode css-base-mode js-base-mode)
+         "html" "css" "javascript"))
+   do (dolist (lang langs)
+        (mode-local-bind (list (cons 'devdocs-current-docs docs))
+                         '(mode-variable-flag t)
+                         lang))))
 
 (use-package xeft
   :if (package-installed-p 'xeft))
