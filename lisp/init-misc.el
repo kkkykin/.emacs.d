@@ -872,7 +872,7 @@ local to that buffer only.")
 (defvar-local my/custom-buffer-local-map nil)
 (defun my/process-custom-buffer-local-keys ()
   "Setup and enable a minor mode if my/custom-buffer-local-keys is non-nil."
-  (when (bound-and-true-p my/custom-buffer-local-keys)
+  (when my/custom-buffer-local-keys
     (let ((map my/custom-buffer-local-map)
 	      (keys my/custom-buffer-local-keys))
       (unless map
@@ -883,6 +883,23 @@ local to that buffer only.")
       (dolist (k keys) (local-set-key (kbd (car k)) (cdr k))))))
 
 (add-hook 'hack-local-variables-hook #'my/process-custom-buffer-local-keys)
+
+
+;; follow
+(defun my/follow-current-window (&optional arg)
+  "Follow the window."
+  (interactive "P")
+  (let* ((my/custom-buffer-local-keys
+          (pcase arg
+            ('(4) (delete-other-windows) nil)
+            ((pred #'listp) arg)))
+         (window-width (window-text-width))
+         (split-cnt (1- (/ window-width fill-column)))
+         (single-width (/ window-width (1+ split-cnt))))
+    (dotimes (i split-cnt)
+      (split-window nil (* (- split-cnt i) single-width) t))
+    (follow-mode 1)
+    (my/process-custom-buffer-local-keys)))
 
 (provide 'init-misc)
 ;;; init-misc.el ends here

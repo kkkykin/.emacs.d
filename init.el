@@ -219,6 +219,8 @@
     ("C-v" . nil)
     ("C-\\" . nil))
   ( :map viper-vi-global-user-map
+    ("C-f" . follow-scroll-up)
+    ("C-b" . follow-scroll-down)
     :prefix "C-w"
     :prefix-map my/viper-cw-prefix-map
     ("h" . windmove-left)
