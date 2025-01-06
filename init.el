@@ -1144,6 +1144,10 @@ before calling the original function."
    chart-emacs-lists
    chart-rmail-from))
 
+(use-package multisession
+  :custom
+  (multisession-storage 'sqlite))
+
 ;; https://karthinks.com/software/different-strokes-for-different-folks/
 (use-package strokes
   :unless my/sys-android-p
