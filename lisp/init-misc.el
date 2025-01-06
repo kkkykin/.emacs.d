@@ -892,7 +892,7 @@ local to that buffer only.")
   (let* ((my/custom-buffer-local-keys
           (pcase arg
             ('(4) (delete-other-windows) nil)
-            ((pred #'listp) arg)))
+            ((pred listp) arg)))
          (window-width (window-text-width))
          (split-cnt (1- (/ window-width fill-column)))
          (single-width (/ window-width (1+ split-cnt))))
