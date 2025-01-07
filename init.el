@@ -559,10 +559,7 @@
 
 (use-package etags-regen
   :if (and (package-installed-p 'etags-regen)
-           (not my/sys-android-p))
-  :after project :defer 1
-  :config
-  (etags-regen-mode))
+           (not my/sys-android-p)))
 
 (use-package quickurl)
 
