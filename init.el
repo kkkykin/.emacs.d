@@ -1809,7 +1809,7 @@ before calling the original function."
       (shell . t)
       (sql . t)
       (sqlite . t))))
-  (dolist (mod '(org-tempo org-crypt))
+  (dolist (mod '(org-tempo org-crypt org-protocol))
     (add-to-list 'org-modules mod)))
 
 (use-package org-attach

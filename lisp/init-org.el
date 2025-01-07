@@ -26,17 +26,16 @@
 
 ;; org-protocol
 
-(require 'org-protocol)
-
 (defun mo/protocol-cookies-dumper (info)
   (let ((parts (org-protocol-parse-parameters info t)))
     (write-region (plist-get parts :cookies) nil
                   (expand-file-name (plist-get parts :host) my/cookies-dir)))
   (server-delete-client (car server-clients)))
 
-(add-to-list 'org-protocol-protocol-alist
-             '("cookies-dumper" :protocol "cookies-dumper"
-               :function mo/protocol-cookies-dumper :kill-client t))
+(with-eval-after-load 'org-protocol
+  (dolist (p '(("cookies-dumper" :protocol "cookies-dumper"
+                :function mo/protocol-cookies-dumper :kill-client t)))
+    (add-to-list 'org-protocol-protocol-alist p)))
 
 (with-eval-after-load 'org-tempo
   (dolist (k '(("d" . "header")
