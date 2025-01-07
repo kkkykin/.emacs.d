@@ -901,5 +901,10 @@ local to that buffer only.")
     (follow-mode 1)
     (my/process-custom-buffer-local-keys)))
 
+(with-eval-after-load 'viper
+  (bind-keys
+   :map my/global-prefix-map
+   ("F" . my/follow-current-window)))
+
 (provide 'init-misc)
 ;;; init-misc.el ends here

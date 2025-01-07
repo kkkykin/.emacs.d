@@ -1176,6 +1176,13 @@ before calling the original function."
       ('cua-scroll-down (call-interactively 'scroll-all-page-up-all))
       (_ t))))
 
+(use-package follow
+  :bind
+  ( :repeat-map my/follow-repeat-map
+    ("n" . follow-next-window)
+    ("p" . follow-previous-window)
+    ("l" . follow-recenter)))
+
 (use-package flyspell
   :hook (text-mode
          (prog-mode . flyspell-prog-mode))
