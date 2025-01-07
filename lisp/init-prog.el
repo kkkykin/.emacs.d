@@ -304,6 +304,22 @@ with `universal argument', select all records."
     n"END;;"n"DELIMITER ;"n))
 
 (tempo-define-template
+ "mp/sql-create-trigger"
+ '(%"DROP TRIGGER IF EXISTS `" (P "Trigger name: " trigger) "`;"n
+    "DELIMITER ;;"n
+    "CREATE TRIGGER `" (s trigger) "`" n
+    (let* ((time (completing-read "Time: " '("BEFORE" "AFTER")))
+           (event (completing-read "Event: " '("INSERT" "UPDATE" "DELETE")))
+           (tbl (read-no-blanks-input "Table: "))
+           (output (list 'l time " " event " ON " tbl " FOR EACH ROW")))
+      (if-let* ((order (completing-read "Order: " '("FOLLOW" "PRECEDES")))
+                ((not (string-empty-p order)))
+                (trig-name (read-no-blanks-input "Trigger: ")))
+          (append output (list order " " trig-name))
+        output))
+    n "main: BEGIN" n n p n n "END main;;" n "DELIMITER ;" n))
+
+(tempo-define-template
  "mp/sql-if"
  '(%"IF " (P "Contidion: ") " THEN"n "  "p n
     (let ((output '(l)))
@@ -346,6 +362,7 @@ with `universal argument', select all records."
   (define-abbrev-table 'sql-mode-abbrev-table
     '(("proc" #1="" tempo-template-mp/sql-create-procedure)
       ("fun" #1# tempo-template-mp/sql-create-function)
+      ("trig" #1# tempo-template-mp/sql-create-trigger)
       ("if" #1# tempo-template-mp/sql-if)
       ("case" #1# tempo-template-mp/sql-case)
       ("while" #1# mp/sql-skeleton-while)
