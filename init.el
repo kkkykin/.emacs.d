@@ -1200,10 +1200,31 @@ before calling the original function."
   (ispell-personal-dictionary (expand-file-name "dict.txt" user-emacs-directory)))
 
 (use-package calendar
+  :bind
+  ( :map my/global-prefix-map
+    ("c" . calendar))
   :custom
+  (diary-file (locate-user-emacs-file "_diary"))
+  (calendar-date-style 'iso)
   (calendar-latitude 30.6)
   (calendar-longitude 114.3)
   (calendar-chinese-all-holidays-flag t))
+
+(use-package todo-mode
+  :bind
+  ( :map my/global-prefix-map
+    ("C" . todo-show))
+  :custom
+  (todo-directory (locate-user-emacs-file "_todo/")))
+
+(use-package diary-lib
+  :custom
+  (diary-number-of-entries 7)
+  :init
+  (add-hook 'diary-list-entries-hook #'diary-sort-entries 50)
+  :hook
+  ((diary-list-entries . diary-include-other-diary-files)
+   (diary-mark-entries . diary-mark-included-diary-files)))
 
 (use-package image
   :custom
@@ -1337,7 +1358,6 @@ before calling the original function."
 
 (use-package forms)
 (use-package ses)
-(use-package todo-mode)
 
 (use-package tab-bar
   :hook emacs-startup
@@ -1865,7 +1885,6 @@ before calling the original function."
   ;; (org-agenda-use-tag-inheritance nil)
   ;; (org-agenda-ignore-properties '(effort appt stats category))
   (org-agenda-files `(,(expand-file-name "agenda.org" org-directory)))
-  (org-agenda-diary-file (file-name-concat org-directory "diary.org"))
   (org-agenda-custom-commands
    '(("n" "Agenda and All Todos"
       ((agenda)
