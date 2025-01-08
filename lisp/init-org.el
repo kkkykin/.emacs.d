@@ -324,7 +324,7 @@ Usage:
           (setq id (substring id (length id-prefix)))
         (setq id (org-id-new))
         (goto-char (org-element-begin ele))
-        (insert "#+attr_babel: :id " id "\n"))
+        (insert "#+attr_babel: " id-prefix id "\n"))
       (org-link-store-props
        :type "babel"
        :link (format "babel:%s::%s" file id)
