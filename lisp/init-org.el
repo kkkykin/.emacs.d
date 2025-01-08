@@ -302,6 +302,61 @@ Usage:
    ("v" . mo/babel-expand-src-block)
    ("m" . mo/babel-execute-named-src-block)))
 
+(defun mo/babel-follow (link _)
+  "Visit the babel on LINK."
+  (pcase-let ((`(,path ,id) (string-split link "::")))
+    (if (find-file path)
+        (progn
+          (goto-char (point-min))
+          (search-forward (concat "#+attr_babel: :id " id)))
+      (user-error "File not found: %s" path))))
+
+(defun mo/babel-store-link (&optional _interactive?)
+  "Store a link to a org-babel."
+  (when-let* (((derived-mode-p 'org-mode))
+              (file (buffer-file-name (buffer-base-buffer)))
+              (ele (org-element-at-point-no-context))
+              ((eq (org-element-type ele) 'src-block))
+              (id-prefix ":id "))
+    (let ((id (cl-find-if (lambda (s) (string-prefix-p id-prefix s)) 
+                          (org-element-property :attr_babel ele))))
+      (if id
+          (setq id (substring id (length id-prefix)))
+        (setq id (org-id-new))
+        (goto-char (org-element-begin ele))
+        (insert "#+attr_babel: :id " id "\n"))
+      (org-link-store-props
+       :type "babel"
+       :link (format "babel:%s::%s" file id)
+       :description id))))
+
+(with-eval-after-load 'ol
+  (org-link-set-parameters "babel"
+                           :follow #'mo/babel-follow
+                           :store #'mo/babel-store-link))
+
+(with-eval-after-load 'ob-tangle
+  (define-advice org-babel-tangle--unbracketed-link
+      (:before-until (params) custom-babel-link)
+    (unless (string= "no" (cdr (assq :comments params)))
+      (save-match-data
+        (let* ((l (org-no-properties
+                   (let ((org-link-parameters
+                          (list (assoc "babel" org-link-parameters))))
+                     (org-store-link nil))))
+               (bare (and l
+                          (string-match org-link-bracket-re l)
+                          (match-string 1 l))))
+          (when bare
+            (if (and org-babel-tangle-use-relative-file-links
+                     (string-match org-link-types-re bare)
+                     (string= (match-string 1 bare) "babel"))
+                (concat "babel:"
+                        (file-relative-name (substring bare (match-end 0))
+                                            (file-name-directory
+                                             (cdr (assq :tangle params)))))
+              bare)))))))
+
 (defvar mo/tangle-default-dir "_tangle"
   "Default directory for tangled code blocks.
 When no TANGLE-DIR property is specified in the Org file, code blocks
