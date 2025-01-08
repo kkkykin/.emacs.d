@@ -1997,6 +1997,7 @@ before calling the original function."
 
 (use-package ox
   :custom
+  (org-export-dispatch-use-expert-ui t)
   (org-export-coding-system 'utf-8)
   (org-export-with-smart-quotes t)
   (org-export-with-sub-superscripts nil)
