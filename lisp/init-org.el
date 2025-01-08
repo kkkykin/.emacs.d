@@ -336,6 +336,44 @@ Usage:
                            :store #'mo/babel-store-link))
 
 (with-eval-after-load 'ob-tangle
+  (define-advice org-babel-tangle-jump-to-org
+      (:before-until () custom-babel-link)
+    (let ((mid (point))
+	      start body-start end target-buffer target-char link bare block-name body)
+      (save-window-excursion
+        (save-excursion
+	      (while (and (re-search-backward org-link-bracket-re nil t)
+		              (not
+		               (and (setq start (line-beginning-position))
+			                (setq body-start (line-beginning-position 2))
+			                (setq link (match-string 0))
+                            (setq bare (match-string 1))
+			                (setq block-name (match-string 2))
+			                (save-excursion
+			                  (save-match-data
+			                    (re-search-forward
+			                     (concat " " (regexp-quote block-name)
+				                         " ends here")
+			                     nil t)
+			                    (setq end (line-beginning-position))))))))
+	      (unless (and start (< start mid) (< mid end))
+	        (error "Not in tangled code"))))
+      (save-match-data
+        (when (and (string-match org-link-types-re bare)
+                   (string= (match-string 1 bare) "babel"))
+          (setq body (buffer-substring body-start end))
+          (org-link-open-from-string link)
+          (setq target-buffer (current-buffer))
+          (goto-char (org-babel-where-is-src-block-head))
+          (forward-line 1)
+          (let ((offset (- mid body-start)))
+	        (when (> end (+ offset (point)))
+	          (forward-char offset)))
+          (setq target-char (point))
+          (org-src-switch-to-buffer target-buffer t)
+          (goto-char target-char)
+          body))))
+  
   (define-advice org-babel-tangle--unbracketed-link
       (:before-until (params) custom-babel-link)
     (unless (string= "no" (cdr (assq :comments params)))
