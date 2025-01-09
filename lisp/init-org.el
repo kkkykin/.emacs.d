@@ -561,6 +561,7 @@ It behaves differently based on the current context:
 
 (with-eval-after-load 'org-src
   (add-to-list 'zr-extra-ex-token-alist '("w" (zr-viper-save-buffer)))
+  (add-hook 'org-src-mode-hook #'smerge-start-session)
   (bind-keys
    :map org-src-mode-map
    ("C-x C-s" . zo/src-save-buffer)))
