@@ -24,44 +24,44 @@
 
 ;;; Code:
 
-(defcustom my/llm-program (executable-find "llama-server")
+(defcustom zr-llm-program (executable-find "llama-server")
   "The default llama.cpp path."
   :type 'string)
 
-(defcustom my/llm-models-directory
+(defcustom zr-llm-models-directory
   (pcase system-type
     ('windows-nt (substitute-in-file-name "$USERPROFILE/scoop/persist/llama-cpp-cuda/models"))
     (_ nil))
   "The path where store models."
   :type 'directory)
 
-(defcustom my/llm-default-model
-  (and my/llm-models-directory
-       (car (directory-files my/llm-models-directory t "^[^.]")))
+(defcustom zr-llm-default-model
+  (and zr-llm-models-directory
+       (car (directory-files zr-llm-models-directory t "^[^.]")))
   "The default llm model or path."
   :type 'string)
 
-(defcustom my/llm-program-args (list "-m" my/llm-default-model
+(defcustom zr-llm-program-args (list "-m" zr-llm-default-model
                                      "--port" "7778")
-  "Arguments to `my/llm-program'."
+  "Arguments to `zr-llm-program'."
   :type '(repeat string))
 
-(defcustom my/llm-process-buf "*llm-server*"
+(defcustom zr-llm-process-buf "*llm-server*"
   "llm server buffer name."
   :type 'string)
 
-(defun my/llm-server-start ()
+(defun zr-llm-server-start ()
   "Start llm server."
   (interactive)
-  (if (apply #'start-process "*llm-server*" my/llm-process-buf
-             my/llm-program my/llm-program-args)
+  (if (apply #'start-process "*llm-server*" zr-llm-process-buf
+             zr-llm-program zr-llm-program-args)
       (message "LLM server started.")
     (message "LLM server start failed.")))
 
-(defun my/llm-server-stop ()
+(defun zr-llm-server-stop ()
   "Stop llm server."
   (interactive)
-  (kill-buffer my/llm-process-buf))
+  (kill-buffer zr-llm-process-buf))
 
 
 

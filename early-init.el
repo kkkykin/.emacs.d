@@ -26,13 +26,13 @@
 
 (setq gc-cons-threshold most-positive-fixnum ; 2^61 bytes
       gc-cons-percentage 0.6)
-(defvar my/file-name-handler-alist-cache file-name-handler-alist)
+(defvar zr-file-name-handler-alist-cache file-name-handler-alist)
 (setq file-name-handler-alist nil)
-(defun my/restore-post-init-settings ()
+(defun zr-restore-post-init-settings ()
   (setq gc-cons-threshold 80000000
         gc-cons-percentage 0.1)
-  (setq file-name-handler-alist my/file-name-handler-alist-cache))
-(add-hook 'emacs-startup-hook #'my/restore-post-init-settings)
+  (setq file-name-handler-alist zr-file-name-handler-alist-cache))
+(add-hook 'emacs-startup-hook #'zr-restore-post-init-settings)
 
 ;; Android Setup
 (if (eq system-type 'android)

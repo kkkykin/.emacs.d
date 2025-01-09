@@ -4,7 +4,7 @@
 
 (require 'cl-lib)
 
-(defvar-keymap my/mpc-prefix-map
+(defvar-keymap zr-mpc-prefix-map
   :doc "A keymap for mpc."
   "s" #'mpc-toggle-play
   "n" #'mpc-next
@@ -15,9 +15,9 @@
   "z" #'mpc-toggle-shuffle
   "a" #'mpc-toggle-single
   "u" #'mpc-update)
-(keymap-set ctl-x-map "c" my/mpc-prefix-map)
+(keymap-set ctl-x-map "c" zr-mpc-prefix-map)
 
-(defun my/always-yes (&rest args)
+(defun zr-always-yes (&rest args)
   "ref: https://goykhman.ca/gene/blog/2024-06-09-always-yes-in-emacs-lisp.html"
   (cl-letf (((symbol-function 'yes-or-no-p) #'always)
             ((symbol-function 'y-or-n-p) #'always))
@@ -26,14 +26,14 @@
 
 ;; theme
 
-(defcustom my/all-theme-list (cons 'default (custom-available-themes))
+(defcustom zr-all-theme-list (cons 'default (custom-available-themes))
   "list of Custom themes available for loading."
   :group 'my
   :type '(repeat symbol))
 
-(defcustom my/light-theme-list
+(defcustom zr-light-theme-list
   (cl-intersection
-   my/all-theme-list
+   zr-all-theme-list
    '(;; adwaita default dichromacy leuven tango tsdh-light whiteboard
      modus-operandi-deuteranopia modus-operandi modus-operandi-tinted
      modus-operandi-tritanopia))
@@ -41,9 +41,9 @@
   :group 'my
   :type '(repeat symbol))
 
-(defcustom my/dark-theme-list
+(defcustom zr-dark-theme-list
   (cl-intersection
-   my/all-theme-list
+   zr-all-theme-list
    '( deeper-blue leuven-dark manoj-dark misterioso
       modus-vivendi-deuteranopia modus-vivendi
       modus-vivendi-tinted modus-vivendi-tritanopia
@@ -52,7 +52,7 @@
   :group 'my
   :type '(repeat symbol))
 
-;; (defcustom my/fonts-list
+;; (defcustom zr-fonts-list
 ;;   '(("霞鹜文楷等宽" . #1=(198 108 140 "https://github.com/lxgw/LxgwWenKai/releases"))
 ;;     ("LXGW WenKai Mono" . #1#)
 ;;     ("等距更纱黑体 SC" . #2=(188 108 130 "https://github.com/be5invis/Sarasa-Gothic/releases"))
@@ -63,23 +63,23 @@
 ;;   :group 'my
 ;;   :type '(repeat string))
 
-;; (defun my/setup-faces ()
+;; (defun zr-setup-faces ()
 ;;   "Randomize setup faces."
 ;;   (when (display-graphic-p)
 ;;     (when-let* ((fonts
 ;;                 (cl-intersection
 ;;                  (font-family-list)
-;;                  (mapcar #'car my/fonts-list) :test 'equal)))
-;;       (let ((font (assoc (seq-random-elt fonts) my/fonts-list)))
+;;                  (mapcar #'car zr-fonts-list) :test 'equal)))
+;;       (let ((font (assoc (seq-random-elt fonts) zr-fonts-list)))
 ;;         (set-face-attribute 'default nil :font (car font) :height
 ;;                             (cond ((< (display-pixel-width) 1920) (cadr font))
 ;;                                   ((> (display-pixel-width) 1920) (cadddr font))
 ;;                                   (t (caddr font))))))
-;;     (my/shuffle-set-theme (if (my/system-dark-mode-enabled-p)
-;;                               my/dark-theme-list
-;;                             my/light-theme-list))))
+;;     (zr-shuffle-set-theme (if (zr-system-dark-mode-enabled-p)
+;;                               zr-dark-theme-list
+;;                             zr-light-theme-list))))
 
-(defcustom my/fonts-list
+(defcustom zr-fonts-list
   '(("LXGW WenKai Mono" (33 14 . 23) "https://github.com/lxgw/LxgwWenKai/releases")
     ("Sarasa Mono SC" (32 14 . 22) "https://github.com/be5invis/Sarasa-Gothic/releases")
     ("Maple Mono NF CN" (32 14 . 21) "https://github.com/subframe7536/maple-font/releases")
@@ -89,7 +89,7 @@
   :group 'my
   :type '(repeat string))
 
-(defun my/system-dark-mode-enabled-p ()
+(defun zr-system-dark-mode-enabled-p ()
   "Check if dark-mode is enabled. ref:
 https://github.com/LionyxML/auto-dark-emacs/blob/master/auto-dark.el"
   (pcase system-type
@@ -105,7 +105,7 @@ https://github.com/LionyxML/auto-dark-emacs/blob/master/auto-dark.el"
                     "org.freedesktop.appearance" "color-scheme")))))
     (_ nil)))
 
-(defun my/set-theme (theme)
+(defun zr-set-theme (theme)
   "Set one theme only."
   (if (eq theme 'default)
       (dolist (item custom-enabled-themes)
@@ -123,23 +123,23 @@ https://github.com/LionyxML/auto-dark-emacs/blob/master/auto-dark.el"
       (disable-theme item))
     (enable-theme theme)))
 
-(defun my/shuffle-set-theme (&optional themes)
+(defun zr-shuffle-set-theme (&optional themes)
   "Shuffle set theme."
   (interactive "P")
   (let* ((themes (pcase themes
-                   ('nil (if (my/system-dark-mode-enabled-p)
-                             my/dark-theme-list
-                           my/light-theme-list))
+                   ('nil (if (zr-system-dark-mode-enabled-p)
+                             zr-dark-theme-list
+                           zr-light-theme-list))
                    ((guard (lambda (a) (consp arg)))
-                    (if (my/system-dark-mode-enabled-p)
-                        my/light-theme-list
-                      my/dark-theme-list))
+                    (if (zr-system-dark-mode-enabled-p)
+                        zr-light-theme-list
+                      zr-dark-theme-list))
                    (_ themes)))
          (theme (seq-random-elt themes)))
-    (my/set-theme theme)
+    (zr-set-theme theme)
     (message "Current theme: %s" (symbol-name theme))))
 
-(defun my/setup-faces ()
+(defun zr-setup-faces ()
   "Randomize setup faces."
   (when (display-graphic-p)
     (when-let*
@@ -153,12 +153,12 @@ https://github.com/LionyxML/auto-dark-emacs/blob/master/auto-dark.el"
                                                         ((pred (< 1920)) (cddadr a))
                                                         (_ (cadadr a)))))))
                             (and (find-font b) b)))
-                        my/fonts-list))))
+                        zr-fonts-list))))
       (set-face-attribute 'default nil :font (seq-random-elt fonts)))
-    (my/shuffle-set-theme)))
-(add-hook 'window-setup-hook #'my/setup-faces)
+    (zr-shuffle-set-theme)))
+(add-hook 'window-setup-hook #'zr-setup-faces)
 
-(defun my/set-font-current-buffer (&optional font)
+(defun zr-set-font-current-buffer (&optional font)
   "Set font for current buffer."
   (interactive "P")
   (let ((fonts (pcase font
@@ -174,47 +174,47 @@ https://github.com/LionyxML/auto-dark-emacs/blob/master/auto-dark.el"
 
 ;; android
 
-(defcustom my/android-misc-files-directory
+(defcustom zr-android-misc-files-directory
   (locate-user-emacs-file "modules/android/")
   "Directory to store miscellaneous Android-related files."
   :group 'my
   :type 'directory)
 
-(defcustom my/emacs-keystore-file
-  (expand-file-name "emacs-keystore" my/android-misc-files-directory)
+(defcustom zr-emacs-keystore-file
+  (expand-file-name "emacs-keystore" zr-android-misc-files-directory)
   "File path to save the emacs.keystore file."
   :group 'my
   :type 'file)
 
-(defcustom my/emacs-keystore-url
+(defcustom zr-emacs-keystore-url
   "https://git.savannah.gnu.org/cgit/emacs.git/plain/java/emacs.keystore"
   "URL of the emacs.keystore file in the Emacs Git repository."
   :type 'string
   :group 'my)
 
-(defun my/download-emacs-keystore ()
+(defun zr-download-emacs-keystore ()
   "Download the emacs.keystore file from the Emacs Git repository asynchronously.
-The file will be saved to the `my/android-misc-files-directory' directory."
+The file will be saved to the `zr-android-misc-files-directory' directory."
   (interactive)
-  (unless (file-directory-p my/android-misc-files-directory)
-    (make-directory my/android-misc-files-directory t))
+  (unless (file-directory-p zr-android-misc-files-directory)
+    (make-directory zr-android-misc-files-directory t))
   (let* ((curl-command (list "curl" "-f" "-o"
-                             my/emacs-keystore-file my/emacs-keystore-url))
+                             zr-emacs-keystore-file zr-emacs-keystore-url))
          (curl-process (apply #'start-process "downloading-emacs-ks" nil curl-command)))
     (set-process-sentinel
      curl-process
      (lambda (process event)
        (pcase event
          ("finished\n"
-          (message "emacs.keystore downloaded to %s" my/emacs-keystore-file))
+          (message "emacs.keystore downloaded to %s" zr-emacs-keystore-file))
          (_ (error "Failed to download emacs.keystore")))))))
 
-(defcustom my/termux-root-directory "/data/data/com.termux/files/"
+(defcustom zr-termux-root-directory "/data/data/com.termux/files/"
   "Andriod termux root path."
   :group 'my
   :type 'directory)
 
-(defcustom my/termux-tmp-directory (file-name-concat my/termux-root-directory "home/tmp/")
+(defcustom zr-termux-tmp-directory (file-name-concat zr-termux-root-directory "home/tmp/")
   "Android termux tmp path."
   :group 'my
   :type 'directory)
@@ -222,18 +222,18 @@ The file will be saved to the `my/android-misc-files-directory' directory."
 (with-eval-after-load 'tramp
   (add-to-list 'tramp-connection-properties
                (list (regexp-quote "termux") "remote-shell"
-                     (file-name-concat my/termux-root-directory "usr/bin/bash")))
+                     (file-name-concat zr-termux-root-directory "usr/bin/bash")))
   (add-to-list 'tramp-connection-properties
-               (list (regexp-quote "termux") "tmpdir" my/termux-tmp-directory))
+               (list (regexp-quote "termux") "tmpdir" zr-termux-tmp-directory))
   (connection-local-set-profile-variables
    'tramp-connection-local-termux-profile
    `((tramp-remote-path
       . ,(mapcar
           (lambda (x)
-            (if (stringp x) (concat my/termux-root-directory x) x))
+            (if (stringp x) (concat zr-termux-root-directory x) x))
           (copy-tree tramp-remote-path)))
      (explicit-shell-file-name
-      . ,(file-name-concat my/termux-root-directory "usr/bin/bash"))))
+      . ,(file-name-concat zr-termux-root-directory "usr/bin/bash"))))
   (connection-local-set-profiles
    ;; FIXME: If the username is not explicitly specified when accessing
    ;; a remote host, the :user option does not work. Therefore, remember
@@ -244,38 +244,38 @@ The file will be saved to the `my/android-misc-files-directory' directory."
 
 ;; bookmark
 
-(defcustom my/bookmark-shared-prefix "s/"
+(defcustom zr-bookmark-shared-prefix "s/"
   "Prefix of shared bookmark name."
   :group 'my
   :type 'string)
 
-(defcustom my/bookmark-shared-file (expand-file-name "bookmark-share" user-emacs-directory)
+(defcustom zr-bookmark-shared-file (expand-file-name "bookmark-share" user-emacs-directory)
   "Shared bookmark file cross device."
   :group 'my
   :type 'file)
-(when (file-exists-p my/bookmark-shared-file)
-  (bookmark-load my/bookmark-shared-file nil t))
+(when (file-exists-p zr-bookmark-shared-file)
+  (bookmark-load zr-bookmark-shared-file nil t))
 
-(defun my/advice-bookmark-save (orig-fun &rest args)
+(defun zr-advice-bookmark-save (orig-fun &rest args)
   "Do not save shared bookmarks to local bookmark file."
   (with-temp-buffer
-    (insert-file-contents my/bookmark-shared-file)
+    (insert-file-contents zr-bookmark-shared-file)
     (let ((ori-shared (bookmark-alist-from-buffer))
           (new-local (copy-sequence bookmark-alist))
           new-shared)
       (dolist (bm new-local)
-        (when (string-prefix-p my/bookmark-shared-prefix (car bm))
+        (when (string-prefix-p zr-bookmark-shared-prefix (car bm))
           (setq new-local (delq bm new-local))
           (setq new-shared (cons bm new-shared))))
       (when-let* ((sorted (seq-sort-by #'car #'string< new-shared))
                  (need-update-p (not (equal sorted ori-shared)))
                  (bookmark-alist sorted))
-        (funcall orig-fun nil my/bookmark-shared-file nil))
+        (funcall orig-fun nil zr-bookmark-shared-file nil))
       (let ((bookmark-alist new-local))
         (apply orig-fun args)))))
-(advice-add 'bookmark-save :around 'my/advice-bookmark-save)
+(advice-add 'bookmark-save :around 'zr-advice-bookmark-save)
 
-(defun my/advice-silence-messages (orig-fun &rest args)
+(defun zr-advice-silence-messages (orig-fun &rest args)
   "Advice function that silences all messages in ORIG-FUN.
 https://scripter.co/using-emacs-advice-to-silence-messages-from-functions"
   (let ((inhibit-message t)    ;Don't show the messages in Echo area
@@ -285,25 +285,25 @@ https://scripter.co/using-emacs-advice-to-silence-messages-from-functions"
 
 ;; adb
 
-(defun my/adb-am (action activity)
+(defun zr-adb-am (action activity)
   "ADB am command."
   (start-process "adb-am" nil "adb" "shell" "am" action activity))
 
-(defun my/am-start-activity (name)
+(defun zr-am-start-activity (name)
   "Start activity through adb."
   (let ((activity (cond ((string= name "termux")
                          "com.termux/com.termux.HomeActivity"))))
-    (my/adb-am "start-activity" activity)))
+    (zr-adb-am "start-activity" activity)))
 
-(defun my/am-force-stop (name)
+(defun zr-am-force-stop (name)
   "Force-stop app through adb."
   (let ((package (cond ((string= name "termux") "com.termux"))))
-    (my/adb-am "force-stop" package)))
+    (zr-adb-am "force-stop" package)))
 
 
 ;; dired
 
-(defun my/dired-duplicate-file (arg)
+(defun zr-dired-duplicate-file (arg)
   "Duplicate a file from dired with an incremented number.
 If ARG is provided, it sets the counter.
 https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-duplicate-thing-function/"
@@ -324,14 +324,14 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
       (copy-file file new-file))
     (dired-revert)))
 
-(defun my/dired-goto-random-file ()
+(defun zr-dired-goto-random-file ()
   "Goto random file in current-buffer."
   (interactive nil dired-mode)
   (dired-goto-file
    (seq-random-elt
     (mapcan (lambda (a) (directory-files (car a) t "^[^.]" t)) dired-subdir-alist))))
 
-(defun my/advice-image-dired-create-thumb-maybe-gs (oldfun &rest args)
+(defun zr-advice-image-dired-create-thumb-maybe-gs (oldfun &rest args)
   (if (string= (file-name-extension (car args)) "pdf")
       (let ((image-dired-cmd-create-thumbnail-program "gs")
             (image-dired-cmd-create-thumbnail-options
@@ -339,7 +339,7 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
         (apply oldfun args))
     (apply oldfun args)))
 
-(defun my/dired-open-with-pandoc (&optional from to)
+(defun zr-dired-open-with-pandoc (&optional from to)
   "Open the current file in Dired using pandoc and display the result in Org mode.
 Optional arguments:
   FROM: Input format for pandoc (default: auto-detected).
@@ -366,7 +366,7 @@ ref: https://pandoc.org/MANUAL.html#general-options"
       (goto-char (point-min))
       (select-window (display-buffer (current-buffer))))))
 
-(defun my/shell-do-open (&optional arg)
+(defun zr-shell-do-open (&optional arg)
   "Open file's directory using an external program. If called with
 `universal-argument', then open file."
   (interactive "P")
@@ -378,16 +378,16 @@ ref: https://pandoc.org/MANUAL.html#general-options"
    :map dired-mode-map
    ;; z f available
    :prefix "SPC"
-   :prefix-map my/dired-spc-prefix-map
-   ("d" . my/dired-duplicate-file)
-   ("o" . my/dired-open-with-pandoc)
-   ("s" . my/dired-goto-random-file)))
+   :prefix-map zr-dired-spc-prefix-map
+   ("d" . zr-dired-duplicate-file)
+   ("o" . zr-dired-open-with-pandoc)
+   ("s" . zr-dired-goto-random-file)))
 
 (with-eval-after-load 'dired-aux
   (when (fboundp #'shell-command-do-open)
     (bind-keys
-     :map my/global-prefix-map
-     ("E" . my/shell-do-open))))
+     :map zr-global-prefix-map
+     ("E" . zr-shell-do-open))))
 
 (with-eval-after-load 'image-dired
   (unless (executable-find "gm")
@@ -396,17 +396,17 @@ ref: https://pandoc.org/MANUAL.html#general-options"
                                                      "-map_metadata" "-1"
                                                      "-vf" "scale=%w:-1"
                                                      "-f" "mjpeg" "%t"))
-    (advice-add 'image-dired-create-thumb-1 :around #'my/advice-image-dired-create-thumb-maybe-gs)))
+    (advice-add 'image-dired-create-thumb-1 :around #'zr-advice-image-dired-create-thumb-maybe-gs)))
 
 
 ;; speedbar
-(defun my/speedbar-show-unknown-files ()
+(defun zr-speedbar-show-unknown-files ()
   "Temporary show unknown files."
   (interactive)
   (let ((speedbar-show-unknown-files t))
     (speedbar-refresh)))
 
-(defun my/speedbar-item-diff ()
+(defun zr-speedbar-item-diff ()
   "Diff the item under the cursor or mouse with
 `speedbar-last-selected-file'."
   (interactive)
@@ -420,8 +420,8 @@ ref: https://pandoc.org/MANUAL.html#general-options"
 (with-eval-after-load 'speedbar
   (bind-keys
     :map speedbar-file-key-map
-    ("=" . my/speedbar-item-diff)
-    ("(" . my/speedbar-show-unknown-files)))
+    ("=" . zr-speedbar-item-diff)
+    ("(" . zr-speedbar-show-unknown-files)))
 
 
 ;; find & grep
@@ -510,7 +510,7 @@ ref: https://pandoc.org/MANUAL.html#general-options"
 
 ;; re-builder
 
-(defun my/wildcards-to-regexp (wildcards)
+(defun zr-wildcards-to-regexp (wildcards)
   "Convert a list of wildcard patterns to a regexp string."
   (mapconcat 
    (lambda (pattern)
@@ -518,7 +518,7 @@ ref: https://pandoc.org/MANUAL.html#general-options"
    wildcards
    "\\|"))
 
-(defun my/reb-copy-match (&optional group)
+(defun zr-reb-copy-match (&optional group)
   "Copy current match strings into the `kill-ring'. With
 `universal-argument' select nth group. Default copy first group."
   (interactive "p" reb-mode)
@@ -531,13 +531,13 @@ ref: https://pandoc.org/MANUAL.html#general-options"
 " (buffer-substring-no-properties (overlay-start a) (overlay-end a)))))
       (reverse reb-overlays)))))
 (with-eval-after-load 're-builder
-  (keymap-set reb-mode-map "C-c M-w" 'my/reb-copy-match))
+  (keymap-set reb-mode-map "C-c M-w" 'zr-reb-copy-match))
 
 
 ;; isearch
 
 (with-eval-after-load 'isearch
-  (transient-define-prefix my/isearch-menu ()
+  (transient-define-prefix zr-isearch-menu ()
     "isearch Menu. http://yummymelon.com/devnull/improving-emacs-isearch-usability-with-transient.html"
     [["Edit Search String"
       ("e"
@@ -604,7 +604,7 @@ ref: https://pandoc.org/MANUAL.html#general-options"
        "occur"
        isearch-occur
        :transient nil)]])
-  (keymap-set isearch-mode-map "C-h t" 'my/isearch-menu))
+  (keymap-set isearch-mode-map "C-h t" 'zr-isearch-menu))
 
 (defun isearch-other-window (regexp-p)
     "Function to isearch-forward in the next window.
@@ -620,30 +620,30 @@ ref: https://karthinks.com/software/emacs-window-management-almanac/"
 
 ;; tab-line
 
-(defcustom my/tab-line-excluded-buffer-list
+(defcustom zr-tab-line-excluded-buffer-list
   `(,(rx (| "*Async-native-compile-log*"
             "*Pp Eval Output*")))
   "Buffer which never show in tab-line.")
 
-(defun my/tab-line-tabs-buffer-group-by-mode-exclude-some-buffer
+(defun zr-tab-line-tabs-buffer-group-by-mode-exclude-some-buffer
     (&optional buffer)
   "Exclude some buffer and group by mode."
   (when-let* ((buf (or buffer (current-buffer)))
               (exclude-p (cl-find-if-not
                           (lambda (a) (buffer-match-p a buf))
-                          my/tab-line-excluded-buffer-list)))
+                          zr-tab-line-excluded-buffer-list)))
     (if (boundp 'tab-line-tabs-buffer-group-by-mode)
         (funcall 'tab-line-tabs-buffer-group-by-mode buf)
       (let ((tab-line-tabs-buffer-group-function nil))
         (funcall 'tab-line-tabs-buffer-group-name buf)))))
 
 (setq tab-line-tabs-buffer-group-function
-      #'my/tab-line-tabs-buffer-group-by-mode-exclude-some-buffer)
+      #'zr-tab-line-tabs-buffer-group-by-mode-exclude-some-buffer)
 
 
 ;; repeat
 
-(defvar-keymap my/structure-repeat-map
+(defvar-keymap zr-structure-repeat-map
   :repeat (:enter ( treesit-beginning-of-defun beginning-of-defun
                     treesit-end-of-defun end-of-defun
                     indent-pp-sexp prog-indent-sexp
@@ -654,7 +654,7 @@ ref: https://karthinks.com/software/emacs-window-management-almanac/"
   "r" #'raise-sexp
   "i" (lambda ()
         (interactive)
-        (setq repeat-map 'my/structure-repeat-map)
+        (setq repeat-map 'zr-structure-repeat-map)
         (pcase major-mode
           ('emacs-lisp-mode (indent-pp-sexp))
           (_ (prog-indent-sexp))))
@@ -666,23 +666,23 @@ ref: https://karthinks.com/software/emacs-window-management-almanac/"
   "(" #'insert-parentheses
   "'" (lambda ()
         (interactive)
-        (setq repeat-map 'my/structure-repeat-map)
+        (setq repeat-map 'zr-structure-repeat-map)
         (insert-pair nil ?\' ?\'))
   "\"" (lambda ()
          (interactive)
-         (setq repeat-map 'my/structure-repeat-map)
+         (setq repeat-map 'zr-structure-repeat-map)
          (insert-pair nil ?\" ?\"))
   "<" (lambda ()
         (interactive)
-        (setq repeat-map 'my/structure-repeat-map)
+        (setq repeat-map 'zr-structure-repeat-map)
         (insert-pair nil ?\< ?\>))
   "[" (lambda ()
         (interactive)
-        (setq repeat-map 'my/structure-repeat-map)
+        (setq repeat-map 'zr-structure-repeat-map)
         (insert-pair nil ?\[ ?\]))
   "{" (lambda ()
         (interactive)
-        (setq repeat-map 'my/structure-repeat-map)
+        (setq repeat-map 'zr-structure-repeat-map)
         (insert-pair nil ?\{ ?\}))
   "/" #'undo
   "w" #'hs-show-all
@@ -690,7 +690,7 @@ ref: https://karthinks.com/software/emacs-window-management-almanac/"
   "c" #'hs-toggle-hiding
   "u" (lambda ()
         (interactive)
-        (setq repeat-map 'my/structure-repeat-map)
+        (setq repeat-map 'zr-structure-repeat-map)
         (pcase major-mode
           ((guard (memq major-mode '(python-ts-mode)))
            (python-nav-backward-up-list))
@@ -702,7 +702,7 @@ ref: https://karthinks.com/software/emacs-window-management-almanac/"
   "b" #'backward-sexp
   "a" (lambda ()
         (interactive)
-        (setq repeat-map 'my/structure-repeat-map)
+        (setq repeat-map 'zr-structure-repeat-map)
         (pcase major-mode
           ((guard (memq major-mode '(python-ts-mode)))
            (treesit-beginning-of-defun))
@@ -713,7 +713,7 @@ ref: https://karthinks.com/software/emacs-window-management-almanac/"
           (_ (beginning-of-defun))))
   "e" (lambda ()
         (interactive)
-        (setq repeat-map 'my/structure-repeat-map)
+        (setq repeat-map 'zr-structure-repeat-map)
         (pcase major-mode
           ((guard (memq major-mode '(python-ts-mode)))
            (treesit-end-of-defun))
@@ -724,7 +724,7 @@ ref: https://karthinks.com/software/emacs-window-management-almanac/"
           (_ (end-of-defun))))
   "x" (lambda ()
         (interactive)
-        (setq repeat-map 'my/structure-repeat-map)
+        (setq repeat-map 'zr-structure-repeat-map)
         (pcase major-mode
           ((guard (memq major-mode '(python-ts-mode)))
            (python-shell-send-defun))
@@ -733,7 +733,7 @@ ref: https://karthinks.com/software/emacs-window-management-almanac/"
 
 ;; file
 
-(defun my/file-modified-recently-p (file seconds)
+(defun zr-file-modified-recently-p (file seconds)
   "Check file is modified recently."
   (and (file-exists-p file)
        (time-less-p
@@ -746,7 +746,7 @@ ref: https://karthinks.com/software/emacs-window-management-almanac/"
 
 ;; etc
 
-(defun my/generate-uuid (&optional obj)
+(defun zr-generate-uuid (&optional obj)
   "Generate UUID format string."
   (interactive)
   (if obj
@@ -762,7 +762,7 @@ ref: https://karthinks.com/software/emacs-window-management-almanac/"
 
 
 ;; pass
-(defun my/generate-pass (&optional arg)
+(defun zr-generate-pass (&optional arg)
   "Generate password then copy to `kill-ring'. If call with
 `universal-argument' then insert into buffer instead of copy."
   (interactive "P")
@@ -789,7 +789,7 @@ ref: https://karthinks.com/software/emacs-window-management-almanac/"
 
 ;; tools
 
-(defun my/pure-pure-pure-url (url)
+(defun zr-pure-pure-pure-url (url)
   "Remove invalid char in url."
   (interactive (list (read-string "Url: " nil nil (current-kill 0 t))))
   (kill-new (replace-regexp-in-string
@@ -798,7 +798,7 @@ ref: https://karthinks.com/software/emacs-window-management-almanac/"
 
 ;; appt
 
-(defun my/notifications-notify (title body &rest params)
+(defun zr-notifications-notify (title body &rest params)
   "Send system notification with TITLE and BODY based on current OS.
    On windows, an active notification must be removed by calling
    `w32-notification-close' before a new one can be shown."
@@ -811,7 +811,7 @@ ref: https://karthinks.com/software/emacs-window-management-almanac/"
               ((eq system-type 'windows-nt)))
     (run-with-timer timeout nil (lambda () (w32-notification-close id)))))
 
-(defun my/appt-notification-notify (min-to-app new-time appt-msg)
+(defun zr-appt-notification-notify (min-to-app new-time appt-msg)
   "Display appointment due in MIN-TO-APP (a string) minutes.
 NEW-TIME is a string giving the current date.
 Displays the appointment message APPT-MSG via notification.
@@ -820,29 +820,29 @@ ref: `appt-disp-window'"
     (and (listp min-to-app)
          (setq min-to-app (number-to-string appt-display-interval)
                appt-msg (mapconcat #'identity appt-msg "\n")))
-    (my/notifications-notify
+    (zr-notifications-notify
      (message "In %s minutes" min-to-app)
      appt-msg
      :urgency 'critical
      :replaces-id 100
      :timeout timeout)))
 
-(defun my/appt-habits ()
+(defun zr-appt-habits ()
   "Add some habits to appointments."
   (dolist (h (number-sequence 8 23))
     (appt-add (format "%d:00" h) "💧 Stay hydrated!" 0)))
 
 (with-eval-after-load 'appt
-  (setq appt-disp-window-function #'my/appt-notification-notify)
-  (my/appt-habits))
+  (setq appt-disp-window-function #'zr-appt-notification-notify)
+  (zr-appt-habits))
 
 (with-eval-after-load 'midnight
-  (add-hook 'midnight-hook #'my/appt-habits))
+  (add-hook 'midnight-hook #'zr-appt-habits))
 
 
 ;; proc
 
-(defun my/get-pid-from-file (pid-file)
+(defun zr-get-pid-from-file (pid-file)
   "Read and return the process ID (PID) from the given PID file.
 If the file doesn't exist or is not readable, return nil.
 If the file is empty or doesn't contain a valid integer, return nil.
@@ -861,35 +861,35 @@ PID-FILE is the path to the file containing the process ID."
 ;; keymap
 
 ;; ref: https://gist.github.com/jdtsmith/f41207cb0ddc7579ed648af1f69e2a0a
-(defvar-local my/custom-buffer-local-keys nil
+(defvar-local zr-custom-buffer-local-keys nil
   "Key-bindings to be set up local to the current buffer.
 A single (KEY . BINDING) cons or list of such conses, of the form
 `bind-keys' accepts.  Set this as a file-local variable to make bindings
 local to that buffer only.")
 
-(put 'my/custom-buffer-local-keys 'safe-local-variable 'consp)
+(put 'zr-custom-buffer-local-keys 'safe-local-variable 'consp)
 
-(defvar-local my/custom-buffer-local-map nil)
-(defun my/process-custom-buffer-local-keys ()
-  "Setup and enable a minor mode if my/custom-buffer-local-keys is non-nil."
-  (when my/custom-buffer-local-keys
-    (let ((map my/custom-buffer-local-map)
-	      (keys my/custom-buffer-local-keys))
+(defvar-local zr-custom-buffer-local-map nil)
+(defun zr-process-custom-buffer-local-keys ()
+  "Setup and enable a minor mode if zr-custom-buffer-local-keys is non-nil."
+  (when zr-custom-buffer-local-keys
+    (let ((map zr-custom-buffer-local-map)
+	      (keys zr-custom-buffer-local-keys))
       (unless map
 	    (setq map (make-sparse-keymap))
 	    (set-keymap-parent map (current-local-map))
-	    (use-local-map (setq my/custom-buffer-local-map map)))
+	    (use-local-map (setq zr-custom-buffer-local-map map)))
       (unless (consp (car keys)) (setq keys (list keys)))
       (dolist (k keys) (local-set-key (kbd (car k)) (cdr k))))))
 
-(add-hook 'hack-local-variables-hook #'my/process-custom-buffer-local-keys)
+(add-hook 'hack-local-variables-hook #'zr-process-custom-buffer-local-keys)
 
 
 ;; follow
-(defun my/follow-current-window (&optional arg)
+(defun zr-follow-current-window (&optional arg)
   "Follow the window."
   (interactive "P")
-  (let* ((my/custom-buffer-local-keys
+  (let* ((zr-custom-buffer-local-keys
           (pcase arg
             ('(4) (delete-other-windows) nil)
             ((pred listp) arg)))
@@ -899,12 +899,12 @@ local to that buffer only.")
     (dotimes (i split-cnt)
       (split-window nil (* (- split-cnt i) single-width) t))
     (follow-mode 1)
-    (my/process-custom-buffer-local-keys)))
+    (zr-process-custom-buffer-local-keys)))
 
 (with-eval-after-load 'viper
   (bind-keys
-   :map my/global-prefix-map
-   ("F" . my/follow-current-window)))
+   :map zr-global-prefix-map
+   ("F" . zr-follow-current-window)))
 
 (provide 'init-misc)
 ;;; init-misc.el ends here

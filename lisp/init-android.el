@@ -46,7 +46,7 @@
 
 ;; hardware
 
-(defun ma/mini-screen-setup-maybe ()
+(defun za/mini-screen-setup-maybe ()
   "Setup for mini screen mobile."
   (if (= (display-pixel-height) 260)
       (modifier-bar-mode -1)
@@ -59,7 +59,7 @@
   (add-hook 'dired-mode-hook 'dired-hide-details-mode))
 
 ;; todo
-(defun ma/mpv-intent (scheme &optional sub)
+(defun za/mpv-intent (scheme &optional sub)
   "http://mpv-android.github.io/mpv-android/intent.html
 am: [-e|--es <EXTRA_KEY> <EXTRA_STRING_VALUE> ...]  filepath
 scheme: rtmp, rtmps, rtp, rtsp, mms, mmst, mmsh, tcp, udp,
@@ -80,7 +80,7 @@ milliseconds"
                      "is.xyz.mpv/is.xyz.mpv.MPVActivity"
                      "-e" "filepath" url))))
 
-(defun ma/fooview-run (cmd)
+(defun za/fooview-run (cmd)
   "Run fooview action."
   ;; (start-process "fooview-run" nil "am" "start"
   ;;                (format "intent:#Intent;action=com.fooview.android.intent.RUN_WORKFLOW;component=com.fooview.android.fooview/.ShortcutProxyActivity;S.action=%s;end" cmd))
@@ -88,43 +88,43 @@ milliseconds"
                  "com.fooview.android.intent.RUN_WORKFLOW" "-e" "action"
                  cmd "com.fooview.android.fooview/.ShortcutProxyActivity"))
 
-(defun ma/rish-run (cmd)
+(defun za/rish-run (cmd)
   "Run command with rish."
   (start-process "rish-run" nil "rish" "-c" cmd))
 
-(defun ma/normal-keyboard ()
+(defun za/normal-keyboard ()
   "Enable normal keyboard on android."
-  (ma/rish-run "ime set com.samsung.android.honeyboard/.service.HoneyBoardService"))
+  (za/rish-run "ime set com.samsung.android.honeyboard/.service.HoneyBoardService"))
 
-(defun ma/bare-keyboard ()
+(defun za/bare-keyboard ()
   "Enable bare keyboard on android."
-  (ma/rish-run "ime set keepass2android.keepass2android/keepass2android.softkeyboard.KP2AKeyboard"))
+  (za/rish-run "ime set keepass2android.keepass2android/keepass2android.softkeyboard.KP2AKeyboard"))
 
 
 ;; sshd
 
-(defvar ma/sshd-pid-file
-  (file-name-concat my/termux-root-directory "usr/var/run/sshd.pid")
+(defvar za/sshd-pid-file
+  (file-name-concat zr-termux-root-directory "usr/var/run/sshd.pid")
   "sshd pid file.")
 
-(defvar ma/sshd-timer nil
+(defvar za/sshd-timer nil
   "sshd timer object.")
 
-(defun ma/toggle-sshd ()
+(defun za/toggle-sshd ()
   "Toggle local sshd server."
   (interactive)
-  (if (process-attributes (or (my/get-pid-from-file ma/sshd-pid-file) 0))
+  (if (process-attributes (or (zr-get-pid-from-file za/sshd-pid-file) 0))
       (progn
-        (delete-file ma/sshd-pid-file)
+        (delete-file za/sshd-pid-file)
         (call-process "pkill" nil nil nil "sshd")
-        (when ma/sshd-timer
-          (cancel-timer ma/sshd-timer)))
+        (when za/sshd-timer
+          (cancel-timer za/sshd-timer)))
     (call-process "sshd")
-    (setq ma/sshd-timer (run-at-time 300 300 #'ma/sshd-handler))))
+    (setq za/sshd-timer (run-at-time 300 300 #'za/sshd-handler))))
 
-(defun ma/sshd-handler ()
+(defun za/sshd-handler ()
   "Kill sshd when no connection over 5 min."
-  (if-let* ((pid (or (my/get-pid-from-file ma/sshd-pid-file) 0))
+  (if-let* ((pid (or (zr-get-pid-from-file za/sshd-pid-file) 0))
             (process-attributes pid))
       (with-temp-buffer
         (call-process "logcat" nil (current-buffer) nil
@@ -139,33 +139,33 @@ milliseconds"
                      (< (string-to-number (or (match-string 1) "0"))
                         (- (float-time) 300)))
             (signal-process pid 9)
-            (delete-file ma/sshd-pid-file)
-            (cancel-timer ma/sshd-timer))))
+            (delete-file za/sshd-pid-file)
+            (cancel-timer za/sshd-timer))))
     (call-process "pkill" nil nil nil "sshd")
-    (cancel-timer ma/sshd-timer)
-    (delete-file ma/sshd-pid-file)))
+    (cancel-timer za/sshd-timer)
+    (delete-file za/sshd-pid-file)))
 
-(defvar ma/dropbear-timer nil
+(defvar za/dropbear-timer nil
   "dropbear timer object.")
 
-(defvar ma/dropbear-buffer-name "*dropbear*"
+(defvar za/dropbear-buffer-name "*dropbear*"
   "Default dropbear buffer name.")
 
-(defun ma/toggle-dropbear ()
+(defun za/toggle-dropbear ()
   "Toggle local dropbear server."
   (interactive)
-  (if (buffer-live-p (get-buffer ma/dropbear-buffer-name))
+  (if (buffer-live-p (get-buffer za/dropbear-buffer-name))
       (let ((kill-buffer-query-functions nil))
         (call-process-shell-command "pkill dropbear")
-        (kill-buffer ma/dropbear-buffer-name)
-        (cancel-timer ma/dropbear-timer))
-    (start-process "dropbear" ma/dropbear-buffer-name "dropbear" "-F" "-w" "-s")
-    (setq ma/dropbear-timer (run-at-time 300 300 #'ma/dropbear-handler
+        (kill-buffer za/dropbear-buffer-name)
+        (cancel-timer za/dropbear-timer))
+    (start-process "dropbear" za/dropbear-buffer-name "dropbear" "-F" "-w" "-s")
+    (setq za/dropbear-timer (run-at-time 300 300 #'za/dropbear-handler
                                          (format-time-string "%G %b %d %T")))))
 
-(defun ma/dropbear-handler (exit)
+(defun za/dropbear-handler (exit)
   "Kill dropbear when no connection over 5 min."
-  (with-current-buffer ma/dropbear-buffer-name
+  (with-current-buffer za/dropbear-buffer-name
     (goto-char (point-min))
     (let (child)
       (while (re-search-forward "^\\[\\([[:digit:]]+\\)\\] \\([[:alpha:]]\\{3\\} [[:digit:]]\\{2\\} [[:digit:]:]\\{8\\}\\) \\(Child\\|Exit\\)" nil t)
@@ -181,19 +181,19 @@ milliseconds"
                     (parse-time-string exit))
                    300)
                   nil))
-        (ma/toggle-dropbear)))))
+        (za/toggle-dropbear)))))
 
 
 ;; termux
 
-(cl-defun ma/termux-toast
+(cl-defun za/termux-toast
     (text &optional (bgcolor "gray") (color "white") (gravity "middle") short)
   "termux-toast wrapper."
   (let ((args (list "-b" bgcolor "-c" color "-g" gravity text)))
     (and short (push "-s" args))
     (apply #'start-process "termux-toast" nil "termux-toast" args)))
 
-(cl-defun ma/termux-notifications-notify
+(cl-defun za/termux-notifications-notify
     ( &key title body replaces-id timeout urgency app-icon
       image-path suppress-sound category on-close actions led-color
       led-off led-on group channel action ongoing alert-once)
@@ -248,30 +248,30 @@ Other parameters map to termux-notification CLI options."
 
 (setenv "SSH_AUTH_SOCK" (string-trim-right (shell-command-to-string "gpgconf -L agent-ssh-socket")))
 
-(add-hook 'focus-in-hook #'ma/mini-screen-setup-maybe)
+(add-hook 'focus-in-hook #'za/mini-screen-setup-maybe)
 
-(defun ma/stop-record-tracks ()
+(defun za/stop-record-tracks ()
   "Stop OpenTracks."
   (interactive)
-  (ma/rish-run "am force-stop de.dennisguse.opentracks"))
+  (za/rish-run "am force-stop de.dennisguse.opentracks"))
 
 (easy-menu-define bot-menu global-map
   "Menu for useful commands."
   '("Bot"
-    ["Stop Tracks" ma/stop-record-tracks]
-    ["toggle sshd" ma/toggle-sshd]
-    ["Start alist" my/net-start-alist]))
+    ["Stop Tracks" za/stop-record-tracks]
+    ["toggle sshd" za/toggle-sshd]
+    ["Start alist" zr-net-start-alist]))
 
 (setq select-enable-clipboard nil
-      shell-file-name (expand-file-name "usr/bin/bash" my/termux-root-directory)
+      shell-file-name (expand-file-name "usr/bin/bash" zr-termux-root-directory)
       overriding-text-conversion-style nil
-      temporary-file-directory my/termux-tmp-directory
-      Info-default-directory-list `(,(file-name-concat my/termux-root-directory "usr/share/info/"))
+      temporary-file-directory zr-termux-tmp-directory
+      Info-default-directory-list `(,(file-name-concat zr-termux-root-directory "usr/share/info/"))
       android-pass-multimedia-buttons-to-system t)
 
 (dolist (path '(".aria2/" ".gitconfig" ".gnupg/" ".ssh/" ".config/"))
   (make-symbolic-link (file-name-concat
-                       my/termux-root-directory "home" path)
+                       zr-termux-root-directory "home" path)
                       (file-name-concat "~" path) t))
 
 (setenv "XDG_CONFIG_HOME" (expand-file-name "~/.config/"))
@@ -286,5 +286,5 @@ Other parameters map to termux-notification CLI options."
 ;;; init-android.el ends here
 
 ;; Local Variables:
-;; read-symbol-shorthands: (("ma/" . "my/android-"))
+;; read-symbol-shorthands: (("za/" . "zr-android-"))
 ;; End:

@@ -27,12 +27,12 @@
 
 ;; shell
 
-(defcustom my/comint-dir (locate-user-emacs-file "comint/")
+(defcustom zr-comint-dir (locate-user-emacs-file "comint/")
   "Directory where comint saves data."
   :type 'directory
   :group 'my)
 
-(defun my/shell-setup ()
+(defun zr-shell-setup ()
   "Setup various shell in shell-mode."
   (pcase (file-name-base (or explicit-shell-file-name shell-file-name))
     ("bash" (shell-dirtrack-mode -1))
@@ -40,30 +40,30 @@
      (shell-dirtrack-mode -1)
      (dirtrack-mode)
      (setq dirtrack-list '("^\\([a-zA-Z]:.*\\)>" 1)))))
-(add-hook 'shell-mode-hook #'my/shell-setup)
+(add-hook 'shell-mode-hook #'zr-shell-setup)
 
-(defun my/advice-comint-save-history-sentinel (proc event)
+(defun zr-advice-comint-save-history-sentinel (proc event)
   "Save history if the default sentinel not save, then kill buffer."
   (when-let* ((buf (process-buffer proc))
               (livep (buffer-live-p buf)))
     (with-current-buffer buf
       (unless (or (null comint-input-ring-file-name)
-                  (my/file-modified-recently-p comint-input-ring-file-name 5))
+                  (zr-file-modified-recently-p comint-input-ring-file-name 5))
         (comint-write-input-ring))
       (when (string= event "finished\n")
         (kill-current-buffer)))))
 
-(defun my/comint-save-history ()
+(defun zr-comint-save-history ()
   "Let all comint-mode save `input-ring' history cross session."
   (when-let* ((proc (get-buffer-process (current-buffer)))
               (program (car (process-command proc)))
               (base (file-name-base program)))
     (setq-local comint-input-ring-file-name
-                (expand-file-name base my/comint-dir))
+                (expand-file-name base zr-comint-dir))
     (comint-read-input-ring t)
     (add-function :after (process-sentinel proc)
-                  #'my/advice-comint-save-history-sentinel)))
-(add-hook 'comint-exec-hook #'my/comint-save-history)
+                  #'zr-advice-comint-save-history-sentinel)))
+(add-hook 'comint-exec-hook #'zr-comint-save-history)
 
 
 

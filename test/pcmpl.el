@@ -25,9 +25,9 @@
 ;;; Code:
 
 (ert-deftest test/advice-pcomplete-from-help ()
-  "Tester for `my/advice-pcomplete-from-help'."
+  "Tester for `zr-advice-pcomplete-from-help'."
   (should (equal '("git" "branch" "-h")
-                 (my/advice-pcomplete-from-help
+                 (zr-advice-pcomplete-from-help
                   `(,vc-git-program "help" "branch")))))
 
 (provide 'pcmpl)

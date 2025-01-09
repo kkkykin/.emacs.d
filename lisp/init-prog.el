@@ -5,7 +5,7 @@
 
 ;; treesit
 
-(defun mp/ts-mode-enable ()
+(defun zp/ts-mode-enable ()
   "Auto map available ts-mode."
   (interactive)
   (dolist (lan (mapcar #'car treesit-language-source-alist))
@@ -33,12 +33,12 @@
                        (_ `(,(format "\\.%s\\'" name) . ,ts-fn))))))))
 
 (with-eval-after-load 'treesit
-  (mp/ts-mode-enable))
+  (zp/ts-mode-enable))
 
 
 ;; occur
 
-(defun mp/grep-files ()
+(defun zp/grep-files ()
   "Extract grep files from current buffer."
   (save-excursion
     (save-restriction
@@ -61,7 +61,7 @@
             (push text files))
           (mapcar #'expand-file-name (delete-dups files)))))))
 
-(defun mp/xref-files ()
+(defun zp/xref-files ()
   "Extract xref files from current buffer."
   (save-excursion
     (save-restriction
@@ -73,13 +73,13 @@
           (push (buffer-substring-no-properties (point) (pos-eol)) files))
         (mapcar #'expand-file-name files)))))
 
-(defun mp/switch-to-occur (&optional nlines)
+(defun zp/switch-to-occur (&optional nlines)
   "Switch to occur buffer for grep or xref results.
 NLINES is the number of context lines to show."
   (interactive "P" grep-mode xref--xref-buffer-mode)
   (when-let* ((files (pcase major-mode
-                      ('grep-mode (mp/grep-files))
-                      ('xref--xref-buffer-mode (mp/xref-files))))
+                      ('grep-mode (zp/grep-files))
+                      ('xref--xref-buffer-mode (zp/xref-files))))
               ((consp files))
               (re
                (pcase major-mode
@@ -100,17 +100,17 @@ NLINES is the number of context lines to show."
 (with-eval-after-load 'grep
   (bind-keys
    :map grep-mode-map
-   ("C-c C-o" . mp/switch-to-occur)))
+   ("C-c C-o" . zp/switch-to-occur)))
 
 (with-eval-after-load 'xref
   (bind-keys
    :map xref--xref-buffer-mode-map
-   ("C-c C-o" . mp/switch-to-occur)))
+   ("C-c C-o" . zp/switch-to-occur)))
 
 
 ;; xref
 
-(defun mp/next-error-put-function-name-work ()
+(defun zp/next-error-put-function-name-work ()
   "Get function name and put to `next-error-last-buffer'."
   (when-let* ((func (which-function)))
     (set-buffer next-error-last-buffer)
@@ -121,7 +121,7 @@ NLINES is the number of context lines to show."
       (overlay-put ov 'evaporate t)))
   (set-buffer next-error-last-buffer))
 
-(defun mp/next-error-put-function-name (&optional arg)
+(defun zp/next-error-put-function-name (&optional arg)
   "Put function name before all items."
   (interactive "P")
   (save-window-excursion
@@ -133,7 +133,7 @@ NLINES is the number of context lines to show."
          (let ((max (- (line-number-at-pos (point-max)) 7)))
            (dotimes (i max)
              (funcall next-error-function 1)
-             (mp/next-error-put-function-name-work))))
+             (zp/next-error-put-function-name-work))))
         ('occur-mode
          (if arg
              (progn
@@ -142,7 +142,7 @@ NLINES is the number of context lines to show."
                (while (not (condition-case t
                                (funcall next-error-function 1)
                              (error t)))
-                 (mp/next-error-put-function-name-work)))
+                 (zp/next-error-put-function-name-work)))
            (let ((back-cnt 2))
              (or (re-search-forward "^[[:digit:]]+ matches .+ in buffer:" nil t)
                  (and (goto-char (point-max)) (setq back-cnt 1)))
@@ -151,25 +151,25 @@ NLINES is the number of context lines to show."
                                    nil t back-cnt)
                (dotimes (i (- max (line-number-at-pos) 1))
                  (funcall next-error-function 1)
-                 (mp/next-error-put-function-name-work))))))))))
+                 (zp/next-error-put-function-name-work))))))))))
 
 (bind-keys
  :map occur-mode-map
- ("w" . mp/next-error-put-function-name))
+ ("w" . zp/next-error-put-function-name))
 
 (with-eval-after-load 'grep
   (bind-keys
    :map grep-mode-map
-   ("w" . mp/next-error-put-function-name)))
+   ("w" . zp/next-error-put-function-name)))
 
-(defun mp/xref-which-function (file pos)
+(defun zp/xref-which-function (file pos)
   "Get function name from a marker in a file."
   (with-current-buffer
       (find-file-noselect file)
     (xref--goto-char pos)
     (which-function)))
 
-(defun mp/xref-put-function-name-work ()
+(defun zp/xref-put-function-name-work ()
   "Put function name before all items."
   (while (not (eobp))
     (forward-line 1)
@@ -177,14 +177,14 @@ NLINES is the number of context lines to show."
       (let* ((location (xref-item-location item))
              (file (xref-location-group location))
              (marker (xref-location-marker location))
-             (function-name (mp/xref-which-function file marker))
+             (function-name (zp/xref-which-function file marker))
              (ov (make-overlay (pos-bol) (1+ (pos-bol)) nil t))
              (text (format "%s │" (or (string-pad function-name 18) ""))))
         (overlay-put ov 'before-string
                      (propertize text 'face 'font-lock-keyward-face))
         (overlay-put ov 'evaporate t)))))
 
-(defun mp/xref-put-function-name (&optional arg)
+(defun zp/xref-put-function-name (&optional arg)
   "Put function name before items in current group. If called with
   `universal-argument', apply to the entire buffer."
   (interactive "P")
@@ -192,30 +192,30 @@ NLINES is the number of context lines to show."
     (if arg
         (progn
           (goto-char (point-min))
-          (mp/xref-put-function-name-work))
+          (zp/xref-put-function-name-work))
       (let ((max (or (and (xref--search-property 'xref-group) (point))
                      (point-max))))
         (xref--search-property 'xref-group t)
         (with-restriction (point) max
-          (mp/xref-put-function-name-work))))))
+          (zp/xref-put-function-name-work))))))
 
 (with-eval-after-load 'xref
   (bind-keys
    :map xref--xref-buffer-mode-map
-   ("w" . mp/xref-put-function-name)))
+   ("w" . zp/xref-put-function-name)))
 
 ;; sql
 
-(defun mp/sql-fix-imenu-exp ()
+(defun zp/sql-fix-imenu-exp ()
   "Fix imenu expression for sql-mode."
   (mapc
    (lambda (a)
      (setcar (cdr a)
              (replace-regexp-in-string "\\\\([^?]" "`?\\&" (cadr a))))
    imenu-generic-expression))
-(add-hook 'sql-mode-hook #'mp/sql-fix-imenu-exp)
+(add-hook 'sql-mode-hook #'zp/sql-fix-imenu-exp)
 
-(defun mp/sql-table-get-pri-key (sqlbuf table)
+(defun zp/sql-table-get-pri-key (sqlbuf table)
   "Get primary key name from table."
   (with-temp-buffer
     (sql-execute-feature sqlbuf (current-buffer) :list-table nil table)
@@ -223,7 +223,7 @@ NLINES is the number of context lines to show."
     (re-search-forward "^| \\([[:alnum:]_]+\\).+| PRI |")
     (match-string 1)))
 
-(defun mp/sql-table-selector (name &optional arg)
+(defun zp/sql-table-selector (name &optional arg)
   "Select data from NAME. Default select latest 10 records,
 with a positive argument, select latest (* 10 number) records;
 with a negative argument, select oldest (* 10 number) records;
@@ -242,7 +242,7 @@ with `universal argument', select all records."
       (setq builder
             (append builder
                     `("order by"
-                      ,(mp/sql-table-get-pri-key sqlbuf name)
+                      ,(zp/sql-table-get-pri-key sqlbuf name)
                       "desc"))))
     (cond ((and (listp arg)
                 (eq nil (car arg)))
@@ -258,7 +258,7 @@ with `universal argument', select all records."
                  (mapconcat #'identity builder " "))))
 
 (tempo-define-template
- "mp/sql-create-procedure"
+ "zp/sql-create-procedure"
  '(%"DROP PROCEDURE IF EXISTS `" (P "Procedure name: " procedure) "`;"n
     "DELIMITER ;;"n
     "CREATE PROCEDURE `" (s procedure) "`("
@@ -278,7 +278,7 @@ with `universal argument', select all records."
  "Drop procedure if exists then create it.")
 
 (tempo-define-template
- "mp/sql-create-function"
+ "zp/sql-create-function"
  '(%"DROP FUNCTION IF EXISTS `" (P "Function name: " function) "`;"n
     "DELIMITER ;;"n
     "CREATE FUNCTION `" (s function) "`("
@@ -304,7 +304,7 @@ with `universal argument', select all records."
     n"END;;"n"DELIMITER ;"n))
 
 (tempo-define-template
- "mp/sql-create-trigger"
+ "zp/sql-create-trigger"
  '(%"DROP TRIGGER IF EXISTS `" (P "Trigger name: " trigger) "`;"n
     "DELIMITER ;;"n
     "CREATE TRIGGER `" (s trigger) "`" n
@@ -320,7 +320,7 @@ with `universal argument', select all records."
     n "main: BEGIN" n n p n n "END main;;" n "DELIMITER ;" n))
 
 (tempo-define-template
- "mp/sql-if"
+ "zp/sql-if"
  '(%"IF " (P "Contidion: ") " THEN"n "  "p n
     (let ((output '(l)))
       (while-let ((elif (read-string "ELSEIF: "))
@@ -332,7 +332,7 @@ with `universal argument', select all records."
     "END IF;"n))
 
 (tempo-define-template
- "mp/sql-case"
+ "zp/sql-case"
  '(%"CASE"n
     (let ((output '(l)))
       (while-let ((co (read-string "Condition: "))
@@ -343,36 +343,36 @@ with `universal argument', select all records."
         output))
     "END CASE;"n))
 
-(define-skeleton mp/sql-skeleton-while
+(define-skeleton zp/sql-skeleton-while
   "SQL while statement." "Condition: "
   "WHILE " str " DO"\n "  "_ \n "END WHILE;"\n)
 
-(define-skeleton mp/sql-skeleton-repeat
+(define-skeleton zp/sql-skeleton-repeat
   "SQL repeat statement." "Condition: "
   "REPEAT"\n "  "_ \n"UNTIL " str \n"END REPEAT;"\n)
 
-(define-skeleton mp/sql-skeleton-loop
+(define-skeleton zp/sql-skeleton-loop
   "SQL loop statement, use `LEAVE' or `ITERATE' label." "Label: "
   str & ": " "LOOP" \n "  "_ \n "END LOOP " str ";"\n)
 
 (with-eval-after-load 'sql
   (bind-keys
-   :map my/sql-cc-ck-prefix-map
-   ("s" . mp/sql-table-selector))
+   :map zr-sql-cc-ck-prefix-map
+   ("s" . zp/sql-table-selector))
   (define-abbrev-table 'sql-mode-abbrev-table
-    '(("proc" #1="" tempo-template-mp/sql-create-procedure)
-      ("fun" #1# tempo-template-mp/sql-create-function)
-      ("trig" #1# tempo-template-mp/sql-create-trigger)
-      ("if" #1# tempo-template-mp/sql-if)
-      ("case" #1# tempo-template-mp/sql-case)
-      ("while" #1# mp/sql-skeleton-while)
-      ("repeat" #1# mp/sql-skeleton-repeat)
-      ("loop" #1# mp/sql-skeleton-loop))))
+    '(("proc" #1="" tempo-template-zp/sql-create-procedure)
+      ("fun" #1# tempo-template-zp/sql-create-function)
+      ("trig" #1# tempo-template-zp/sql-create-trigger)
+      ("if" #1# tempo-template-zp/sql-if)
+      ("case" #1# tempo-template-zp/sql-case)
+      ("while" #1# zp/sql-skeleton-while)
+      ("repeat" #1# zp/sql-skeleton-repeat)
+      ("loop" #1# zp/sql-skeleton-loop))))
 
 
 ;; sqlite
 
-(defun mp/sqlite-view-file-magically ()
+(defun zp/sqlite-view-file-magically ()
   "Runs `sqlite-mode-open-file' on the file name visited by the
 current buffer, killing it.
 From https://christiantietze.de/posts/2024/01/emacs-sqlite-mode-open-sqlite-files-automatically/"
@@ -380,11 +380,11 @@ From https://christiantietze.de/posts/2024/01/emacs-sqlite-mode-open-sqlite-file
     (kill-current-buffer)
     (sqlite-mode-open-file file-name)))
 
-(add-to-list 'magic-mode-alist '("SQLite format 3\x00" . mp/sqlite-view-file-magically))
+(add-to-list 'magic-mode-alist '("SQLite format 3\x00" . zp/sqlite-view-file-magically))
 
 ;; vc
 
-(defun mp/vc-dir-copy-filename-as-kill (&optional arg)
+(defun zp/vc-dir-copy-filename-as-kill (&optional arg)
   "ref: `dired-copy-filename-as-kill'"
   (interactive "P" vc-dir-mode)
   (let* ((sfiles (or (vc-dir-marked-only-files-and-states)
@@ -416,9 +416,9 @@ From https://christiantietze.de/posts/2024/01/emacs-sqlite-mode-open-sqlite-file
 (with-eval-after-load 'vc-dir
   (bind-keys
    :map vc-dir-mode-map
-   ("w" . mp/vc-dir-copy-filename-as-kill)))
+   ("w" . zp/vc-dir-copy-filename-as-kill)))
 
-(define-skeleton mp/vc-commit-template
+(define-skeleton zp/vc-commit-template
   "VC Conventional Commits.
    https://www.conventionalcommits.org/en/v1.0.0/"
   "Scope: "
@@ -435,21 +435,21 @@ From https://christiantietze.de/posts/2024/01/emacs-sqlite-mode-open-sqlite-file
                          (vc-read-revision "Current branch: "))))
       (_ (format "%s(%s): " type (skeleton-read "Scope: "))))))
 (with-eval-after-load 'log-edit
-  (add-hook 'log-edit-hook #'mp/vc-commit-template 1))
+  (add-hook 'log-edit-hook #'zp/vc-commit-template 1))
 
-(defun mp/git-commit-message-setup ()
+(defun zp/git-commit-message-setup ()
   "Default insert state, and emulate vc-commit."
   (when (string-suffix-p "/.git/COMMIT_EDITMSG" (buffer-file-name))
     (when viper-mode
       (viper-change-state-to-insert))
-    (when (fboundp 'my/process-custom-buffer-local-keys)
-      (setq-local my/custom-buffer-local-keys
+    (when (fboundp 'zr-process-custom-buffer-local-keys)
+      (setq-local zr-custom-buffer-local-keys
                   '(("C-c C-c" . server-edit)
                     ("C-c C-k" . (lambda () (interactive) (erase-buffer) (server-edit)))))
-      (my/process-custom-buffer-local-keys))
-    (my/prog-vc-commit-template)))
+      (zr-process-custom-buffer-local-keys))
+    (zp/vc-commit-template)))
 
-(add-hook 'server-switch-hook #'mp/git-commit-message-setup)
+(add-hook 'server-switch-hook #'zp/git-commit-message-setup)
 
 (with-eval-after-load 'log-view
   (bind-keys
@@ -461,5 +461,5 @@ From https://christiantietze.de/posts/2024/01/emacs-sqlite-mode-open-sqlite-file
 ;;; init-prog.el ends here
 
 ;; Local Variables:
-;; read-symbol-shorthands: (("mp/" . "my/prog-"))
+;; read-symbol-shorthands: (("zp/" . "zr-prog-"))
 ;; End:

@@ -30,7 +30,7 @@
 
 ;; UWP
 
-(defun mw/uwp-visit-localhost (app)
+(defun zw/uwp-visit-localhost (app)
   "Make a UWP App visist localhost."
   (interactive
    (list
@@ -46,17 +46,17 @@
 
 ;; shell
 
-(defconst mw/vanilla-shell shell-file-name)
+(defconst zw/vanilla-shell shell-file-name)
 
-(defun mw/cmdproxy-real-program-name (cmd)
+(defun zw/cmdproxy-real-program-name (cmd)
   "Find invoked real program name in cmd."
   (seq-some (lambda (x) (and (not (string-prefix-p "/" x))
                          (not (string= "start" x)) x))
             (split-string-shell-command cmd)))
 
-(defun mw/find-shell-command-coding-system (command)
+(defun zw/find-shell-command-coding-system (command)
   "Find coding system for shell command."
-  (let ((program (mw/cmdproxy-real-program-name command)))
+  (let ((program (zw/cmdproxy-real-program-name command)))
     (find-operation-coding-system 'call-process program)))
 
 (define-advice shell-command-on-region (:around (orig-fun &rest args) fix-coding)
@@ -65,7 +65,7 @@ directory."
   (if (file-remote-p default-directory)
       (apply orig-fun args)
     (let ((process-coding-system-alist
-           `(("cmdproxy" ,@(mw/find-shell-command-coding-system (caddr args))))))
+           `(("cmdproxy" ,@(zw/find-shell-command-coding-system (caddr args))))))
       (apply orig-fun args))))
 
 (with-eval-after-load 'ob-eval
@@ -75,10 +75,10 @@ remote directory."
     (if (file-remote-p default-directory)
         (apply orig-fun args)
       (let ((process-coding-system-alist
-             `(("cmdproxy" ,@(mw/find-shell-command-coding-system (car args))))))
+             `(("cmdproxy" ,@(zw/find-shell-command-coding-system (car args))))))
         (apply orig-fun args)))))
 
-(defun mw/proc-coding-system-fix (&optional proc cmd)
+(defun zw/proc-coding-system-fix (&optional proc cmd)
   "Fix the coding system for a process based on its command.
 
 This function sets the coding system for the process PROC based on the
@@ -93,23 +93,23 @@ command it is running.  It only applies the fix if the current
   command list."
   (if-let* (((not (file-remote-p default-directory)))
             (proc (or proc (get-buffer-process (current-buffer))))
-            (cs (mw/find-shell-command-coding-system
+            (cs (zw/find-shell-command-coding-system
                  (or cmd (nth 2 (process-command proc))))))
       (set-process-coding-system proc (car cs) (cdr cs))
     t))
 
 (dolist (h `(,(derived-mode-hook-name async-shell-command-mode)
              compilation-start-hook))
-  (add-hook h #'mw/proc-coding-system-fix))
+  (add-hook h #'zw/proc-coding-system-fix))
 
-(defun mw/output-coding-system-fix (cmd output)
+(defun zw/output-coding-system-fix (cmd output)
   "Fix coding system by convert string."
   (if-let* ((localp (not (file-remote-p default-directory)))
-           (cs (mw/find-shell-command-coding-system cmd)))
+           (cs (zw/find-shell-command-coding-system cmd)))
       (decode-coding-string (encode-coding-string output (cdr cs)) (car cs))
     output))
 
-(defun mw/eshell-change-cs-when-exec (proc)
+(defun zw/eshell-change-cs-when-exec (proc)
   "Change the coding system of the Eshell process PROC based on the command
 being executed.
 
@@ -126,39 +126,39 @@ Eshell."
              (cs (find-operation-coding-system
                   #'call-process (car (process-command proc)))))
     (set-process-coding-system proc (car cs) (cdr cs))))
-(add-hook 'eshell-exec-hook #'mw/eshell-change-cs-when-exec)
+(add-hook 'eshell-exec-hook #'zw/eshell-change-cs-when-exec)
 
-(defun mw/shell-change-cs-before-send-input (proc string)
-  "See `mw/eshell-change-cs-when-exec'."
+(defun zw/shell-change-cs-before-send-input (proc string)
+  "See `zw/eshell-change-cs-when-exec'."
   (when-let* (((not (string-empty-p string)))
-             ((mw/proc-coding-system-fix proc string))
+             ((zw/proc-coding-system-fix proc string))
              (cs (find-operation-coding-system
                   #'call-process (car (process-command proc)))))
     (set-process-coding-system proc (car cs) (cdr cs)))
   (comint-simple-send proc string))
 
-(defun mw/shell-mode-setup ()
+(defun zw/shell-mode-setup ()
   "Setup for shell-mode."
   (when (string-match-p "cmdproxy"
                         (or explicit-shell-file-name shell-file-name))
     (setq comint-process-echoes t
-          comint-input-sender #'mw/shell-change-cs-before-send-input)))
-(add-hook 'shell-mode-hook #'mw/shell-mode-setup)
+          comint-input-sender #'zw/shell-change-cs-before-send-input)))
+(add-hook 'shell-mode-hook #'zw/shell-mode-setup)
 
-(defun mw/run-bash ()
+(defun zw/run-bash ()
   (interactive)
   (let ((shell-file-name "C:\\Windows\\system32\\bash.exe"))
     (shell "*bash*")))
 
-(defun mw/toggle-shell ()
+(defun zw/toggle-shell ()
   "Toggle shell between wsl bash and cmd"
   (interactive)
   (setq shell-file-name
-        (if (string= shell-file-name mw/vanilla-shell)
+        (if (string= shell-file-name zw/vanilla-shell)
             "C:/Windows/system32/bash.exe"
-          mw/vanilla-shell)))
+          zw/vanilla-shell)))
 
-(defun mw/coding-conv-region (min from to)
+(defun zw/coding-conv-region (min from to)
   "Convert coding system between min and `point-max'."
   (unless (file-remote-p default-directory)
     (encode-coding-region min (point-max) from)
@@ -170,7 +170,7 @@ Eshell."
 
 ;; sandbox
 
-(cl-defun mw/generate-sandbox-conf
+(cl-defun zw/generate-sandbox-conf
     (&key (gpu "Disable") (net "Disable") map-dirs cmds
           (audio "Disable") (video "Disable") (protect "Enable")
           (printer "Disable") (clip "Disable") (memory "4096"))
@@ -354,5 +354,5 @@ https://learn.microsoft.com/en-us/windows/security/application-security/applicat
 ;;; init-winnt.el ends here
 
 ;; Local Variables:
-;; read-symbol-shorthands: (("mw/" . "my/win-"))
+;; read-symbol-shorthands: (("zw/" . "zr-win-"))
 ;; End:

@@ -24,14 +24,14 @@
 
 ;;; Code:
 
-(defun ml/transparency (value)
+(defun zl/transparency (value)
   "Sets the transparency of the frame window. 0=transparent/100=opaque"
   (interactive "nTransparency Value 0 - 100 opaque:")
   (set-frame-parameter nil 'alpha-background value))
 
-(add-hook 'server-after-make-frame-hook #'my/setup-faces)
+(add-hook 'server-after-make-frame-hook #'zr-setup-faces)
 
-(defun ml/fix-plantuml-args (path args)
+(defun zl/fix-plantuml-args (path args)
   "Fix plantuml Warning: -headless flag must be the first one in the
 command line."
   (when-let* ((link (file-symlink-p (executable-find "plantuml"))))
@@ -43,14 +43,14 @@ command line."
         (set args (append (symbol-value args) (cl-subseq cmd 2 -2)))))))
 
 (with-eval-after-load 'ob-plantuml
-  (ml/fix-plantuml-args 'org-plantuml-executable-path 'org-plantuml-args))
+  (zl/fix-plantuml-args 'org-plantuml-executable-path 'org-plantuml-args))
 
 (with-eval-after-load 'plantuml-mode
-  (ml/fix-plantuml-args 'plantuml-executable-path 'plantuml-executable-args))
+  (zl/fix-plantuml-args 'plantuml-executable-path 'plantuml-executable-args))
 
 (provide 'init-linux)
 ;;; init-linux.el ends here
 
 ;; Local Variables:
-;; read-symbol-shorthands: (("ml/" . "my/linux-"))
+;; read-symbol-shorthands: (("zl/" . "zr-linux-"))
 ;; End:

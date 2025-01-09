@@ -29,7 +29,7 @@
 
 ;; vi
 
-(defun my/open-with-vim (&optional file server)
+(defun zr-open-with-vim (&optional file server)
   "Open a FILE with Vim, optionally specifying a Vim SERVER.
 
 This function uses Vim's server mode to open a specified file or the
@@ -58,16 +58,16 @@ Usage:
                 "--remote-silent" file)))
 
 (bind-keys
- :map my/viper-vi-spc-prefix-map
- ("v" . my/open-with-vim))
+ :map zr-viper-vi-spc-prefix-map
+ ("v" . zr-open-with-vim))
 
 
 ;; netrw
 
-(defvar my/dired-target-files nil
+(defvar zr-dired-target-files nil
   "A list of target directories where marked files can be copied or moved.")
 
-(defun my/dired-get-targets ()
+(defun zr-dired-get-targets ()
   "Return a list of target files or directories in the current Dired buffer.
 
 If there are marked files in the Dired buffer, return them.
@@ -78,11 +78,11 @@ or the `default-directory` otherwise."
                 (dired-current-directory)
               default-directory))))
 
-(defun my/dired-mark-target (&optional path)
+(defun zr-dired-mark-target (&optional path)
   "Mark a directory as a target for copy/move operations in Dired.
 
 If PATH is provided, prompt the user to select a directory to add to the
-list of target directories `my/dired-target-files'.
+list of target directories `zr-dired-target-files'.
 If PATH is not provided, mark the currently selected files or directories
 in Dired as target directories.
 
@@ -91,15 +91,15 @@ target directory."
   (interactive "P" dired-mode)
   (dolist (f (if path
                  (list (read-directory-name "Target: "))
-               (my/dired-get-targets)))
-    (add-to-list 'my/dired-target-files f)))
+               (zr-dired-get-targets)))
+    (add-to-list 'zr-dired-target-files f)))
 
-(defun my/dired-unmark-target (&optional target)
+(defun zr-dired-unmark-target (&optional target)
   "Unmark a directory from the list of target directories for copy/move
 operations in Dired.
 
 If TARGET is provided, prompt the user to select a directory to remove from
-the list of target directories `my/dired-target-files'.
+the list of target directories `zr-dired-target-files'.
 If TARGET is not provided, unmark the currently selected files or directories
 in Dired from the list of target directories.
 
@@ -107,34 +107,34 @@ When called interactively with a prefix argument, always prompt for the
 target to unmark."
   (interactive "P" dired-mode)
   (dolist (f (if target
-                 (list (completing-read "Target: " my/dired-target-files))
-               (my/dired-get-targets)))
-    (setq my/dired-target-files
+                 (list (completing-read "Target: " zr-dired-target-files))
+               (zr-dired-get-targets)))
+    (setq zr-dired-target-files
           (if (string-empty-p f) nil
-            (delete f my/dired-target-files)))))
+            (delete f zr-dired-target-files)))))
 
-(defun my/dired-dwim-target ()
+(defun zr-dired-dwim-target ()
   "Return a list of target directories for copy/move operations in Dired.
 
 This function combines recent Dired targets from `dired-dwim-target-recent'
-with the custom list of target directories `my/dired-target-files',
+with the custom list of target directories `zr-dired-target-files',
 removing duplicates."
   (cl-delete-duplicates
    (append (dired-dwim-target-recent)
-           my/dired-target-files)
+           zr-dired-target-files)
    :test #'equal))
 
 (bind-keys
- :map my/dired-spc-prefix-map
- ("t" . my/dired-mark-target)
- ("T" . my/dired-unmark-target))
+ :map zr-dired-spc-prefix-map
+ ("t" . zr-dired-mark-target)
+ ("T" . zr-dired-unmark-target))
 
-(setq dired-dwim-target #'my/dired-dwim-target)
+(setq dired-dwim-target #'zr-dired-dwim-target)
 
 
 ;; window
 
-(defun my/buffer-to-side (side &optional buf)
+(defun zr-buffer-to-side (side &optional buf)
   "Move the current buffer to a window on the specified SIDE.
 
 This function moves the buffer of the currently selected window to a window
@@ -169,11 +169,11 @@ should be moved. It is selected interactively from the options: 'left', 'right',
     (display-buffer-in-direction fb `((direction . ,side) (window . main)))))
 
 (bind-keys
- :map my/viper-cw-prefix-map
- ("H" . (lambda () (interactive) (my/buffer-to-side 'left)))
- ("L" . (lambda () (interactive) (my/buffer-to-side 'right)))
- ("K" . (lambda () (interactive) (my/buffer-to-side 'top)))
- ("J" . (lambda () (interactive) (my/buffer-to-side 'bottom))))
+ :map zr-viper-cw-prefix-map
+ ("H" . (lambda () (interactive) (zr-buffer-to-side 'left)))
+ ("L" . (lambda () (interactive) (zr-buffer-to-side 'right)))
+ ("K" . (lambda () (interactive) (zr-buffer-to-side 'top)))
+ ("J" . (lambda () (interactive) (zr-buffer-to-side 'bottom))))
 
 (provide 'init-viper)
 ;;; init-viper.el ends here

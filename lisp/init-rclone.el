@@ -27,21 +27,21 @@
 
 ;; rclone
 
-(defcustom my/rclone-baseurl "http://127.0.0.1:5572"
+(defcustom zr-rclone-baseurl "http://127.0.0.1:5572"
   "Default rclone rc baseurl.")
 
-(defcustom my/rclone-root-directory (pcase system-type
+(defcustom zr-rclone-root-directory (pcase system-type
                                       ('windows-nt "d:/rclone/")
                                       ('gnu/linux (expand-file-name
                                                    "~/rclone/")))
   "Default rclone root directory."
   :type 'directory)
 
-(defun my/rclone-rc-contact (action &optional args json-type async baseurl)
+(defun zr-rclone-rc-contact (action &optional args json-type async baseurl)
   "Contact with rclone."
   (with-current-buffer (get-buffer-create "*rclone-rc*")
     (when-let* ((begin (point-max))
-                (url (url-generic-parse-url my/rclone-baseurl))
+                (url (url-generic-parse-url zr-rclone-baseurl))
                 (auth (car
                        (auth-source-search :max 1
                                            :host (url-host url)
@@ -51,7 +51,7 @@
       (goto-char begin)
       (apply #'call-process "curl" nil (current-buffer) nil
              "-su" user "-XPOST"
-             (concat (or baseurl my/rclone-baseurl) "/" action)
+             (concat (or baseurl zr-rclone-baseurl) "/" action)
              (when args
                (append '("-H" "Content-Type: application/json" "-d")
                        (list args))))
@@ -59,100 +59,100 @@
         (goto-char begin)
         (apply #'json-parse-buffer json-type)))))
 
-;; [[elisp:(my/rclone-rc-contact "rc/noop" (json-encode '(("potato" . 1) ("sausage" . 2))))]]
+;; [[elisp:(zr-rclone-rc-contact "rc/noop" (json-encode '(("potato" . 1) ("sausage" . 2))))]]
 
-;; [[elisp:(my/rclone-rc-contact "config/listremotes")]]
+;; [[elisp:(zr-rclone-rc-contact "config/listremotes")]]
 
-(defun my/rclone-list-remotes ()
+(defun zr-rclone-list-remotes ()
   "Lists the remotes in the config file and defined in environment
 variables."
   (gethash "remotes"
-           (my/rclone-rc-contact "config/listremotes" nil
+           (zr-rclone-rc-contact "config/listremotes" nil
                                  '(:array-type list))))
 
-(defun my/rclone-list-mounts ()
+(defun zr-rclone-list-mounts ()
   "Show current mount points."
-  (plist-get (my/rclone-rc-contact "mount/listmounts" nil
+  (plist-get (zr-rclone-rc-contact "mount/listmounts" nil
                                    '(:object-type plist))
              :mountPoints))
 
-(defun my/rclone-mount-remote (remote &optional root)
+(defun zr-rclone-mount-remote (remote &optional root)
   "Create a new mount point."
   (interactive
    (list (completing-read "Remote: "
                           (cl-delete-if
                            (lambda (r) (string-prefix-p "local" r))
-                           (my/rclone-list-remotes)))))
-  (let* ((root (or root my/rclone-root-directory))
+                           (zr-rclone-list-remotes)))))
+  (let* ((root (or root zr-rclone-root-directory))
          (path (expand-file-name remote root)))
     (make-directory root t)
-    (my/rclone-rc-contact
+    (zr-rclone-rc-contact
      "mount/mount"
      (json-encode `(("fs" . ,(concat remote ":"))
                     ("mountPoint" . ,path)
                     ("vfsOpt" . ,(json-encode '(("vfs-cache-mode" . "writes")))))))
     (dired path)))
 
-(defun my/rclone-unmount (point)
+(defun zr-rclone-unmount (point)
   "Unmount selected active mount."
   (interactive
    (list (completing-read "Point: "
                           (mapcar (lambda (m) (plist-get m :MountPoint))
-                                  (my/rclone-list-mounts)))))
-  (my/rclone-rc-contact
+                                  (zr-rclone-list-mounts)))))
+  (zr-rclone-rc-contact
    "mount/unmount"
    (json-encode `(("mountPoint" . ,point)))))
 
-(defun my/rclone-unmount-all ()
+(defun zr-rclone-unmount-all ()
   "Unmount all active mounts."
   (interactive)
-  (my/rclone-rc-contact "mount/unmountall"))
+  (zr-rclone-rc-contact "mount/unmountall"))
 
-(defun my/rclone-quit ()
+(defun zr-rclone-quit ()
   "Exit rclone safely."
   (interactive)
-  (my/rclone-rc-contact "core/quit"))
+  (zr-rclone-rc-contact "core/quit"))
 
-(defun my/rclone-directory-files-internal (fs remote &optional opt)
+(defun zr-rclone-directory-files-internal (fs remote &optional opt)
   "Returns a list of files in the remote directory specified by `remote`.
    The `fs` argument specifies the file system to use for the operation.
    If `opt` is provided, it is passed as an additional option to the
    operation."
   (gethash "list"
-           (my/rclone-rc-contact "operations/list"
+           (zr-rclone-rc-contact "operations/list"
                                  (json-encode `(("fs" . ,(concat fs ":"))
                                                 ("remote" . ,remote)
                                                 ("opt" . ,opt))))))
 
-(defun my/rclone-directory-files (fs remote &optional full)
+(defun zr-rclone-directory-files (fs remote &optional full)
   "Return a list of names of files in rclone remote."
   (mapcar (lambda (a)
             (let ((f (gethash "Path" a)))
               (if full (concat fs ":" f)
                 (file-name-nondirectory f))))
-          (my/rclone-directory-files-internal
+          (zr-rclone-directory-files-internal
            fs remote '(("noModTime" . t) ("noMimeType" . t)))))
 
-(defun my/rclone-directory-files-recursively
+(defun zr-rclone-directory-files-recursively
     (fs remote regexp &optional include-directorys)
   "Return a list of names of files in rclone remote recursively."
   (cl-delete-if-not
    (lambda (a) (string-match-p regexp a))
    (mapcar (lambda (a) (format "%s:%s" fs (gethash "Path" a)))
-           (my/rclone-directory-files-internal
+           (zr-rclone-directory-files-internal
             fs remote
             (let ((opt '(("noModTime" . t) ("recurse" . t) ("noMimeType" . t))))
               (if include-directorys opt
                 (cons'("filesOnly" . t) opt)))))))
 
-(defun my/rclone-filelist-export (fs remote file &optional regexp prefix)
+(defun zr-rclone-filelist-export (fs remote file &optional regexp prefix)
   (write-region
    (mapconcat (lambda (a)
                 (if prefix
                     (replace-regexp-in-string
                      (format "^%s:" fs) prefix a)
                   a))
-              (my/rclone-directory-files-recursively
+              (zr-rclone-directory-files-recursively
                fs remote (or regexp ".*"))
               "\n")
    nil file))

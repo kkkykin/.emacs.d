@@ -7,20 +7,20 @@
 
 ;; url
 
-(defcustom mn/img-cdn-server-list
+(defcustom zn/img-cdn-server-list
   '("https://images.weserv.nl?url=${href_ue}"
     "https://imageproxy.pimg.tw/resize?url=${href_ue}")
   "Public Image CDN server."
   :group 'my
   :type '(repeat string))
 
-(defcustom mn/img-cdn-server (car mn/img-cdn-server-list)
+(defcustom zn/img-cdn-server (car zn/img-cdn-server-list)
   "Default Image CDN server."
   :group 'my
   :type 'string)
 
 ;; https://hub.zzzr.eu.org/curl/curl/wiki/DNS-over-HTTPS E
-(defcustom mn/doh-server-list '("9.9.9.9/dns-query"
+(defcustom zn/doh-server-list '("9.9.9.9/dns-query"
                                 "doh.bortzmeyer.fr"
                                 "dns.digitalsize.net/dns-query"
                                 "1.1.1.1/dns-query"
@@ -30,28 +30,28 @@
   :group 'my
   :type '(repeat string))
 
-(defcustom mn/doh-server (concat "https://" (car mn/doh-server-list))
+(defcustom zn/doh-server (concat "https://" (car zn/doh-server-list))
   "Default DOH Server."
   :group 'my
   :type 'string)
 
-(defun mn/default-callback (&rest args)
+(defun zn/default-callback (&rest args)
   "Test default callback."
   (message (if args "Up" "Down")))
 
-(defun mn/internet-up-p (&optional host callback)
+(defun zn/internet-up-p (&optional host callback)
   "Test connectivity via ping."
   (interactive)
-  (let* ((args (if mn/sys-winnt-p '("-n" "1" "-w" "1") '("-c1" "-W1")))
+  (let* ((args (if zn/sys-winnt-p '("-n" "1" "-w" "1") '("-c1" "-W1")))
          (proc (apply #'start-process "internet-test" nil "ping"
                       (if host host "baidu.com") args))
-         (callback (if callback callback 'mn/default-callback)))
+         (callback (if callback callback 'zn/default-callback)))
     (set-process-sentinel proc (lambda (proc signal)
                                  (apply callback
                                         (if (= 0 (process-exit-status proc))
                                             '(t) nil))))))
 
-(defun mn/url-up-p (url &rest cbargs)
+(defun zn/url-up-p (url &rest cbargs)
   "Test connectivity via curl."
   (let* ((callback (plist-get cbargs :callback))
          (max-time (plist-get cbargs :max-time))
@@ -62,20 +62,20 @@
                  ,@(when proxy (list "-x" proxy))
                  "-o/dev/null" "-w%{http_code}" ,url))
          (proc (apply #'start-process "url-test" nil "curl" args))
-         (callback (if callback callback 'mn/default-callback)))
+         (callback (if callback callback 'zn/default-callback)))
     (set-process-filter proc (lambda (proc line)
                                (apply callback
                                       (if (string= "200" line)
                                           '(t) nil))))))
 
-(defun mn/doh-up-p (&optional doh-url callback)
+(defun zn/doh-up-p (&optional doh-url callback)
   "Test DOH availability."
   (interactive)
-  (let ((args `(:doh-url ,(if doh-url doh-url mn/doh-server)
+  (let ((args `(:doh-url ,(if doh-url doh-url zn/doh-server)
                          :callback ,(when callback callback))))
-    (apply #'mn/url-up-p "https://www.baidu.com" :max-time 3 args)))
+    (apply #'zn/url-up-p "https://www.baidu.com" :max-time 3 args)))
 
-(defun mn/advice-url-retrieve-with-timeout (orig-fun &rest args)
+(defun zn/advice-url-retrieve-with-timeout (orig-fun &rest args)
   "Use `url-queue-retrieve' instead of `url-retrieve'."
   (cl-flet ((url-retrieve #'url-queue-retrieve)
             (url-queue-timeout 30))
@@ -92,7 +92,7 @@
        (apply orig-fun args)))
     (_ (apply orig-fun args))))
 
-(defun mn/url-http-parse-response ()
+(defun zn/url-http-parse-response ()
   "Parse http response, From 'https://emacs-china.org/t/elisp-http/18432/2'."
   (set-buffer-multibyte t)
   (goto-char (point-min))
@@ -115,13 +115,13 @@
 
 ;; proxy
 
-(defvar mn/proxy-rules-hash (make-hash-table :test 'equal)
+(defvar zn/proxy-rules-hash (make-hash-table :test 'equal)
   "Hash table for storing domain proxy rules.")
 
-(defvar mn/proxy-rules-patterns nil
+(defvar zn/proxy-rules-patterns nil
   "List of regexp proxy rules.")
 
-(defun mn/generate-ipv4-mask (prefix-len)
+(defun zn/generate-ipv4-mask (prefix-len)
   "Generate IPv4 netmask vector for given prefix length."
   (let ((mask (make-vector 4 0)))
     (dotimes (i 4)
@@ -132,7 +132,7 @@
          (t (aset mask i 0)))))
     mask))
 
-(defun mn/generate-ipv6-mask (prefix-len)
+(defun zn/generate-ipv6-mask (prefix-len)
   "Generate IPv6 netmask vector for given prefix length."
   (let* ((mask (make-vector 8 0))
          (full-groups (/ prefix-len 16))
@@ -148,7 +148,7 @@
                    (ash #xFFFF (- remainder-bits 16)))))
     mask))
 
-(defun mn/cidr-to-ip-mask (cidr)
+(defun zn/cidr-to-ip-mask (cidr)
   "Convert CIDR notation (IPv4 or IPv6) to a list of IP and netmask vectors."
   (if (string-match "\\(.+\\)/\\([0-9]+\\)" cidr)
       (let* ((ip (match-string 1 cidr))
@@ -158,15 +158,15 @@
                       (car (network-lookup-address-info
                             ip (if is-ipv6 'ipv6 'ipv4) 'numeric))
                       0 -1))
-             (mask (if is-ipv6 (mn/generate-ipv6-mask prefix-len)
-                     (mn/generate-ipv4-mask prefix-len))))
+             (mask (if is-ipv6 (zn/generate-ipv6-mask prefix-len)
+                     (zn/generate-ipv4-mask prefix-len))))
         (cons ip-vec mask))
     (error "Invalid CIDR notation")))
 
-(defun mn/init-proxy-rules-1 (rules)
+(defun zn/init-proxy-rules-1 (rules)
   "Initialize proxy rules from the given rules list."
-  (clrhash mn/proxy-rules-hash)
-  (setq mn/proxy-rules-patterns nil)
+  (clrhash zn/proxy-rules-hash)
+  (setq zn/proxy-rules-patterns nil)
   
   (let ((proxys (gethash "proxy" rules))
         (autoproxy_hosts (gethash "autoproxy_hosts" rules)))
@@ -177,39 +177,39 @@
         (mapc (lambda (host)
                 (if (seq-position host ?*)
                     (push host wildcards)
-                  (puthash host proxy mn/proxy-rules-hash)))
+                  (puthash host proxy zn/proxy-rules-hash)))
               hosts)
         (when wildcards
-          (push (cons (my/wildcards-to-regexp wildcards) proxy)
-                mn/proxy-rules-patterns))))))
+          (push (cons (zr-wildcards-to-regexp wildcards) proxy)
+                zn/proxy-rules-patterns))))))
 
-(defun mn/match-proxy-rule (urlobj host)
+(defun zn/match-proxy-rule (urlobj host)
   "Match URL against proxy rules. Returns proxy string or \"DIRECT\"."
   (let* ((parts (split-string host "\\."))
          (len (length parts)))
     (or (catch 'found
           (while (> len 0)
             (if-let* ((fd (gethash (string-join (last parts len) ".")
-                                   mn/proxy-rules-hash)))
+                                   zn/proxy-rules-hash)))
                 (throw 'found fd)
               (setq len (1- len))))
-          (dolist (r mn/proxy-rules-patterns)
+          (dolist (r zn/proxy-rules-patterns)
             (when (string-match-p (car r) host)
               (throw 'found (cdr r)))))
         "DIRECT")))
 
-(defvar mn/url-history '())
-(defun mn/url-proxy-locator (urlobj host)
+(defvar zn/url-history '())
+(defun zn/url-proxy-locator (urlobj host)
   "Determine proxy settings for URL based on host and proxy services."
   (when debug-on-error
-    (push (cons (float-time) (url-recreate-url urlobj)) mn/url-history))
-  (replace-regexp-in-string "^SOCKS5 " "PROXY " (mn/match-proxy-rule urlobj host)))
-(setq url-proxy-locator #'mn/url-proxy-locator)
+    (push (cons (float-time) (url-recreate-url urlobj)) zn/url-history))
+  (replace-regexp-in-string "^SOCKS5 " "PROXY " (zn/match-proxy-rule urlobj host)))
+(setq url-proxy-locator #'zn/url-proxy-locator)
 
-(defun mn/curl-parameters-dwim (url &rest args)
+(defun zn/curl-parameters-dwim (url &rest args)
   "Generate explicit parameters for curl."
   (let* ((urlobj (url-generic-parse-url url))
-         (proxy (mn/match-proxy-rule urlobj (url-host urlobj)))
+         (proxy (zn/match-proxy-rule urlobj (url-host urlobj)))
          parameters)
     (if (string= "DIRECT" proxy)
         (setq parameters (list "-x" ""))
@@ -218,33 +218,33 @@
         (setq parameters (list (concat "-x" prefix (cadr u))))))
     (list url parameters)))
 
-(defcustom mn/dotfiles-dir (expand-file-name "~/.config")
+(defcustom zn/dotfiles-dir (expand-file-name "~/.config")
   "Dotfiles dir."
   :type 'directory
   :set (lambda (sym val)
          (set-default sym val)
-         (let ((pac 'mn/pac-data-file))
+         (let ((pac 'zn/pac-data-file))
            (and (boundp pac)
                 (custom-reevaluate-setting pac)))))
 
-(defcustom mn/pac-data-file (expand-file-name "surfingkeys/pac.json.gpg" mn/dotfiles-dir)
+(defcustom zn/pac-data-file (expand-file-name "surfingkeys/pac.json.gpg" zn/dotfiles-dir)
   "PAC data file path."
   :type 'file)
 
-(defun mn/init-proxy-rules ()
+(defun zn/init-proxy-rules ()
   (with-temp-buffer
-    (insert-file-contents-literally mn/pac-data-file)
-    (when (string-suffix-p ".gpg" mn/pac-data-file)
+    (insert-file-contents-literally zn/pac-data-file)
+    (when (string-suffix-p ".gpg" zn/pac-data-file)
       (let ((epa-replace-original-text t))
         (epa-decrypt-region (point-min) (point-max))))
     (goto-char 1)
-    (mn/init-proxy-rules-1 (json-parse-buffer))))
+    (zn/init-proxy-rules-1 (json-parse-buffer))))
 
 (with-eval-after-load 'epa
   (unless (eq system-type 'android)
-    (run-with-idle-timer 10 nil #'mn/init-proxy-rules)))
+    (run-with-idle-timer 10 nil #'zn/init-proxy-rules)))
 
-(defun mn/add-domain-to-proxy (hostname)
+(defun zn/add-domain-to-proxy (hostname)
   "Add a domain to the proxy rules.
 
 This function takes a HOSTNAME as input and adds it to the first proxy
@@ -252,7 +252,7 @@ rules in the proxy data file."
   (interactive "shostname: ")
   (with-current-buffer (find-file-noselect
                         (expand-file-name "surfingkeys/pac.json.gpg"
-                                          mn/dotfiles-dir))
+                                          zn/dotfiles-dir))
     (goto-char 1)
     (let* ((cfg (json-parse-buffer))
            (autoproxy_hosts (gethash "autoproxy_hosts" cfg)))
@@ -268,11 +268,11 @@ rules in the proxy data file."
       (erase-buffer)
       (insert (json-serialize cfg))
       (save-buffer)
-      (mn/init-proxy-rules-1 cfg)
+      (zn/init-proxy-rules-1 cfg)
       (message "%s added to proxy." hostname))
-    (mn/generate-pac-file)))
+    (zn/generate-pac-file)))
 
-(defun mn/generate-pac-file ()
+(defun zn/generate-pac-file ()
   "Generate a PAC file by tangle surfingkeys config.
 
 ref:
@@ -282,47 +282,47 @@ https://support.microsoft.com/en-us/topic/how-to-disable-automatic-proxy-caching
     (org-babel-tangle-file
      (expand-file-name
       "surfingkeys/20241214T081602--surfingkeys__browser.org"
-      my/dotfiles-dir)
+      zr-dotfiles-dir)
      nil "^javascript$")))
 
-(defun mn/proxy-up-p (&optional proxy callback)
+(defun zn/proxy-up-p (&optional proxy callback)
   "Test Proxy availability."
   (interactive)
   (let ((args `(:proxy ,(if proxy proxy
-                          (concat "http://" mn/centaur-proxy))
+                          (concat "http://" zn/centaur-proxy))
                        :callback ,(when callback callback))))
-    (apply #'mn/url-up-p "https://www.baidu.com" :max-time 2 args)))
+    (apply #'zn/url-up-p "https://www.baidu.com" :max-time 2 args)))
 
-(defun mn/proxy-http-show ()
+(defun zn/proxy-http-show ()
   "Show HTTP/HTTPS proxy."
   (interactive)
   (if url-proxy-services
-      (message "Current HTTP proxy is `%s'" mn/centaur-proxy)
+      (message "Current HTTP proxy is `%s'" zn/centaur-proxy)
     (message "No HTTP proxy")))
 
-(defun mn/proxy-http-enable ()
+(defun zn/proxy-http-enable ()
   "Enable HTTP/HTTPS proxy."
   (interactive)
   (setq url-proxy-services
-        `(("http" . ,mn/centaur-proxy)
-          ("https" . ,mn/centaur-proxy)
+        `(("http" . ,zn/centaur-proxy)
+          ("https" . ,zn/centaur-proxy)
           ("no_proxy" . "^\\(localhost\\|192.168.*\\|10.*\\)")))
-  (mn/proxy-http-show))
+  (zn/proxy-http-show))
 
-(defun mn/proxy-http-disable ()
+(defun zn/proxy-http-disable ()
   "Disable HTTP/HTTPS proxy."
   (interactive)
   (setq url-proxy-services nil)
-  (mn/proxy-http-show))
+  (zn/proxy-http-show))
 
-(defun mn/proxy-http-toggle ()
+(defun zn/proxy-http-toggle ()
   "Toggle HTTP/HTTPS proxy."
   (interactive)
   (if (bound-and-true-p url-proxy-services)
-      (mn/proxy-http-disable)
-    (mn/proxy-http-enable)))
+      (zn/proxy-http-disable)
+    (zn/proxy-http-enable)))
 
-(defun mn/proxy-socks-show ()
+(defun zn/proxy-socks-show ()
   "Show SOCKS proxy."
   (interactive)
   (if (bound-and-true-p socks-noproxy)
@@ -330,39 +330,39 @@ https://support.microsoft.com/en-us/topic/how-to-disable-automatic-proxy-caching
                (cadddr socks-server) (cadr socks-server) (caddr socks-server))
     (message "No SOCKS proxy")))
 
-(defun mn/proxy-socks-enable ()
+(defun zn/proxy-socks-enable ()
   "Enable SOCKS proxy."
   (interactive)
   (require 'socks)
   (setq url-gateway-method 'socks
         socks-noproxy '("localhost"))
-  (let* ((proxy (split-string mn/centaur-socks-proxy ":"))
+  (let* ((proxy (split-string zn/centaur-socks-proxy ":"))
          (host (car proxy))
          (port (string-to-number (cadr proxy))))
     (setq socks-server `("Default server" ,host ,port 5)))
-  (setenv "all_proxy" (concat "socks5://" mn/centaur-socks-proxy))
-  (mn/proxy-socks-show))
+  (setenv "all_proxy" (concat "socks5://" zn/centaur-socks-proxy))
+  (zn/proxy-socks-show))
 
-(defun mn/proxy-socks-disable ()
+(defun zn/proxy-socks-disable ()
   "Disable SOCKS proxy."
   (interactive)
   (setq url-gateway-method 'native
         socks-noproxy nil
         socks-server nil)
   (setenv "all_proxy" "")
-  (mn/proxy-socks-show))
+  (zn/proxy-socks-show))
 
-(defun mn/proxy-socks-toggle ()
+(defun zn/proxy-socks-toggle ()
   "Toggle SOCKS proxy."
   (interactive)
   (if (bound-and-true-p socks-noproxy)
       (proxy-socks-disable)
-    (mn/proxy-socks-enable)))
+    (zn/proxy-socks-enable)))
 
 
 ;; Newsticker
 
-(defcustom mn/rss-bridge-list '("rss-bridge.kkky.fun:2053"
+(defcustom zn/rss-bridge-list '("rss-bridge.kkky.fun:2053"
                                 "rss-bridge.org/bridge01"
                                 "rss.nixnet.services"
                                 "wtf.roflcopter.fr/rss-bridge"
@@ -371,7 +371,7 @@ https://support.microsoft.com/en-us/topic/how-to-disable-automatic-proxy-caching
   :group 'my
   :type '(repeat string))
 
-(defcustom mn/rss-hub-list '("rsshub.kkky.fun/"
+(defcustom zn/rss-hub-list '("rsshub.kkky.fun/"
                              "rsshub.rssforever.com/"
                              "rsshub.feeded.xyz/"
                              "hub.slarker.me/"
@@ -385,21 +385,21 @@ https://support.microsoft.com/en-us/topic/how-to-disable-automatic-proxy-caching
   :group 'my
   :type '(repeat string))
 
-(defcustom mn/rss-bridge-server (concat "https://" (car mn/rss-bridge-list))
+(defcustom zn/rss-bridge-server (concat "https://" (car zn/rss-bridge-list))
   "RSS bridge default server."
   :group 'my
   :type 'string)
 
-(defcustom mn/rss-hub-server (concat "https://" (car mn/rss-hub-list))
+(defcustom zn/rss-hub-server (concat "https://" (car zn/rss-hub-list))
   "RSS hub default server."
   :group 'my
   :type 'string)
 
-(defun mn/rss-bridge-generator (bridge &optional proxy cache-timeout)
+(defun zn/rss-bridge-generator (bridge &optional proxy cache-timeout)
   "Generate atom feed via rss-bridge."
-  (if-let* ((obj (url-generic-parse-url mn/rss-bridge-server))
+  (if-let* ((obj (url-generic-parse-url zn/rss-bridge-server))
             (request (format "%s/?action=display&format=Atom&bridge=%s&"
-                             mn/rss-bridge-server bridge))
+                             zn/rss-bridge-server bridge))
             (found (car (auth-source-search :host (url-host obj)
                                             :port (url-portspec obj)
                                             :max 1))))
@@ -411,9 +411,9 @@ https://support.microsoft.com/en-us/topic/how-to-disable-automatic-proxy-caching
        request)
     request))
 
-(defun mn/rss-bridge-wp (blog limit &optional content)
+(defun zn/rss-bridge-wp (blog limit &optional content)
   "Returns the newest full posts of a WordPress powered website."
-  (concat (mn/rss-bridge-generator "WordPressBridge")
+  (concat (zn/rss-bridge-generator "WordPressBridge")
           (url-build-query-string
            (cl-delete-if
             #'null
@@ -422,11 +422,11 @@ https://support.microsoft.com/en-us/topic/how-to-disable-automatic-proxy-caching
               ("content_selector" ,content))
             :key #'cadr))))
 ;; todo
-;; (defun mn/rss-bridge-filter ())
+;; (defun zn/rss-bridge-filter ())
 
-(defun mn/rss-bridge-reducer (feed percentage)
+(defun zn/rss-bridge-reducer (feed percentage)
   "Choose a percentage of a feed you want to see."
-  (concat (mn/rss-bridge-generator "FeedReducerBridge")
+  (concat (zn/rss-bridge-generator "FeedReducerBridge")
           (url-build-query-string
            (cl-delete-if
             #'null
@@ -434,13 +434,13 @@ https://support.microsoft.com/en-us/topic/how-to-disable-automatic-proxy-caching
               ("percentage" ,percentage))
             :key #'cadr))))
 
-(defun mn/rss-bridge-css-expander (feed limit content &optional
+(defun zn/rss-bridge-css-expander (feed limit content &optional
                                         content-cleanup
                                         dont-expand-metadata
                                         discard-thumbnail)
   "Expand any site RSS feed using CSS selectors."
   (concat "https://rss-bridge.org/bridge01/?action=display&format=Atom&bridge=CssSelectorFeedExpanderBridge&"
-          ;; (mn/rss-bridge-generator "CssSelectorFeedExpanderBridge")
+          ;; (zn/rss-bridge-generator "CssSelectorFeedExpanderBridge")
           (url-build-query-string
            (cl-delete-if
             #'null
@@ -452,7 +452,7 @@ https://support.microsoft.com/en-us/topic/how-to-disable-automatic-proxy-caching
               ("discard_thumbnail" ,(when discard-thumbnail "on")))
             :key #'cadr))))
 
-(cl-defun mn/rss-bridge-css-selector
+(cl-defun zn/rss-bridge-css-selector
     ( home limit entry load-pages &key content title time time-fmt url
       url-pattern title-cleanup content-cleanup cookie author cat rm-style)
   "Convert any site to RSS feed using CSS selectors. The bridge first
@@ -461,7 +461,7 @@ the links to the articles from these elements. It then, depending on
 the setting 'load_pages', either parses the selected elements,
 or downloads the page for each article and parses those. Parsing the
 elements or page is done using the provided selectors."
-  (concat (mn/rss-bridge-generator "CssSelectorComplexBridge")
+  (concat (zn/rss-bridge-generator "CssSelectorComplexBridge")
           (url-build-query-string
            (cl-delete-if
             #'null
@@ -483,13 +483,13 @@ elements or page is done using the provided selectors."
               ("remove_styling" ,(when rm-style "on")))
             :key #'cadr))))
 
-(defun mn/rss-bridge-merger (feeds limit name)
+(defun zn/rss-bridge-merger (feeds limit name)
   "This bridge merges two or more feeds into a single feed. Max 10
 items are fetched from each feed."
   (when (> (length feeds) 10)
     (user-error "Feed: %s is reach Max feeds limit."
                 (propertize "aaa" 'face '(:inherit 'font-lock-warning-face))))
-  (concat (mn/rss-bridge-generator "FeedMergeBridge")
+  (concat (zn/rss-bridge-generator "FeedMergeBridge")
           (let ((m 0))
             (mapconcat
              (lambda (feed)
@@ -500,12 +500,12 @@ items are fetched from each feed."
           "&limit=" (number-to-string limit)
           "&feed_name=" (url-hexify-string name)))
 
-(cl-defun mn/rss-hub-generator
+(cl-defun zn/rss-hub-generator
     ( router &key fmt limit full brief unsort opencc scihub f-uncase f
       f-title f-desc f-author f-cat f-time fo fo-title fo-desc fo-author
       fo-cat img-tp domain)
   "Generate feed via RSSHub."
-  (let* ((main (concat mn/rss-hub-server router
+  (let* ((main (concat zn/rss-hub-server router
                        (when fmt (concat "." fmt))))
          (url (url-generic-parse-url main))
          (code (auth-source-pick-first-password :host (url-host url))))
@@ -531,17 +531,17 @@ items are fetched from each feed."
                 ("filterout_description" ,fo-desc)
                 ("filterout_author" ,fo-author)
                 ("filterout_category" ,fo-cat)
-                ;; ("image_hotlink_template" ,mn/img-cdn-server)
+                ;; ("image_hotlink_template" ,zn/img-cdn-server)
                 ("domain" ,domain)
                 ("code" ,(md5 (concat (url-filename url) code))))
               :key #'cadr)))))
 
-(cl-defun mn/rss-hub-transform
+(cl-defun zn/rss-hub-transform
     ( url s-fmt &key title item item-title item-title-a item-link
       item-link-a item-desc iten-desc-a item-pub item-pub-a extra)
   "Pass URL and transformation rules to convert HTML/JSON into RSS."
   (apply
-   #'mn/rss-hub-generator
+   #'zn/rss-hub-generator
    (format "rsshub/transform/%s/%s/%s"
            s-fmt (url-hexify-string url)
            (url-build-query-string
@@ -560,7 +560,7 @@ items are fetched from each feed."
              :key #'cadr)))
    extra))
 
-(defun mn/atom-builder (title link entrys &optional id updated author)
+(defun zn/atom-builder (title link entrys &optional id updated author)
   "Create brief atom feeds."
   (if-let* ((dir (expand-file-name "builder" newsticker-dir))
             (mkdir (or (make-directory dir t) t))
@@ -568,7 +568,7 @@ items are fetched from each feed."
             (err entrys))
       (let ((updated (or updated (format-time-string "%FT%T%z")))
             (author (or author (url-host (url-generic-parse-url link))))
-            (id (or id (concat "urn:uuid:" (my/generate-uuid (concat title link updated)))))
+            (id (or id (concat "urn:uuid:" (zr-generate-uuid (concat title link updated)))))
             (link (string-replace "&" "&amp;" link)))
         (erase-buffer)
         (insert-file-contents-literally (expand-file-name "atom.xml" auto-insert-directory))
@@ -591,7 +591,7 @@ items are fetched from each feed."
                       (link (or (string-replace "&" "&amp;" (plist-get a :link)) link))
                       (id (or (plist-get a :id)
                               (concat "urn:uuid:"
-                                      (my/generate-uuid
+                                      (zr-generate-uuid
                                        (concat title link updated)))))
                       (content (plist-get a :content))
                       (category (plist-get a :category)))
@@ -617,10 +617,10 @@ items are fetched from each feed."
     (kill-current-buffer)
     (user-error "*Feed %s is broken.*" title)))
 
-(defun mn/atom-boss-builder (title url buf)
+(defun zn/atom-boss-builder (title url buf)
   "Generate atom feeds for Boss ZhiPin."
   (with-current-buffer buf
-    (mn/atom-builder
+    (zn/atom-builder
      title url
      (progn
        (goto-char 1)
@@ -644,7 +644,7 @@ items are fetched from each feed."
                              (gethash "jobName" a))))
         (gethash "jobList" (gethash "zpData" (json-parse-buffer))))))))
 
-(defun mn/newsticker--sentinel (process event)
+(defun zn/newsticker--sentinel (process event)
   "Sentinel for extracting news titles from an text buffer.
 Argument PROCESS is the process which has just changed its state.
 Argument EVENT tells what has happened to the process."
@@ -658,11 +658,11 @@ Argument EVENT tells what has happened to the process."
          (buffer (process-buffer process)))
     (when (and (eq p-status 'exit)
                (= exit-status 0))
-      (apply (intern (format "my/net-atom-%s-builder" feed-channel))
+      (apply (intern (format "zr-net-atom-%s-builder" feed-channel))
              (list feed-name feed-url buffer))
       (newsticker--sentinel-work event t feed-name command buffer))))
 
-(defun mn/newsticker--url-stuff-it (channel &optional title args)
+(defun zn/newsticker--url-stuff-it (channel &optional title args)
   "Generate url for feeds."
   (pcase channel
     ("boss"
@@ -688,11 +688,11 @@ Argument EVENT tells what has happened to the process."
                  ("multiSubway" ,(plist-get args :multisubway))
                  ("multiBusinessDistrict" ,(plist-get args :multibusinessdistrict)))))))))
 
-(defun mn/newsticker--get-news-by-build
+(defun zn/newsticker--get-news-by-build
     (feed-name channel &optional curl-arguments limit extras)
   "Newsticker build atom feeds."
   (let ((buffername (concat " *newsticker-curl-" feed-name "*"))
-        (url (mn/newsticker--url-stuff-it channel feed-name extras)))
+        (url (zn/newsticker--url-stuff-it channel feed-name extras)))
     (with-current-buffer (get-buffer-create buffername)
       (erase-buffer)
       ;; throw an error if there is an old curl-process around
@@ -705,7 +705,7 @@ Argument EVENT tells what has happened to the process."
              (proc (apply #'start-process feed-name buffername
                           newsticker-wget-name args)))
         (set-process-coding-system proc 'utf-8 'utf-8)
-        (set-process-sentinel proc #'mn/newsticker--sentinel)
+        (set-process-sentinel proc #'zn/newsticker--sentinel)
         (process-put proc 'nt-feed-name feed-name)
         (process-put proc 'nt-feed-channel channel)
         (process-put proc 'nt-feed-limit limit)
@@ -713,13 +713,13 @@ Argument EVENT tells what has happened to the process."
                                             newsticker--process-ids))
         (force-mode-line-update)))))
 
-(defun mn/advice-newsticker--get-news-by-wget (args)
+(defun zn/advice-newsticker--get-news-by-wget (args)
   (setcar (cddr args)
           (append (caddr args)
-                  (cadr (mn/curl-parameters-dwim (cadr args)))))
+                  (cadr (zn/curl-parameters-dwim (cadr args)))))
   args)
 
-(defun mn/newsticker-treeview-prev-page ()
+(defun zn/newsticker-treeview-prev-page ()
   "Scroll item buffer."
   (interactive)
   (save-selected-window
@@ -729,7 +729,7 @@ Argument EVENT tells what has happened to the process."
       (error
        (goto-char (point-max))))))
 
-(defun mn/advice-newsticker-save-item (feed item)
+(defun zn/advice-newsticker-save-item (feed item)
   "Save FEED ITEM."
   (interactive)
   (let ((filename
@@ -747,30 +747,30 @@ Argument EVENT tells what has happened to the process."
 
 (with-eval-after-load 'newsticker
   (setq newsticker-wget-arguments
-        (append `("--doh-url" ,mn/doh-server) newsticker-wget-arguments))
+        (append `("--doh-url" ,zn/doh-server) newsticker-wget-arguments))
 
   (define-advice newsticker--get-news-by-funcall
       (:around (orig-fun feed-name function) build-feeds)
     "Get feeds maybe by build atom feeds.
      '((\"zzz\" ignore 1 3600 (\"-c\" \"3\") \"boss\" 10 (:dd 3)))"
     (if-let* ((item (assoc feed-name newsticker-url-list-defaults)))
-        (mn/newsticker--get-news-by-build
+        (zn/newsticker--get-news-by-build
          feed-name (nth 5 item) (nth 4 item) (nth 6 item) (nth 7 item))
       (funcall orig-fun feed-name function)))
   
-  (advice-add 'newsticker--get-news-by-wget :filter-args #'mn/advice-newsticker--get-news-by-wget)
-  (advice-add 'newsticker-save-item :before-until #'mn/advice-newsticker-save-item)
+  (advice-add 'newsticker--get-news-by-wget :filter-args #'zn/advice-newsticker--get-news-by-wget)
+  (advice-add 'newsticker-save-item :before-until #'zn/advice-newsticker-save-item)
   (dolist (fn '(newsticker--image-sentinel newsticker--sentinel-work))
-    (advice-add fn :around #'my/advice-silence-messages))
+    (advice-add fn :around #'zr-advice-silence-messages))
   (make-directory (file-name-concat newsticker-dir "saved") t)
   (bind-keys
    :map newsticker-treeview-mode-map
-   ("DEL" . mn/newsticker-treeview-prev-page)))
+   ("DEL" . zn/newsticker-treeview-prev-page)))
 
 
 ;; eww
 
-(defun mn/url-redirect (url)
+(defun zn/url-redirect (url)
   (cond
    ((string-match "^https://github.com/\\(.+\\)/commit/\\(\\w+\\)$" url)
     (format "https://github.com/%s/commit/%s.patch"
@@ -789,7 +789,7 @@ Argument EVENT tells what has happened to the process."
                               "https://old.reddit.com" url))
    (t url)))
 
-(defun mn/eww-render-hook()
+(defun zn/eww-render-hook()
   "This function is intended to be added to `eww-after-render-hook'.
 It applies specific rendering or major modes based on the URL or content
 of the current EWW buffer.
@@ -844,41 +844,41 @@ If no custom prefix matches, it calls the original function."
         (apply orig-fun args)
       (let ((eww-retrieve-command
              (append `(,newsticker-wget-name ,@newsticker-wget-arguments "-o-")
-                     (cadr (mn/curl-parameters-dwim url)))))
+                     (cadr (zn/curl-parameters-dwim url)))))
         (apply orig-fun args))))
-  (add-to-list 'eww-url-transformers 'mn/url-redirect)
-  (add-hook 'eww-after-render-hook #'mn/eww-render-hook))
+  (add-to-list 'eww-url-transformers 'zn/url-redirect)
+  (add-hook 'eww-after-render-hook #'zn/eww-render-hook))
 
 
 ;; Aria2
 
-(defcustom mn/aria2-conf-file (expand-file-name "aria2.conf" "~/.aria2")
+(defcustom zn/aria2-conf-file (expand-file-name "aria2.conf" "~/.aria2")
   "Default aria2 configuration file path."
   :type '(string))
 
-(defun mn/get-bt-tracker (url)
+(defun zn/get-bt-tracker (url)
   "Get BT tracker from https://github.com/XIU2/TrackersListCollection/blob/master/README-ZH.md."
-  (when (and (file-exists-p mn/aria2-conf-file)
-             (not (find-buffer-visiting mn/aria2-conf-file))
+  (when (and (file-exists-p zn/aria2-conf-file)
+             (not (find-buffer-visiting zn/aria2-conf-file))
              (time-less-p
               (time-add
-               (file-attribute-modification-time (file-attributes mn/aria2-conf-file))
+               (file-attribute-modification-time (file-attributes zn/aria2-conf-file))
                (* 60 60 12))
               (current-time)))
     (make-process
-     :name "mn/get-bt-tracker"
-     :buffer "mn/get-bt-tracker"
+     :name "zn/get-bt-tracker"
+     :buffer "zn/get-bt-tracker"
      :command `(,newsticker-wget-name ,@newsticker-wget-arguments ,url)
-     :sentinel #'mn/sentinel-get-bt-tracker)))
+     :sentinel #'zn/sentinel-get-bt-tracker)))
 
-(defun mn/sentinel-get-bt-tracker (proc event)
+(defun zn/sentinel-get-bt-tracker (proc event)
   "Write tracker to aria2 conf file."
   (when (string= event "finished\n")
      (with-current-buffer (process-buffer proc)
        (when-let* ((getp (search-backward "announce" nil t))
                   (start (pos-bol))
                   (end (pos-eol)))
-         (with-current-buffer (find-file-noselect mn/aria2-conf-file)
+         (with-current-buffer (find-file-noselect zn/aria2-conf-file)
            (goto-char (point-min))
            (re-search-forward "^bt-tracker=")
            (delete-region (point) (pos-eol))
@@ -888,24 +888,24 @@ If no custom prefix matches, it calls the original function."
          (kill-buffer))))
 
 (with-eval-after-load 'aria2
-  (mn/get-bt-tracker "https://gitea.com/XIU2/TrackersListCollection/raw/branch/master/best_aria2.txt"))
+  (zn/get-bt-tracker "https://gitea.com/XIU2/TrackersListCollection/raw/branch/master/best_aria2.txt"))
 
 
 ;; alist
 
-(defvar mn/alist-data-directory
+(defvar zn/alist-data-directory
   (pcase system-type
     ('windows-nt (substitute-in-file-name "$USERPROFILE/scoop/persist/alist/"))
     (_ (expand-file-name "~/.config/alist/")))
   "Where alist store data.")
 
-(defun mn/start-alist ()
+(defun zn/start-alist ()
   "Start alist server."
   (interactive)
-  (rename-file (expand-file-name "log/log.log" my/alist-data-directory)
-               (file-name-concat my/alist-data-directory "log" (format-time-string "%+4Y-%m-%d-%H-%M")))
+  (rename-file (expand-file-name "log/log.log" zr-alist-data-directory)
+               (file-name-concat zr-alist-data-directory "log" (format-time-string "%+4Y-%m-%d-%H-%M")))
   (start-process "alist" nil "alist" "server"
-                 "--data" my/alist-data-directory)
+                 "--data" zr-alist-data-directory)
   (pcase system-type
     ('android (android-notifications-notify
                :title "alist"
@@ -916,12 +916,12 @@ If no custom prefix matches, it calls the original function."
 
 ;; tcpdump
 
-(defun mn/string-to-hex (str)
+(defun zn/string-to-hex (str)
   "Convert string to hex string, each byte separated with spaces"
   (mapconcat (lambda (c) (format "%02x" c))
              (string-to-vector str) ""))
 
-(defun mn/get-chunk-size (remaining-bytes)
+(defun zn/get-chunk-size (remaining-bytes)
   "Determine appropriate chunk size (1/2/4) for remaining bytes"
   (cond
    ((>= remaining-bytes 4) 4)
@@ -930,15 +930,15 @@ If no custom prefix matches, it calls the original function."
    ((= remaining-bytes 1) 1)
    (t nil)))
 
-(defun mn/smart-split-hex (hex-str)
+(defun zn/smart-split-hex (hex-str)
   "Split hex string into chunks of valid sizes (1/2/4 bytes)"
   (let ((result '())
         (str hex-str))
     (while (not (string-empty-p str))
       (let* ((remaining-bytes (/ (length str) 2))
-             (chunk-size (if (listp (mn/get-chunk-size remaining-bytes))
-                             (car (mn/get-chunk-size remaining-bytes))
-                           (mn/get-chunk-size remaining-bytes)))
+             (chunk-size (if (listp (zn/get-chunk-size remaining-bytes))
+                             (car (zn/get-chunk-size remaining-bytes))
+                           (zn/get-chunk-size remaining-bytes)))
              (hex-size (* chunk-size 2)))
         (push (cons chunk-size (substring str 0 hex-size)) result)
         (setq str (substring str hex-size))))
@@ -948,7 +948,7 @@ If no custom prefix matches, it calls the original function."
         (push (cons 1 last-chunk) result)))
     (nreverse result)))
 
-(cl-defun mn/string-to-tcpdump-filter (string &optional (offset 0))
+(cl-defun zn/string-to-tcpdump-filter (string &optional (offset 0))
   "It takes the string you enter, splits it into 1, 2, or 4 byte chunks,
 converts them to numbers, and creates a capture filter that matches
 those numbers at the offset you provide.
@@ -956,8 +956,8 @@ those numbers at the offset you provide.
 ref: https://www.wireshark.org/tools/string-cf.html
 But the website have a bug, maybe it add offset by string instead of
 number."
-  (let* ((hex-str (mn/string-to-hex string))
-         (chunks (mn/smart-split-hex hex-str))
+  (let* ((hex-str (zn/string-to-hex string))
+         (chunks (zn/smart-split-hex hex-str))
          (header-calc "((tcp[12:1] & 0xf0) >> 2)"))
     (mapconcat
      (lambda (chunk)
@@ -977,5 +977,5 @@ number."
 ;;; init-net.el ends here
 
 ;; Local Variables:
-;; read-symbol-shorthands: (("mn/" . "my/net-"))
+;; read-symbol-shorthands: (("zn/" . "zr-net-"))
 ;; End:

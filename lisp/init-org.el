@@ -26,15 +26,15 @@
 
 ;; org-protocol
 
-(defun mo/protocol-cookies-dumper (info)
+(defun zo/protocol-cookies-dumper (info)
   (let ((parts (org-protocol-parse-parameters info t)))
     (write-region (plist-get parts :cookies) nil
-                  (expand-file-name (plist-get parts :host) my/cookies-dir)))
+                  (expand-file-name (plist-get parts :host) zr-cookies-dir)))
   (server-delete-client (car server-clients)))
 
 (with-eval-after-load 'org-protocol
   (dolist (p '(("cookies-dumper" :protocol "cookies-dumper"
-                :function mo/protocol-cookies-dumper :kill-client t)))
+                :function zo/protocol-cookies-dumper :kill-client t)))
     (add-to-list 'org-protocol-protocol-alist p)))
 
 (with-eval-after-load 'org-tempo
@@ -71,7 +71,7 @@ its subdirectories."
          (table (concat table-header table-rows)))
     (insert table)))
 
-(defun mo/table-select (value-ref tbl key-ref key-value)
+(defun zo/table-select (value-ref tbl key-ref key-value)
   "Select values from a table based on a key.
 
 VALUE-REF(Must contains \"%d\") is the reference to the value in the table TBL.
@@ -87,8 +87,8 @@ For example:
 |   1 | one |
 | www | two |
 
-(my/org-table-select \"%d,1\" \"digit\" \",0\" 1) => \"one\"
-(my/org-table-select \"%d,1\" \"digit\" \",0\" \"www\") => \"two\"
+(zo/table-select \"%d,1\" \"digit\" \",0\" 1) => \"one\"
+(zo/table-select \"%d,1\" \"digit\" \",0\" \"www\") => \"two\"
 "
   (org-babel-ref-resolve
    (format (format "%s[%s]" tbl value-ref)
@@ -97,7 +97,7 @@ For example:
                          (format "%s[%s]" tbl key-ref))
                         :test #'equal))))
 
-(defun mo/call-babel-at-point (&optional type params position confirm)
+(defun zo/call-babel-at-point (&optional type params position confirm)
   "Execute the Babel block or call at point in Org mode.
 
 This function executes a Babel source block or a Babel call located at
@@ -120,7 +120,7 @@ before executing the block.
 
 Example usage:
 - Execute a specific Babel call at a given position with confirmation:
-  (mo/call-babel-at-point 'babel-call '((:var . \"a=\\\"ddd\\\"\"))
+  (zo/call-babel-at-point 'babel-call '((:var . \"a=\\\"ddd\\\"\"))
   1234 t)."
   (save-excursion
     (when position (goto-char position))
@@ -135,7 +135,7 @@ Example usage:
            (org-babel-execute-src-block
             nil (org-babel-lob-get-info ele) params type)))))))
 
-(defun mo/exec-link-or-babel-nearby (&optional arg)
+(defun zo/exec-link-or-babel-nearby (&optional arg)
   "Execute a link or Babel block near the point in Org mode.
 Or execute a link near the point in all mode.
 
@@ -177,7 +177,7 @@ In case no link or Babel block is found, a user error is signaled."
                        (memq (org-element-type (org-element-at-point))
                              '( babel-call inline-babel-call
                                 inline-src-block src-block)))))
-           (mo/call-babel-at-point type)
+           (zo/call-babel-at-point type)
          (save-excursion
            (re-search-forward
             (if orgp
@@ -200,10 +200,10 @@ In case no link or Babel block is found, a user error is signaled."
                  (org-link-open-from-string link)))
               ((memq type '( inline-babel-call babel-call
                              inline-src-block src-block))
-               (mo/call-babel-at-point type nil nil t))
+               (zo/call-babel-at-point type nil nil t))
               (t (user-error "No link or babel found"))))))))))
 
-(defun mo/babel-expand-src-block ()
+(defun zo/babel-expand-src-block ()
   "Expand the Org Babel source block at point.
 
 This function handles both named source blocks and inline source blocks.
@@ -225,7 +225,7 @@ Usage:
 - Call this function interactively to expand the source block.
 
 Example:
-Place the cursor on the following line and call `mo/babel-expand-src-block`:
+Place the cursor on the following line and call `zo/babel-expand-src-block`:
 #+CALL: your-named-src-block()
 
 This will navigate to `your-named-src-block`, process its parameters,
@@ -240,7 +240,7 @@ and expand it."
         (funcall-interactively #'org-babel-expand-src-block nil info))
     (funcall-interactively #'org-babel-expand-src-block)))
 
-(defun mo/babel-src-and-call-blocks (&optional file)
+(defun zo/babel-src-and-call-blocks (&optional file)
   "Return the names of source and call blocks in FILE or the current
 buffer. ref: `org-babel-src-block-names'."
   (with-current-buffer (if file (find-file-noselect file) (current-buffer))
@@ -255,7 +255,7 @@ buffer. ref: `org-babel-src-block-names'."
                 (when name (push (cons name (point)) blocks))))))
         blocks))))
 
-(defun mo/babel-execute-named-src-block (&optional name params)
+(defun zo/babel-execute-named-src-block (&optional name params)
   "Execute a named Babel source block or call in the current Org buffer.
 
 This function searches for and executes a named Babel source block or call
@@ -272,9 +272,9 @@ function. These parameters are merged with a default parameter that sets the
 `:results` property to \"silent\" to suppress output.
 
 Usage:
-- Execute a specific named Babel block: `M-x mo/babel-execute-named-src-block`
+- Execute a specific named Babel block: `M-x zo/babel-execute-named-src-block`
 - Execute a named Babel block with additional parameters:
-  (mo/babel-execute-named-src-block \"block-name\" '((:lexical . \"yes\")))."
+  (zo/babel-execute-named-src-block \"block-name\" '((:lexical . \"yes\")))."
   (interactive nil org-mode)
   (save-excursion
     (save-restriction
@@ -289,20 +289,20 @@ Usage:
                               ((equal name (org-element-property :name element)))
                               (type (org-element-type element))
                               ((memq type '(src-block babel-call))))
-                    (throw 'found (mo/call-babel-at-point type params)))))))
-        (if-let* ((blocks (mo/babel-src-and-call-blocks))
+                    (throw 'found (zo/call-babel-at-point type params)))))))
+        (if-let* ((blocks (zo/babel-src-and-call-blocks))
                   (name (completing-read "Src: " (mapcar #'car blocks)))
                   (p (alist-get name blocks nil nil 'equal)))
-            (mo/call-babel-at-point nil params p)
+            (zo/call-babel-at-point nil params p)
           (user-error "No blocks found."))))))
 
 (with-eval-after-load 'ob
   (bind-keys
    :map org-babel-map
-   ("v" . mo/babel-expand-src-block)
-   ("m" . mo/babel-execute-named-src-block)))
+   ("v" . zo/babel-expand-src-block)
+   ("m" . zo/babel-execute-named-src-block)))
 
-(defun mo/babel-follow (link _)
+(defun zo/babel-follow (link _)
   "Visit the babel on LINK."
   (pcase-let ((`(,path ,id) (string-split link "::")))
     (if (find-file path)
@@ -311,7 +311,7 @@ Usage:
           (search-forward (concat "#+attr_babel: :id " id)))
       (user-error "File not found: %s" path))))
 
-(defun mo/babel-store-link (&optional _interactive?)
+(defun zo/babel-store-link (&optional _interactive?)
   "Store a link to a org-babel."
   (when-let* (((derived-mode-p 'org-mode))
               (file (buffer-file-name (buffer-base-buffer)))
@@ -332,8 +332,8 @@ Usage:
 
 (with-eval-after-load 'ol
   (org-link-set-parameters "babel"
-                           :follow #'mo/babel-follow
-                           :store #'mo/babel-store-link))
+                           :follow #'zo/babel-follow
+                           :store #'zo/babel-store-link))
 
 (defvar zo/babel-confirm-replace-tangle 'ask
   "Confirm before replace by conflicts.")
@@ -469,26 +469,26 @@ results."
                                              (cdr (assq :tangle params)))))
               bare)))))))
 
-(defvar mo/tangle-default-dir "_tangle"
+(defvar zo/tangle-default-dir "_tangle"
   "Default directory for tangled code blocks.
 When no TANGLE-DIR property is specified in the Org file, code blocks
 will be tangled to this directory relative to the Org file's location.")
 
-(defun mo/by-tangle-dir (&optional name no-inherit)
+(defun zo/by-tangle-dir (&optional name no-inherit)
   "Generate absolute file path for tangling the source block at point.
 
 This function determines the tangle destination by combining:
 1. The target directory: either from TANGLE-DIR property (inherited or not
-inherited) or `mo/tangle-default-dir'.
+inherited) or `zo/tangle-default-dir'.
 2. The filename: either from NAME parameter or the source block's NAME property.
 
 ref: https://emacs-china.org/t/header-args-property/27494/2"
   (expand-file-name
    (or name (org-element-property :name (org-element-at-point-no-context)))
-   (or (org-entry-get nil "TANGLE-DIR" (not no-inherit)) mo/tangle-default-dir)))
+   (or (org-entry-get nil "TANGLE-DIR" (not no-inherit)) zo/tangle-default-dir)))
 
 (with-eval-after-load 'ox-pandoc
-  (defun mo/pandoc-options-fix (body backend info)
+  (defun zo/pandoc-options-fix (body backend info)
     "Fix OPTIONS metadata when export org via pandoc.
 
 This function ensures proper handling of export options when exporting
@@ -509,10 +509,10 @@ metadata to the exported content."
                     (replace-regexp-in-string "^#\\+options:.+" "" body))))
       body))
   (add-hook 'org-export-filter-final-output-functions
-            #'mo/pandoc-options-fix))
+            #'zo/pandoc-options-fix))
 
 (with-eval-after-load 'ox-latex
-  (defun mo/latex-filter-link-fix (link backend info)
+  (defun zo/latex-filter-link-fix (link backend info)
     "Use correct path when export directory not `default-directory'.
      Append zero-width-space after link avoid error: No line here to end."
     (if (eq 'latex backend)
@@ -530,9 +530,9 @@ metadata to the exported content."
          link t t)
       link))
   (add-hook 'org-export-filter-link-functions
-            #'mo/latex-filter-link-fix))
+            #'zo/latex-filter-link-fix))
 
-(defun mo/src-save-buffer ()
+(defun zo/src-save-buffer ()
   "Ask before save org-babel preview buffer."
   (interactive)
   (if (string-prefix-p "*Org-Babel Preview "
@@ -541,7 +541,7 @@ metadata to the exported content."
         (org-edit-src-save))
     (org-edit-src-save)))
 
-(defun my/viper-save-buffer (&rest args)
+(defun zr-viper-save-buffer (&rest args)
   "Save buffer in different modes, customized for Viper and Org interactions.
 
 This function provides a unified interface for saving buffers across
@@ -549,31 +549,30 @@ different modes and special buffers in Emacs, particularly when using
 Viper mode and Org mode.
 
 It behaves differently based on the current context:
-1. In `org-src-mode', it calls `mo/src-save-buffer'.
+1. In `org-src-mode', it calls `zo/src-save-buffer'.
 2. In the \"*Edit Formulas*\" buffer, it finishes formula editing.
 3. In all other cases, it performs a Viper ex-mode write operation."
   (interactive "P")
   (cond
-   (org-src-mode (mo/src-save-buffer))
+   (org-src-mode (zo/src-save-buffer))
    ((string= (buffer-name) "*Edit Formulas*")
     (apply #'org-table-fedit-finish args))
    (t (ex-write nil))))
 
 (with-eval-after-load 'org-src
-  (add-to-list 'my/extra-ex-token-alist '("w" (my/viper-save-buffer)))
+  (add-to-list 'zr-extra-ex-token-alist '("w" (zr-viper-save-buffer)))
   (bind-keys
    :map org-src-mode-map
-   ("C-x C-s" . mo/src-save-buffer)))
+   ("C-x C-s" . zo/src-save-buffer)))
 
 (with-eval-after-load 'viper
   (bind-keys
    :map viper-vi-global-user-map
-   ([remap org-open-at-point-global] . mo/exec-link-or-babel-nearby)))
+   ([remap org-open-at-point-global] . zo/exec-link-or-babel-nearby)))
 
 (provide 'init-org)
 ;;; init-org.el ends here
 
 ;; Local Variables:
-;; read-symbol-shorthands: (("mo/" . "my/org-"))
-;; read-symbol-shorthands: (("zo/" . "z-org-"))
+;; read-symbol-shorthands: (("zo/" . "zr-org-"))
 ;; End:

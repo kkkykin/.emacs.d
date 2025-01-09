@@ -23,7 +23,7 @@
 
 ;;; Code:
 
-(transient-define-prefix my/ffmpeg-menu ()
+(transient-define-prefix zr-ffmpeg-menu ()
   "ffmpeg Menu."
   ["Global Options"
    ("b" "Suppress printing banner." (nil "-hide_banner"))

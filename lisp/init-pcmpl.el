@@ -23,7 +23,7 @@
 
 ;;; Code:
 
-(defun my/pcmpl-7z--list-archive ()
+(defun zr-pcmpl-7z--list-archive ()
   "List archive files with 7z."
   (let ((pass (or (seq-some (lambda (a) (and (string-prefix-p "-p" a) a))
                             pcomplete-args)
@@ -63,7 +63,7 @@
               ((or "d" "e" "rn" "u")
                (pcomplete-here (completion-table-merge
                                 (pcomplete-entries)
-                                (my/pcmpl-7z--list-archive))))))))))
+                                (zr-pcmpl-7z--list-archive))))))))))
 (defalias 'pcomplete/7zz 'pcomplete/7z)
 
 (defun pcomplete/adb ()

@@ -4,13 +4,13 @@
 
 (add-to-list 'load-path (file-name-concat user-emacs-directory "lisp"))
 
-(defconst my/sys-winnt-p (eq system-type 'windows-nt)
+(defconst zr-sys-winnt-p (eq system-type 'windows-nt)
   "Windows System.")
 
-(defconst my/sys-linux-p (eq system-type 'gnu/linux)
+(defconst zr-sys-linux-p (eq system-type 'gnu/linux)
   "Linux System.")
 
-(defconst my/sys-android-p (eq system-type 'android)
+(defconst zr-sys-android-p (eq system-type 'android)
   "Android System.")
 
 (use-package emacs
@@ -24,7 +24,7 @@
   ([remap downcase-word] . downcase-dwim)
   ([remap capitalize-word] . capitalize-dwim)
   ( :prefix "C-x j"
-    :prefix-map my/global-prefix-map
+    :prefix-map zr-global-prefix-map
     ("s" . scratch-buffer))
   :custom
   (read-process-output-max (* 1024 1024))
@@ -76,12 +76,12 @@
   (large-hscroll-threshold 1000)
   (syntax-wholeline-max 1000)
   :config
-  (defun my/defer-gc ()
+  (defun zr-defer-gc ()
     (setq gc-cons-threshold most-positive-fixnum))
-  (defun my/do-restore-gc ()
+  (defun zr-do-restore-gc ()
     (setq gc-cons-threshold 80000000))
-  (defun my/restore-gc ()
-    (run-at-time 1 nil #'my/do-restore-gc))
+  (defun zr-restore-gc ()
+    (run-at-time 1 nil #'zr-do-restore-gc))
   (put 'buffer-file-coding-system 'safe-local-variable 'symbolp)
   (put 'buffer-auto-save-file-name 'safe-local-variable 'null)
   (prefer-coding-system 'utf-8)
@@ -93,7 +93,7 @@
   :bind
   ("M-g M-n" . 'tempo-forward-mark)
   ("M-g M-p" . 'tempo-backward-mark)
-  (:repeat-map my/tempo-repeat-map
+  (:repeat-map zr-tempo-repeat-map
                ("n" . tempo-forward-mark)
                ("p" . tempo-backward-mark)))
 
@@ -108,13 +108,13 @@
   :demand t)
 
 (use-package init-winnt :demand t
-  :if (and my/sys-winnt-p (locate-library "init-winnt")))
+  :if (and zr-sys-winnt-p (locate-library "init-winnt")))
 
 (use-package init-linux :demand t
-  :if (and my/sys-linux-p (locate-library "init-linux")))
+  :if (and zr-sys-linux-p (locate-library "init-linux")))
 
 (use-package init-android :demand t
-  :if (and my/sys-android-p (locate-library "init-android")))
+  :if (and zr-sys-android-p (locate-library "init-android")))
 
 (use-package init-prog
   :if (locate-library "init-prog")
@@ -141,7 +141,7 @@
   :after viper :defer 0)
 
 (use-package touch-screen
-  :if my/sys-android-p
+  :if zr-sys-android-p
   :custom
   (touch-screen-display-keyboard t))
 
@@ -163,8 +163,8 @@
   :hook
   ((emacs-startup . minibuffer-electric-default-mode)
    (emacs-startup . savehist-mode)
-   (minibuffer-setup . my/defer-gc)
-   (minibuffer-exit . my/restore-gc)))
+   (minibuffer-setup . zr-defer-gc)
+   (minibuffer-exit . zr-restore-gc)))
 
 (use-package icomplete
   :hook (emacs-startup . fido-mode)
@@ -186,7 +186,7 @@
 
 (use-package viper
   :init
-  (setq my/extra-ex-token-alist
+  (setq zr-extra-ex-token-alist
         '(("tabe" (tab-new)) ("tabc" (tab-close)))
         viper-inhibit-startup-message t
         viper-expert-level 5
@@ -222,18 +222,18 @@
     ("C-f" . follow-scroll-up)
     ("C-b" . follow-scroll-down)
     :prefix "C-w"
-    :prefix-map my/viper-cw-prefix-map
+    :prefix-map zr-viper-cw-prefix-map
     ("h" . windmove-left)
     ("l" . windmove-right)
     ("k" . windmove-up)
     ("j" . windmove-down)
     :prefix "g"
-    :prefix-map my/viper-vi-g-prefix-map
+    :prefix-map zr-viper-vi-g-prefix-map
     ("g" . beginning-of-buffer)
     ("t" . tab-bar-switch-to-next-tab)
     ("T" . tab-bar-switch-to-prev-tab)
     :prefix "SPC"
-    :prefix-map my/viper-vi-spc-prefix-map
+    :prefix-map zr-viper-vi-spc-prefix-map
     ("d" . duplicate-dwim)
     ("f" . org-open-at-point-global)
     ("L" . org-insert-link-global)
@@ -244,7 +244,7 @@
     ("p" . viper-prev-destructive-command)
     ("n" . viper-next-destructive-command)
     :prefix "z"
-    :prefix-map my/viper-vi-z-prefix-map
+    :prefix-map zr-viper-vi-z-prefix-map
     ("z" . recenter)
     ("T" . transpose-regions))
   ( :map viper-dired-modifier-map
@@ -254,10 +254,10 @@
                         #'viper-exec-key-in-emacs #'viper-search-forward)
                     args)))
     (":" . nil))
-  (:repeat-map my/viper-insert-repeat-map
+  (:repeat-map zr-viper-insert-repeat-map
                ("p" . viper-insert-prev-from-insertion-ring)
                ("n" . viper-insert-next-from-insertion-ring))
-  (:repeat-map my/viper-vi-repeat-map
+  (:repeat-map zr-viper-vi-repeat-map
                ("p" . viper-prev-destructive-command)
                ("n" . viper-next-destructive-command))
   :custom
@@ -270,7 +270,7 @@
   :config
   (with-eval-after-load 'dired
     (bind-keys
-     :map my/dired-spc-prefix-map
+     :map zr-dired-spc-prefix-map
      (":" . (lambda (&rest args)
               (interactive "P")
               (apply (if (eq major-mode 'wdired-mode)
@@ -280,7 +280,7 @@
     "More ex-token, and `display-line-number-mode'."
     (require 'display-line-numbers)
     (display-line-numbers--turn-on)
-    (let ((ex-token-alist (append my/extra-ex-token-alist ex-token-alist))
+    (let ((ex-token-alist (append zr-extra-ex-token-alist ex-token-alist))
           (buf (current-buffer)))
       (apply orig-fun args)
       (when (buffer-live-p buf)
@@ -363,13 +363,13 @@
   (pixel-scroll-precision-interpolation-factor 8.0))
 
 (use-package display-fill-column-indicator
-  :unless my/sys-android-p
+  :unless zr-sys-android-p
   :hook prog-mode
   :custom
   (display-fill-column-indicator-character ?\u254e))
 
 (use-package time :defer 9
-  :unless my/sys-android-p
+  :unless zr-sys-android-p
   :custom
   (display-time-24hr-format t)
   (display-time-use-mail-icon t)
@@ -378,7 +378,7 @@
   (display-time))
 
 (use-package battery :defer 10
-  :unless my/sys-android-p
+  :unless zr-sys-android-p
   :config
   (when (and battery-status-function
              (not (string= "unknown"
@@ -395,17 +395,17 @@
   )
 
 (use-package display-line-numbers
-  :unless my/sys-android-p
+  :unless zr-sys-android-p
   :custom
   (display-line-numbers-type 'relative))
 
 (use-package subword
-  :unless my/sys-android-p
+  :unless zr-sys-android-p
   :diminish
   :hook prog-mode)
 
 (use-package glasses
-  :unless my/sys-android-p
+  :unless zr-sys-android-p
   ;; :hook prog-mode
   :custom
   (glasses-uncapitalize-p t)
@@ -415,7 +415,7 @@
   :custom
   (reb-re-syntax 'string)
   :bind
-  (:repeat-map my/re-builder-repeat-mode
+  (:repeat-map zr-re-builder-repeat-mode
                ("s" . reb-next-match)
                ("r" . reb-prev-match)))
 
@@ -478,7 +478,7 @@
   (tooltip-mode nil))
 
 (use-package tool-bar
-  :if my/sys-android-p
+  :if zr-sys-android-p
   :custom
   (tool-bar-button-margin 12)
   (tool-bar-position 'bottom)
@@ -491,7 +491,7 @@
 
 (use-package speedbar
   :bind
-  ( :map my/global-prefix-map
+  ( :map zr-global-prefix-map
     ("b" . speedbar))
   :config
   (setopt speedbar-supported-extension-expressions
@@ -520,7 +520,7 @@
       (apply orig-fn c args))))
 
 (use-package windmove
-  :unless my/sys-android-p
+  :unless zr-sys-android-p
   :hook emacs-startup
   :custom
   (windmove-wrap-around t)
@@ -559,7 +559,7 @@
 
 (use-package etags-regen
   :if (and (package-installed-p 'etags-regen)
-           (not my/sys-android-p)))
+           (not zr-sys-android-p)))
 
 (use-package quickurl)
 
@@ -575,7 +575,7 @@
 
 ;; [[info:autotype]]
 (use-package auto-insert
-  :unless my/sys-android-p
+  :unless zr-sys-android-p
   :hook emacs-startup
   :custom
   (auto-insert-directory (file-name-concat user-emacs-directory "insert/"))
@@ -648,7 +648,7 @@
   )
 
 (use-package elide-head
-  :unless my/sys-android-p
+  :unless zr-sys-android-p
   :hook prog-mode)
 
 ;; https://karthinks.com/software/simple-folding-with-hideshow/
@@ -666,7 +666,7 @@
 
 (use-package which-func :defer 5
   :autoload which-function
-  :unless my/sys-android-p
+  :unless zr-sys-android-p
   :config
   (which-function-mode))
 
@@ -730,7 +730,7 @@
   :bind
   (:map flymake-mode-map
         ("C-x `" . flymake-goto-next-error))
-  (:repeat-map my/flymake-repeat-map
+  (:repeat-map zr-flymake-repeat-map
                ("n" . flymake-goto-next-error)
                ("p" . flymake-goto-prev-error))
   :custom
@@ -749,7 +749,7 @@
   ("C-x C-b" . bs-show)
   ("C-x <up>" . bs-cycle-previous)
   ("C-x <down>" . bs-cycle-next)
-  (:repeat-map my/bs-repeat-map
+  (:repeat-map zr-bs-repeat-map
                ("<up>" . bs-cycle-previous)
                ("<down>" . bs-cycle-next))
   :config
@@ -867,19 +867,19 @@ before calling the original function."
     (let ((default-directory newsticker-dir))
       (apply orig-fun args)))
 
-  (defun my/init-and-start-newsticker (level)
+  (defun zr-init-and-start-newsticker (level)
     (interactive "nPrivacy level: ")
     ;; (auth-source-forget-all-cached)
     (load "init-rss.el.gpg" t t)
-    (my/setup-news-url-list level)
+    (zr-setup-news-url-list level)
     (newsticker-start t))
 
-  (if (bound-and-true-p my/news-privacy-level)
-      (my/init-and-start-newsticker my/news-privacy-level)
+  (if (bound-and-true-p zr-news-privacy-level)
+      (zr-init-and-start-newsticker zr-news-privacy-level)
     (and (display-graphic-p)
          (not (eq system-type 'android))
          (y-or-n-p-with-timeout "Do you want to run newsticker? " 30 t)
-         (call-interactively #'my/init-and-start-newsticker))))
+         (call-interactively #'zr-init-and-start-newsticker))))
 
 (use-package eww
   :bind
@@ -901,7 +901,7 @@ before calling the original function."
 
 (use-package webjump
   :bind
-  ( :map my/global-prefix-map
+  ( :map zr-global-prefix-map
     ("/" . webjump))
   :config
   (dolist (web '(("Mojeek" .
@@ -938,7 +938,7 @@ before calling the original function."
 
 (use-package tramp
   :bind
-  ( :map my/global-prefix-map
+  ( :map zr-global-prefix-map
     ("t" . tramp-cleanup-connection)
     ("T" . tramp-cleanup-some-buffers))
   :custom
@@ -975,17 +975,17 @@ before calling the original function."
   ( :map sql-mode-map
     ("C-c C-p" . sql-connect)
     :prefix "C-c C-k"
-    :prefix-map my/sql-cc-ck-prefix-map
+    :prefix-map zr-sql-cc-ck-prefix-map
     ("a" . sql-list-all)
     ("t" . sql-list-table))
   ( :map sql-interactive-mode-map
     :prefix "C-c"
-    :prefix-map my/sqli-cc-prefix-map
+    :prefix-map zr-sqli-cc-prefix-map
     ("C-y" . sql-copy-column)
     ("C-w" . backward-kill-word)
     ("C-l" . comint-dynamic-list-input-ring)
     :prefix "C-c C-k"
-    :prefix-map my/sql-cc-ck-prefix-map)
+    :prefix-map zr-sql-cc-ck-prefix-map)
   :custom
   (sql-input-ring-file-name (locate-user-emacs-file "sql-history.eld")))
 
@@ -1030,7 +1030,7 @@ before calling the original function."
                           (completing-read "Device: " devices))))))
      ("\\.apk\\'"
       (format "apksigner sign --ks \"%s\" --ks-pass \"pass:emacs1\" --ks-key-alias \"Emacs keystore\""
-              my/emacs-keystore-file))
+              zr-emacs-keystore-file))
      (,(rx ?. (| "tzst" "tar.zst") eos)
       "zstd -dc ? | tar -xf -")
      (,(rx ?. (| "srt") eos)
@@ -1063,7 +1063,7 @@ before calling the original function."
     ("C-p" . viper-previous-line)
     ("C-n" . viper-next-line)
     :prefix "SPC"
-    :prefix-map my/dired-spc-prefix-map
+    :prefix-map zr-dired-spc-prefix-map
     ("a" . org-attach-dired-to-subtree))
   :config
   (when-let* ((7z (or (executable-find "7z")
@@ -1115,7 +1115,7 @@ before calling the original function."
 
 (use-package dictionary
   :bind
-  ( :map my/global-prefix-map
+  ( :map zr-global-prefix-map
     ("D" . dictionary-search))
   :custom
   (dictionary-server "dict.tw")
@@ -1123,7 +1123,7 @@ before calling the original function."
 
 (use-package epg
   :config
-  (unless my/sys-linux-p
+  (unless zr-sys-linux-p
     (setq epg-pinentry-mode 'loopback)))
 
 (use-package mpc
@@ -1131,7 +1131,7 @@ before calling the original function."
   (mpc-host "127.0.0.1"))
 
 (use-package avoid :defer 15
-  :unless my/sys-android-p
+  :unless zr-sys-android-p
   :config
   (mouse-avoidance-mode 'exile))
 
@@ -1149,14 +1149,14 @@ before calling the original function."
 
 ;; https://karthinks.com/software/different-strokes-for-different-folks/
 (use-package strokes
-  :unless my/sys-android-p
+  :unless zr-sys-android-p
   :custom
   (strokes-lighter nil)
   :bind ("<down-mouse-3>" . 'strokes-do-stroke))
 
 (use-package master
   :bind
-  (:repeat-map my/master-repeat-map
+  (:repeat-map zr-master-repeat-map
                ("n" . master-says-scroll-up)
                ("p" . master-says-scroll-down)
                ("l" . master-says-recenter)
@@ -1175,7 +1175,7 @@ before calling the original function."
 
 (use-package follow
   :bind
-  ( :repeat-map my/follow-repeat-map
+  ( :repeat-map zr-follow-repeat-map
     ("n" . follow-next-window)
     ("p" . follow-previous-window)
     ("l" . follow-recenter)))
@@ -1198,7 +1198,7 @@ before calling the original function."
 
 (use-package calendar
   :bind
-  ( :map my/global-prefix-map
+  ( :map zr-global-prefix-map
     ("c" . calendar))
   :custom
   (diary-file (locate-user-emacs-file "_diary"))
@@ -1209,7 +1209,7 @@ before calling the original function."
 
 (use-package todo-mode
   :bind
-  ( :map my/global-prefix-map
+  ( :map zr-global-prefix-map
     ("C" . todo-show))
   :custom
   (todo-directory (locate-user-emacs-file "_todo/")))
@@ -1248,7 +1248,7 @@ before calling the original function."
 
 (use-package smerge-mode
   :bind
-  (:repeat-map my/smerge-repeat-map
+  (:repeat-map zr-smerge-repeat-map
                ("n" . smerge-next)
                ("p" . smerge-prev)
                ("r" . smerge-resolve)
@@ -1273,7 +1273,7 @@ before calling the original function."
   (ediff-keep-variants nil)
   (ediff-window-setup-function 'ediff-setup-windows-plain)
   :config
-  (unless my/sys-android-p
+  (unless zr-sys-android-p
     (setq ediff-split-window-function 'split-window-horizontally))
   (add-hook 'ediff-before-setup-hook #'tab-bar-new-tab)
   ;; close tab after 'ediff-cleanup-mess
@@ -1340,7 +1340,7 @@ before calling the original function."
 
 (use-package proced
   :bind
-  ( :map my/global-prefix-map
+  ( :map zr-global-prefix-map
     ("P" . proced))
   :custom
   (proced-goal-attribute nil)
@@ -1367,7 +1367,7 @@ before calling the original function."
                ("0" . tab-close)
                ("r" . tab-rename)
                ("u" . tab-undo))
-  (:repeat-map my/tab-bar-history-repeat-map
+  (:repeat-map zr-tab-bar-history-repeat-map
                ("<right>" . tab-bar-history-forward)
                ("<left>" . tab-bar-history-back))
   :custom
@@ -1381,7 +1381,7 @@ before calling the original function."
   (tab-bar-tab ((t (:inherit mode-line :box t))))
   (tab-bar-tab-inactive ((t (:inherit mode-line-inactive :box nil))))
   :config
-  (unless my/sys-android-p
+  (unless zr-sys-android-p
     (setq tab-bar-close-button-show nil))
   (tab-bar-history-mode))
 
@@ -1426,7 +1426,7 @@ before calling the original function."
      newsticker-treeview-list-mode
      newsticker-treeview-mode))
   :config
-  (unless my/sys-android-p
+  (unless zr-sys-android-p
     (setq tab-line-new-button-show nil
           tab-line-close-button-show nil)))
 
@@ -1467,7 +1467,7 @@ before calling the original function."
   ;;    ((major-mode . completion-list-mode)
   ;;     #3=display-buffer-at-bottom #11#)))
   ;; :config
-  ;; (if my/sys-android-p
+  ;; (if zr-sys-android-p
   ;;     (setq window-sides-slots '(0 0 0 0))
   ;;   (dolist (v `(((or (major-mode . Info-mode)
   ;;                     (major-mode . help-mode)
@@ -1500,7 +1500,7 @@ before calling the original function."
 (use-package recentf
   :hook emacs-startup
   :bind
-  ( :map my/global-prefix-map
+  ( :map zr-global-prefix-map
     ("r" . recentf))
   :config
   (recentf-mode)
@@ -1511,7 +1511,7 @@ before calling the original function."
 
 (use-package esh-mode
   :bind
-  ( :map my/global-prefix-map
+  ( :map zr-global-prefix-map
     ("e" . eshell))
   (:map eshell-proc-mode-map
         ;; Kill eshell buffer if no process, like `comint-send-eof'
@@ -1601,7 +1601,7 @@ before calling the original function."
                                      eos)))
 
 (use-package filesets :defer 10
-  :unless my/sys-android-p
+  :unless zr-sys-android-p
   :config
   (filesets-init))
 
@@ -1614,7 +1614,7 @@ before calling the original function."
                            ("config.txt" "~/.config/yt-dlp/"))))
 
 (use-package shadowfile :defer 11
-  :unless my/sys-android-p
+  :unless zr-sys-android-p
   :config
   (shadow-initialize)
   (with-eval-after-load 'project
@@ -1723,9 +1723,9 @@ before calling the original function."
     ("C-," . nil)
     ("C-'" . nil)
     ("C-c $" . org-cycle-agenda-files))
-  ( :repeat-map my/org-cycle-repeat-map
+  ( :repeat-map zr-org-cycle-repeat-map
     ("$" . org-cycle-agenda-files))
-  ( :repeat-map my/org-block-repeat-map
+  ( :repeat-map zr-org-block-repeat-map
     ("f" . org-next-block)
     ("b" . org-previous-block)
     ("c" . org-fold-hide-block-toggle)
@@ -1817,7 +1817,7 @@ before calling the original function."
 
 (use-package org-clock
   :bind
-  ( :map my/global-prefix-map
+  ( :map zr-global-prefix-map
     ("i" . org-clock-in)
     ("I" . org-clock-in-last)
     ("o" . org-clock-out)
@@ -1924,10 +1924,10 @@ before calling the original function."
 (use-package ol
   :commands org-insert-link-global
   :bind
-  ( :map my/global-prefix-map
+  ( :map zr-global-prefix-map
     ("l" . org-store-link)
     ("L" . org-insert-link-global))
-  ( :repeat-map my/org-link-repeat-map
+  ( :repeat-map zr-org-link-repeat-map
     ("n" . org-next-link)
     ("p" . org-previous-link)
     ("o" . org-open-at-point))
@@ -1939,7 +1939,7 @@ before calling the original function."
 
 (use-package ob
   :bind
-  (:repeat-map my/ob-repeat-map
+  (:repeat-map zr-ob-repeat-map
                ("Z" . org-babel-switch-to-session)
                ("a" . org-babel-sha1-hash)
                ("c" . org-babel-check-src-block)
@@ -2122,14 +2122,14 @@ before calling the original function."
    ("C-," . avy-goto-char-timer))
   ( :map isearch-mode-map
     ("M-j" . avy-isearch))
-  ( :map my/global-prefix-map
+  ( :map zr-global-prefix-map
     ("?" . avy-resume))
   :config
-  (defun my/avy-action-comment (pt)
+  (defun zr-avy-action-comment (pt)
     (if (> pt (point))
         (comment-or-uncomment-region (point) pt)
       (comment-or-uncomment-region pt (point))))
-  (setf (alist-get ?\; avy-dispatch-alist) 'my/avy-action-comment)
+  (setf (alist-get ?\; avy-dispatch-alist) 'zr-avy-action-comment)
   (defun avy-action-embark (pt)
     (unwind-protect
         (save-excursion
@@ -2175,14 +2175,14 @@ before calling the original function."
 (use-package denote
   :if (package-installed-p 'denote)
   :bind
-  ( :map my/global-prefix-map
+  ( :map zr-global-prefix-map
     ("n" . denote-open-or-create)
     ("N" . denote-silo-extras-open-or-create))
   :init
   (put 'denote-directory 'safe-local-variable 'stringp)
   (with-eval-after-load 'dired
     (bind-keys
-     :map my/dired-spc-prefix-map
+     :map zr-dired-spc-prefix-map
      ("r" . denote-dired-rename-files)
      ("R" . denote-dired-rename-marked-files-with-keywords)))
   (with-eval-after-load 'org-capture
@@ -2237,11 +2237,11 @@ before calling the original function."
       t))
   (unless (file-exists-p denote-directory)
     (make-directory denote-directory))
-  (defun my/denote-region-org-structure-template (_beg _end)
+  (defun zr-denote-region-org-structure-template (_beg _end)
     (when (derived-mode-p 'org-mode)
       (activate-mark)
       (call-interactively 'org-insert-structure-template)))
-  (add-hook 'denote-region-after-new-note-functions #'my/denote-region-org-structure-template)
+  (add-hook 'denote-region-after-new-note-functions #'zr-denote-region-org-structure-template)
   (denote-rename-buffer-mode 1))
 
 ;; Popup completion-at-point
@@ -2388,7 +2388,7 @@ before calling the original function."
 (use-package aria2
   :if (package-installed-p 'aria2)
   :bind
-  ( :map my/global-prefix-map
+  ( :map zr-global-prefix-map
     ("a" . aria2-download-list))
   :config
   (let ((auth (car (auth-source-search :host "aria2.localhost"))))
@@ -2429,9 +2429,9 @@ before calling the original function."
     ("<left>" . nov-scroll-down)
     ("<right>" . nov-scroll-up)
     ("k" . kill-current-buffer)
-    ("&" . my/shell-do-open))
+    ("&" . zr-shell-do-open))
   :config
-  (defun my/nov-toggle-header-line ()
+  (defun zr-nov-toggle-header-line ()
     (interactive)
     (let ((v 'nov-header-line-format))
       (if (local-variable-p v)
@@ -2440,7 +2440,7 @@ before calling the original function."
       (nov-render-document)))
   (bind-keys
    :map nov-mode-map
-   ("i" . my/nov-toggle-header-line))
+   ("i" . zr-nov-toggle-header-line))
   ;; advice for 7z cli cannot split "-o" and `direcotry'
   (define-advice nov-unzip-epub (:around (orig-fun &rest args) extract-with-7z)
     (let ((nov-unzip-args
@@ -2469,8 +2469,8 @@ before calling the original function."
   (llm-warn-on-nonfree nil)
   :config
   (require 'init-llm)
-  (my/llm-server-start)
-  (when my/sys-winnt-p
+  (zr-llm-server-start)
+  (when zr-sys-winnt-p
     (delete "--compressed" plz-curl-default-args)))
 
 (use-package keyfreq
@@ -2563,7 +2563,7 @@ before calling the original function."
 (use-package el-search :defer 1
   :if (package-installed-p 'el-search)
   :bind
-  ( :repeat-map my/el-search-repeat-map
+  ( :repeat-map zr-el-search-repeat-map
     ("s" . el-search-pattern)
     ("r" . el-search-pattern-backward))
   :config
