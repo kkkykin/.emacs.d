@@ -50,9 +50,11 @@
 
 (defun zw/cmdproxy-real-program-name (cmd)
   "Find invoked real program name in cmd."
-  (seq-some (lambda (x) (and (not (string-prefix-p "/" x))
-                         (not (string= "start" x)) x))
-            (split-string-shell-command cmd)))
+  (cl-some (lambda (x) (and (not (string-prefix-p "/" x))
+                        (not (string= "start" x)) x))
+           (split-string-shell-command
+            (replace-regexp-in-string
+             (rx (+ space) "\";\"" (* space) eos) "" cmd))))
 
 (defun zw/find-shell-command-coding-system (command)
   "Find coding system for shell command."
@@ -281,11 +283,14 @@ https://learn.microsoft.com/en-us/windows/security/application-security/applicat
   (setq tramp-default-method "sshx"
         tramp-use-connection-share nil))
 
+(let ((exec-path (cl-remove-if (lambda (s) (string= "c:/Windows/system32" s))
+                               exec-path)))
+  (setq find-program (string-replace "/" "\\" (executable-find "find"))))
+
 (setq grep-program "ug"
       grep-use-null-device nil
       grep-highlight-matches t
-      find-program "fd"
-      find-ls-option '("-I -X ls -ldh {} ; | iconv -f utf-8 -t gb18030 -cs" . "-ldh")
+      find-ls-option '("-exec ls -ldh \"{}\" \";\" | iconv -f utf-8 -t gb18030 -cs" . "-ldh")
       ls-lisp-use-insert-directory-program t
       default-process-coding-system '(utf-8-dos . utf-8-unix) ;; change this maybe break tramp sshx
       ispell-extra-args (list "--filter-path" (substitute-in-file-name "$USERPROFILE/scoop/apps/aspell/current/lib/aspell-0.60"))
@@ -298,7 +303,7 @@ https://learn.microsoft.com/en-us/windows/security/application-security/applicat
         ("awk" utf-8 . ,locale-coding-system)
         ("curl" utf-8 . ,locale-coding-system)
         ("ffmpeg" utf-8 . ,locale-coding-system)
-        (,find-program utf-8 . ,locale-coding-system)
+        (,(regexp-quote find-program) utf-8 . ,locale-coding-system)
         (,grep-program utf-8 . ,locale-coding-system)
         ("git" utf-8 . ,locale-coding-system)
         ("tectonic" utf-8 . ,locale-coding-system)
