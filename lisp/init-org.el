@@ -335,45 +335,119 @@ Usage:
                            :follow #'mo/babel-follow
                            :store #'mo/babel-store-link))
 
+(defvar zo/babel-confirm-replace-tangle 'ask
+  "Confirm before replace by conflicts.")
+
+(defun zo/babel-tangle-jump-to-org ()
+  "Support custom babel link."
+  (let ((mid (point))
+	    start body-start end target-buffer target-char link bare block-name body)
+    (save-window-excursion
+      (save-excursion
+	    (while (and (re-search-backward org-link-bracket-re nil t)
+		            (not
+		             (and (setq start (line-beginning-position))
+			              (setq body-start (line-beginning-position 2))
+			              (setq link (match-string 0))
+                          (setq bare (match-string 1))
+			              (setq block-name (match-string 2))
+			              (save-excursion
+			                (save-match-data
+			                  (re-search-forward
+			                   (concat " " (regexp-quote block-name)
+				                       " ends here")
+			                   nil t)
+			                  (setq end (line-beginning-position))))))))
+	    (unless (and start (< start mid) (< mid end))
+	      (error "Not in tangled code"))))
+    (save-match-data
+      (when (and (string-match org-link-types-re bare)
+                 (string= (match-string 1 bare) "babel"))
+        (setq body (buffer-substring body-start end))
+        (org-link-open-from-string link)
+        (setq target-buffer (current-buffer))
+        (goto-char (org-babel-where-is-src-block-head))
+        (forward-line 1)
+        (let ((offset (- mid body-start)))
+	      (when (> end (+ offset (point)))
+	        (forward-char offset)))
+        (setq target-char (point))
+        (org-src-switch-to-buffer target-buffer t)
+        (goto-char target-char)
+        body))))
+
+(defun zo/babel-update-block-body (new-body)
+  "Update the body of the current code block to NEW-BODY."
+  (let ((element (org-element-at-point)))
+    (unless (org-element-type-p element 'src-block)
+      (error "Not in a source block"))
+    (goto-char (org-babel-where-is-src-block-head element))
+    (let* ((ind (org-current-text-indentation))
+           org-confirm-babel-evaluate
+           (body (org-element-normalize-string
+		          (if (org-src-preserve-indentation-p element) new-body
+		            (with-temp-buffer
+		              (insert (org-remove-indentation new-body))
+		              (indent-rigidly
+		               (point-min)
+		               (point-max)
+		               (+ ind org-edit-src-content-indentation))
+		              (buffer-string)))))
+           (expanded (concat (org-babel-expand-src-block) "\n")))
+      (when (and (not (string= body expanded))
+                 (pcase zo/babel-confirm-replace-tangle
+                   ('ask (y-or-n-p "Replace by diff-results? "))
+                   (_ zo/babel-confirm-replace-tangle)))
+        (let* ((body-start (line-beginning-position 2))
+               (body-end (org-with-wide-buffer
+		                  (goto-char (org-element-end element))
+		                  (skip-chars-backward " \t\n")
+		                  (line-beginning-position)))
+               (old-body (buffer-substring-no-properties body-start body-end))
+               (new-file (expand-file-name (make-temp-name "detangle") temporary-file-directory))
+               (expand-file (expand-file-name (make-temp-name "detangle") temporary-file-directory))
+               diff-results)
+          (write-region body nil new-file)
+          (write-region expanded nil expand-file)
+          (with-temp-buffer
+            (insert old-body)
+            (call-process-region nil nil (executable-find "diff3") t t t
+                                 "-m" new-file "-Lnew" expand-file "-Lexpand" "-" "-Lold")
+            (setq diff-results (buffer-string)))
+          (delete-file new-file)
+          (delete-file expand-file)
+          (delete-region body-start body-end)
+          (goto-char body-start)
+          (insert diff-results))))))
+
+(defun zo/babel-detangle-1 (&optional source-code-file)
+  "Call detangle after bind custom function."
+  (cl-letf (((symbol-function 'org-babel-tangle-jump-to-org) #'zo/babel-tangle-jump-to-org)
+            ((symbol-function 'org-babel-update-block-body) #'zo/babel-update-block-body))
+    (org-babel-detangle source-code-file)))
+
+(defun zo/babel-detangle (&optional source-code-file)
+  "Support detangle single block, call custom babel link, replace by diff
+results."
+  (interactive "P")
+  (pcase current-prefix-arg
+    ('nil (zo/babel-detangle-1 source-code-file))
+    ('(4)
+     (goto-char (pos-bol))
+     (or (re-search-forward org-link-bracket-re (pos-eol) t)
+         (re-search-backward org-link-bracket-re))
+     (let ((begin (pos-bol)))
+       (re-search-forward
+        (concat " " (regexp-quote (match-string 2)) " ends here") nil t)
+       (with-restriction begin (pos-eol) (zo/babel-detangle-1))))
+    ((or '(16) (guard force))
+     (let ((zo/babel-confirm-replace-tangle
+            (y-or-n-p "Always replace conflicts? ")))
+       (zo/babel-detangle-1)))
+    ('- (org-babel-detangle)))
+  (run-at-time 1 nil (lambda () (goto-char (point-min)) (smerge-start-session t))))
+
 (with-eval-after-load 'ob-tangle
-  (define-advice org-babel-tangle-jump-to-org
-      (:before-until () custom-babel-link)
-    (let ((mid (point))
-	      start body-start end target-buffer target-char link bare block-name body)
-      (save-window-excursion
-        (save-excursion
-	      (while (and (re-search-backward org-link-bracket-re nil t)
-		              (not
-		               (and (setq start (line-beginning-position))
-			                (setq body-start (line-beginning-position 2))
-			                (setq link (match-string 0))
-                            (setq bare (match-string 1))
-			                (setq block-name (match-string 2))
-			                (save-excursion
-			                  (save-match-data
-			                    (re-search-forward
-			                     (concat " " (regexp-quote block-name)
-				                         " ends here")
-			                     nil t)
-			                    (setq end (line-beginning-position))))))))
-	      (unless (and start (< start mid) (< mid end))
-	        (error "Not in tangled code"))))
-      (save-match-data
-        (when (and (string-match org-link-types-re bare)
-                   (string= (match-string 1 bare) "babel"))
-          (setq body (buffer-substring body-start end))
-          (org-link-open-from-string link)
-          (setq target-buffer (current-buffer))
-          (goto-char (org-babel-where-is-src-block-head))
-          (forward-line 1)
-          (let ((offset (- mid body-start)))
-	        (when (> end (+ offset (point)))
-	          (forward-char offset)))
-          (setq target-char (point))
-          (org-src-switch-to-buffer target-buffer t)
-          (goto-char target-char)
-          body))))
-  
   (define-advice org-babel-tangle--unbracketed-link
       (:before-until (params) custom-babel-link)
     (unless (string= "no" (cdr (assq :comments params)))
@@ -501,4 +575,5 @@ It behaves differently based on the current context:
 
 ;; Local Variables:
 ;; read-symbol-shorthands: (("mo/" . "my/org-"))
+;; read-symbol-shorthands: (("zo/" . "z-org-"))
 ;; End:
