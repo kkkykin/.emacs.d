@@ -773,6 +773,77 @@ PID-FILE is the path to the file containing the process ID."
             (when (and (integerp pid) (> pid 0))
               pid)))))))
 
+(defun zr-proc-menu-do-kill-line (cnt)
+  "Delete CNT entries from the process menu without killing their processes.
+Removes the entries from `tabulated-list-entries' while preserving the
+actual processes. CNT is the prefix argument indicating how many entries
+to delete."
+  (interactive "p")
+  (let (deleted)
+    (dotimes (i cnt)
+      (push (tabulated-list-delete-entry) deleted))
+    (setq tabulated-list-entries
+          (cl-nset-difference tabulated-list-entries deleted :key #'car))))
+
+(defun zr-proc-menu-do-delete-process (cnt)
+  "Kill CNT processes from the process menu and remove their entries.
+If point is on a valid entry, kills CNT processes starting from current
+position.  Otherwise, kills all remaining processes from the next entry
+onwards.  CNT is the prefix argument specifying number of processes to
+kill.  Refreshes the buffer after deletion."
+  (interactive "p")
+  (let ((revert-buffer-function #'ignore))
+    (if (tabulated-list-get-id)
+        (dotimes (i cnt)
+          (process-menu-delete-process)
+          (forward-line))
+      (forward-line)
+      (while (tabulated-list-get-id)
+        (process-menu-delete-process)
+        (forward-line))))
+  (revert-buffer))
+
+(defvar-local zr-proc-menu-group-by-index nil
+  "Column key used for grouping process entries in the tabulated list.
+When nil, no grouping is performed. Otherwise, should be a valid index
+into `tabulated-list-format' array.")
+
+(defun zr-proc-menu-group-by ()
+  "Group process menu entries based on `zr-proc-menu-group-by-index'.
+When `zr-proc-menu-group-by-index' is set, groups entries in
+`tabulated-list-entries' by the specified column value, prefixing group
+headers with '* '."
+  (when zr-proc-menu-group-by-index
+    (setq tabulated-list-groups
+          (seq-group-by (lambda (entry)
+                          (let ((s (aref (cadr entry) zr-proc-menu-group-by-index)))
+                            (concat "* " (if (stringp s) s (car s)))))
+                        tabulated-list-entries))))
+
+(defun zr-proc-menu-do-group (&optional index)
+  "Set grouping for process menu based on column specified by INDEX.
+INDEX is the prefix argument indicating which column to group
+by (1-based index).  When INDEX is 0 or nil, grouping is disabled.
+Refreshes the buffer after changing grouping."
+  (interactive "p")
+  (setq zr-proc-menu-group-by-index
+        (if (zerop index) nil
+          (1- (min index (length tabulated-list-format)))))
+  (zr-proc-menu-group-by)
+  (revert-buffer))
+
+(defun zr-proc-menu-setup ()
+  "Set up process menu functionality."
+  (add-hook 'tabulated-list-revert-hook #'zr-proc-menu-group-by 50 t))
+
+(add-hook 'process-menu-mode-hook #'zr-proc-menu-setup)
+
+(bind-keys
+ :map process-menu-mode-map
+ ("k" . zr-proc-menu-do-kill-line)
+ ("/" . zr-proc-menu-do-group)
+ ("d" . zr-proc-menu-do-delete-process))
+
 
 ;; keymap
 
