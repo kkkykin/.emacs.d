@@ -206,6 +206,26 @@ NLINES is the number of context lines to show."
 
 ;; sql
 
+(defun zp/sqli-buffer-p (buf)
+  "Check if BUF is a live SQL interactive buffer.
+BUF can be either a buffer object or a string naming a buffer.
+Returns non-nil if the buffer exists and is in SQL interactive mode."
+  (sql-buffer-live-p (if (stringp buf) (get-buffer buf) (cdr buf))))
+
+(defun zp/read-sqli-buffer (prompt &optional def require-match predicate)
+  "ref: `read-buffer'. If PREDICATE is nil, `zp/sqli-buffer-p' is used as
+the predicate."
+  (let (read-buffer-function)
+    (read-buffer prompt def require-match (or predicate #'zp/sqli-buffer-p))))
+
+(defun zp/sql-set-sqli-buffer ()
+  "Select a SQL interactive buffer for the current SQL mode buffer.
+This is a wrapper around `sql-set-sqli-buffer' that restricts buffer
+selection to SQL interactive buffers only."
+  (interactive nil sql-mode)
+  (let ((read-buffer-function #'zp/read-sqli-buffer))
+    (sql-set-sqli-buffer)))
+
 (defun zp/sql-fix-imenu-exp ()
   "Fix imenu expression for sql-mode."
   (mapc
