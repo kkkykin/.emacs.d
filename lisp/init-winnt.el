@@ -254,9 +254,40 @@ https://learn.microsoft.com/en-us/windows/security/application-security/applicat
   (let ((coding-system-for-read 'utf-8))
     (apply orig-fun args)))
 
+(defun zr-dired-change-onedrive-stat (&optional arg)
+  "Toggle OneDrive sync attributes for marked files in dired.
+
+When called without a prefix argument, pins files for offline access by
+setting the pinned (+p) attribute and removing the unpinned (-u)
+attribute.  With a prefix argument, unpins files by removing the
+pinned (-p) attribute and setting the unpinned (+u) attribute.
+
+The function operates recursively on directories (/s) and includes both
+files and directories (/d) in the operation.
+
+The command uses the Windows 'attrib' utility and respects the system's
+locale encoding for proper handling of non-ASCII filenames."
+  (interactive "P")
+  (let ((opt '("/s" "/d"))
+        (files (dired-get-marked-files))
+        (coding-system-for-write locale-coding-system)
+        msg)
+    (if arg
+        (setq opt (append '("-p" "+u") opt)
+              msg "free up space")
+      (setq opt (append '("+p" "-u") opt)
+            msg "always keep on device"))
+    (dolist (f files)
+      (apply #'call-process "attrib" nil nil nil
+             (if (file-directory-p f) (concat f "/*") f) opt))
+    (message "%s %s." (mapconcat #'file-name-nondirectory files ", ") msg)))
+
 (with-eval-after-load 'dired
   (add-to-list 'dired-guess-shell-alist-user
                '("\\.exe\\'" "innounp -x -o -b -u -pxyg688.com"))
+  (bind-keys
+   :map zr-dired-spc-prefix-map
+   ("O" . zr-dired-change-onedrive-stat))
   (bind-keys
    :map dired-mode-map
    ("N" . woman-dired-find-file)))
