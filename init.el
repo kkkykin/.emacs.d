@@ -27,6 +27,11 @@
     :prefix-map zr-global-prefix-map
     ("s" . scratch-buffer))
   :custom
+  (mode-line-compact t)
+  (mode-line-frame-identification nil)
+  (mode-line-client nil)
+  (mode-line-front-space nil)
+  (mode-line-end-spaces nil)
   (read-process-output-max (* 1024 1024))
   (inhibit-splash-screen t)
   (indicate-buffer-boundaries 'left)
@@ -316,6 +321,7 @@
   (help-window-keep-selected t)
   (help-enable-symbol-autoload t)
   (help-enable-variable-value-editing t)
+  (three-step-help t)
   (apropos-sort-by-scores t)
   :bind
   (:map help-map
