@@ -460,13 +460,12 @@ From https://christiantietze.de/posts/2024/01/emacs-sqlite-mode-open-sqlite-file
 (defun zp/git-commit-message-setup ()
   "Default insert state, and emulate vc-commit."
   (when (string-suffix-p "/.git/COMMIT_EDITMSG" (buffer-file-name))
-    (when viper-mode
-      (viper-change-state-to-insert))
-    (when (fboundp 'zr-process-custom-buffer-local-keys)
-      (setq-local zr-custom-buffer-local-keys
-                  '(("C-c C-c" . server-edit)
-                    ("C-c C-k" . (lambda () (interactive) (erase-buffer) (server-edit)))))
-      (zr-process-custom-buffer-local-keys))
+    (when (bound-and-true-p viper-mode)
+      (viper-change-state-to-insert)
+      (viper-add-local-keys
+       'insert-state
+       '(("\C-c\C-c" . server-edit)
+         ("\C-c\C-k" . (lambda () (interactive) (erase-buffer) (server-edit))))))
     (zp/vc-commit-template)))
 
 (add-hook 'server-switch-hook #'zp/git-commit-message-setup)

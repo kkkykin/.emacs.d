@@ -845,48 +845,21 @@ Refreshes the buffer after changing grouping."
  ("d" . zr-proc-menu-do-delete-process))
 
 
-;; keymap
-
-;; ref: https://gist.github.com/jdtsmith/f41207cb0ddc7579ed648af1f69e2a0a
-(defvar-local zr-custom-buffer-local-keys nil
-  "Key-bindings to be set up local to the current buffer.
-A single (KEY . BINDING) cons or list of such conses, of the form
-`bind-keys' accepts.  Set this as a file-local variable to make bindings
-local to that buffer only.")
-
-(put 'zr-custom-buffer-local-keys 'safe-local-variable 'consp)
-
-(defvar-local zr-custom-buffer-local-map nil)
-(defun zr-process-custom-buffer-local-keys ()
-  "Setup and enable a minor mode if zr-custom-buffer-local-keys is non-nil."
-  (when zr-custom-buffer-local-keys
-    (let ((map zr-custom-buffer-local-map)
-	      (keys zr-custom-buffer-local-keys))
-      (unless map
-	    (setq map (make-sparse-keymap))
-	    (set-keymap-parent map (current-local-map))
-	    (use-local-map (setq zr-custom-buffer-local-map map)))
-      (unless (consp (car keys)) (setq keys (list keys)))
-      (dolist (k keys) (local-set-key (kbd (car k)) (cdr k))))))
-
-(add-hook 'hack-local-variables-hook #'zr-process-custom-buffer-local-keys)
-
-
 ;; follow
 (defun zr-follow-current-window (&optional arg)
   "Follow the window."
   (interactive "P")
-  (let* ((zr-custom-buffer-local-keys
-          (pcase arg
-            ('(4) (delete-other-windows) nil)
-            ((pred listp) arg)))
-         (window-width (window-text-width))
+  (let* ((window-width (window-text-width))
          (split-cnt (1- (/ window-width fill-column)))
          (single-width (/ window-width (1+ split-cnt))))
+    (pcase arg
+      ('(4) (delete-other-windows))
+      ((and `(,state . ,keymap)
+            (guard (memq state '(vi-state insert-state emacs-state))))
+       (viper-add-local-keys state keymap)))
     (dotimes (i split-cnt)
       (split-window nil (* (- split-cnt i) single-width) t))
-    (follow-mode 1)
-    (zr-process-custom-buffer-local-keys)))
+    (follow-mode 1)))
 
 (with-eval-after-load 'viper
   (bind-keys
