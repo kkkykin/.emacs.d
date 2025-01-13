@@ -1235,6 +1235,9 @@ before calling the original function."
    (diary-mark-entries . diary-mark-included-diary-files)))
 
 (use-package image
+  :bind
+  ( :map image-mode-map
+    ("k" . image-kill-buffer))
   :custom
   (image-dired-external-viewer "ffplay -fs -an -noborder")
   (image-use-external-converter t)
@@ -1760,6 +1763,7 @@ before calling the original function."
     ("u" . org-up-element))
   :custom
   (org-read-date-popup-calendar nil)
+  (org-fontify-done-headline nil)
   ;; (org-replace-disputed-keys t "see `'org-disputed-keys'")
   (org-special-ctrl-a/e t)
   (org-special-ctrl-k t)
