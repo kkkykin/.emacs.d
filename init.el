@@ -207,7 +207,12 @@
         viper-ESC-moves-cursor-back nil
         viper-mode t)
   :hook (window-setup
-         (( change-log-mode edebug-mode org-mode org-capture-mode log-edit-mode)
+         (( calc-embedded-mode
+            change-log-mode
+            edebug-mode
+            org-mode
+            org-capture-mode
+            log-edit-mode)
           . viper-change-state-to-insert))
   :bind
   ( :map viper-insert-basic-map
@@ -1707,7 +1712,23 @@ before calling the original function."
 
 (use-package calc
   :config
-  (setq calc-display-trail nil))
+  (setq math-additional-units
+        '((bit "b" "bit")
+          (byte "8 b" "byte")
+          (KB "1024 byte" "KB")
+          (MB "1024 KB" "MB")
+          (GB "1024 MB" "GB")
+          (TB "1024 GB" "TB")
+          (PB "1024 TB" "PB")
+          (EB "1024 PB" "EB")
+          (kb "1000 byte" "kb")
+          (mb "1000 kb" "mb")
+          (gb "1000 mb" "gb")
+          (tb "1000 gb" "tb")
+          (pb "1000 tb" "pb")
+          (eb "1000 pb" "eb"))
+        math-units-table nil
+        calc-display-trail nil))
 
 (use-package appt :defer 2
   :custom
