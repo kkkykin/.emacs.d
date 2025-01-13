@@ -1236,7 +1236,7 @@ before calling the original function."
 
 (use-package image
   :bind
-  ( :map image-mode-map
+  ( :map image-map
     ("k" . image-kill-buffer))
   :custom
   (image-dired-external-viewer "ffplay -fs -an -noborder")
@@ -1293,6 +1293,20 @@ before calling the original function."
   ;; close tab after 'ediff-cleanup-mess
   (add-hook 'ediff-quit-hook #'tab-bar-close-tab 1))
 
+(use-package smtpmail
+  :custom
+  (send-mail-command 'smtpmail-send-it)
+  (smtpmail-smtp-server "smtp.qq.com")
+  (smtpmail-smtp-service 465)
+  (smtpmail-stream-type 'ssl)
+  :config
+  (setq smtpmail-smtp-user
+        (plist-get (car (auth-source-search
+	                     :max 1
+	                     :host smtpmail-smtp-server
+	                     :port smtpmail-smtp-service))
+                   :user)))
+
 (use-package message
   :hook (message-send . ispell-message)
   :custom
@@ -1303,8 +1317,7 @@ before calling the original function."
 
 (use-package rmail
   :custom
-  (rmail-remote-password-required t)
-  (send-mail-command 'smtpmail-send-it))
+  (rmail-remote-password-required t))
 
 (use-package gnus
   :hook ((gnus-select-group . gnus-group-set-timestamp)
