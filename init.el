@@ -883,14 +883,7 @@ before calling the original function."
     ;; (auth-source-forget-all-cached)
     (load "init-rss.el.gpg" t t)
     (zr-setup-news-url-list level)
-    (newsticker-start t))
-
-  (if (bound-and-true-p zr-news-privacy-level)
-      (zr-init-and-start-newsticker zr-news-privacy-level)
-    (and (display-graphic-p)
-         (not (eq system-type 'android))
-         (y-or-n-p-with-timeout "Do you want to run newsticker? " 30 t)
-         (call-interactively #'zr-init-and-start-newsticker))))
+    (newsticker-start t)))
 
 (use-package eww
   :bind
