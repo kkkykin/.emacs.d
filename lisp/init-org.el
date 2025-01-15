@@ -97,6 +97,17 @@ For example:
                          (format "%s[%s]" tbl key-ref))
                         :test #'equal))))
 
+(defvar org-babel-default-header-args:bat
+  '((:prologue . "SETLOCAL")
+    (:epilogue . "ENDLOCAL"))
+  "Default arguments for evaluating a bat source block.")
+
+(defun org-babel-variable-assignments:bat (params)
+  "Return list of Bat statements assigning the block's variables.
+The variables are defined in PARAMS."
+  (mapcar (lambda (pair) (format "set \"%s=%s\"" (car pair) (cdr pair)))
+          (org-babel--get-vars params)))
+
 (defun zo/call-babel-at-point (&optional type params position confirm)
   "Execute the Babel block or call at point in Org mode.
 
