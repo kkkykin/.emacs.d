@@ -108,6 +108,10 @@
 (use-package mode-local
   :autoload mode-local-bind)
 
+(use-package multisession
+  :custom
+  (multisession-storage 'sqlite))
+
 (use-package init-misc
   :if (locate-library "init-misc")
   :demand t)
@@ -1146,10 +1150,6 @@ before calling the original function."
    chart-emacs-storage
    chart-emacs-lists
    chart-rmail-from))
-
-(use-package multisession
-  :custom
-  (multisession-storage 'sqlite))
 
 ;; https://karthinks.com/software/different-strokes-for-different-folks/
 (use-package strokes

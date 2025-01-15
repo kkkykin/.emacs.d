@@ -42,25 +42,30 @@ Each entry is a list containing:
 - Font family name as a string
 - List of pixel sizes (large, medium, small) for different resolutions
 - URL where the font can be downloaded"
-  "Fonts. Heights. Source."
   :group 'zr
   :type '(repeat string))
 
-(defvar zr-font-available-list
-  (cl-loop with index = (pcase (display-pixel-width)
-                          ((pred (> 1920)) 0)
-                          ((pred (< 1920)) 2)
-                          (_ 1))
-           for font in zr-fonts-list
-           if (zr-font-installed-p (car font))
-           collect (font-spec :name
-                              (format "%s:pixelsize=%d" (car font)
-                                      (nth index (cadr font)))))
-  "List of available font specifications based on screen resolution.
+(defvar zr-font-available-list nil
+  "List of available font specifications based on screen resolution.")
+
+(defun zr-font-find-available-font ()
+  "Find available font specifications based on screen resolution.
 Automatically selects appropriate pixel size based on display width:
 - Index 0 (large) for displays > 1920 pixels
 - Index 1 (medium) for displays = 1920 pixels
-- Index 2 (small) for displays < 1920 pixels")
+- Index 2 (small) for displays < 1920 pixels"
+  (setq zr-font-available-list
+        (cl-loop with index = (pcase (display-pixel-width)
+                                ((pred (> 1920)) 0)
+                                ((pred (< 1920)) 2)
+                                (_ 1))
+                 for font in zr-fonts-list
+                 if (zr-font-installed-p (car font))
+                 collect (font-spec :name
+                                    (format "%s:pixelsize=%d" (car font)
+                                            (nth index (cadr font))))))
+  (remove-hook 'server-after-make-frame-hook #'zr-font-find-available-font))
+(add-hook 'server-after-make-frame-hook #'zr-font-find-available-font)
 
 (define-multisession-variable zr-theme-light-list '(default)
   "List of available light themes for the current Emacs session.
@@ -138,8 +143,9 @@ checking their background colors. Updates `zr-theme-light-list' and
             (push theme cur-dark))
            (t (push theme (if (zr-theme-dark-p theme) cur-dark cur-light)))))
         (setf (multisession-value zr-theme-light-list) cur-light
-              (multisession-value zr-theme-dark-list) cur-dark)))))
-(add-hook 'after-init-hook #'zr-theme-list-update)
+              (multisession-value zr-theme-dark-list) cur-dark))))
+  (remove-hook 'server-after-make-frame-hook #'zr-theme-list-update))
+(add-hook 'server-after-make-frame-hook #'zr-theme-list-update)
 
 (defun zr-theme-dark-p (&optional theme)
   "Return non-nil if THEME or current theme has a dark background.
@@ -212,7 +218,7 @@ When in graphical display:
 (let ((hook (pcase system-type
               ('android 'window-setup-hook)
               (_ 'server-after-make-frame-hook))))
-  (add-hook hook #'zr-face-setup))
+  (add-hook hook #'zr-face-setup 50))
 
 (defun zr-set-font-current-buffer (&optional font)
   "Set font for current buffer."
