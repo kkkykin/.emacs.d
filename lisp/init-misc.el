@@ -26,72 +26,140 @@
 
 ;; theme
 
-(defcustom zr-all-theme-list (cons 'default (custom-available-themes))
-  "list of Custom themes available for loading."
-  :group 'my
-  :type '(repeat symbol))
-
-(defcustom zr-light-theme-list
-  (cl-intersection
-   zr-all-theme-list
-   '(;; adwaita default dichromacy leuven tango tsdh-light whiteboard
-     modus-operandi-deuteranopia modus-operandi modus-operandi-tinted
-     modus-operandi-tritanopia))
-  "Built-in light themes."
-  :group 'my
-  :type '(repeat symbol))
-
-(defcustom zr-dark-theme-list
-  (cl-intersection
-   zr-all-theme-list
-   '( deeper-blue leuven-dark manoj-dark misterioso
-      modus-vivendi-deuteranopia modus-vivendi
-      modus-vivendi-tinted modus-vivendi-tritanopia
-      tango-dark tsdh-dark wheatgrass wombat))
-  "Built-in dark themes."
-  :group 'my
-  :type '(repeat symbol))
-
-;; (defcustom zr-fonts-list
-;;   '(("霞鹜文楷等宽" . #1=(198 108 140 "https://github.com/lxgw/LxgwWenKai/releases"))
-;;     ("LXGW WenKai Mono" . #1#)
-;;     ("等距更纱黑体 SC" . #2=(188 108 130 "https://github.com/be5invis/Sarasa-Gothic/releases"))
-;;     ("Sarasa Mono SC" . #2#)
-;;     ("Unifont-JP" . (198 108 142 "https://unifoundry.com/unifont/index.html"))
-;;     ("UnifontExMono" . (198 108 142 "https://github.com/stgiga/UnifontEX/releases")))
-;;   "Fonts. Heights. Source."
-;;   :group 'my
-;;   :type '(repeat string))
-
-;; (defun zr-setup-faces ()
-;;   "Randomize setup faces."
-;;   (when (display-graphic-p)
-;;     (when-let* ((fonts
-;;                 (cl-intersection
-;;                  (font-family-list)
-;;                  (mapcar #'car zr-fonts-list) :test 'equal)))
-;;       (let ((font (assoc (seq-random-elt fonts) zr-fonts-list)))
-;;         (set-face-attribute 'default nil :font (car font) :height
-;;                             (cond ((< (display-pixel-width) 1920) (cadr font))
-;;                                   ((> (display-pixel-width) 1920) (cadddr font))
-;;                                   (t (caddr font))))))
-;;     (zr-shuffle-set-theme (if (zr-system-dark-mode-enabled-p)
-;;                               zr-dark-theme-list
-;;                             zr-light-theme-list))))
+(defun zr-font-installed-p (font-name)
+  "Check if font with FONT-NAME is available.
+Stolen from https://github.com/seagle0128/.emacs.d/blob/c9bd6f1bb72486580f55879cdfd4fdcc852a49a6/lisp/init-funcs.el#L53"
+  (find-font (font-spec :name font-name)))
 
 (defcustom zr-fonts-list
-  '(("LXGW WenKai Mono" (33 14 . 23) "https://github.com/lxgw/LxgwWenKai/releases")
-    ("Sarasa Mono SC" (32 14 . 22) "https://github.com/be5invis/Sarasa-Gothic/releases")
-    ("Maple Mono NF CN" (32 14 . 21) "https://github.com/subframe7536/maple-font/releases")
-    ("Unifont-JP" #1=(33 14 . 24) "https://unifoundry.com/unifont/index.html")
+  '(("LXGW WenKai Mono" (33 14 23) "https://github.com/lxgw/LxgwWenKai/releases")
+    ("Sarasa Mono SC" (32 14 22) "https://github.com/be5invis/Sarasa-Gothic/releases")
+    ("Maple Mono NF CN" (32 14 21) "https://github.com/subframe7536/maple-font/releases")
+    ("Unifont-JP" #1=(33 14 24) "https://unifoundry.com/unifont/index.html")
     ("UnifontExMono" #1# "https://github.com/stgiga/UnifontEX/releases"))
+  "List of font configurations for different display resolutions.
+Each entry is a list containing:
+- Font family name as a string
+- List of pixel sizes (large, medium, small) for different resolutions
+- URL where the font can be downloaded"
   "Fonts. Heights. Source."
-  :group 'my
+  :group 'zr
   :type '(repeat string))
 
+(defvar zr-font-available-list
+  (cl-loop with index = (pcase (display-pixel-width)
+                          ((pred (> 1920)) 0)
+                          ((pred (< 1920)) 2)
+                          (_ 1))
+           for font in zr-fonts-list
+           if (zr-font-installed-p (car font))
+           collect (font-spec :name
+                              (format "%s:pixelsize=%d" (car font)
+                                      (nth index (cadr font)))))
+  "List of available font specifications based on screen resolution.
+Automatically selects appropriate pixel size based on display width:
+- Index 0 (large) for displays > 1920 pixels
+- Index 1 (medium) for displays = 1920 pixels
+- Index 2 (small) for displays < 1920 pixels")
+
+(define-multisession-variable zr-theme-light-list '(default)
+  "List of available light themes for the current Emacs session.
+Persists across multiple Emacs sessions and defaults to built-in
+`default' theme."
+  :package "init-misc"
+  :key "theme")
+
+(define-multisession-variable zr-theme-dark-list nil
+  "List of available dark themes for the current Emacs session.
+Persists across multiple Emacs sessions and starts empty by default."
+  :package "init-misc"
+  :key "theme")
+
+(define-multisession-variable zr-theme-last-list '(default)
+  "List of most recently used themes in the current Emacs session.
+Persists across multiple Emacs sessions and defaults to built-in
+`default' theme."
+  :package "init-misc"
+  :key "theme")
+
+(defvar zr-theme-customize
+  '((adwaita
+     (hl-line ((t (:extend t :background "navajo white")))))
+    (whiteboard
+     (hl-line ((t (:extend t :background "wheat")))))
+    (tango
+     (hl-line ((t (:extend t :background "cornsilk"))))))
+  "Theme-specific face customizations.
+Each entry is an alist mapping theme symbols to face specifications.")
+
+(defun zr-theme-enable-only (themes &optional tmp)
+  "Enable THEMES exclusively, disabling all other active themes.
+When called interactively, prompts for a single theme to enable.
+
+THEMES can be a single theme symbol or a list of theme symbols.
+With optional TMP non-nil, don't update `zr-theme-last-list'.
+
+Loads any unloaded themes and applies custom face specifications
+from `zr-theme-customize'."
+  (interactive
+   (list (intern
+          (completing-read "Theme: "
+                           (cons 'default (custom-available-themes))))))
+  (dolist (item custom-enabled-themes)
+    (disable-theme item))
+  (unless (eq themes 'default)
+    (let* ((themes (ensure-list themes))
+           (load (cl-set-difference themes custom-known-themes)))
+      (dolist (loadee load)
+        (load-theme loadee t t))
+      (dolist (theme themes)
+        (apply #'custom-theme-set-faces theme
+               (alist-get theme zr-theme-customize))
+        (enable-theme theme))
+      (unless tmp
+        (setf (multisession-value zr-theme-last-list) themes)))))
+
+(defun zr-theme-list-update ()
+  "Update the light and dark theme lists based on available themes.
+Automatically categorizes newly installed themes as light or dark by
+checking their background colors. Updates `zr-theme-light-list' and
+`zr-theme-dark-list' accordingly."
+  (interactive)
+  (let ((cur (cons 'default (custom-available-themes)))
+        (light (multisession-value zr-theme-light-list))
+        (dark (multisession-value zr-theme-dark-list)))
+    (unless (seq-set-equal-p cur (append light dark))
+      (let (cur-light cur-dark)
+        (dolist (theme cur)
+          (cond
+           ((memq theme light)
+            (push theme cur-light))
+           ((memq theme dark)
+            (push theme cur-dark))
+           (t (push theme (if (zr-theme-dark-p theme) cur-dark cur-light)))))
+        (setf (multisession-value zr-theme-light-list) cur-light
+              (multisession-value zr-theme-dark-list) cur-dark)))))
+(add-hook 'after-init-hook #'zr-theme-list-update)
+
+(defun zr-theme-dark-p (&optional theme)
+  "Return non-nil if THEME or current theme has a dark background.
+When THEME is provided, temporarily enables it to check its properties.
+Restores the previous theme state after checking."
+  (if theme
+      (let ((enabled custom-enabled-themes))
+        (zr-theme-enable-only theme t)
+        (prog1 (zr-theme-dark-p)
+          (zr-theme-enable-only enabled t)))
+    (color-dark-p (color-name-to-rgb (face-attribute 'default :background)))))
+
 (defun zr-system-dark-mode-enabled-p ()
-  "Check if dark-mode is enabled. ref:
-https://github.com/LionyxML/auto-dark-emacs/blob/master/auto-dark.el"
+  "Check if system-wide dark mode is enabled.
+Returns non-nil if dark mode is active:
+- Windows: Checks registry key for dark app theme
+- Linux: Checks DBus interface for dark color scheme
+- Other systems: Returns nil
+
+ref: https://github.com/LionyxML/auto-dark-emacs/blob/master/auto-dark.el"
   (pcase system-type
     ('windows-nt
      (eq 0 (w32-read-registry 'HKCU "SOFTWARE/Microsoft/Windows/CurrentVersion/Themes/Personalize" "AppsUseLightTheme")))
@@ -105,58 +173,46 @@ https://github.com/LionyxML/auto-dark-emacs/blob/master/auto-dark.el"
                     "org.freedesktop.appearance" "color-scheme")))))
     (_ nil)))
 
-(defun zr-set-theme (theme)
-  "Set one theme only."
-  (if (eq theme 'default)
-      (dolist (item custom-enabled-themes)
-        (disable-theme item))
-    (unless (memq theme custom-known-themes)
-      (load-theme theme t t))
-    (pcase theme
-      ('adwaita
-       (custom-theme-set-faces theme '(hl-line ((t (:extend t :background "navajo white"))))))
-      ('whiteboard
-       (custom-theme-set-faces theme '(hl-line ((t (:extend t :background "wheat"))))))
-      ('tango
-       (custom-theme-set-faces theme '(hl-line ((t (:extend t :background "cornsilk")))))))
-    (dolist (item custom-enabled-themes)
-      (disable-theme item))
-    (enable-theme theme)))
-
-(defun zr-shuffle-set-theme (&optional themes)
-  "Shuffle set theme."
+(defun zr-theme-shuffle-set (&optional themes)
+  "Randomly select and enable a theme from appropriate category.
+With no prefix arg, selects from light/dark themes based on system theme.
+With `-' prefix arg, selects from opposite category.
+With other THEMES argument, selects from provided theme list.
+Avoids selecting the most recently used theme."
   (interactive "P")
   (let* ((themes (pcase themes
-                   ('nil (if (zr-system-dark-mode-enabled-p)
-                             zr-dark-theme-list
-                           zr-light-theme-list))
-                   ((guard (lambda (a) (consp arg)))
-                    (if (zr-system-dark-mode-enabled-p)
-                        zr-light-theme-list
-                      zr-dark-theme-list))
+                   ('nil
+                    (multisession-value
+                     (if (zr-system-dark-mode-enabled-p)
+                         zr-theme-dark-list
+                       zr-theme-light-list)))
+                   ('-
+                    (multisession-value
+                     (if (zr-system-dark-mode-enabled-p)
+                         zr-theme-light-list
+                       zr-theme-dark-list)))
                    (_ themes)))
-         (theme (seq-random-elt themes)))
-    (zr-set-theme theme)
-    (message "Current theme: %s" (symbol-name theme))))
+         (theme (seq-random-elt
+                 (cl-set-difference themes
+                                    (multisession-value zr-theme-last-list)))))
+    (zr-theme-enable-only theme)
+    (message "Current theme: %S" theme)))
 
-(defun zr-setup-faces ()
-  "Randomize setup faces."
+(defun zr-face-setup ()
+  "Initialize random font and theme configuration.
+When in graphical display:
+1. Randomly selects and applies a font from `zr-font-available-list'
+2. Calls `zr-theme-shuffle-set' to set an appropriate theme"
   (when (display-graphic-p)
-    (when-let*
-        ((fonts
-          (delq nil
-                (mapcar (lambda (a)
-                          (let ((b (font-spec :name
-                                              (format "%s:pixelsize=%d" (car a)
-                                                      (pcase (display-pixel-width)
-                                                        ((pred (> 1920)) (caadr a))
-                                                        ((pred (< 1920)) (cddadr a))
-                                                        (_ (cadadr a)))))))
-                            (and (find-font b) b)))
-                        zr-fonts-list))))
-      (set-face-attribute 'default nil :font (seq-random-elt fonts)))
-    (zr-shuffle-set-theme)))
-(add-hook 'window-setup-hook #'zr-setup-faces)
+    (when zr-font-available-list
+      (set-face-attribute 'default nil
+                          :font (seq-random-elt zr-font-available-list)))
+    (zr-theme-shuffle-set)))
+
+(let ((hook (pcase system-type
+              ('android 'window-setup-hook)
+              (_ 'server-after-make-frame-hook))))
+  (add-hook hook #'zr-face-setup))
 
 (defun zr-set-font-current-buffer (&optional font)
   "Set font for current buffer."
@@ -164,8 +220,8 @@ https://github.com/LionyxML/auto-dark-emacs/blob/master/auto-dark.el"
   (let ((fonts (pcase font
                  ((pred stringp) (list font))
                  ('nil '("Unifont-JP" "UnifontExMono"))
-                 ((pred listp) (list (completing-read
-                                      "Fonts: " (font-family-list)))))))
+                 ('(4) (list (completing-read
+                              "Fonts: " (font-family-list)))))))
     (when-let* ((font (cl-intersection
                       (font-family-list)
                       fonts :test 'equal)))

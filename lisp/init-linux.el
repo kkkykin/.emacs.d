@@ -29,8 +29,6 @@
   (interactive "nTransparency Value 0 - 100 opaque:")
   (set-frame-parameter nil 'alpha-background value))
 
-(add-hook 'server-after-make-frame-hook #'zr-setup-faces)
-
 (defun zl/fix-plantuml-args (path args)
   "Fix plantuml Warning: -headless flag must be the first one in the
 command line."
