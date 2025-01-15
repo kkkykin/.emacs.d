@@ -296,7 +296,35 @@ Usage:
             (zo/call-babel-at-point nil params p)
           (user-error "No blocks found."))))))
 
+(defun zo/completion-at-point ()
+  "Provide completion-at-point functionality for source blocks in org-mode.
+When point is inside a source block, this function detects the block's
+language and calls the corresponding completion function if it
+exists. For example, if point is in a Python source block, it will call
+`python-completion-at-point'.
+
+The function looks for a completion function named <language>-completion-at-point
+where <language> is the source block's language property.
+
+Returns:
+- The result of calling the language-specific completion function if found
+- nil if point is not in a source block or no completion function exists"
+  (let ((ele (org-element-at-point-no-context)))
+    (pcase (org-element-type ele)
+      ((and 'src-block
+            (let lan (org-element-property :language ele))
+            (let fn (intern (concat lan "-completion-at-point")))
+            (guard (lambda () fboundp fn)))
+       (funcall fn)))))
+
+(defun zo/hook-setup ()
+  "Set up completion-at-point for org-mode buffers.
+Adds `zo/completion-at-point' to `completion-at-point-functions'
+locally, enabling source block-aware completion in org-mode documents."
+  (add-hook 'completion-at-point-functions #'zo/completion-at-point nil t))
+
 (with-eval-after-load 'ob
+  (add-hook 'org-mode-hook #'zo/hook-setup)
   (bind-keys
    :map org-babel-map
    ("v" . zo/babel-expand-src-block)
