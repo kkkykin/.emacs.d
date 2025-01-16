@@ -87,6 +87,9 @@ Persists across multiple Emacs sessions and defaults to built-in
   :package "init-misc"
   :key "theme")
 
+(defvar zr-theme-disabled-list '(light-blue)
+  "List of disabled themes. Most of them are obsolete.")
+
 (defvar zr-theme-customize
   '((adwaita
      (hl-line ((t (:extend t :background "navajo white")))))
@@ -130,7 +133,9 @@ Automatically categorizes newly installed themes as light or dark by
 checking their background colors. Updates `zr-theme-light-list' and
 `zr-theme-dark-list' accordingly."
   (interactive)
-  (let ((cur (cons 'default (custom-available-themes)))
+  (let ((cur (cons 'default
+                   (cl-set-difference (custom-available-themes)
+                                      zr-theme-disabled-list)))
         (light (multisession-value zr-theme-light-list))
         (dark (multisession-value zr-theme-dark-list)))
     (unless (seq-set-equal-p cur (append light dark))
