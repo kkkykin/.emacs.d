@@ -902,7 +902,7 @@ Refreshes the buffer after changing grouping."
 
 (defvar-local zr-proc-menu-omit-regexp
     (rx bos
-        (| (: "server" (? " <" (+ digit) ?>))
+        (| (: "server" (? " <" (+ (| ?. ?: digit)) ?>))
            "ispell")
         eos)
   "Regular expression to match process names that should be omitted from
