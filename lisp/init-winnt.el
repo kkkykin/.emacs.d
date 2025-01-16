@@ -314,9 +314,21 @@ locale encoding for proper handling of non-ASCII filenames."
   (setq tramp-default-method "sshx"
         tramp-use-connection-share nil))
 
-(let ((exec-path (cl-remove-if (lambda (s) (string= "c:/Windows/system32" s))
-                               exec-path)))
-  (setq find-program (string-replace "/" "\\" (executable-find "find"))))
+
+;; file
+
+(defun zw/save-with-sudo ()
+  "Save the current buffer with sudo permissions."
+  (interactive)
+  (save-restriction
+    (widen)
+    (let ((tmp (make-temp-file "emacs-" nil nil (buffer-string))))
+      (call-process "sudo" nil nil nil "move"
+                    (subst-char-in-string ?/ ?\\ tmp) (buffer-file-name))))
+  (revert-buffer-quick))
+
+(let ((exec-path (cl-remove "c:/Windows/system32" exec-path :test #'equal)))
+  (setq find-program (subst-char-in-string ?/ ?\\ (executable-find "find"))))
 
 (setq grep-program "ug"
       grep-use-null-device nil
@@ -361,6 +373,7 @@ locale encoding for proper handling of non-ASCII filenames."
 ;; viper
 
 (with-eval-after-load 'viper
+  (add-to-list 'zr-extra-ex-token-alist '("ws" (zw/save-with-sudo)))
   (add-hook 'viper-vi-state-hook (lambda () (w32-set-ime-open-status nil))))
 
 
