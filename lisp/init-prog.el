@@ -436,7 +436,8 @@ From https://christiantietze.de/posts/2024/01/emacs-sqlite-mode-open-sqlite-file
 (with-eval-after-load 'vc-dir
   (bind-keys
    :map vc-dir-mode-map
-   ("w" . zp/vc-dir-copy-filename-as-kill)))
+   ("w" . zp/vc-dir-copy-filename-as-kill)
+   ("b m" . vc-merge)))
 
 (define-skeleton zp/vc-commit-template
   "VC Conventional Commits.
