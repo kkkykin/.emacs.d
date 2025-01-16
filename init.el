@@ -1533,37 +1533,29 @@ before calling the original function."
   :bind
   ( :map zr-global-prefix-map
     ("e" . eshell))
-  (:map eshell-proc-mode-map
-        ;; Kill eshell buffer if no process, like `comint-send-eof'
-        ("C-c C-d" . (lambda () (interactive)
-                       (or (eshell-send-eof-to-process)
-                           (kill-current-buffer)))))
-  (:repeat-map eshell-command-repeat-map
-               ("b" . eshell-backward-argument)
-               ("f" . eshell-forward-argument))
-  (:repeat-map eshell-prompt-repeat-map
-               ("n" . eshell-next-prompt)
-               ("p" . eshell-previous-prompt)
-               :exit
-               ("m" . eshell-copy-old-input))
+  ( :map eshell-proc-mode-map
+    ;; Kill eshell buffer if no process, like `comint-send-eof'
+    ("C-c C-d" . (lambda () (interactive)
+                   (or (eshell-send-eof-to-process)
+                       (kill-current-buffer)))))
+  ( :repeat-map eshell-command-repeat-map
+    ("C-b" . nil)
+    ("C-f" . nil)
+    ("b" . eshell-backward-argument)
+    ("f" . eshell-forward-argument))
+  ( :repeat-map eshell-prompt-repeat-map
+    ("C-n" . nil)
+    ("C-p" . nil)
+    ("n" . eshell-next-prompt)
+    ("p" . eshell-previous-prompt)
+    :exit
+    ("m" . eshell-copy-old-input))
   :custom
-  (eshell-prefer-lisp-functions t)
-  (eshell-default-target-is-dot t)
-  (eshell-mv-overwrite-files nil)
-  (eshell-cp-overwrite-files nil)
-  (eshell-cp-interactive-query t)
-  (eshell-rm-interactive-query t)
-  (eshell-rm-removes-directories t)
   (eshell-pushd-dunique t)
   (eshell-pushd-dextract t)
   (eshell-scroll-to-bottom-on-output 'others)
   :config
-  (setq-mode-local eshell-mode
-                   imenu-generic-expression '(("Prompt" " $ \\(.*\\)" 1)))
-  (keymap-unset eshell-command-repeat-map "C-b")
-  (keymap-unset eshell-command-repeat-map "C-f")
-  (keymap-unset eshell-prompt-repeat-map "C-n")
-  (keymap-unset eshell-prompt-repeat-map "C-p")
+  (require 'init-esh)
   (modify-syntax-entry ?' "\"" eshell-mode-syntax-table)
   (add-hook 'eshell-expand-input-functions #'eshell-expand-history-references)
   (dolist (mod '(eshell-smart eshell-elecslash eshell-tramp eshell-xtra))
