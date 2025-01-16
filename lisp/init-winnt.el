@@ -325,7 +325,7 @@ locale encoding for proper handling of non-ASCII filenames."
     (let ((tmp (make-temp-file "emacs-" nil nil (buffer-string))))
       (call-process "sudo" nil nil nil "move"
                     (subst-char-in-string ?/ ?\\ tmp) (buffer-file-name))))
-  (revert-buffer-quick))
+  (set-buffer-modified-p nil))
 
 (let ((exec-path (cl-remove "c:/Windows/system32" exec-path :test #'equal)))
   (setq find-program (subst-char-in-string ?/ ?\\ (executable-find "find"))))
