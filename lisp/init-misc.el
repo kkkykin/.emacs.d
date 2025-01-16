@@ -880,10 +880,11 @@ into `tabulated-list-format' array.")
 When `zr-proc-menu-group-by-index' is set, groups entries in
 `tabulated-list-entries' by the specified column value, prefixing group
 headers with '* '."
-  (when zr-proc-menu-group-by-index
-    (setq tabulated-list-groups
+  (setq tabulated-list-groups
+        (when zr-proc-menu-group-by-index
           (seq-group-by (lambda (entry)
-                          (let ((s (aref (cadr entry) zr-proc-menu-group-by-index)))
+                          (let ((s (aref (cadr entry)
+                                         zr-proc-menu-group-by-index)))
                             (concat "* " (if (stringp s) s (car s)))))
                         tabulated-list-entries))))
 
@@ -899,14 +900,48 @@ Refreshes the buffer after changing grouping."
   (zr-proc-menu-group-by)
   (revert-buffer))
 
+(defvar-local zr-proc-menu-omit-regexp
+    (rx bos
+        (| (: "server" (? " <" (+ digit) ?>))
+           "ispell")
+        eos)
+  "Regular expression to match process names that should be omitted from
+the process menu.")
+
+(defun zr-proc-menu-omit-proc (&optional regexp)
+  "Filter out processes from the process menu that match
+`zr-proc-menu-omit-regexp'. When called interactively, set
+`zr-proc-menu-omit-regexp' from input."
+  (interactive (list (read-regexp "Omit-regexp: ")) process-menu-mode)
+  (when regexp
+    (setq zr-proc-menu-omit-regexp regexp))
+  (setq tabulated-list-entries
+        (cl-delete-if (lambda (p) (string-match-p
+                              zr-proc-menu-omit-regexp
+                              (aref (cadr p) 0)))
+                      tabulated-list-entries)))
+
+(define-minor-mode zr-proc-menu-omit-mode
+  "Omit processes from the process menu based on `zr-proc-menu-omit-regexp'.
+When enabled, processes matching the regular expression are omitted from
+the process menu."
+  :init-value nil
+  :lighter " O"
+  (if zr-proc-menu-omit-mode
+      (add-hook 'tabulated-list-revert-hook #'zr-proc-menu-omit-proc 25 t)
+    (remove-hook 'tabulated-list-revert-hook #'zr-proc-menu-omit-proc t)))
+
 (defun zr-proc-menu-setup ()
   "Set up process menu functionality."
+  (zr-proc-menu-omit-mode t)
   (add-hook 'tabulated-list-revert-hook #'zr-proc-menu-group-by 50 t))
 
 (add-hook 'process-menu-mode-hook #'zr-proc-menu-setup)
 
 (bind-keys
  :map process-menu-mode-map
+ ("(" . zr-proc-menu-omit-mode)
+ (")" . zr-proc-menu-omit-proc)
  ("k" . zr-proc-menu-do-kill-line)
  ("/" . zr-proc-menu-do-group)
  ("d" . zr-proc-menu-do-delete-process))
