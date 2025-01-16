@@ -115,11 +115,16 @@
 
 ;; proxy
 
-(defvar zn/proxy-rules-hash (make-hash-table :test 'equal)
-  "Hash table for storing domain proxy rules.")
+(define-multisession-variable zn/proxy-rules-hash
+  (make-hash-table :test 'equal)
+  "Hash table for storing domain proxy rules."
+  :package "init-net"
+  :key "proxy")
 
-(defvar zn/proxy-rules-patterns nil
-  "List of regexp proxy rules.")
+(define-multisession-variable zn/proxy-rules-patterns nil
+  "List of regexp proxy rules."
+  :package "init-net"
+  :key "proxy")
 
 (defun zn/generate-ipv4-mask (prefix-len)
   "Generate IPv4 netmask vector for given prefix length."
@@ -165,11 +170,10 @@
 
 (defun zn/init-proxy-rules-1 (rules)
   "Initialize proxy rules from the given rules list."
-  (clrhash zn/proxy-rules-hash)
-  (setq zn/proxy-rules-patterns nil)
-  
   (let ((proxys (gethash "proxy" rules))
-        (autoproxy_hosts (gethash "autoproxy_hosts" rules)))
+        (autoproxy_hosts (gethash "autoproxy_hosts" rules))
+        (hash (make-hash-table :test 'equal))
+        pattern)
     (dotimes (i (length proxys))
       (let ((proxy (elt proxys i))
             (hosts (elt autoproxy_hosts i))
@@ -177,23 +181,26 @@
         (mapc (lambda (host)
                 (if (seq-position host ?*)
                     (push host wildcards)
-                  (puthash host proxy zn/proxy-rules-hash)))
+                  (puthash host proxy hash)))
               hosts)
         (when wildcards
           (push (cons (zr-wildcards-to-regexp wildcards) proxy)
-                zn/proxy-rules-patterns))))))
+                pattern))))
+    (setf (multisession-value zn/proxy-rules-hash) hash
+          (multisession-value zn/proxy-rules-patterns) pattern)))
 
 (defun zn/match-proxy-rule (urlobj host)
   "Match URL against proxy rules. Returns proxy string or \"DIRECT\"."
-  (let* ((parts (split-string host "\\."))
+  (let* ((hash (multisession-value zn/proxy-rules-hash))
+         (pattern (multisession-value zn/proxy-rules-patterns))
+         (parts (split-string host "\\."))
          (len (length parts)))
     (or (catch 'found
           (while (> len 0)
-            (if-let* ((fd (gethash (string-join (last parts len) ".")
-                                   zn/proxy-rules-hash)))
+            (if-let* ((fd (gethash (string-join (last parts len) ".") hash)))
                 (throw 'found fd)
               (setq len (1- len))))
-          (dolist (r zn/proxy-rules-patterns)
+          (dolist (r pattern)
             (when (string-match-p (car r) host)
               (throw 'found (cdr r)))))
         "DIRECT")))
@@ -232,17 +239,14 @@
   :type 'file)
 
 (defun zn/init-proxy-rules ()
+  (interactive)
   (with-temp-buffer
     (insert-file-contents-literally zn/pac-data-file)
-    (when (string-suffix-p ".gpg" zn/pac-data-file)
+    (when (string-match-p epa-file-name-regexp zn/pac-data-file)
       (let ((epa-replace-original-text t))
         (epa-decrypt-region (point-min) (point-max))))
     (goto-char 1)
     (zn/init-proxy-rules-1 (json-parse-buffer))))
-
-(with-eval-after-load 'epa
-  (unless (eq system-type 'android)
-    (run-with-idle-timer 10 nil #'zn/init-proxy-rules)))
 
 (defun zn/add-domain-to-proxy (hostname)
   "Add a domain to the proxy rules.
