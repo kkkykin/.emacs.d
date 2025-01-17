@@ -65,6 +65,8 @@
   (kill-do-not-save-duplicates t)
   (duplicate-region-final-position 1)
   (indent-tabs-mode nil)
+  (tab-always-indent 'complete)
+  (tab-first-completion 'word-or-paren-or-punct)
   (delete-pair-blink-delay nil)
   (tab-width 4)
   (shell-command-dont-erase-buffer 'beg-last-out)
@@ -954,6 +956,8 @@ before calling the original function."
   :custom
   (tramp-verbose 0)
   (tramp-use-scp-direct-remote-copying t)
+  (remote-file-name-inhibit-locks t)
+  (remote-file-name-inhibit-auto-save t)
   (debug-ignored-errors (cons 'remote-file-error debug-ignored-errors))
   (tramp-use-connection-share t))
 
