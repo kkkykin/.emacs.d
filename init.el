@@ -109,8 +109,10 @@
   :autoload mode-local-bind)
 
 (use-package multisession
-  :custom
-  (multisession-storage 'sqlite))
+  :init
+  (when (and (sqlite-available-p)
+             (version< "3.40" (sqlite-version)))
+    (setq multisession-storage 'sqlite)))
 
 (use-package init-misc
   :if (locate-library "init-misc")
