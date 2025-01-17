@@ -151,6 +151,8 @@ checking their background colors. Updates `zr-theme-light-list' and
               (multisession-value zr-theme-dark-list) cur-dark))))
   (remove-hook 'server-after-make-frame-hook #'zr-theme-list-update))
 (add-hook 'server-after-make-frame-hook #'zr-theme-list-update)
+(when (display-graphic-p)
+  (add-hook 'window-setup-hook #'zr-theme-list-update))
 
 (defun zr-theme-dark-p (&optional theme)
   "Return non-nil if THEME or current theme has a dark background.
