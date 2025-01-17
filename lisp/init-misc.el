@@ -152,6 +152,7 @@ checking their background colors. Updates `zr-theme-light-list' and
   (remove-hook 'server-after-make-frame-hook #'zr-theme-list-update))
 (add-hook 'server-after-make-frame-hook #'zr-theme-list-update)
 (when (display-graphic-p)
+  (add-hook 'window-setup-hook #'zr-font-find-available-font)
   (add-hook 'window-setup-hook #'zr-theme-list-update))
 
 (defun zr-theme-dark-p (&optional theme)
