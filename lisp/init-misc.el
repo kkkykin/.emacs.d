@@ -32,7 +32,8 @@ Stolen from https://github.com/seagle0128/.emacs.d/blob/c9bd6f1bb72486580f55879c
   (find-font (font-spec :name font-name)))
 
 (defcustom zr-fonts-list
-  '(("LXGW WenKai Mono" (33 14 23) "https://github.com/lxgw/LxgwWenKai/releases")
+  '(("LXGW WenKai Mono" #2=(33 14 23) #3="https://github.com/lxgw/LxgwWenKai/releases")
+    ("霞鹜文楷等宽"  #2# #3#)
     ("Sarasa Mono SC" (32 14 22) "https://github.com/be5invis/Sarasa-Gothic/releases")
     ("Maple Mono NF CN" (32 14 21) "https://github.com/subframe7536/maple-font/releases")
     ("Unifont-JP" #1=(33 14 24) "https://unifoundry.com/unifont/index.html")
@@ -45,7 +46,7 @@ Each entry is a list containing:
   :group 'zr
   :type '(repeat string))
 
-(defvar zr-font-available-list nil
+(defvar zr-font-available-alist nil
   "List of available font specifications based on screen resolution.")
 
 (defun zr-font-find-available-font ()
@@ -54,16 +55,25 @@ Automatically selects appropriate pixel size based on display width:
 - Index 0 (large) for displays > 1920 pixels
 - Index 1 (medium) for displays = 1920 pixels
 - Index 2 (small) for displays < 1920 pixels"
-  (setq zr-font-available-list
-        (cl-loop with index = (pcase (display-pixel-width)
-                                ((pred (> 1920)) 0)
-                                ((pred (< 1920)) 2)
-                                (_ 1))
-                 for font in zr-fonts-list
-                 if (zr-font-installed-p (car font))
-                 collect (font-spec :name
-                                    (format "%s:pixelsize=%d" (car font)
-                                            (nth index (cadr font))))))
+  (let ((index (pcase (display-pixel-width)
+                 ((pred (> 1920)) 0)
+                 ((pred (< 1920)) 2)
+                 (_ 1)))
+        (prefer (mapcar #'car zr-fonts-list))
+        (installed (font-family-list))
+        default emoji)
+    (dolist (f installed)
+      (cond
+       ((cl-position f prefer :test #'string=)
+        (cl-pushnew
+         (cons f (nth index (car (alist-get f zr-fonts-list
+                                            nil nil #'string=))))
+         default :test #'equal))
+       ((string-match-p "Emoji" f)
+        (cl-pushnew f emoji :test #'string=))))
+    (when default
+      (setq zr-font-available-alist `((default . ,default)
+                                      (emoji . ,emoji)))))
   (remove-hook 'server-after-make-frame-hook #'zr-font-find-available-font))
 (add-hook 'server-after-make-frame-hook #'zr-font-find-available-font)
 
@@ -215,12 +225,20 @@ Avoids selecting the most recently used theme."
 (defun zr-face-setup ()
   "Initialize random font and theme configuration.
 When in graphical display:
-1. Randomly selects and applies a font from `zr-font-available-list'
+1. Randomly selects and applies a font from `zr-font-available-alist'
 2. Calls `zr-theme-shuffle-set' to set an appropriate theme"
   (when (display-graphic-p)
-    (when zr-font-available-list
-      (set-face-attribute 'default nil
-                          :font (seq-random-elt zr-font-available-list)))
+    (let-alist zr-font-available-alist
+      (when .default
+        (let* ((font (seq-random-elt .default))
+               (size (cdr font)))
+          (set-face-attribute 'default nil
+                          :font (font-spec :family (car font)
+                                           :size size))
+          (when .emoji
+            (set-fontset-font t 'emoji
+                              (font-spec
+                               :family (seq-random-elt .emoji)))))))
     (zr-theme-shuffle-set)))
 
 (let ((hook (pcase system-type
