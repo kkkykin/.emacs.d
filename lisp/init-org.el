@@ -71,6 +71,21 @@ its subdirectories."
          (table (concat table-header table-rows)))
     (insert table)))
 
+(defun zo/string-eval (string)
+  "Evaluate STRING as a Lisp expression.
+STRING must be a valid Lisp expression in string form.  Returns the
+result of evaluating the expression."
+  (eval (car (read-from-string string))))
+
+(defun zo/string-maybe-eval (string)
+  "Conditionally evaluate STRING as a Lisp expression if it appears to be one.
+If STRING matches the pattern of a complete Lisp form (starts with '('
+and ends with ')'), evaluate it as a Lisp expression. Otherwise, return
+STRING unchanged."
+  (if (string-match-p (rx bos ?\( (+ anychar) ?\) eos) string)
+      (zo/string-eval string)
+    string))
+
 (defun zo/table-select (value-ref tbl key-ref key-value)
   "Select values from a table based on a key.
 
