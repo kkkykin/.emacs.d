@@ -27,10 +27,16 @@
 ;; org-protocol
 
 (defun zo/protocol-cookies-dumper (info)
-  (let ((parts (org-protocol-parse-parameters info t)))
-    (write-region (plist-get parts :cookies) nil
-                  (expand-file-name (plist-get parts :host) zr-cookies-dir)))
-  (server-delete-client (car server-clients)))
+  (server-delete-client (car server-clients))
+  (let* ((parts (org-protocol-parse-parameters info t))
+         (cookie-file (file-name-concat url-configuration-directory
+                                        "netscape"
+                                        (plist-get parts :host)))
+         (buffer-file-coding-system 'utf-8-unix))
+    (make-directory (file-name-directory cookie-file) t)
+    (write-region (plist-get parts :cookies) nil cookie-file)
+    (url-cookie-parse-file-netscape cookie-file))
+  (url-cookie-write-file))
 
 (with-eval-after-load 'org-protocol
   (dolist (p '(("cookies-dumper" :protocol "cookies-dumper"
