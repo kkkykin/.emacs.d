@@ -36,6 +36,7 @@ Stolen from https://github.com/seagle0128/.emacs.d/blob/c9bd6f1bb72486580f55879c
     ("霞鹜文楷等宽"  #2# #3#)
     ("LXGW Bright Code" #2# #3#)
     ("小赖字体 等宽 SC" #2# #3#)
+    ("小賴字體 等寬 SC" #2# #3#)
     ("Sarasa Mono SC" (32 14 22) "https://github.com/be5invis/Sarasa-Gothic/releases")
     ("Maple Mono NF CN" (32 14 21) "https://github.com/subframe7536/maple-font/releases")
     ("Unifont-JP" #1=(33 14 24) "https://unifoundry.com/unifont/index.html")
@@ -88,7 +89,7 @@ Automatically selects appropriate pixel size based on display width:
       (let* ((fonts (if (> 2 (length .default)) .default
                       (cl-remove (face-attribute 'default :family)
                                  .default :key #'car :test #'string=)))
-             (font (progn (print fonts) (seq-random-elt fonts)))
+             (font (seq-random-elt fonts))
              (size (cdr font)))
         (set-face-attribute 'default nil
                             :font (font-spec :family (car font)
