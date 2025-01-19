@@ -34,6 +34,8 @@ Stolen from https://github.com/seagle0128/.emacs.d/blob/c9bd6f1bb72486580f55879c
 (defcustom zr-fonts-list
   '(("LXGW WenKai Mono" #2=(33 14 23) #3="https://github.com/lxgw/LxgwWenKai/releases")
     ("霞鹜文楷等宽"  #2# #3#)
+    ("LXGW Bright Code" #2# #3#)
+    ("小赖字体 等宽 SC" #2# #3#)
     ("Sarasa Mono SC" (32 14 22) "https://github.com/be5invis/Sarasa-Gothic/releases")
     ("Maple Mono NF CN" (32 14 21) "https://github.com/subframe7536/maple-font/releases")
     ("Unifont-JP" #1=(33 14 24) "https://unifoundry.com/unifont/index.html")
@@ -55,6 +57,7 @@ Automatically selects appropriate pixel size based on display width:
 - Index 0 (large) for displays > 1920 pixels
 - Index 1 (medium) for displays = 1920 pixels
 - Index 2 (small) for displays < 1920 pixels"
+  (interactive)
   (let ((index (pcase (display-pixel-width)
                  ((pred (> 1920)) 0)
                  ((pred (< 1920)) 2)
@@ -76,6 +79,24 @@ Automatically selects appropriate pixel size based on display width:
                                       (emoji . ,emoji)))))
   (remove-hook 'server-after-make-frame-hook #'zr-font-find-available-font))
 (add-hook 'server-after-make-frame-hook #'zr-font-find-available-font)
+
+(defun zr-font-shuffle-set ()
+  "Randomly selects and applies a font from `zr-font-available-alist'."
+  (interactive)
+  (let-alist zr-font-available-alist
+    (when .default
+      (let* ((fonts (if (> 2 (length .default)) .default
+                      (cl-remove (face-attribute 'default :family)
+                                 .default :key #'car :test #'string=)))
+             (font (progn (print fonts) (seq-random-elt fonts)))
+             (size (cdr font)))
+        (set-face-attribute 'default nil
+                            :font (font-spec :family (car font)
+                                             :size size))
+        (when .emoji
+          (set-fontset-font t 'emoji
+                            (font-spec
+                             :family (seq-random-elt .emoji))))))))
 
 (define-multisession-variable zr-theme-light-list '(default)
   "List of available light themes for the current Emacs session.
@@ -225,20 +246,10 @@ Avoids selecting the most recently used theme."
 (defun zr-face-setup ()
   "Initialize random font and theme configuration.
 When in graphical display:
-1. Randomly selects and applies a font from `zr-font-available-alist'
+1. Calls `zr-font-shuffle-set' to set an appropriate font.
 2. Calls `zr-theme-shuffle-set' to set an appropriate theme"
   (when (display-graphic-p)
-    (let-alist zr-font-available-alist
-      (when .default
-        (let* ((font (seq-random-elt .default))
-               (size (cdr font)))
-          (set-face-attribute 'default nil
-                          :font (font-spec :family (car font)
-                                           :size size))
-          (when .emoji
-            (set-fontset-font t 'emoji
-                              (font-spec
-                               :family (seq-random-elt .emoji)))))))
+    (zr-font-shuffle-set)
     (zr-theme-shuffle-set)))
 
 (let ((hook (pcase system-type
