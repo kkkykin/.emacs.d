@@ -984,14 +984,14 @@ the process menu."
 (defun zr-follow-current-window (&optional arg)
   "Follow the window."
   (interactive "P")
+  (pcase arg
+    ('(4) (delete-other-windows))
+    ((and `(,state . ,keymap)
+          (guard (memq state '(vi-state insert-state emacs-state))))
+     (viper-add-local-keys state keymap)))
   (let* ((window-width (window-text-width))
          (split-cnt (1- (/ window-width fill-column)))
          (single-width (/ window-width (1+ split-cnt))))
-    (pcase arg
-      ('(4) (delete-other-windows))
-      ((and `(,state . ,keymap)
-            (guard (memq state '(vi-state insert-state emacs-state))))
-       (viper-add-local-keys state keymap)))
     (dotimes (i split-cnt)
       (split-window nil (* (- split-cnt i) single-width) t))
     (follow-mode 1)))
