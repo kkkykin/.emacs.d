@@ -356,79 +356,8 @@ locally, enabling source block-aware completion in org-mode documents."
    ("v" . zo/babel-expand-src-block)
    ("m" . zo/babel-execute-named-src-block)))
 
-(defun zo/babel-follow (link _)
-  "Visit the babel on LINK."
-  (pcase-let ((`(,path ,id) (string-split link "::")))
-    (if (find-file path)
-        (progn
-          (goto-char (point-min))
-          (search-forward (concat "#+attr_babel: :id " id)))
-      (user-error "File not found: %s" path))))
-
-(defun zo/babel-store-link (&optional _interactive?)
-  "Store a link to a org-babel."
-  (when-let* (((derived-mode-p 'org-mode))
-              (file (buffer-file-name (buffer-base-buffer)))
-              (ele (org-element-at-point-no-context))
-              ((eq (org-element-type ele) 'src-block))
-              (id-prefix ":id "))
-    (let ((id (cl-find-if (lambda (s) (string-prefix-p id-prefix s)) 
-                          (org-element-property :attr_babel ele))))
-      (if id
-          (setq id (substring id (length id-prefix)))
-        (setq id (org-id-new))
-        (goto-char (org-element-begin ele))
-        (insert "#+attr_babel: " id-prefix id "\n"))
-      (org-link-store-props
-       :type "babel"
-       :link (format "babel:%s::%s" file id)
-       :description id))))
-
-(with-eval-after-load 'ol
-  (org-link-set-parameters "babel"
-                           :follow #'zo/babel-follow
-                           :store #'zo/babel-store-link))
-
 (defvar zo/babel-confirm-replace-tangle 'ask
   "Confirm before replace by conflicts.")
-
-(defun zo/babel-tangle-jump-to-org ()
-  "Support custom babel link."
-  (let ((mid (point))
-	    start body-start end target-buffer target-char link bare block-name body)
-    (save-window-excursion
-      (save-excursion
-	    (while (and (re-search-backward org-link-bracket-re nil t)
-		            (not
-		             (and (setq start (line-beginning-position))
-			              (setq body-start (line-beginning-position 2))
-			              (setq link (match-string 0))
-                          (setq bare (match-string 1))
-			              (setq block-name (match-string 2))
-			              (save-excursion
-			                (save-match-data
-			                  (re-search-forward
-			                   (concat " " (regexp-quote block-name)
-				                       " ends here")
-			                   nil t)
-			                  (setq end (line-beginning-position))))))))
-	    (unless (and start (< start mid) (< mid end))
-	      (error "Not in tangled code"))))
-    (save-match-data
-      (when (and (string-match org-link-types-re bare)
-                 (string= (match-string 1 bare) "babel"))
-        (setq body (buffer-substring body-start end))
-        (org-link-open-from-string link)
-        (setq target-buffer (current-buffer))
-        (goto-char (org-babel-where-is-src-block-head))
-        (forward-line 1)
-        (let ((offset (- mid body-start)))
-	      (when (> end (+ offset (point)))
-	        (forward-char offset)))
-        (setq target-char (point))
-        (org-src-switch-to-buffer target-buffer t)
-        (goto-char target-char)
-        body))))
 
 (defun zo/babel-insert-diff-block (body-start body-end new-body expanded)
   "Insert a diff block in the current buffer.
@@ -496,8 +425,8 @@ EXPANDED -- The expanded content to be merged."
 
 (defun zo/babel-detangle-1 (&optional source-code-file)
   "Call detangle after bind custom function."
-  (cl-letf (((symbol-function 'org-babel-tangle-jump-to-org) #'zo/babel-tangle-jump-to-org)
-            ((symbol-function 'org-babel-update-block-body) #'zo/babel-update-block-body))
+  (cl-letf (((symbol-function 'org-babel-update-block-body)
+             #'zo/babel-update-block-body))
     (org-babel-detangle source-code-file)))
 
 (defun zo/babel-detangle (&optional source-code-file)
@@ -520,28 +449,6 @@ results."
        (zo/babel-detangle-1)))
     ('- (org-babel-detangle)))
   (run-at-time 1 nil (lambda () (smerge-start-session t))))
-
-(with-eval-after-load 'ob-tangle
-  (define-advice org-babel-tangle--unbracketed-link
-      (:before-until (params) custom-babel-link)
-    (unless (string= "no" (cdr (assq :comments params)))
-      (save-match-data
-        (let* ((l (org-no-properties
-                   (let ((org-link-parameters
-                          (list (assoc "babel" org-link-parameters))))
-                     (org-store-link nil))))
-               (bare (and l
-                          (string-match org-link-bracket-re l)
-                          (match-string 1 l))))
-          (when bare
-            (if (and org-babel-tangle-use-relative-file-links
-                     (string-match org-link-types-re bare)
-                     (string= (match-string 1 bare) "babel"))
-                (concat "babel:"
-                        (file-relative-name (substring bare (match-end 0))
-                                            (file-name-directory
-                                             (cdr (assq :tangle params)))))
-              bare)))))))
 
 (defvar zo/tangle-default-dir "_tangle"
   "Default directory for tangled code blocks.
