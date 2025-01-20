@@ -474,6 +474,29 @@ ref: https://emacs-china.org/t/header-args-property/27494/2"
    (or name (org-element-property :name (org-element-at-point-no-context)))
    (or (org-entry-get nil "TANGLE-DIR" (not no-inherit)) zo/tangle-default-dir)))
 
+(defun zo/custom-id-get (&optional epom create prefix inherit)
+  "ref: `org-id-get'"
+  (let ((id (org-entry-get epom "CUSTOM_ID" (and inherit t))))
+    (cond
+     ((and id (stringp id) (string-match "\\S-" id))
+      id)
+     (create
+      (setq id (org-id-new prefix))
+      (org-entry-put epom "CUSTOM_ID" id)
+      (org-with-point-at epom
+        (org-id-add-location
+         id
+		 (or org-id-overriding-file-name
+			 (buffer-file-name (buffer-base-buffer)))))
+      id))))
+
+(with-eval-after-load 'ob-tangle
+  (define-advice org-babel-tangle--unbracketed-link
+      (:before (params) create-custom-id)
+    "If create comments, also create custom-id."
+    (unless (string= "no" (cdr (assq :comments params)))
+      (zo/custom-id-get nil t))))
+
 (with-eval-after-load 'ox-pandoc
   (defun zo/pandoc-options-fix (body backend info)
     "Fix OPTIONS metadata when export org via pandoc.
