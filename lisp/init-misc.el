@@ -65,7 +65,7 @@ Automatically selects appropriate pixel size based on display width:
                  (_ 1)))
         (prefer (mapcar #'car zr-fonts-list))
         (installed (font-family-list))
-        default emoji)
+        default symbol emoji)
     (dolist (f installed)
       (cond
        ((cl-position f prefer :test #'string=)
@@ -73,10 +73,13 @@ Automatically selects appropriate pixel size based on display width:
          (cons f (nth index (car (alist-get f zr-fonts-list
                                             nil nil #'string=))))
          default :test #'equal))
+       ((string-match-p "Symbol" f)
+        (cl-pushnew f symbol :test #'string=))
        ((string-match-p "Emoji" f)
         (cl-pushnew f emoji :test #'string=))))
     (when default
       (setq zr-font-available-alist `((default . ,default)
+                                      (symbol . ,symbol)
                                       (emoji . ,emoji)))))
   (remove-hook 'server-after-make-frame-hook #'zr-font-find-available-font))
 (add-hook 'server-after-make-frame-hook #'zr-font-find-available-font)
@@ -94,6 +97,10 @@ Automatically selects appropriate pixel size based on display width:
         (set-face-attribute 'default nil
                             :font (font-spec :family (car font)
                                              :size size))
+        (when .symbol
+          (set-fontset-font t 'symbol
+                            (font-spec
+                             :family (seq-random-elt .symbol))))
         (when .emoji
           (set-fontset-font t 'emoji
                             (font-spec
