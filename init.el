@@ -1184,6 +1184,8 @@ before calling the original function."
       (_ t))))
 
 (use-package follow
+  :custom
+  (follow-mode-line-text " Fl")
   :bind
   ( :repeat-map zr-follow-repeat-map
     ("n" . follow-next-window)
