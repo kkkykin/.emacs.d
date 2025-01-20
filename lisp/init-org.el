@@ -385,19 +385,15 @@ BODY-START -- The start position of the region to be replaced.
 BODY-END -- The end position of the region to be replaced.
 NEW-BODY -- The new content to be merged.
 EXPANDED -- The expanded content to be merged."
-  (let ((old-body (buffer-substring-no-properties body-start body-end))
-        (new-file (make-temp-file "detangle" nil nil new-body))
+  (let ((new-file (make-temp-file "detangle" nil nil new-body))
         (expand-file (make-temp-file "detangle" nil nil expanded)))
-    (with-temp-buffer
-      (insert old-body)
-      (call-process-region nil nil (executable-find "diff3") t t t
-                           "-m" new-file "-Lnew" expand-file "-Lexpand" "-" "-Lold")
-      (setq new-body (buffer-string)))
+    (with-restriction body-start body-end
+      ;; replaced string maybe above "#+begin_src", so narrow it.
+      (call-process-region body-start body-end (executable-find "diff3")
+                           t t nil "-m" new-file "-Lnew"
+                           expand-file "-Lexpand" "-" "-Lold"))
     (delete-file new-file)
-    (delete-file expand-file)
-    (delete-region body-start body-end)
-    (goto-char body-start)
-    (insert new-body)))
+    (delete-file expand-file)))
 
 (defun zo/babel-update-block-body (new-body)
   "Update the body of the current code block to NEW-BODY."
