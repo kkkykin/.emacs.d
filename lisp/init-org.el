@@ -118,6 +118,10 @@ For example:
                          (format "%s[%s]" tbl key-ref))
                         :test #'equal))))
 
+(defvar org-babel-default-header-args:ahk
+  '((:shebang . "#Requires AutoHotkey 2.0+"))
+  "Default arguments for evaluating a ahk source block.")
+
 (defvar org-babel-default-header-args:bat
   '((:prologue . "SETLOCAL")
     (:epilogue . "ENDLOCAL"))
