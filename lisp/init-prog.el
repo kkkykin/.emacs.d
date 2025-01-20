@@ -404,6 +404,21 @@ From https://christiantietze.de/posts/2024/01/emacs-sqlite-mode-open-sqlite-file
 
 ;; vc
 
+(with-eval-after-load 'vc-git
+  (bind-keys
+   :map vc-prefix-map
+   :prefix "t"
+   :prefix-map zp/vc-git-prefix-map
+   :prefix-docstring
+   "`vc-git-extra-menu-map', `vc-git-stash-map', `vc-dir-git-mode-map'"
+   ("s" . vc-git-stash-snapshot)
+   ("c" . vc-git-stash)
+   ("d" . vc-git-stash-delete)
+   ("v" . vc-git-stash-show)
+   ("a" . vc-git-stash-apply)
+   ("p" . vc-git-stash-pop)
+   ("g" . vc-git-grep)))
+
 (defun zp/vc-dir-copy-filename-as-kill (&optional arg)
   "ref: `dired-copy-filename-as-kill'"
   (interactive "P" vc-dir-mode)
