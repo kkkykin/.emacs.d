@@ -1920,7 +1920,6 @@ before calling the original function."
   (org-agenda-inhibit-startup t)
   ;; (org-agenda-use-tag-inheritance nil)
   ;; (org-agenda-ignore-properties '(effort appt stats category))
-  (org-agenda-files `(,(expand-file-name "agenda.org" org-directory)))
   (org-agenda-custom-commands
    '(("n" "Agenda and All Todos"
       ((agenda)
