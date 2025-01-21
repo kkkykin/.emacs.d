@@ -283,8 +283,9 @@ locale encoding for proper handling of non-ASCII filenames."
     (message "%s %s." (mapconcat #'file-name-nondirectory files ", ") msg)))
 
 (with-eval-after-load 'dired
-  (add-to-list 'dired-guess-shell-alist-user
-               '("\\.exe\\'" "innounp -x -o -b -u -pxyg688.com"))
+  (dolist (s '(("\\.exe\\'" "innounp -x -o -b -u -pxyg688.com")
+               ("\\.ttf\\'" "explorer")))
+    (add-to-list 'dired-guess-shell-alist-user s))
   (bind-keys
    :map zr-dired-spc-prefix-map
    ("O" . zr-dired-change-onedrive-stat))
