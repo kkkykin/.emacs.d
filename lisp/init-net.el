@@ -492,7 +492,7 @@ elements or page is done using the provided selectors."
 items are fetched from each feed."
   (when (> (length feeds) 10)
     (user-error "Feed: %s is reach Max feeds limit."
-                (propertize "aaa" 'face '(:inherit 'font-lock-warning-face))))
+                (propertize name 'face '(:inherit 'font-lock-warning-face))))
   (concat (zn/rss-bridge-generator "FeedMergeBridge")
           (let ((m 0))
             (mapconcat
