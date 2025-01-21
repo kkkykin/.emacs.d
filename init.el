@@ -1045,8 +1045,26 @@ before calling the original function."
                   (format "-s \"%s\" "
                           (completing-read "Device: " devices))))))
      ("\\.apk\\'"
-      (format "apksigner sign --ks \"%s\" --ks-pass \"pass:emacs1\" --ks-key-alias \"Emacs keystore\""
-              zr-emacs-keystore-file))
+      (format "%s sign --ks \"%s\" --ks-pass \"pass:emacs1\" --ks-key-alias \"Emacs keystore\""
+              (cond*
+               ((bind* (exe (executable-find "apksigner")))
+                :non-exit)
+               (exe exe)
+               ((bind* (adb (executable-find "adb"))
+                       (build-path (replace-regexp-in-string
+                                    "^\\(.+\\)/\\(?:.+?\\)/\\(?:.+?\\)$"
+                                    "\\1/build-tools" adb)))
+                :non-exit)
+               (adb
+                (if-let*
+                    (((file-directory-p build-path))
+                     (exe (car (directory-files-recursively
+                                build-path
+                                (format "^apksigner%s$"
+                                        (regexp-opt exec-suffixes))))))
+                    exe
+                  "apksigner")))
+              zr-emacs-keystore-file)))
      (,(rx ?. (| "tzst" "tar.zst") eos)
       "zstd -dc ? | tar -xf -")
      (,(rx ?. (| "srt") eos)
