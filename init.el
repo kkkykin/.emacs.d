@@ -108,7 +108,9 @@
   :autoload transient-define-prefix)
 
 (use-package mode-local
-  :autoload mode-local-bind)
+  :autoload
+  (mode-local-bind
+   setq-mode-local))
 
 (use-package multisession
   :init
