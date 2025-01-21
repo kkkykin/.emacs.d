@@ -73,7 +73,7 @@ Automatically selects appropriate pixel size based on display width:
          (cons f (nth index (car (alist-get f zr-fonts-list
                                             nil nil #'string=))))
          default :test #'equal))
-       ((string-match-p "Symbol" f)
+       ((string-match-p ".+Symbol" f)
         (cl-pushnew f symbol :test #'string=))
        ((string-match-p "Emoji" f)
         (cl-pushnew f emoji :test #'string=))))
