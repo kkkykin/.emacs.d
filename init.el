@@ -2411,17 +2411,9 @@ before calling the original function."
 (use-package disk-usage
   :if (package-installed-p 'disk-usage)
   :config
-  (when (eq system-type 'windows-nt)
-    (setq disk-usage-find-command "fd"
-          disk-usage-du-command "du")
-    (custom-reevaluate-setting 'disk-usage-directory-size-function)
-    (define-advice process-file (:filter-args (args) fd-syntax-fix)
-      "`fd' replacement."
-      (let ((arg (last args 2)))
-        (and (string= (car args) "fd")
-             (equal arg '("-type" "d"))
-             (setcar arg "-t")))
-      args)))
+  (when (executable-find "du")
+    (setq disk-usage-du-command "du")
+    (custom-reevaluate-setting 'disk-usage-directory-size-function)))
 
 (use-package aria2
   :if (package-installed-p 'aria2)
