@@ -328,7 +328,8 @@ locale encoding for proper handling of non-ASCII filenames."
                     (subst-char-in-string ?/ ?\\ tmp) (buffer-file-name))))
   (set-buffer-modified-p nil))
 
-(let ((exec-path (cl-remove "c:/Windows/system32" exec-path :test #'equal)))
+(let ((exec-path (cl-remove "c:/Windows/system32" exec-path
+                            :test #'string-equal-ignore-case)))
   (setq find-program (subst-char-in-string ?/ ?\\ (executable-find "find"))))
 
 (setq grep-program "ug"
