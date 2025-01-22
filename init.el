@@ -1047,24 +1047,23 @@ before calling the original function."
      ("\\.apk\\'"
       (format "%s sign --ks \"%s\" --ks-pass \"pass:emacs1\" --ks-key-alias \"Emacs keystore\""
               (cond*
-               ((bind* (exe (executable-find "apksigner")))
+               ((bind* (base-name "apksigner")
+                       (exe (executable-find base-name)))
                 :non-exit)
                (exe exe)
-               ((bind* (adb (executable-find "adb"))
-                       (build-path (replace-regexp-in-string
-                                    "^\\(.+\\)/\\(?:.+?\\)/\\(?:.+?\\)$"
-                                    "\\1/build-tools" adb)))
+               ((bind* (adb (executable-find "adb")))
                 :non-exit)
                (adb
                 (if-let*
-                    (((file-directory-p build-path))
+                    ((build-path (locate-dominating-file adb "build-tools"))
                      (exe (car (directory-files-recursively
                                 build-path
-                                (format "^apksigner%s$"
+                                (format "^%s%s$" base-name
                                         (regexp-opt exec-suffixes))))))
                     exe
-                  "apksigner")))
-              zr-emacs-keystore-file)))
+                  base-name))
+               (t base-name))
+              zr-emacs-keystore-file))
      (,(rx ?. (| "tzst" "tar.zst") eos)
       "zstd -dc ? | tar -xf -")
      (,(rx ?. (| "srt") eos)
