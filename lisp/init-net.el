@@ -375,7 +375,7 @@ https://support.microsoft.com/en-us/topic/how-to-disable-automatic-proxy-caching
   :group 'my
   :type '(repeat string))
 
-(defcustom zn/rss-hub-list '("rsshub.kkky.fun/"
+(defcustom zn/rss-hub-list '("rsshub.email-once.com/"
                              "rsshub.rssforever.com/"
                              "rsshub.feeded.xyz/"
                              "hub.slarker.me/"
