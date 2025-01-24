@@ -125,7 +125,7 @@ milliseconds"
 (defun za/sshd-handler ()
   "Kill sshd when no connection over 5 min."
   (if-let* ((pid (or (zr-get-pid-from-file za/sshd-pid-file) 0))
-            (process-attributes pid))
+            ((process-attributes pid)))
       (with-temp-buffer
         (call-process "logcat" nil (current-buffer) nil
                       "-s" "sshd:*" "-d" "-v" "epoch")
