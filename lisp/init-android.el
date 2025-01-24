@@ -186,6 +186,27 @@ milliseconds"
 
 ;; termux
 
+(defun za/parse-json-program (program &rest args)
+  (with-temp-buffer
+    (apply #'call-process program nil t nil args)
+    (goto-char (point-min))
+    (json-parse-buffer)))
+
+(defun za/termux-am (&rest args)
+  (apply #'start-process " *termux-am*" nil "termux-am" args))
+
+(defun za/termux-battery-status ()
+  (za/parse-json-program "termux-battery-status"))
+
+(defun za/termux-notification-list ()
+  (za/parse-json-program "termux-notification-list"))
+
+(defun za/termux-wifi-connectioninfo ()
+  (za/parse-json-program "termux-wifi-connectioninfo"))
+
+(defun za/termux-wifi-scaninfo ()
+  (za/parse-json-program "termux-wifi-scaninfo"))
+
 (cl-defun za/termux-toast
     (text &optional (bgcolor "gray") (color "white") (gravity "middle") short)
   "termux-toast wrapper."
