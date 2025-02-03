@@ -303,6 +303,86 @@ Other parameters map to termux-notification CLI options."
 (keymap-global-set "H-c" 'clipboard-kill-ring-save)
 (keymap-global-set "H-v" 'clipboard-yank)
 
+
+;; modifier-bar
+
+(defun za/event-apply-prefix (key)
+  "Apply the appropriate prefix to the given key.
+If KEY is an array, it is converted to a key sequence.
+If KEY is a number or marker, it is converted to a vector."
+  (pcase key
+    ((pred arrayp)
+     (vconcat (listify-key-sequence key)))
+    ((pred number-or-marker-p)
+     (vector key))))
+
+(defun za/event-apply-meta-prefix (_)
+  "Apply the meta prefix to the event.
+This function uses `meta-prefix-char` as the key."
+  (za/event-apply-prefix meta-prefix-char))
+
+(defun za/event-apply-keyboard-quit (_)
+  "Apply the keyboard quit prefix (C-g) to the event."
+  (za/event-apply-prefix "\C-g"))
+
+(defun za/event-apply-cx-prefix (_)
+  "Apply the C-x prefix to the event."
+  (za/event-apply-prefix "\C-x"))
+
+(defun za/event-apply-cc-prefix (_)
+  "Apply the C-c prefix to the event."
+  (za/event-apply-prefix "\C-c"))
+
+(defun za/event-apply-ch-prefix (_)
+  "Apply the C-h prefix to the event."
+  (za/event-apply-prefix "\C-h"))
+
+(defun za/event-apply-mark-prefix (_)
+  "Apply the mark prefix (C-@) to the event."
+  (za/event-apply-prefix "\C-@"))
+
+(defun za/modifier-bar-setup ()
+  "Set up the modifier bar for `modifier-bar-mode`.
+This function defines custom tool-bar items and key bindings."
+  (when modifier-bar-mode
+    (setcdr secondary-tool-bar-map
+            (append
+             (cdr secondary-tool-bar-map)
+             `((quit menu-item "Keyboard Quit"
+                     keyboard-quit
+                     :help "Keyboard Quit"
+                     :image ,(tool-bar--image-expression "symbols/cross_16"))
+               (c-x menu-item "C-x"
+                    keyboard-quit
+                    :help "C-x"
+                    :image ,(tool-bar--image-expression "symbols/plus_16"))
+               (c-c menu-item "C-c"
+                    keyboard-quit
+                    :help "C-c"
+                    :image ,(tool-bar--image-expression "symbols/menu_16"))
+               (help menu-item "help"
+                     keyboard-quit
+                     :help "help"
+                     :image ,(tool-bar--image-expression "symbols/heart_16"))
+               (mark menu-item "mark"
+                     keyboard-quit
+                     :help "mark"
+                     :image ,(tool-bar--image-expression "symbols/star_16")))))
+    (define-key input-decode-map [tool-bar meta]
+                #'za/event-apply-meta-prefix)
+    (define-key input-decode-map [tool-bar quit]
+                #'za/event-apply-keyboard-quit)
+    (define-key input-decode-map [tool-bar c-x]
+                #'za/event-apply-cx-prefix)
+    (define-key input-decode-map [tool-bar c-c]
+                #'za/event-apply-cc-prefix)
+    (define-key input-decode-map [tool-bar help]
+                #'za/event-apply-ch-prefix)
+    (define-key input-decode-map [tool-bar mark]
+                #'za/event-apply-mark-prefix)))
+
+(add-hook 'modifier-bar-mode-hook #'za/modifier-bar-setup)
+
 (provide 'init-android)
 ;;; init-android.el ends here
 
