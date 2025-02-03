@@ -24,46 +24,68 @@
 
 ;;; Code:
 
-(defcustom zr-llm-program (executable-find "llama-server")
+(defcustom zl/program (executable-find "llama-server")
   "The default llama.cpp path."
   :type 'string)
 
-(defcustom zr-llm-models-directory
+(defcustom zl/models-directory
   (pcase system-type
     ('windows-nt (substitute-in-file-name "$USERPROFILE/scoop/persist/llama-cpp-cuda/models"))
     (_ nil))
   "The path where store models."
   :type 'directory)
 
-(defcustom zr-llm-default-model
-  (and zr-llm-models-directory
-       (car (directory-files zr-llm-models-directory t "^[^.]")))
-  "The default llm model or path."
-  :type 'string)
+(defvar zl/last-model nil
+  "The last used llm model.")
 
-(defcustom zr-llm-program-args (list "-m" zr-llm-default-model
-                                     "--port" "7778")
-  "Arguments to `zr-llm-program'."
+(defcustom zl/program-port 7778
+  "Port to listen.")
+
+(defcustom zl/program-thread 8
+  "Number of threads to use during generation.")
+
+(defcustom zl/program-gpu-layers 36
+  "Number of layers to store in VRAM.")
+
+(defcustom zl/program-cache-type-k "q8_0"
+  "KV cache data type for K.
+Allowed values: f32, f16, bf16, q8_0, q4_0, q4_1, iq4_nl, q5_0, q5_1.")
+
+(defcustom zl/program-args nil
+  "Extra arguments to `zl/program'."
   :type '(repeat string))
 
-(defcustom zr-llm-process-buf "*llm-server*"
+(defcustom zl/process-buf "*llm-server*"
   "llm server buffer name."
   :type 'string)
 
-(defun zr-llm-server-start ()
-  "Start llm server."
-  (interactive)
-  (if (apply #'start-process "*llm-server*" zr-llm-process-buf
-             zr-llm-program zr-llm-program-args)
-      (message "LLM server started.")
-    (message "LLM server start failed.")))
+(defun zl/read-model ()
+  (completing-read "Model: " (directory-files zl/models-directory t "^[^.]")))
 
-(defun zr-llm-server-stop ()
+(defun zl/server-start (&optional arg)
+  "Start llm server."
+  (interactive "P")
+  (let ((model (if arg (zl/read-model)
+                 (or zl/last-model (zl/read-model)))))
+    (setq zl/last-model model)
+    (if (apply #'start-process "*llm-server*" zl/process-buf
+               zl/program "-m" model
+               "--port" (number-to-string zl/program-port)
+               "-t" (number-to-string zl/program-thread)
+               "-ngl" (number-to-string zl/program-gpu-layers)
+               "-ctk" zl/program-cache-type-k
+               zl/program-args)
+        (message "LLM server started.")
+      (message "LLM server start failed."))))
+
+(defun zl/server-stop ()
   "Stop llm server."
   (interactive)
-  (kill-buffer zr-llm-process-buf))
-
-
+  (kill-buffer zl/process-buf))
 
 (provide 'init-llm)
 ;;; init-llm.el ends here
+
+;; Local Variables:
+;; read-symbol-shorthands: (("zl/" . "zr-llm-"))
+;; End:
