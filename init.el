@@ -2145,6 +2145,7 @@ before calling the original function."
   :if (package-installed-p 'magit)
   :bind
   ( :map zr-global-prefix-map
+    ("G" . magit-dispatch)
     ("g" . magit-status)))
 
 (use-package with-editor
