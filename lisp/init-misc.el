@@ -257,7 +257,9 @@ Avoids selecting the most recently used theme."
 When in graphical display:
 1. Calls `zr-font-shuffle-set' to set an appropriate font.
 2. Calls `zr-theme-shuffle-set' to set an appropriate theme"
-  (when (display-graphic-p)
+  (when-let* (((display-graphic-p))
+              (buf (buffer-file-name))
+              ((not (string-suffix-p "/.git/COMMIT_EDITMSG" buf))))
     (zr-font-shuffle-set)
     (zr-theme-shuffle-set)))
 
