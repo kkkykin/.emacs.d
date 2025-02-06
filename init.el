@@ -2037,7 +2037,11 @@ before calling the original function."
                                                 :comments :eval)))
                               org-babel-default-header-args :key #'car)))
   (with-eval-after-load 'ob-org
-    (dolist (l '("conf" "json" "text" "yml"))
+    (dolist (l '("conf"
+                 "conf-space"
+                 "json"
+                 "text"
+                 "yml"))
       (dolist (f '("org-babel-expand-body"
                    "org-babel-execute"))
         (defalias (intern (format "%s:%s" f l))
