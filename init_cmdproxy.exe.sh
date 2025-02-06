@@ -1,6 +1,6 @@
 @echo off
 
-set PAGER=NUL & set EDITOR=emacsclient
+set PAGER=NUL
 
 rem Local Variables:
 rem mode: bat

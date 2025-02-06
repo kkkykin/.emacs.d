@@ -2141,6 +2141,24 @@ before calling the original function."
     (add-to-list 'major-mode-remap-alist
                  '(gdscript-mode . gdscript-ts-mode))))
 
+(use-package magit
+  :if (package-installed-p 'magit)
+  :bind
+  ( :map zr-global-prefix-map
+    ("g" . magit-status)))
+
+(use-package with-editor
+  :if (package-installed-p 'with-editor)
+  :bind
+  ([remap async-shell-command] . with-editor-async-shell-command)
+  ([remap shell-command] . with-editor-shell-command)
+  :hook
+  ((#1=( shell-mode
+         eshell-mode
+         term-exec-hook)
+       . with-editor-export-editor)
+   (#1# . with-editor-export-git-editor)))
+
 (use-package dape
   :if (package-installed-p 'dape)
   :custom
