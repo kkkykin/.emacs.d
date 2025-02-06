@@ -252,16 +252,17 @@ Avoids selecting the most recently used theme."
     (zr-theme-enable-only theme)
     (message "Current theme: %S" theme)))
 
+(defvar zr-face-first-time t)
 (defun zr-face-setup ()
   "Initialize random font and theme configuration.
 When in graphical display:
 1. Calls `zr-font-shuffle-set' to set an appropriate font.
 2. Calls `zr-theme-shuffle-set' to set an appropriate theme"
-  (when-let* (((display-graphic-p))
-              (buf (buffer-file-name))
-              ((not (string-suffix-p "/.git/COMMIT_EDITMSG" buf))))
+  (when (and zr-face-first-time
+             (display-graphic-p))
     (zr-font-shuffle-set)
-    (zr-theme-shuffle-set)))
+    (zr-theme-shuffle-set)
+    (setq zr-face-first-time nil)))
 
 (let ((hook (pcase system-type
               ('android 'window-setup-hook)
