@@ -2159,6 +2159,16 @@ before calling the original function."
        . with-editor-export-editor)
    (#1# . with-editor-export-git-editor)))
 
+(use-package aider
+  :if (package-installed-p 'aider)
+  :vc ( :url "https://github.com/kkkykin/aider.el"
+        :rev :newest)
+  :custom
+  (aider-args '("--model" "openrouter/deepseek/deepseek-r1:free"))
+  :bind
+  ( :map zr-viper-vi-spc-prefix-map
+    ("A" . aider-transient-menu)))
+
 (use-package dape
   :if (package-installed-p 'dape)
   :custom
