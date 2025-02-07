@@ -494,6 +494,11 @@
                ("/hosts\\'" . conf-mode)))
     (add-to-list 'auto-mode-alist m)))
 
+(use-package tmm
+  :custom
+  (tmm-mid-prompt "/")
+  (tmm-completion-prompt nil))
+
 (use-package tooltip
   :custom
   (tooltip-mode nil))
