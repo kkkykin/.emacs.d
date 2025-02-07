@@ -2549,18 +2549,26 @@ before calling the original function."
   :custom
   (ellama-keymap-prefix "C-x y")
   (ellama-language "Chinese")
-  (ellama-provider
-   (make-llm-openai-compatible :url "http://127.0.0.1:7778"))
-  (ellama-translation-provider (make-llm-openai-compatible :url "http://127.0.0.1:7778"))
+  (ellama-translation-provider )
   (ellama-providers
-   `(("gemini" . ,(make-llm-gemini :key (auth-source-pick-first-password :host "makersuite.google.com")))
-     ("local" . ,(make-llm-openai-compatible :url "http://127.0.0.1:7778"))))
+   `(("gemini" . ,(make-llm-gemini
+                   :key (auth-source-pick-first-password
+                         :host "makersuite.google.com")))))
   (llm-warn-on-nonfree nil)
   :config
+  (let ((ds-model
+         (make-llm-openai-compatible
+          :url "https://api.deepseek.com"
+          :chat-model "deepseek-chat"
+          :key (auth-source-pick-first-password :host "deepseek.api")))
+        (lo-model
+         (make-llm-openai-compatible :url "http://127.0.0.1:7778")))
+    (setq ellama-provider ds-model)
+    (push ds-model ellama-providers)
+    (push lo-model ellama-providers))
   (require 'init-llm)
-  (zr-llm-server-start)
-  (when zr-sys-winnt-p
-    (delete "--compressed" plz-curl-default-args)))
+  (when zr-llm-program
+    (zr-llm-server-start)))
 
 (use-package keyfreq
   :if (package-installed-p 'keyfreq)
