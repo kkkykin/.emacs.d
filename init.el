@@ -2145,6 +2145,7 @@ before calling the original function."
 (use-package magit
   :if (package-installed-p 'magit)
   :custom
+  (magit-wip-mode-lighter nil)
   (magit-wip-mode t)
   :bind
   ( :map zr-global-prefix-map
