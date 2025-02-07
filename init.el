@@ -2164,7 +2164,7 @@ before calling the original function."
   :if (package-installed-p 'aider)
   :vc ( :url "https://github.com/tninja/aider.el")
   :custom
-  (aider-args '("--deepseek"))
+  (aider-args '("--no-auto-commits" "--deepseek"))
   :bind
   ( :map zr-viper-vi-spc-prefix-map
     ("A" . aider-transient-menu))
