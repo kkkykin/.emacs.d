@@ -45,5 +45,6 @@
   (push '(scroll-bar-mode . nil) default-frame-alist)
   (push '(tool-bar-mode . nil) default-frame-alist)
   (scroll-bar-mode -1)
-  (tool-bar-mode -1)
-  (menu-bar-mode -1))
+  (tool-bar-mode -1))
+
+(menu-bar-mode -1)
