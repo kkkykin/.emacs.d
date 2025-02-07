@@ -554,6 +554,7 @@
 
 (use-package autorevert
   :custom
+  (auto-revert-mode-text " AR")
   (auto-revert-remote-files t))
 
 (use-package diff
@@ -2143,6 +2144,8 @@ before calling the original function."
 
 (use-package magit
   :if (package-installed-p 'magit)
+  :custom
+  (magit-wip-mode t)
   :bind
   ( :map zr-global-prefix-map
     ("G" . magit-dispatch)
