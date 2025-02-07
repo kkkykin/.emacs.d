@@ -2150,9 +2150,8 @@ before calling the original function."
 
 (use-package with-editor
   :if (package-installed-p 'with-editor)
-  :bind
-  ([remap async-shell-command] . with-editor-async-shell-command)
-  ([remap shell-command] . with-editor-shell-command)
+  :custom
+  (shell-command-with-editor-mode t)
   :hook
   ((#1=( shell-mode
          eshell-mode
