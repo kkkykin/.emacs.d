@@ -500,6 +500,7 @@
 
 (use-package tmm
   :custom
+  (tmm-shortcut-words nil)
   (tmm-shortcut-inside-entry t)
   (tmm-completion-prompt nil))
 
@@ -962,10 +963,13 @@ before calling the original function."
 
 (use-package tramp
   :init
-  (define-key zr-menu [tramp-cleanup-connection]
-              '(menu-item "tramp-cleanup-connection" tramp-cleanup-connection))
-  (define-key zr-menu [tramp-cleanup-some-buffers]
-              '(menu-item "tramp-cleanup-some-buffers" tramp-cleanup-some-buffers))
+  (defvar zr-tramp-menu (make-sparse-keymap "tramp"))
+  (define-key zr-menu [tramp-menu]
+              (list 'menu-item "tramp-menu" zr-tramp-menu))
+  (define-key zr-tramp-menu [tramp-cleanup-connection]
+              '(menu-item "cleanup-connection" tramp-cleanup-connection))
+  (define-key zr-tramp-menu [tramp-cleanup-some-buffers]
+              '(menu-item "cleanup-some-buffers" tramp-cleanup-some-buffers))
   :custom
   (tramp-verbose 0)
   (tramp-use-scp-direct-remote-copying t)
@@ -1778,6 +1782,10 @@ before calling the original function."
   :init
   (setq org-directory "~/org")
   (put 'org-reverse-note-order 'safe-local-variable 'booleanp)
+  (defvar zr-org-menu (make-sparse-keymap "org-menu")
+    "My useful org menu in `zr-menu'.")
+  (define-key zr-menu [org-menu]
+              (list 'menu-item "org-menu" zr-org-menu))
   :hook
   (org-mode . (lambda ()
                 (modify-syntax-entry ?< "." org-mode-syntax-table)
@@ -1882,14 +1890,14 @@ before calling the original function."
 
 (use-package org-clock
   :init
-  (define-key zr-menu [org-clock-in]
-              '(menu-item "org-clock-in" org-clock-in))
-  (define-key zr-menu [org-clock-in-last]
-              '(menu-item "org-clock-in-last" org-clock-in-last))
-  (define-key zr-menu [org-clock-out]
-              '(menu-item "org-clock-out" org-clock-out))
-  (define-key zr-menu [org-clock-goto]
-              '(menu-item "org-clock-goto" org-clock-goto))
+  (define-key zr-org-menu [org-clock-in]
+              '(menu-item "clock-in" org-clock-in))
+  (define-key zr-org-menu [org-clock-in-last]
+              '(menu-item "clock-in-last" org-clock-in-last))
+  (define-key zr-org-menu [org-clock-out]
+              '(menu-item "clock-out" org-clock-out))
+  (define-key zr-org-menu [org-clock-goto]
+              '(menu-item "clock-goto" org-clock-goto))
   :custom
   (org-clock-out-remove-zero-time-clocks t)
   (org-clock-persist 'history)
@@ -1991,10 +1999,8 @@ before calling the original function."
 (use-package ol
   :commands org-insert-link-global
   :init
-  (define-key zr-menu [org-store-link]
-              '(menu-item "org-store-link" org-store-link))
-  (define-key zr-menu [org-insert-link-global]
-              '(menu-item "org-insert-link-global" org-insert-link-global))
+  (define-key zr-org-menu [org-store-link]
+              '(menu-item "store-link" org-store-link))
   :bind
   ( :repeat-map zr-org-link-repeat-map
     ("n" . org-next-link)
@@ -2159,12 +2165,7 @@ before calling the original function."
   :if (package-installed-p 'magit)
   :custom
   (magit-wip-mode-lighter nil)
-  (magit-wip-mode t)
-  :init
-  (define-key zr-menu [magit-dispatch]
-              '(menu-item "magit-dispatch" magit-dispatch))
-  (define-key zr-menu [magit-status]
-              '(menu-item "magit-status" magit-status)))
+  (magit-wip-mode t))
 
 (use-package with-editor
   :if (package-installed-p 'with-editor)
