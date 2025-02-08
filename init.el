@@ -180,14 +180,17 @@
   ((emacs-startup . minibuffer-electric-default-mode)
    (emacs-startup . savehist-mode)
    (minibuffer-setup . zr-defer-gc)
-   (minibuffer-exit . zr-restore-gc)))
+   (minibuffer-exit . zr-restore-gc))
+  :config
+  (advice-add 'completion-at-point :after #'minibuffer-hide-completions))
 
 (use-package icomplete
-  :hook (emacs-startup . fido-mode)
-  :config
-  (advice-add 'icomplete--fido-mode-setup :after-while
-              (lambda (&rest r)
-                (kill-local-variable 'completion-styles))))
+  :hook
+  ((emacs-startup . fido-mode)
+   (icomplete-minibuffer-setup
+    . (lambda () (kill-local-variable 'completion-styles))))
+  :custom
+  (icomplete-in-buffer t))
 
 (use-package completion-preview
   :if (package-installed-p 'completion-preview)
