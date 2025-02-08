@@ -40,7 +40,7 @@ Stolen from https://github.com/seagle0128/.emacs.d/blob/c9bd6f1bb72486580f55879c
     ("Sarasa Mono SC" #6=(32 14 22) #7="https://github.com/be5invis/Sarasa-Gothic/releases")
     ("等距更纱黑体 SC" #6# #7#)
     ("Maple Mono NF CN" (32 13 21) "https://github.com/subframe7536/maple-font/releases")
-    ("Unifont-JP" #1=(33 15 24) "https://unifoundry.com/unifont/index.html")
+    ("Unifont-JP" #1=(33 14 24) "https://unifoundry.com/unifont/index.html")
     ("UnifontExMono" #1# "https://github.com/stgiga/UnifontEX/releases"))
   "List of font configurations for different display resolutions.
 Each entry is a list containing:
