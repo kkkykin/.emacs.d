@@ -496,7 +496,7 @@
 
 (use-package tmm
   :custom
-  (tmm-mid-prompt "/")
+  (tmm-shortcut-inside-entry t)
   (tmm-completion-prompt nil))
 
 (use-package tooltip
