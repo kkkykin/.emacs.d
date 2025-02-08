@@ -379,7 +379,10 @@ This function defines custom tool-bar items and key bindings."
                        :image ,(tool-bar--image-expression "symbols/dot_small_16"))
                (keyboard menu-item "Keyboard"
                          za/display-keyboard-mode
-                         :image ,(tool-bar--image-expression "symbols/dot_large_16")))))
+                         :image ,(tool-bar--image-expression "conceal"))
+               (read-only menu-item "read-only-mode"
+                          read-only-mode
+                          :image ,(tool-bar--image-expression "reveal")))))
     (define-key input-decode-map [tool-bar meta]
                 #'za/event-apply-meta-prefix)
     (define-key input-decode-map [tool-bar quit]
