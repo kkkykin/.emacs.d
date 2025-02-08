@@ -23,9 +23,6 @@
   ([remap upcase-word] . upcase-dwim)
   ([remap downcase-word] . downcase-dwim)
   ([remap capitalize-word] . capitalize-dwim)
-  ( :prefix "C-x j"
-    :prefix-map zr-global-prefix-map
-    ("s" . scratch-buffer))
   :custom
   (mode-line-compact t)
   (mode-line-frame-identification nil)
@@ -83,6 +80,10 @@
   (large-hscroll-threshold 1000)
   (syntax-wholeline-max 1000)
   :config
+  (easy-menu-define zr-menu global-map
+    "My useful menu."
+    '("zr"
+      ["scratch" scratch-buffer]))
   (defun zr-defer-gc ()
     (setq gc-cons-threshold most-positive-fixnum))
   (defun zr-do-restore-gc ()
@@ -516,9 +517,9 @@
   (imenu-flatten 'prefix))
 
 (use-package speedbar
-  :bind
-  ( :map zr-global-prefix-map
-    ("b" . speedbar))
+  :init
+  (define-key zr-menu [speedbar]
+              '(menu-item "speedbar" speedbar))
   :config
   (setopt speedbar-supported-extension-expressions
           (append '(".sql")
@@ -920,9 +921,9 @@ before calling the original function."
                    goal-column (1+ (/ (window-width) 2))))
 
 (use-package webjump
-  :bind
-  ( :map zr-global-prefix-map
-    ("/" . webjump))
+  :init
+  (define-key zr-menu [webjump]
+              '(menu-item "webjump" webjump))
   :config
   (dolist (web '(("Mojeek" .
                   [simple-query "https://www.mojeek.com"
@@ -957,10 +958,11 @@ before calling the original function."
   (browse-url-handlers '(("\\`file:" . browse-url-default-browser))))
 
 (use-package tramp
-  :bind
-  ( :map zr-global-prefix-map
-    ("t" . tramp-cleanup-connection)
-    ("T" . tramp-cleanup-some-buffers))
+  :init
+  (define-key zr-menu [tramp-cleanup-connection]
+              '(menu-item "tramp-cleanup-connection" tramp-cleanup-connection))
+  (define-key zr-menu [tramp-cleanup-some-buffers]
+              '(menu-item "tramp-cleanup-some-buffers" tramp-cleanup-some-buffers))
   :custom
   (tramp-verbose 0)
   (tramp-use-scp-direct-remote-copying t)
@@ -1153,9 +1155,9 @@ before calling the original function."
     :prefix-map help-map))
 
 (use-package dictionary
-  :bind
-  ( :map zr-global-prefix-map
-    ("D" . dictionary-search))
+  :init
+  (define-key zr-menu [dictionary-search]
+              '(menu-item "dictionary-search" dictionary-search))
   :custom
   (dictionary-server "dict.tw")
   (dictionary-use-single-buffer t))
@@ -1234,9 +1236,6 @@ before calling the original function."
   (ispell-personal-dictionary (expand-file-name "dict.txt" user-emacs-directory)))
 
 (use-package calendar
-  :bind
-  ( :map zr-global-prefix-map
-    ("c" . calendar))
   :custom
   (diary-file (locate-user-emacs-file "_diary"))
   (calendar-date-style 'iso)
@@ -1245,9 +1244,9 @@ before calling the original function."
   (calendar-chinese-all-holidays-flag t))
 
 (use-package todo-mode
-  :bind
-  ( :map zr-global-prefix-map
-    ("C" . todo-show))
+  :init
+  (define-key zr-menu [todo-show]
+              '(menu-item "todo-show" todo-show))
   :custom
   (todo-directory (locate-user-emacs-file "_todo/")))
 
@@ -1392,9 +1391,9 @@ before calling the original function."
   (add-to-list 'remember-handler-functions 'remember-diary-extract-entries))
 
 (use-package proced
-  :bind
-  ( :map zr-global-prefix-map
-    ("P" . proced))
+  :init
+  (define-key zr-menu [proced]
+              '(menu-item "proced" proced))
   :custom
   (proced-goal-attribute nil)
   (proced-show-remote-processes t)
@@ -1552,9 +1551,9 @@ before calling the original function."
 
 (use-package recentf
   :hook emacs-startup
-  :bind
-  ( :map zr-global-prefix-map
-    ("r" . recentf))
+  :init
+  (define-key zr-menu [recentf]
+              '(menu-item "recentf" recentf))
   :config
   (recentf-mode)
   :custom
@@ -1563,9 +1562,10 @@ before calling the original function."
                      "/sshx:" ,(file-name-concat package-user-dir ".*-autoloads\\.el\\'"))))
 
 (use-package esh-mode
+  :init
+  (define-key zr-menu [eshell]
+              '(menu-item "eshell" eshell))
   :bind
-  ( :map zr-global-prefix-map
-    ("e" . eshell))
   ( :map eshell-proc-mode-map
     ;; Kill eshell buffer if no process, like `comint-send-eof'
     ("C-c C-d" . (lambda () (interactive)
@@ -1878,12 +1878,15 @@ before calling the original function."
   (require 'org-attach-git))
 
 (use-package org-clock
-  :bind
-  ( :map zr-global-prefix-map
-    ("i" . org-clock-in)
-    ("I" . org-clock-in-last)
-    ("o" . org-clock-out)
-    ("O" . org-clock-goto))
+  :init
+  (define-key zr-menu [org-clock-in]
+              '(menu-item "org-clock-in" org-clock-in))
+  (define-key zr-menu [org-clock-in-last]
+              '(menu-item "org-clock-in-last" org-clock-in-last))
+  (define-key zr-menu [org-clock-out]
+              '(menu-item "org-clock-out" org-clock-out))
+  (define-key zr-menu [org-clock-goto]
+              '(menu-item "org-clock-goto" org-clock-goto))
   :custom
   (org-clock-out-remove-zero-time-clocks t)
   (org-clock-persist 'history)
@@ -1984,10 +1987,12 @@ before calling the original function."
 
 (use-package ol
   :commands org-insert-link-global
+  :init
+  (define-key zr-menu [org-store-link]
+              '(menu-item "org-store-link" org-store-link))
+  (define-key zr-menu [org-insert-link-global]
+              '(menu-item "org-insert-link-global" org-insert-link-global))
   :bind
-  ( :map zr-global-prefix-map
-    ("l" . org-store-link)
-    ("L" . org-insert-link-global))
   ( :repeat-map zr-org-link-repeat-map
     ("n" . org-next-link)
     ("p" . org-previous-link)
@@ -2152,10 +2157,11 @@ before calling the original function."
   :custom
   (magit-wip-mode-lighter nil)
   (magit-wip-mode t)
-  :bind
-  ( :map zr-global-prefix-map
-    ("G" . magit-dispatch)
-    ("g" . magit-status)))
+  :init
+  (define-key zr-menu [magit-dispatch]
+              '(menu-item "magit-dispatch" magit-dispatch))
+  (define-key zr-menu [magit-status]
+              '(menu-item "magit-status" magit-status)))
 
 (use-package with-editor
   :if (package-installed-p 'with-editor)
@@ -2222,13 +2228,14 @@ before calling the original function."
 ;; https://karthinks.com/software/avy-can-do-anything/
 (use-package avy
   :if (package-installed-p 'avy)
+  :init
+  (define-key zr-menu [avy-resume]
+              '(menu-item "avy-resume" avy-resume))
   :bind
   (("M-g M-g" . avy-goto-line)
    ("C-," . avy-goto-char-timer))
   ( :map isearch-mode-map
     ("M-j" . avy-isearch))
-  ( :map zr-global-prefix-map
-    ("?" . avy-resume))
   :config
   (defun zr-avy-action-comment (pt)
     (if (> pt (point))
@@ -2279,10 +2286,6 @@ before calling the original function."
 
 (use-package denote
   :if (package-installed-p 'denote)
-  :bind
-  ( :map zr-global-prefix-map
-    ("n" . denote-open-or-create)
-    ("N" . denote-silo-extras-open-or-create))
   :init
   (put 'denote-directory 'safe-local-variable 'stringp)
   (with-eval-after-load 'dired
@@ -2484,9 +2487,9 @@ before calling the original function."
 
 (use-package aria2
   :if (package-installed-p 'aria2)
-  :bind
-  ( :map zr-global-prefix-map
-    ("a" . aria2-download-list))
+  :init
+  (define-key zr-menu [aria2-download-list]
+              '(menu-item "aria2-download-list" aria2-download-list))
   :config
   (let ((auth (car (auth-source-search :host "aria2.localhost"))))
     (setq aria2-rcp-secret (auth-info-password auth)

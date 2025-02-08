@@ -496,9 +496,8 @@ ref: https://pandoc.org/MANUAL.html#general-options"
 
 (with-eval-after-load 'dired-aux
   (when (fboundp #'shell-command-do-open)
-    (bind-keys
-     :map zr-global-prefix-map
-     ("E" . zr-shell-do-open))))
+    (define-key zr-menu [zr-shell-do-open]
+                '(menu-item "zr-shell-do-open" zr-shell-do-open))))
 
 (with-eval-after-load 'image-dired
   (unless (executable-find "gm")
@@ -1008,9 +1007,8 @@ the process menu."
     (follow-mode 1)))
 
 (with-eval-after-load 'viper
-  (bind-keys
-   :map zr-global-prefix-map
-   ("F" . zr-follow-current-window)))
+  (define-key zr-menu [zr-follow-current-window]
+              '(menu-item "zr-follow-current-window" zr-follow-current-window)))
 
 (provide 'init-misc)
 ;;; init-misc.el ends here
