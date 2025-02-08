@@ -157,9 +157,7 @@
   :after viper :defer 0)
 
 (use-package touch-screen
-  :if zr-sys-android-p
-  :custom
-  (touch-screen-display-keyboard t))
+  :if zr-sys-android-p)
 
 (use-package minibuffer
   :custom

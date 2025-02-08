@@ -306,6 +306,12 @@ Other parameters map to termux-notification CLI options."
 
 ;; modifier-bar
 
+(define-minor-mode za/display-keyboard-mode
+  "Toggle display keyboard on scree."
+  :init-value touch-screen-display-keyboard
+  :lighter " K"
+  (setq touch-screen-display-keyboard za/display-keyboard-mode))
+
 (defun za/event-apply-prefix (key)
   "Apply the appropriate prefix to the given key.
 If KEY is an array, it is converted to a key sequence.
@@ -367,7 +373,13 @@ This function defines custom tool-bar items and key bindings."
                (mark menu-item "mark"
                      keyboard-quit
                      :help "mark"
-                     :image ,(tool-bar--image-expression "symbols/star_16")))))
+                     :image ,(tool-bar--image-expression "symbols/star_16"))
+               (repeat menu-item "Repeat"
+                       repeat
+                       :image ,(tool-bar--image-expression "symbols/dot_small_16"))
+               (keyboard menu-item "Keyboard"
+                         za/display-keyboard-mode
+                         :image ,(tool-bar--image-expression "symbols/dot_large_16")))))
     (define-key input-decode-map [tool-bar meta]
                 #'za/event-apply-meta-prefix)
     (define-key input-decode-map [tool-bar quit]
