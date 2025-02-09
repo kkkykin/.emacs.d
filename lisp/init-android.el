@@ -312,10 +312,14 @@ Other parameters map to termux-notification CLI options."
   :lighter " K"
   (setq touch-screen-display-keyboard za/display-keyboard-mode))
 
-(defun za/event-apply-prefix (key)
+(defun za/event-apply-prefix (key &optional hide-keyboard)
   "Apply the appropriate prefix to the given key.
 If KEY is an array, it is converted to a key sequence.
-If KEY is a number or marker, it is converted to a vector."
+If KEY is a number or marker, it is converted to a vector.
+
+Display keyboard unless HIDE-KEYBOARD specified."
+  (unless hide-keyboard
+    (frame-toggle-on-screen-keyboard nil nil))
   (pcase key
     ((pred arrayp)
      (vconcat (listify-key-sequence key)))
@@ -329,7 +333,7 @@ This function uses `meta-prefix-char` as the key."
 
 (defun za/event-apply-keyboard-quit (_)
   "Apply the keyboard quit prefix (C-g) to the event."
-  (za/event-apply-prefix "\C-g"))
+  (za/event-apply-prefix "\C-g" t))
 
 (defun za/event-apply-cx-prefix (_)
   "Apply the C-x prefix to the event."
@@ -343,9 +347,9 @@ This function uses `meta-prefix-char` as the key."
   "Apply the C-h prefix to the event."
   (za/event-apply-prefix "\C-h"))
 
-(defun za/event-apply-mark-prefix (_)
-  "Apply the mark prefix (C-@) to the event."
-  (za/event-apply-prefix "\C-@"))
+(defun za/event-apply-universal-argument (_)
+  "Apply the universal-argument prefix (C-u) to the event."
+  (za/event-apply-prefix "\C-u"))
 
 (defun za/modifier-bar-setup ()
   "Set up the modifier bar for `modifier-bar-mode`.
@@ -370,9 +374,9 @@ This function defines custom tool-bar items and key bindings."
                      keyboard-quit
                      :help "help"
                      :image ,(tool-bar--image-expression "symbols/heart_16"))
-               (mark menu-item "mark"
+               (universal-argument menu-item "universal-argument"
                      keyboard-quit
-                     :help "mark"
+                     :help "universal-argument"
                      :image ,(tool-bar--image-expression "symbols/star_16"))
                (repeat menu-item "Repeat"
                        repeat
@@ -385,16 +389,16 @@ This function defines custom tool-bar items and key bindings."
                           :image ,(tool-bar--image-expression "reveal")))))
     (define-key input-decode-map [tool-bar meta]
                 #'za/event-apply-meta-prefix)
-    (define-key input-decode-map [tool-bar quit]
-                #'za/event-apply-keyboard-quit)
+    ;; (define-key input-decode-map [tool-bar quit]
+    ;;             #'za/event-apply-keyboard-quit)
     (define-key input-decode-map [tool-bar c-x]
                 #'za/event-apply-cx-prefix)
     (define-key input-decode-map [tool-bar c-c]
                 #'za/event-apply-cc-prefix)
     (define-key input-decode-map [tool-bar help]
                 #'za/event-apply-ch-prefix)
-    (define-key input-decode-map [tool-bar mark]
-                #'za/event-apply-mark-prefix)))
+    (define-key input-decode-map [tool-bar universal-argument]
+                #'za/event-apply-universal-argument)))
 
 (add-hook 'modifier-bar-mode-hook #'za/modifier-bar-setup)
 
