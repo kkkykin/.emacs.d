@@ -375,7 +375,7 @@ This function defines custom tool-bar items and key bindings."
                      :help "help"
                      :image ,(tool-bar--image-expression "symbols/heart_16"))
                (universal-argument menu-item "universal-argument"
-                     keyboard-quit
+                     universal-argument
                      :help "universal-argument"
                      :image ,(tool-bar--image-expression "symbols/star_16"))
                (repeat menu-item "Repeat"
@@ -389,16 +389,14 @@ This function defines custom tool-bar items and key bindings."
                           :image ,(tool-bar--image-expression "reveal")))))
     (define-key input-decode-map [tool-bar meta]
                 #'za/event-apply-meta-prefix)
-    ;; (define-key input-decode-map [tool-bar quit]
-    ;;             #'za/event-apply-keyboard-quit)
+    (define-key input-decode-map [tool-bar quit]
+                #'za/event-apply-keyboard-quit)
     (define-key input-decode-map [tool-bar c-x]
                 #'za/event-apply-cx-prefix)
     (define-key input-decode-map [tool-bar c-c]
                 #'za/event-apply-cc-prefix)
     (define-key input-decode-map [tool-bar help]
-                #'za/event-apply-ch-prefix)
-    (define-key input-decode-map [tool-bar universal-argument]
-                #'za/event-apply-universal-argument)))
+                #'za/event-apply-ch-prefix)))
 
 (add-hook 'modifier-bar-mode-hook #'za/modifier-bar-setup)
 
