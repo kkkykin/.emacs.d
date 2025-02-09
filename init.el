@@ -2162,8 +2162,7 @@ before calling the original function."
 (use-package magit
   :if (package-installed-p 'magit)
   :custom
-  (magit-wip-mode-lighter nil)
-  (magit-wip-mode t))
+  (magit-wip-mode-lighter nil))
 
 (use-package with-editor
   :if (package-installed-p 'with-editor)
