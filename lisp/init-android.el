@@ -201,11 +201,18 @@ milliseconds"
 (defun za/termux-notification-list ()
   (za/parse-json-program "termux-notification-list"))
 
-(defun za/termux-wifi-connectioninfo ()
-  (za/parse-json-program "termux-wifi-connectioninfo"))
+(defun za/termux-wifi-connectioninfo (&optional key)
+  (let ((info (za/parse-json-program
+               "termux-wifi-connectioninfo")))
+    (if key (gethash key info)
+      info)))
 
-(defun za/termux-wifi-scaninfo ()
-  (za/parse-json-program "termux-wifi-scaninfo"))
+(defun za/termux-wifi-scaninfo (&optional key)
+  (let ((info (za/parse-json-program
+               "termux-wifi-scaninfo")))
+    (if key
+        (mapcar (apply-partially #'gethash key) info)
+      info)))
 
 (cl-defun za/termux-toast
     (text &optional (bgcolor "gray") (color "white") (gravity "middle") short)
@@ -265,6 +272,94 @@ Other parameters map to termux-notification CLI options."
            (start-process "remove-termux-notification" nil
                           "termux-notification-remove" replaces-id))))
       proc)))
+
+
+;; wifi
+
+(define-multisession-variable za/wifi-location-table
+  (make-hash-table :test #'equal)
+  "Wifi locations.")
+
+(defun za/wifi-record-location (&optional ssid loc)
+  "Record the location associated with a given SSID.
+If SSID is not provided, it will be retrieved from the current WiFi connection.
+If LOC is not provided, it will be prompted for selection."
+  (interactive "P")
+  (let* ((table (multisession-value za/wifi-location-table))
+         (ssid (pcase ssid
+                 ('nil (za/termux-wifi-connectioninfo "ssid"))
+                 ((pred stringp) ssid)
+                 (_ (completing-read "SSID: " (za/termux-wifi-scaninfo "ssid")))))
+         (new-loc (or loc (completing-read "Location: " '("home" "company")))))
+    (let ((loc (gethash ssid table)))
+      (when (or (null loc)
+                (and (not (string= loc new-loc))
+                     (y-or-n-p (format "Move %s from %s to %s? "
+                                       ssid loc new-loc))))
+        (puthash ssid new-loc table)
+        (setf (multisession-value za/wifi-location-table) table)))))
+
+(defun za/where-am-i (&optional ssid)
+  "Determine the current location based on the SSID of the connected Wi-Fi network.
+If no SSID is provided, it uses the SSID of the currently connected network.
+If the SSID is not found in the `za/wifi-location-table', it scans for nearby SSIDs
+and checks if any of them are in the table. Returns the location if found, otherwise nil.
+
+Args:
+  ssid (optional): The SSID of the Wi-Fi network to check. If not provided, the current SSID is used.
+
+Returns:
+  The location associated with the SSID, or nil if no matching SSID is found."
+  (let* ((table (multisession-value za/wifi-location-table))
+         (loc (gethash (or ssid (za/termux-wifi-connectioninfo "ssid")) table)))
+    (or loc
+        (let ((near-ssid (za/termux-wifi-scaninfo "ssid")))
+          (catch 'found
+            (dolist (s near-ssid)
+              (when-let ((loc (gethash s table)))
+                (throw 'found loc))))))))
+
+(defun za/wifi-try-remove-tmp-connection (ssid)
+  "Attempt to remove a temporary Wi-Fi connection suggestion for SSID.
+If the SSID is found in the nearby Wi-Fi scan and exists in the Wi-Fi location table,
+it removes the suggestion. Otherwise, it retries after 5 minutes."
+  (let ((near-ssid (za/termux-wifi-scaninfo "ssid"))
+        (table (multisession-value za/wifi-location-table)))
+    (if (catch 'found
+          (dolist (s near-ssid)
+            (when (gethash s table)
+              (throw 'found t))))
+        (za/rish-run
+         (combine-and-quote-strings
+          (list "cmd" "wifi" "remove-suggestion" ssid)))
+      (run-at-time (* 5 60) nil
+                   #'za/wifi-try-remove-tmp-connection ssid))))
+
+(defun za/wifi-try-connect (ssid psk &rest args)
+  "Attempt to connect to a Wi-Fi network with the given SSID and PSK.
+If the current Wi-Fi state is COMPLETED and not connected to the desired SSID,
+it prompts the user to switch. If DISCONNECTED, it adds a suggestion for the SSID
+and retries connection after 60 seconds if the SSID is not found in the scan."
+  (let* ((info (za/termux-wifi-connectioninfo))
+         (cur-ssid (gethash "ssid" info)))
+    (pcase (gethash "supplicant_state" info)
+      ("UNINITIALIZED")
+      ("COMPLETED"
+       (unless (or (equal ssid cur-ssid)
+                   (za/where-am-i cur-ssid))
+         (when-let* ((use-dialog-box t)
+                     ((y-or-n-p ("Switch to wifi: %s?" ssid))))
+           (za/fooview-run "Internet"))))
+      ("DISCONNECTED"
+       (if (member ssid (za/termux-wifi-scaninfo "ssid"))
+           (progn
+             (za/rish-run
+              (combine-and-quote-strings
+               `("cmd" "wifi" "add-suggestion" ,ssid "wpa2" ,psk ,@args)))
+             (run-at-time (* 5 60) nil
+                          #'za/wifi-try-remove-tmp-connection ssid))
+         (apply #'run-at-time 60 nil
+                #'za/wifi-try-connect ssid psk args))))))
 
 
 (setenv "SSH_AUTH_SOCK" (string-trim-right (shell-command-to-string "gpgconf -L agent-ssh-socket")))
