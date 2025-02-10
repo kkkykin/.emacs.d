@@ -986,6 +986,8 @@ before calling the original function."
       ("fall" "[[fallthrough]]"))))
 
 (use-package sh-script
+  :custom
+  (sh-basic-offset 2)
   :config
   (setq-mode-local sh-base-mode
                    buffer-file-coding-system 'prefer-utf-8-unix))
