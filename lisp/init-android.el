@@ -301,23 +301,67 @@ If LOC is not provided, it will be prompted for selection."
 
 (defun za/where-am-i (&optional ssid)
   "Determine the current location based on the SSID of the connected Wi-Fi network.
-If no SSID is provided, it uses the SSID of the currently connected network.
-If the SSID is not found in the `za/wifi-location-table', it scans for nearby SSIDs
-and checks if any of them are in the table. Returns the location if found, otherwise nil.
+If no SSID is provided, it scans for nearby SSIDs and checks if any of
+them are in `za/wifi-location-table'. Returns the location if found, otherwise nil.
 
 Args:
-  ssid (optional): The SSID of the Wi-Fi network to check. If not provided, the current SSID is used.
+  ssid (optional): The SSID of the Wi-Fi network to check.
 
 Returns:
   The location associated with the SSID, or nil if no matching SSID is found."
-  (let* ((table (multisession-value za/wifi-location-table))
-         (loc (gethash (or ssid (za/termux-wifi-connectioninfo "ssid")) table)))
-    (or loc
-        (let ((near-ssid (za/termux-wifi-scaninfo "ssid")))
-          (catch 'found
-            (dolist (s near-ssid)
-              (when-let ((loc (gethash s table)))
-                (throw 'found loc))))))))
+  (let ((table (multisession-value za/wifi-location-table)))
+    (if ssid (gethash ssid table)
+      (let ((near-ssid (za/termux-wifi-scaninfo "ssid")))
+        (catch 'found
+          (dolist (s near-ssid)
+            (when-let ((loc (gethash s table)))
+              (throw 'found loc))))))))
+
+(defun za/near-known-wifi-p (&optional near-ssid)
+  "Check if any of the nearby Wi-Fi SSIDs are known.
+
+This function compares the SSIDs of nearby Wi-Fi networks with a list of known SSIDs.
+If `near-ssid` is provided, it is split into a list of SSIDs. Otherwise, it retrieves
+the SSIDs of nearby networks using `za/termux-wifi-scaninfo`.
+
+Args:
+  near-ssid (Optional): A string containing SSIDs separated by newlines.
+
+Returns:
+  A list of SSIDs that are both nearby and known, or nil if no matches are found."
+  (let ((known-ssid (hash-table-keys (multisession-value za/wifi-location-table)))
+        (near-ssid (or (string-split near-ssid "\n")
+                       (za/termux-wifi-scaninfo "ssid"))))
+    (cl-intersection known-ssid near-ssid :test #'string=)))
+
+(defvar za/wifi-timer nil
+  "A timer object used to manage the scheduling of WiFi-related tasks.
+This variable holds the timer that is used to periodically execute
+a WiFi management command. It is set to nil when no timer is active.")
+
+(defun za/wifi-set-timer (minutes &rest args)
+  "Set or remove a timer for executing a WiFi management command.
+
+If MINUTES is 0, cancel the existing timer and set `za/wifi-timer` to nil.
+Otherwise, if no timer is currently active, create a new timer that will execute
+a WiFi management command after the specified number of MINUTES (defaulting to 0).
+The command is executed using `start-process` with the provided ARGS.
+
+ARGS should be a list of arguments to pass to the `zr-wifi-manage` command.
+
+Example usage:
+  (za/wifi-set-timer 5 \"connect\" \"my-wifi-ssid\")  ; Schedule a WiFi connection in 5 minutes
+  (za/wifi-set-timer 0)  ; Cancel the existing timer"
+  (if (zerop minutes)
+      (progn
+        (when za/wifi-timer
+          (cancel-timer za/wifi-timer))
+        (setq za/wifi-timer nil))
+    (unless za/wifi-timer
+      (let ((time (* 60 minutes)))
+        (setq za/wifi-timer
+              (apply #'run-at-time time time #'start-process
+                     "wifi-handler" nil "zr-wifi-manage" args))))))
 
 (defun za/wifi-try-remove-tmp-connection (ssid)
   "Attempt to remove a temporary Wi-Fi connection suggestion for SSID.
