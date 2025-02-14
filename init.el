@@ -2513,10 +2513,7 @@ before calling the original function."
          (make-llm-openai-compatible :url "http://127.0.0.1:7778")))
     (setq ellama-provider ds-model)
     (push ds-model ellama-providers)
-    (push lo-model ellama-providers))
-  (require 'init-llm)
-  (when zr-llm-program
-    (zr-llm-server-start)))
+    (push lo-model ellama-providers)))
 
 (use-package keyfreq
   :if (package-installed-p 'keyfreq)
