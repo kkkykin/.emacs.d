@@ -2010,6 +2010,7 @@ before calling the original function."
   (with-eval-after-load 'ob-org
     (dolist (l '("conf"
                  "conf-space"
+                 "conf-unix"
                  "json"
                  "text"
                  "yml"))
