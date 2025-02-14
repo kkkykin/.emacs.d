@@ -2087,7 +2087,9 @@ before calling the original function."
   (put 'html-ts-mode-indent-offset 'safe-local-variable #'natnump))
 
 (use-package lua-ts-mode
-  :mode "\\.lua\\'")
+  :mode "\\.lua\\'"
+  :custom
+  (lua-ts-indent-offset 2))
 
 (use-package nix-ts-mode
   :if (package-installed-p 'nix-ts-mode)
