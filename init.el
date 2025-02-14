@@ -152,10 +152,6 @@
   :if (locate-library "init-pcmpl")
   :after pcomplete :defer 0)
 
-(use-package init-viper
-  :if (locate-library "init-viper")
-  :after viper :defer 0)
-
 (use-package touch-screen
   :if zr-sys-android-p)
 
@@ -203,8 +199,7 @@
 
 (use-package viper
   :init
-  (setq zr-extra-ex-token-alist
-        '(("tabe" (tab-new)) ("tabc" (tab-close)))
+  (setq viper-custom-file-name (locate-library "init-viper")
         viper-inhibit-startup-message t
         viper-expert-level 5
         viper-vi-style-in-minibuffer nil
@@ -227,20 +222,18 @@
             log-edit-mode)
           . viper-change-state-to-insert))
   :bind
-  ( :map viper-insert-basic-map
-    ("C-t" . nil)
-    ("C-d" . nil)
-    ("C-v" . nil)
-    ("C-w" . nil)
-    ("C-\\" . nil))
   ( :map viper-insert-global-user-map
+    ("C-t" . viper-exec-key-in-emacs)
+    ("C-d" . viper-exec-key-in-emacs)
+    ("C-v" . viper-exec-key-in-emacs)
+    ("C-w" . viper-exec-key-in-emacs)
+    ("C-\\" . viper-exec-key-in-emacs)
     ("<backspace>" . viper-exec-key-in-emacs)
     ("RET" . viper-exec-key-in-emacs))
-  ( :map viper-vi-basic-map
-    ("C-u" . nil)
-    ("C-v" . nil)
-    ("C-\\" . nil))
   ( :map viper-vi-global-user-map
+    ("C-u" . viper-exec-key-in-emacs)
+    ("C-v" . viper-exec-key-in-emacs)
+    ("C-\\" . viper-exec-key-in-emacs)
     ("C-f" . follow-scroll-up)
     ("C-b" . follow-scroll-down)
     :prefix "C-w"
@@ -288,49 +281,7 @@
   (ex-cycle-other-window nil)
   (viper-syntax-preference 'emacs)
   :custom-face
-  (viper-minibuffer-emacs ((t (:background nil :foreground nil))))
-  :config
-  (with-eval-after-load 'dired
-    (bind-keys
-     :map zr-dired-spc-prefix-map
-     (":" . (lambda (&rest args)
-              (interactive "P")
-              (apply (if (eq major-mode 'wdired-mode)
-                         #'viper-exec-key-in-emacs #'viper-ex)
-                     args)))))
-  (define-advice viper-ex (:around (orig-fun &rest args) more-token)
-    "More ex-token, and `display-line-number-mode'."
-    (require 'display-line-numbers)
-    (display-line-numbers--turn-on)
-    (let ((ex-token-alist (append zr-extra-ex-token-alist ex-token-alist))
-          (buf (current-buffer)))
-      (apply orig-fun args)
-      (when (buffer-live-p buf)
-        (with-current-buffer buf
-          (display-line-numbers-mode -1)))))
-  (put 'viper-setup-master-buffer 'safe-local-eval-function t)
-  (put 'viper-mode-string 'risky-local-variable t)
-  (add-face-text-property 0 (length viper-emacs-state-id) '(:inverse-video t) nil viper-emacs-state-id)
-  (setopt
-   viper-major-mode-modifier-list
-   (append '((sql-interactive-mode insert-state viper-comint-mode-modifier-map)
-             (sql-interactive-mode vi-state viper-comint-mode-modifier-map)
-             (eshell-mode insert-state viper-comint-mode-modifier-map)
-             (eshell-mode vi-state viper-comint-mode-modifier-map)
-             (inferior-python-mode insert-state viper-comint-mode-modifier-map)
-             (inferior-python-mode vi-state viper-comint-mode-modifier-map))
-           viper-major-mode-modifier-list))
-  ;; check `viper-set-state-in-major-mode'
-  ;; vi => emacs => insert => emacs
-  (setq viper-insert-state-mode-list
-        (append viper-insert-state-mode-list
-                '( apropos-mode log-view-mode vc-dir-mode)
-                viper-emacs-state-mode-list)
-        viper-emacs-state-mode-list nil)
-  (dolist (mode '( diff-mode dun-mode outline-mode reb-mode
-                   sql-interactive-mode))
-    (setq viper-vi-state-mode-list (delq mode viper-vi-state-mode-list))
-    (add-to-list 'viper-insert-state-mode-list mode)))
+  (viper-minibuffer-emacs ((t (:background nil :foreground nil)))))
 
 (use-package help
   :custom

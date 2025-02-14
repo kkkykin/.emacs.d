@@ -570,7 +570,7 @@ It behaves differently based on the current context:
    (t (ex-write nil))))
 
 (with-eval-after-load 'org-src
-  (add-to-list 'zr-extra-ex-token-alist '("w" (zr-viper-save-buffer)))
+  (add-to-list 'zr-viper-extra-ex-token-alist '("w" (zr-viper-save-buffer)))
   (add-hook 'org-src-mode-hook #'smerge-start-session)
   (bind-keys
    :map org-src-mode-map

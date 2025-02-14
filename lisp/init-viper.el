@@ -27,6 +27,80 @@
 (require 'cl-lib)
 
 
+;; ex
+
+(defvar zr-viper-extra-ex-token-alist
+  '(("tabe" (tab-new))
+    ("tabc" (tab-close)))
+  "An alist of extra Viper ex commands and their corresponding actions.
+Each element is of the form (COMMAND ACTION), where COMMAND is a string
+representing the ex command, and ACTION is the Lisp form to execute.")
+
+(defun zr-viper-ex (&rest args)
+  "Execute a Viper ex command with additional custom commands.
+This function extends the default Viper ex command set by adding
+extra commands defined in `zr-viper-extra-ex-token-alist'. It also
+temporarily enables line numbers during command execution.
+
+ARGS is a list of arguments passed to the Viper ex command.
+
+If an error occurs during execution, the error is captured and
+re-raised after restoring the original state of line numbers."
+  (interactive "P")
+  (require 'display-line-numbers)
+  (let ((ex-token-alist (append zr-viper-extra-ex-token-alist
+                                ex-token-alist))
+        (buf (current-buffer))
+        (disp display-line-numbers-mode)
+        sig)
+    (display-line-numbers-mode 1)
+    (condition-case e
+        (apply #'viper-ex args)
+      (t (setq sig e)))
+    (when (and (not disp)
+               (buffer-live-p buf))
+      (with-current-buffer buf
+        (display-line-numbers-mode -1)))
+    (when sig (signal (car sig) (cdr sig)))))
+
+(bind-keys
+ :map viper-vi-global-user-map
+ (":" . zr-viper-ex))
+
+
+;; mode
+
+(put 'viper-setup-master-buffer 'safe-local-eval-function t)
+
+(put 'viper-mode-string 'risky-local-variable t)
+
+(add-face-text-property 0 (length viper-emacs-state-id)
+                        '(:inverse-video t) nil viper-emacs-state-id)
+
+(setopt
+ viper-major-mode-modifier-list
+ (append '((sql-interactive-mode insert-state viper-comint-mode-modifier-map)
+           (sql-interactive-mode vi-state viper-comint-mode-modifier-map)
+           (eshell-mode insert-state viper-comint-mode-modifier-map)
+           (eshell-mode vi-state viper-comint-mode-modifier-map)
+           (inferior-python-mode insert-state viper-comint-mode-modifier-map)
+           (inferior-python-mode vi-state viper-comint-mode-modifier-map))
+         viper-major-mode-modifier-list))
+
+;; check `viper-set-state-in-major-mode'
+;; vi => emacs => insert => emacs
+(setq viper-insert-state-mode-list
+      (append viper-insert-state-mode-list
+              '( apropos-mode log-view-mode vc-dir-mode)
+              viper-emacs-state-mode-list)
+      viper-emacs-state-mode-list nil)
+
+(dolist (mode '( diff-mode dun-mode outline-mode reb-mode
+                 sql-interactive-mode))
+  (setq viper-vi-state-mode-list (delq mode viper-vi-state-mode-list))
+  (add-to-list 'viper-insert-state-mode-list mode))
+
+
 ;; vi
 
 (defun zr-open-with-vim (&optional file server)
@@ -62,7 +136,7 @@ Usage:
  ("v" . zr-open-with-vim))
 
 
-;; netrw
+;; dired
 
 (defvar zr-dired-target-files nil
   "A list of target directories where marked files can be copied or moved.")
@@ -130,6 +204,21 @@ removing duplicates."
  ("T" . zr-dired-unmark-target))
 
 (setq dired-dwim-target #'zr-dired-dwim-target)
+
+(defun zr-dired-cond-ex (&rest args)
+  "Execute a command conditionally based on the current major mode.
+If the current major mode is `wdired-mode', execute the command using
+`viper-exec-key-in-emacs'. Otherwise, execute the command using
+`zr-viper-ex'.  ARGS are passed to the chosen function."
+  (interactive "P")
+  (apply (if (eq major-mode 'wdired-mode)
+             #'viper-exec-key-in-emacs #'zr-viper-ex)
+         args))
+
+(with-eval-after-load 'dired
+  (bind-keys
+   :map zr-dired-spc-prefix-map
+   (":" . zr-dired-cond-ex)))
 
 
 ;; window

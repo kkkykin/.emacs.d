@@ -375,7 +375,7 @@ locale encoding for proper handling of non-ASCII filenames."
 ;; viper
 
 (with-eval-after-load 'viper
-  (add-to-list 'zr-extra-ex-token-alist '("ws" (zw/save-with-sudo)))
+  (add-to-list 'zr-viper-extra-ex-token-alist '("ws" (zw/save-with-sudo)))
   (add-hook 'viper-vi-state-hook (lambda () (w32-set-ime-open-status nil))))
 
 
