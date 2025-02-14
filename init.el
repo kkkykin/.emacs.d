@@ -2129,24 +2129,17 @@ before calling the original function."
        . with-editor-export-editor)
    (#1# . with-editor-export-git-editor)))
 
-(use-package aider
-  :if (package-installed-p 'aider)
-  :vc ( :url "https://github.com/tninja/aider.el")
+(use-package aidermacs
+  :if (package-installed-p 'aidermacs)
+  :vc (:url "https://github.com/MatthewZMD/aidermacs" :rev :latest)
   :custom
-  (aider-args '("--no-auto-commits" "--deepseek"))
+  (aidermacs-args '("--no-auto-commits" "--deepseek"))
   :bind
   ( :map zr-viper-vi-spc-prefix-map
-    ("A" . aider-transient-menu))
+    ("A" . aidermacs-transient-menu))
   :config
   (when-let* ((ds-key (auth-source-pick-first-password :host "deepseek.api")))
-    (setq aider-args (append aider-args (list "--api-key" (concat "deepseek=" ds-key)))))
-  (define-advice aider-buffer-name-from-git-repo-path
-      (:around (fn &rest args) handle-wrong-arg)
-    (condition-case nil
-        (apply fn args)
-      (args-out-of-range
-       (let ((relative-path (file-relative-name (car args) (cadr args))))
-         (format "*aider:%s*" (string-replace "\n" "" relative-path)))))))
+    (setenv "DEEPSEEK_API_KEY" ds-key)))
 
 (use-package dape
   :if (package-installed-p 'dape)
