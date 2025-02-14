@@ -29,17 +29,17 @@
 
 ;; ex
 
-(defvar zr-viper-extra-ex-token-alist
+(defvar zv/extra-ex-token-alist
   '(("tabe" (tab-new))
     ("tabc" (tab-close)))
   "An alist of extra Viper ex commands and their corresponding actions.
 Each element is of the form (COMMAND ACTION), where COMMAND is a string
 representing the ex command, and ACTION is the Lisp form to execute.")
 
-(defun zr-viper-ex (&rest args)
+(defun zv/ex (&rest args)
   "Execute a Viper ex command with additional custom commands.
 This function extends the default Viper ex command set by adding
-extra commands defined in `zr-viper-extra-ex-token-alist'. It also
+extra commands defined in `zv/extra-ex-token-alist'. It also
 temporarily enables line numbers during command execution.
 
 ARGS is a list of arguments passed to the Viper ex command.
@@ -48,7 +48,7 @@ If an error occurs during execution, the error is captured and
 re-raised after restoring the original state of line numbers."
   (interactive "P")
   (require 'display-line-numbers)
-  (let ((ex-token-alist (append zr-viper-extra-ex-token-alist
+  (let ((ex-token-alist (append zv/extra-ex-token-alist
                                 ex-token-alist))
         (buf (current-buffer))
         (disp display-line-numbers-mode)
@@ -65,7 +65,7 @@ re-raised after restoring the original state of line numbers."
 
 (bind-keys
  :map viper-vi-global-user-map
- (":" . zr-viper-ex))
+ (":" . zv/ex))
 
 
 ;; mode
@@ -103,36 +103,39 @@ re-raised after restoring the original state of line numbers."
 
 ;; vi
 
-(defun zr-open-with-vim (&optional file server)
-  "Open a FILE with Vim, optionally specifying a Vim SERVER.
+(defvar zv/default-nvim-server "127.0.0.1:5567"
+  )
 
-This function uses Vim's server mode to open a specified file or the
-current buffer's file in a running Vim instance. If no FILE is
+(defun zv/open-with-nvim (&optional file server)
+  "Open a FILE with Nvim, optionally specifying a Nvim SERVER.
+
+This function uses Nvim's server mode to open a specified file or the
+current buffer's file in a running Nvim instance. If no FILE is
 specified, the current buffer's file or the default directory is
-used. You can also optionally specify a Vim server name to target a
-specific Vim instance.
+used. You can also optionally specify a Nvim server name to target a
+specific Nvim instance.
 
 When called interactively:
 - If FILE is provided (with a prefix argument), prompt the user to select a file.
 - If no FILE is provided, use the current buffer's file or the default directory.
 
-SERVER specifies the name of the Vim server to use. If no server name is
-provided, the default server name \"vi\" is used.
+SERVER specifies the name of the Nvim server to use. If no server name is
+provided, the default server name `zv/default-nvim-server' is used.
 
 Usage:
-- Call this function interactively to open the current buffer's file in Vim.
-- Call this function with a prefix argument to specify a file to open in Vim.
-- Optionally provide a server name to target a specific Vim instance."
+- Call this function interactively to open the current buffer's file in Nvim.
+- Call this function with a prefix argument to specify a file to open in Nvim.
+- Optionally provide a server name to target a specific Nvim instance."
   (interactive "P")
   (let ((file (or (when file (read-file-name "File: "))
                  (buffer-file-name)
                  default-directory)))
-   (call-process "vim" nil nil nil
-                "--servername" (or server "vi")
-                "--remote-silent" file)))
+   (call-process "nvim" nil nil nil
+                "--server" (or server zv/default-nvim-server)
+                "--remote" file)))
 
 (bind-keys
- :map zr-viper-vi-spc-prefix-map
+ :map zv/vi-spc-prefix-map
  ("v" . zr-open-with-vim))
 
 
@@ -209,10 +212,10 @@ removing duplicates."
   "Execute a command conditionally based on the current major mode.
 If the current major mode is `wdired-mode', execute the command using
 `viper-exec-key-in-emacs'. Otherwise, execute the command using
-`zr-viper-ex'.  ARGS are passed to the chosen function."
+`zv/ex'.  ARGS are passed to the chosen function."
   (interactive "P")
   (apply (if (eq major-mode 'wdired-mode)
-             #'viper-exec-key-in-emacs #'zr-viper-ex)
+             #'viper-exec-key-in-emacs #'zv/ex)
          args))
 
 (with-eval-after-load 'dired
@@ -258,7 +261,7 @@ should be moved. It is selected interactively from the options: 'left', 'right',
     (display-buffer-in-direction fb `((direction . ,side) (window . main)))))
 
 (bind-keys
- :map zr-viper-cw-prefix-map
+ :map zv/cw-prefix-map
  ("H" . (lambda () (interactive) (zr-buffer-to-side 'left)))
  ("L" . (lambda () (interactive) (zr-buffer-to-side 'right)))
  ("K" . (lambda () (interactive) (zr-buffer-to-side 'top)))
@@ -266,3 +269,7 @@ should be moved. It is selected interactively from the options: 'left', 'right',
 
 (provide 'init-viper)
 ;;; init-viper.el ends here
+
+;; Local Variables:
+;; read-symbol-shorthands: (("zv/" . "zr-viper-"))
+;; End:
