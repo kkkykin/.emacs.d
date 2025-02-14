@@ -35,7 +35,7 @@ Stolen from https://github.com/seagle0128/.emacs.d/blob/c9bd6f1bb72486580f55879c
   '(("LXGW WenKai Mono" #2=(33 14 23) #3="https://github.com/lxgw/LxgwWenKai/releases")
     ("霞鹜文楷等宽"  #2# #3#)
     ("LXGW Bright Code" #2# "https://github.com/lxgw/LxgwBright-Code/releases")
-    ("小赖字体 等宽 SC" #5=(33 15 23) #4="https://github.com/lxgw/kose-font/releases")
+    ("小赖字体 等宽 SC" #5=(33 14 23) #4="https://github.com/lxgw/kose-font/releases")
     ("小賴字體 等寬 SC" #5# #4#)
     ("Sarasa Mono SC" #6=(32 14 22) #7="https://github.com/be5invis/Sarasa-Gothic/releases")
     ("等距更纱黑体 SC" #6# #7#)
