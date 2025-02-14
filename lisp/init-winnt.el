@@ -391,6 +391,11 @@ locale encoding for proper handling of non-ASCII filenames."
     args))
 
 
+;; mysql
+(with-eval-after-load 'sql
+  (setq sql-mysql-options '("-tfn" "--compression-algorithms=zstd")))
+
+
 ;; jsonrpc
 (with-eval-after-load 'gdscript-mode
   (with-eval-after-load 'eglot
