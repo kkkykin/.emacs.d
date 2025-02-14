@@ -23,6 +23,24 @@
             ((symbol-function 'y-or-n-p) #'always))
     (funcall-interactively (car args) (cdr args))))
 
+(defcustom zr-dotfiles-dir-followd-by-vars nil
+  "List of variables that should be re-evaluated when `zr-dotfiles-dir' changes.
+This allows dependent settings to update automatically when the
+directory changes.")
+
+(defcustom zr-dotfiles-dir (expand-file-name "~/.config")
+  "The directory where dotfiles are stored.
+This is typically set to a directory like `~/.config' but can be
+customized.  When this value is changed, any variables listed in
+`zr-dotfiles-dir-followd-by-vars' are re-evaluated to ensure dependent
+settings are updated."
+  :type 'directory
+  :set (lambda (sym val)
+         (set-default sym val)
+         (dolist (var zr-dotfiles-dir-followd-by-vars)
+           (when (boundp var)
+             (custom-reevaluate-setting var)))))
+
 
 ;; theme
 

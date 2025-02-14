@@ -225,18 +225,11 @@
         (setq parameters (list (concat "-x" prefix (cadr u))))))
     (list url parameters)))
 
-(defcustom zn/dotfiles-dir (expand-file-name "~/.config")
-  "Dotfiles dir."
-  :type 'directory
-  :set (lambda (sym val)
-         (set-default sym val)
-         (let ((pac 'zn/pac-data-file))
-           (and (boundp pac)
-                (custom-reevaluate-setting pac)))))
-
-(defcustom zn/pac-data-file (expand-file-name "surfingkeys/pac.json.gpg" zn/dotfiles-dir)
+(defcustom zn/pac-data-file
+  (expand-file-name "surfingkeys/pac.json.gpg" zr-dotfiles-dir)
   "PAC data file path."
   :type 'file)
+(add-to-list 'zr-dotfiles-dir-followd-by-vars 'zn/pac-data-file)
 
 (defun zn/init-proxy-rules ()
   (interactive)
@@ -254,9 +247,7 @@
 This function takes a HOSTNAME as input and adds it to the first proxy
 rules in the proxy data file."
   (interactive "shostname: ")
-  (with-current-buffer (find-file-noselect
-                        (expand-file-name "surfingkeys/pac.json.gpg"
-                                          zn/dotfiles-dir))
+  (with-current-buffer (find-file-noselect zn/pac-data-file)
     (goto-char 1)
     (let* ((cfg (json-parse-buffer))
            (autoproxy_hosts (gethash "autoproxy_hosts" cfg)))
