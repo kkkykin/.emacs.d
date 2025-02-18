@@ -417,7 +417,7 @@ EXPANDED -- The expanded content to be merged."
 		               (+ ind org-edit-src-content-indentation))
 		              (buffer-string)))))
            (expanded (org-babel-expand-src-block)))
-      (when (and (not (string= (concat "\n" body) expanded))
+      (when (and (not (string= (string-trim body) (string-trim expanded)))
                  (pcase zo/babel-confirm-replace-tangle
                    ('ask (y-or-n-p "Replace by diff-results? "))
                    (_ zo/babel-confirm-replace-tangle)))
@@ -427,7 +427,7 @@ EXPANDED -- The expanded content to be merged."
 		                 (skip-chars-backward " \t\n")
 		                 (line-beginning-position))))
           (zo/babel-insert-diff-block
-           body-start body-end body expanded))))))
+           body-start body-end body (concat expanded "\n")))))))
 
 (defun zo/babel-detangle-1 (&optional source-code-file)
   "Call detangle after bind custom function."
