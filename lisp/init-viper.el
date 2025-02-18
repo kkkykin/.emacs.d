@@ -201,11 +201,6 @@ removing duplicates."
            zr-dired-target-files)
    :test #'equal))
 
-(bind-keys
- :map zr-dired-spc-prefix-map
- ("t" . zr-dired-mark-target)
- ("T" . zr-dired-unmark-target))
-
 (setq dired-dwim-target #'zr-dired-dwim-target)
 
 (defun zr-dired-cond-ex (&rest args)
@@ -221,7 +216,9 @@ If the current major mode is `wdired-mode', execute the command using
 (with-eval-after-load 'dired
   (bind-keys
    :map zr-dired-spc-prefix-map
-   (":" . zr-dired-cond-ex)))
+   (":" . zr-dired-cond-ex)
+   ("t" . zr-dired-mark-target)
+   ("T" . zr-dired-unmark-target)))
 
 
 ;; window
