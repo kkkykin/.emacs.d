@@ -2135,7 +2135,9 @@ before calling the original function."
   :if (package-installed-p 'aidermacs)
   :vc (:url "https://github.com/MatthewZMD/aidermacs" :rev :latest)
   :custom
-  (aidermacs-args '("--no-auto-commits" "--deepseek"))
+  (aidermacs-extra-args '())
+  (aidermacs-auto-commits nil)
+  (aidermacs-default-model "deepseek/deepseek-chat")
   :bind
   ( :map zr-viper-vi-spc-prefix-map
     ("A" . aidermacs-transient-menu))
