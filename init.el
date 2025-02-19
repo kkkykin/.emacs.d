@@ -1125,6 +1125,13 @@ before calling the original function."
   (unless zr-sys-linux-p
     (setq epg-pinentry-mode 'loopback)))
 
+(use-package plstore
+  :init
+  (defcustom zr-local-pls nil
+    "Temp local plstore."
+    :safe t
+    :local 'permanent-only))
+
 (use-package mpc
   :custom
   (mpc-host "127.0.0.1"))
