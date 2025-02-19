@@ -390,12 +390,14 @@ BODY-END -- The end position of the region to be replaced.
 NEW-BODY -- The new content to be merged.
 EXPANDED -- The expanded content to be merged."
   (let ((new-file (make-temp-file "detangle" nil nil new-body))
+        (old-file (make-temp-file "detangle" nil nil
+                                  (buffer-substring body-start body-end)))
         (expand-file (make-temp-file "detangle" nil nil expanded)))
-    (with-restriction body-start body-end
-      ;; replaced string maybe above "#+begin_src", so narrow it.
-      (call-process-region body-start body-end (executable-find "diff3")
-                           t t nil "-m" new-file "-Lnew"
-                           expand-file "-Lexpand" "-" "-Lold"))
+    (delete-region body-start body-end)
+    (forward-line)
+    (call-process (executable-find "diff3") nil t nil "-m" expand-file
+                  "-Lexpand" old-file "-Lold" new-file "-Lnew")
+    (delete-file old-file)
     (delete-file new-file)
     (delete-file expand-file)))
 
