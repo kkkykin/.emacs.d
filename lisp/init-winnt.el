@@ -345,6 +345,7 @@ locale encoding for proper handling of non-ASCII filenames."
                 "mingw-winlibs-llvm-ucrt/current/share/info"))
       process-coding-system-alist
       `(("cmdproxy" . ,locale-coding-system)
+        ("aider" . ,locale-coding-system)
         ("awk" utf-8 . ,locale-coding-system)
         ("curl" utf-8 . ,locale-coding-system)
         ("ffmpeg" utf-8 . ,locale-coding-system)
