@@ -223,7 +223,7 @@
       (let* ((u (string-split proxy " "))
              (prefix (if (string= "PROXY" (car u)) "http://" "socks5h://")))
         (setq parameters (list (concat "-x" prefix (cadr u))))))
-    (list url parameters)))
+    parameters))
 
 (defcustom zn/pac-data-file
   (expand-file-name "surfingkeys/pac.json.gpg" zr-dotfiles-dir)
@@ -711,7 +711,7 @@ Argument EVENT tells what has happened to the process."
 (defun zn/advice-newsticker--get-news-by-wget (args)
   (setcar (cddr args)
           (append (caddr args)
-                  (cadr (zn/curl-parameters-dwim (cadr args)))))
+                  (zn/curl-parameters-dwim (cadr args))))
   args)
 
 (defun zn/newsticker-treeview-prev-page ()
@@ -839,7 +839,7 @@ If no custom prefix matches, it calls the original function."
         (apply orig-fun args)
       (let ((eww-retrieve-command
              (append `(,newsticker-wget-name ,@newsticker-wget-arguments "-o-")
-                     (cadr (zn/curl-parameters-dwim url)))))
+                     (zn/curl-parameters-dwim url))))
         (apply orig-fun args))))
   (add-to-list 'eww-url-transformers 'zn/url-redirect)
   (add-hook 'eww-after-render-hook #'zn/eww-render-hook))
