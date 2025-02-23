@@ -136,7 +136,7 @@ Usage:
 
 (bind-keys
  :map zv/vi-spc-prefix-map
- ("v" . zr-open-with-vim))
+ ("v" . zv/open-with-nvim))
 
 
 ;; dired
