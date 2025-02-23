@@ -2505,8 +2505,9 @@ before calling the original function."
   :init
   (require 'llm-gemini)
   (require 'llm-openai)
+  (define-key zr-menu [ellama]
+              '(menu-item "ellama" ellama-transient-main-menu))
   :custom
-  (ellama-keymap-prefix "C-x y")
   (ellama-language "Chinese")
   (ellama-translation-provider )
   (ellama-providers
@@ -2514,6 +2515,9 @@ before calling the original function."
                    :key (auth-source-pick-first-password
                          :host "makersuite.google.com")))))
   (llm-warn-on-nonfree nil)
+  (ellama-auto-scroll t)
+  :hook
+  (org-ctrl-c-ctrl-c-final . ellama-chat-send-last-message)
   :config
   (let ((ds-model
          (make-llm-openai-compatible
@@ -2523,8 +2527,8 @@ before calling the original function."
         (lo-model
          (make-llm-openai-compatible :url "http://127.0.0.1:7778")))
     (setq ellama-provider ds-model)
-    (push ds-model ellama-providers)
-    (push lo-model ellama-providers)))
+    (push (cons "local" lo-model) ellama-providers))
+  (ellama-context-header-line-global-mode +1))
 
 (use-package keyfreq
   :if (package-installed-p 'keyfreq)
