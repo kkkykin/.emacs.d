@@ -76,7 +76,7 @@ variables."
                                    '(:object-type plist))
              :mountPoints))
 
-(defun zr-rclone-mount-remote (remote &optional root)
+(defun zr-rclone-mount-remote (remote &optional root remote-path)
   "Create a new mount point."
   (interactive
    (list (completing-read "Remote: "
@@ -88,10 +88,11 @@ variables."
     (make-directory root t)
     (zr-rclone-rc-contact
      "mount/mount"
-     (json-encode `(("fs" . ,(concat remote ":"))
+     (json-encode `(("fs" . ,(concat remote ":" (or remote-path "")))
                     ("mountPoint" . ,path)
                     ("vfsOpt" . ,(json-encode '(("vfs-cache-mode" . "writes")))))))
-    (dired path)))
+    (when (called-interactively-p t)
+      (dired path))))
 
 (defun zr-rclone-unmount (point)
   "Unmount selected active mount."
