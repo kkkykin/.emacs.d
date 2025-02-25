@@ -2067,6 +2067,7 @@ before calling the original function."
   :custom
   ;; (package-install-upgrade-built-in t)
   ;; (package-pinned-packages nil)
+  (package-quickstart t)
   (package-archives '(("gnu" . "https://mirrors.ustc.edu.cn/elpa/gnu/")
                       ("nongnu" . "https://mirrors.ustc.edu.cn/elpa/nongnu/")
                       ("melpa" . "https://mirrors.ustc.edu.cn/elpa/melpa/")))
@@ -2507,6 +2508,8 @@ before calling the original function."
   (require 'llm-openai)
   (define-key zr-menu [ellama]
               '(menu-item "ellama" ellama-transient-main-menu))
+  :commands
+  (ellama-transient-main-menu)
   :custom
   (ellama-language "Chinese")
   (ellama-translation-provider )
