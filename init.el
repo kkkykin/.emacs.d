@@ -47,6 +47,7 @@
   (scroll-margin 0)
   (scroll-conservatively 97)
   (make-cursor-line-fully-visible nil)
+  (blink-matching-paren-highlight-offscreen t)
   (blink-cursor-mode nil)
   (column-number-mode t)
   (shift-select-mode nil)
@@ -643,7 +644,7 @@
   (show-paren-predicate '(or (not (derived-mode . special-mode))
                              (major-mode . Info-mode)))
   (show-paren-when-point-in-periphery t)
-  (show-paren-context-when-offscreen 'overlay))
+  (show-paren-context-when-offscreen 'child-frame))
 
 (use-package which-func :defer 5
   :autoload which-function
