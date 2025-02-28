@@ -2069,6 +2069,7 @@ before calling the original function."
   ;; (package-install-upgrade-built-in t)
   ;; (package-pinned-packages nil)
   (package-quickstart t)
+  (package-quickstart-file (locate-user-emacs-file "_package-quickstart.el"))
   (package-archives '(("gnu" . "https://mirrors.ustc.edu.cn/elpa/gnu/")
                       ("nongnu" . "https://mirrors.ustc.edu.cn/elpa/nongnu/")
                       ("melpa" . "https://mirrors.ustc.edu.cn/elpa/melpa/")))
@@ -2512,6 +2513,7 @@ before calling the original function."
   :commands
   (ellama-transient-main-menu)
   :custom
+  (ellama-sessions-directory (locate-user-emacs-file "_ellama-sessions"))
   (ellama-language "Chinese")
   (ellama-translation-provider )
   (ellama-providers
