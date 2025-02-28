@@ -33,5 +33,16 @@
       (eshell-set-variable
        (concat (string-join args "_") "_" (car mark)) file))))
 
+(defun eshell/vi (&rest args)
+  "Open files in Neovim, optionally using a remote server if configured.
+If `zr-viper-default-nvim-server' is bound and non-nil, files are opened
+in the specified Neovim server. Otherwise, files are opened in a new
+Neovim instance."
+  (apply #'call-process "nvim" nil 0 nil
+         (if (bound-and-true-p zr-viper-default-nvim-server)
+             `("--server" ,zr-viper-default-nvim-server "--remote"
+               ,@(mapcar #'expand-file-name args))
+           args)))
+
 (provide 'init-esh)
 ;;; init-esh.el ends here
