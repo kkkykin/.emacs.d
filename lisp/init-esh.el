@@ -44,5 +44,21 @@ Neovim instance."
                ,@(mapcar #'expand-file-name args))
            args)))
 
+(defun eshell/vt (&rest args)
+  "Open a new terminal buffer in Neovim with the specified command.
+If `zr-viper-default-nvim-server' is bound and true, the command is
+executed remotely in the existing Neovim server. Otherwise, it opens a
+new Neovim instance.
+
+ARGS: A list of arguments to be passed as the command to execute in the
+terminal."
+  (let ((term (concat "te " (combine-and-quote-strings args " "))))
+    (apply #'call-process "nvim" nil 0 nil
+           (if (bound-and-true-p zr-viper-default-nvim-server)
+               `("--server" ,zr-viper-default-nvim-server "--remote-expr"
+                 ,(format "execute('tab %s')"
+                          (string-replace "'" "''" term)))
+             (list "--cmd" term)))))
+
 (provide 'init-esh)
 ;;; init-esh.el ends here
