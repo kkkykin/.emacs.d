@@ -2152,8 +2152,9 @@ before calling the original function."
   ( :map zr-viper-vi-spc-prefix-map
     ("A" . aidermacs-transient-menu))
   :config
-  (when-let* ((ds-key (auth-source-pick-first-password :host "deepseek.api")))
-    (setenv "DEEPSEEK_API_KEY" ds-key)))
+  (dolist (m '("gemini" "deepseek" "groq"))
+    (when-let* ((key (auth-source-pick-first-password :host (concat m ".api"))))
+      (setenv (concat (upcase m) "_API_KEY") key))))
 
 (use-package dape
   :if (package-installed-p 'dape)
@@ -2516,24 +2517,27 @@ before calling the original function."
   (ellama-sessions-directory (locate-user-emacs-file "_ellama-sessions"))
   (ellama-language "Chinese")
   (ellama-translation-provider )
+  (ellama-provider
+   (make-llm-openai-compatible
+    :url "https://api.deepseek.com"
+    :chat-model "deepseek-chat"
+    :key (auth-source-pick-first-password :host "deepseek.api")))
   (ellama-providers
    `(("gemini" . ,(make-llm-gemini
                    :key (auth-source-pick-first-password
-                         :host "makersuite.google.com")))))
+                         :host "gemini.api")))
+     ("groq" . ,(make-llm-openai-compatible
+                 :url "https://api.groq.com/openai/v1"
+                 :key (auth-source-pick-first-password
+                       :host "groq.api")
+                 :chat-model "llama3-70b-8192"))
+     ("local" . ,(make-llm-openai-compatible
+                  :url "http://127.0.0.1:7778"))))
   (llm-warn-on-nonfree nil)
   (ellama-auto-scroll t)
   :hook
   (org-ctrl-c-ctrl-c-final . ellama-chat-send-last-message)
   :config
-  (let ((ds-model
-         (make-llm-openai-compatible
-          :url "https://api.deepseek.com"
-          :chat-model "deepseek-chat"
-          :key (auth-source-pick-first-password :host "deepseek.api")))
-        (lo-model
-         (make-llm-openai-compatible :url "http://127.0.0.1:7778")))
-    (setq ellama-provider ds-model)
-    (push (cons "local" lo-model) ellama-providers))
   (ellama-context-header-line-global-mode +1))
 
 (use-package keyfreq
