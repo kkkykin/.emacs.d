@@ -59,7 +59,8 @@
 (defun zw/find-shell-command-coding-system (command)
   "Find coding system for shell command."
   (let ((program (zw/cmdproxy-real-program-name command)))
-    (find-operation-coding-system 'call-process program)))
+    (or (find-operation-coding-system 'call-process program)
+        default-process-coding-system)))
 
 (define-advice shell-command-on-region (:around (orig-fun &rest args) fix-coding)
   "Fix coding system for `shell-command-on-region' when not in a remote
@@ -117,26 +118,20 @@ being executed.
 
 This function checks if the current directory is local (not remote). If
 so, it determines the appropriate coding system for the command being
-executed by the process PROC using `find-operation-coding-system`.  It
-then sets the process coding system for PROC to ensure correct encoding
-and decoding of input and output.
+executed by the process PROC.  It then sets the process coding system
+for PROC to ensure correct encoding and decoding of input and output.
 
 The function is intended to be used with `eshell-exec-hook' to
 dynamically adjust the coding system for each command executed in
 Eshell."
-  (when-let* (((not (file-remote-p default-directory)))
-             (cs (find-operation-coding-system
-                  #'call-process (car (process-command proc)))))
-    (set-process-coding-system proc (car cs) (cdr cs))))
+  (unless (file-remote-p default-directory)
+    (zw/proc-coding-system-fix proc)))
 (add-hook 'eshell-exec-hook #'zw/eshell-change-cs-when-exec)
 
 (defun zw/shell-change-cs-before-send-input (proc string)
   "See `zw/eshell-change-cs-when-exec'."
-  (when-let* (((not (string-empty-p string)))
-             ((zw/proc-coding-system-fix proc string))
-             (cs (find-operation-coding-system
-                  #'call-process (car (process-command proc)))))
-    (set-process-coding-system proc (car cs) (cdr cs)))
+  (unless (string-empty-p string)
+    (zw/proc-coding-system-fix proc string))
   (comint-simple-send proc string))
 
 (defun zw/shell-mode-setup ()
@@ -312,6 +307,11 @@ locale encoding for proper handling of non-ASCII filenames."
 ;; tramp
 
 (with-eval-after-load 'tramp
+  (connection-local-set-profile-variables
+   'winnt-fix-coding-system-profile
+   '((default-process-coding-system . (utf-8-dos . utf-8-unix))))
+  (connection-local-set-profiles
+   '(:application tramp) 'winnt-fix-coding-system-profile)
   (setq tramp-default-method "sshx"
         tramp-use-connection-share nil))
 
@@ -337,7 +337,7 @@ locale encoding for proper handling of non-ASCII filenames."
       grep-highlight-matches t
       find-ls-option '("-exec ls -ldh \"{}\" \";\" | iconv -f utf-8 -t gb18030 -cs" . "-ldh")
       ls-lisp-use-insert-directory-program t
-      default-process-coding-system '(utf-8-dos . utf-8-unix) ;; change this maybe break tramp sshx
+      default-process-coding-system (cons 'utf-8-dos locale-coding-system)
       ispell-extra-args (list "--filter-path" (substitute-in-file-name "$USERPROFILE/scoop/apps/aspell/current/lib/aspell-0.60"))
       Info-default-directory-list
       (mapcar (lambda (a) (concat (getenv "USERPROFILE") "/scoop/apps/" a))
@@ -345,21 +345,7 @@ locale encoding for proper handling of non-ASCII filenames."
                 "mingw-winlibs-llvm-ucrt/current/share/info"))
       process-coding-system-alist
       `(("cmdproxy" . ,locale-coding-system)
-        ("aider" . ,locale-coding-system)
-        ("awk" utf-8 . ,locale-coding-system)
-        ("curl" utf-8 . ,locale-coding-system)
-        ("ffmpeg" utf-8 . ,locale-coding-system)
-        (,(regexp-quote find-program) utf-8 . ,locale-coding-system)
-        (,grep-program utf-8 . ,locale-coding-system)
-        ("git" utf-8 . ,locale-coding-system)
-        ("tectonic" utf-8 . ,locale-coding-system)
-        ("ls" utf-8 . ,locale-coding-system)
-        ("pandoc" utf-8 . ,locale-coding-system)
-        ("make" utf-8 . ,locale-coding-system)
-        ("mpv" utf-8 . ,locale-coding-system)
-        ("mupdf" utf-8 . ,locale-coding-system)
-        ("mutool" utf-8 . ,locale-coding-system)
-        ("sha256sum" utf-8 . ,locale-coding-system))
+        ("aider" . ,locale-coding-system))
       file-name-coding-system locale-coding-system
       shr-use-fonts nil)
 
