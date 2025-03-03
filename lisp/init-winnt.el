@@ -116,16 +116,13 @@ command it is running.  It only applies the fix if the current
   "Change the coding system of the Eshell process PROC based on the command
 being executed.
 
-This function checks if the current directory is local (not remote). If
-so, it determines the appropriate coding system for the command being
-executed by the process PROC.  It then sets the process coding system
-for PROC to ensure correct encoding and decoding of input and output.
+It then sets the process coding system for PROC to ensure correct
+encoding and decoding of input and output.
 
 The function is intended to be used with `eshell-exec-hook' to
 dynamically adjust the coding system for each command executed in
 Eshell."
-  (unless (file-remote-p default-directory)
-    (zw/proc-coding-system-fix proc)))
+  (zw/proc-coding-system-fix proc))
 (add-hook 'eshell-exec-hook #'zw/eshell-change-cs-when-exec)
 
 (defun zw/shell-change-cs-before-send-input (proc string)
