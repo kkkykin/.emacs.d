@@ -225,6 +225,13 @@
         (setq parameters (list (concat "-x" prefix (cadr u))))))
     parameters))
 
+(with-eval-after-load 'plz
+  (define-advice plz (:around (fn method url &rest args) append-arg)
+    (let ((plz-curl-default-args
+           (append (zn/curl-parameters-dwim url)
+                   plz-curl-default-args)))
+      (apply fn method url args))))
+
 (defcustom zn/pac-data-file
   (expand-file-name "surfingkeys/pac.json.gpg" zr-dotfiles-dir)
   "PAC data file path."
