@@ -46,6 +46,10 @@
 
 ;; shell
 
+(defun zw/display-windows-terminal ()
+  "Focus on windows terminal quake window."
+  (call-process "wt" nil 0 nil "-w" "_quake" "ft"))
+
 (defconst zw/vanilla-shell shell-file-name)
 
 (defun zw/cmdproxy-real-program-name (cmd)
@@ -342,6 +346,7 @@ locale encoding for proper handling of non-ASCII filenames."
                 "mingw-winlibs-llvm-ucrt/current/share/info"))
       process-coding-system-alist
       `(("cmdproxy" . ,locale-coding-system)
+        ("ipconfig" . ,locale-coding-system)
         ("aider" . ,locale-coding-system))
       file-name-coding-system locale-coding-system
       shr-use-fonts nil)

@@ -38,9 +38,11 @@
 If `zr-viper-default-nvim-server' is bound and non-nil, files are opened
 in the specified Neovim server. Otherwise, files are opened in a new
 Neovim instance."
+  (pcase system-type
+    ('windows-nt (zr-win-display-windows-terminal)))
   (apply #'call-process "nvim" nil 0 nil
          (if (bound-and-true-p zr-viper-default-nvim-server)
-             `("--server" ,zr-viper-default-nvim-server "--remote"
+             `("--server" ,zr-viper-default-nvim-server "--remote-tab"
                ,@(mapcar #'expand-file-name args))
            args)))
 
@@ -56,9 +58,25 @@ terminal."
     (apply #'call-process "nvim" nil 0 nil
            (if (bound-and-true-p zr-viper-default-nvim-server)
                `("--server" ,zr-viper-default-nvim-server "--remote-expr"
-                 ,(format "execute('tab %s')"
+                 ,(format "execute('tabe | tc %s | %s')"
+                          (if (file-remote-p default-directory) ""
+                            default-directory)
                           (string-replace "'" "''" term)))
              (list "--cmd" term)))))
 
+(defun ze/invoke-by-nvim (&rest args)
+  "Invoke program in neovim."
+  (pcase system-type
+    ('windows-nt (zr-win-display-windows-terminal)))
+  (throw 'eshell-replace-command
+         (eshell-parse-command "vt" args)))
+
+(dolist (cmd (list (rx bos (| "ping") eos)))
+  (add-to-list 'eshell-interpreter-alist (cons cmd 'ze/invoke-by-nvim)))
+
 (provide 'init-esh)
 ;;; init-esh.el ends here
+
+;; Local Variables:
+;; read-symbol-shorthands: (("ze/" . "zr-eshell-"))
+;; End:
