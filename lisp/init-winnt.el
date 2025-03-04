@@ -126,7 +126,15 @@ encoding and decoding of input and output.
 The function is intended to be used with `eshell-exec-hook' to
 dynamically adjust the coding system for each command executed in
 Eshell."
-  (zw/proc-coding-system-fix proc (car (process-command proc))))
+  (when (memq eshell-in-pipeline-p '(nil last))
+    (let ((cmd (process-command proc)))
+      (zw/proc-coding-system-fix
+       proc
+       (if (member (car cmd)
+                   (list explicit-shell-file-name
+                         shell-file-name))
+           (nth 2 cmd)
+         (car cmd))))))
 (add-hook 'eshell-exec-hook #'zw/eshell-change-cs-when-exec)
 
 (defun zw/shell-change-cs-before-send-input (proc string)
