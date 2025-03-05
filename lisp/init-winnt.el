@@ -355,6 +355,7 @@ locale encoding for proper handling of non-ASCII filenames."
       process-coding-system-alist
       `(("cmdproxy" . ,locale-coding-system)
         ("ipconfig" . ,locale-coding-system)
+        ("findstr" . ,locale-coding-system)
         ("aider" . ,locale-coding-system))
       file-name-coding-system locale-coding-system
       shr-use-fonts nil)
