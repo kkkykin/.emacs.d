@@ -54,7 +54,7 @@ new Neovim instance.
 
 ARGS: A list of arguments to be passed as the command to execute in the
 terminal."
-  (let ((term (concat "te " (combine-and-quote-strings args " "))))
+  (let ((term (concat "te " (combine-and-quote-strings (flatten-tree args)))))
     (apply #'call-process "nvim" nil 0 nil
            (if (bound-and-true-p zr-viper-default-nvim-server)
                `("--server" ,zr-viper-default-nvim-server "--remote-expr"
