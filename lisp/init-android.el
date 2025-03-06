@@ -361,7 +361,7 @@ Example usage:
       (let ((time (* 60 minutes)))
         (setq za/wifi-timer
               (apply #'run-at-time time time #'start-process
-                     "wifi-handler" nil "zr-wifi-manage" args))))))
+                     "wifi-handler" nil "timeout" "10s" "zr-wifi-manage" args))))))
 
 (defun za/wifi-try-remove-tmp-connection (ssid)
   "Attempt to remove a temporary Wi-Fi connection suggestion for SSID.
