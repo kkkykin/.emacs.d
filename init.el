@@ -1380,9 +1380,6 @@ before calling the original function."
 (use-package tab-bar
   :hook emacs-startup
   :bind
-  ( :map tab-bar-mode-map
-    ("C-<tab>" . nil)
-    ("C-S-<tab>" . nil))
   (:repeat-map tab-bar-move-repeat-map
                ("G" . tab-group)
                ("0" . tab-close)
@@ -1393,6 +1390,7 @@ before calling the original function."
                ("<left>" . tab-bar-history-back))
   :custom
   (tab-bar-format '(tab-bar-format-global tab-bar-format-tabs-groups))
+  (tab-bar-define-keys 'numeric)
   (tab-bar-select-tab-modifiers '(control))
   (tab-bar-tab-hints t)
   (tab-bar-new-tab-to 'rightmost)
