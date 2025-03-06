@@ -452,7 +452,9 @@
   :custom
   (tmm-shortcut-words nil)
   (tmm-shortcut-inside-entry t)
-  (tmm-completion-prompt nil))
+  (tmm-completion-prompt nil)
+  :config
+  (advice-add 'tmm-add-prompt :after #'minibuffer-hide-completions))
 
 (use-package tooltip
   :custom
