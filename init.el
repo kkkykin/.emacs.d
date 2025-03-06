@@ -246,8 +246,9 @@
     :prefix "g"
     :prefix-map zr-viper-vi-g-prefix-map
     ("g" . beginning-of-buffer)
-    ("t" . tab-bar-switch-to-next-tab)
-    ("T" . tab-bar-switch-to-prev-tab)
+    ("cc" . comment-line)
+    ("t" . tab-line-switch-to-next-tab)
+    ("T" . tab-line-switch-to-prev-tab)
     :prefix "SPC"
     :prefix-map zr-viper-vi-spc-prefix-map
     ("d" . duplicate-dwim)
@@ -1391,7 +1392,7 @@ before calling the original function."
                ("<right>" . tab-bar-history-forward)
                ("<left>" . tab-bar-history-back))
   :custom
-  (tab-bar-format '(tab-bar-format-global tab-bar-format-tabs-groups))
+  (tab-bar-format '(tab-bar-format-tabs-groups))
   (tab-bar-define-keys 'numeric)
   (tab-bar-select-tab-modifiers '(control))
   (tab-bar-tab-hints t)
@@ -1402,6 +1403,14 @@ before calling the original function."
   (tab-bar-tab ((t (:inherit mode-line :box t))))
   (tab-bar-tab-inactive ((t (:inherit mode-line-inactive :box nil))))
   :config
+  (defun zr-tab-bar-format-setup ()
+    (if (eq t (framep (selected-frame)))
+        (setopt tab-bar-show 1
+                tab-bar-format
+                (remove 'tab-bar-format-global tab-bar-format))
+      (add-to-list 'tab-bar-format 'tab-bar-format-global)
+      (setopt tab-bar-show t)))
+  (add-hook 'server-after-make-frame-hook #'zr-tab-bar-format-setup)
   (unless zr-sys-android-p
     (setq tab-bar-close-button-show nil))
   (tab-bar-history-mode))
@@ -1529,6 +1538,10 @@ before calling the original function."
   (recentf-max-saved-items 1000)
   (recentf-exclude `("/data/data/com\\.termux/files/home/tmp" "/tmp/" "/ssh:"
                      "/sshx:" ,(file-name-concat package-user-dir ".*-autoloads\\.el\\'"))))
+
+(use-package term/xterm
+  :custom
+  (xterm-extra-capabilities '(modifyOtherKeys setSelection)))
 
 (use-package esh-mode
   :init

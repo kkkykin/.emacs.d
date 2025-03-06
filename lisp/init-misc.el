@@ -232,18 +232,26 @@ Returns non-nil if dark mode is active:
 - Other systems: Returns nil
 
 ref: https://github.com/LionyxML/auto-dark-emacs/blob/master/auto-dark.el"
-  (pcase system-type
-    ('windows-nt
-     (eq 0 (w32-read-registry 'HKCU "SOFTWARE/Microsoft/Windows/CurrentVersion/Themes/Personalize" "AppsUseLightTheme")))
-    ('gnu/linux
-     (eq 1 (caar (dbus-ignore-errors
-                   (dbus-call-method
-                    :session
-                    "org.freedesktop.portal.Desktop"
-                    "/org/freedesktop/portal/desktop"
-                    "org.freedesktop.portal.Settings" "Read"
-                    "org.freedesktop.appearance" "color-scheme")))))
-    (_ nil)))
+  (if (eq t (framep (selected-frame)))
+      ;; stolen from xterm--init
+      (when (memq 'reportBackground xterm-extra-capabilities)
+        (xterm--query "\e]11;?\e\\"
+                      '(("\e]11;" .  xterm--report-background-handler))))
+    (pcase system-type
+      ('windows-nt
+       (eq 0 (w32-read-registry
+              'HKCU
+              "SOFTWARE/Microsoft/Windows/CurrentVersion/Themes/Personalize"
+              "AppsUseLightTheme")))
+      ('gnu/linux
+       (eq 1 (caar (dbus-ignore-errors
+                     (dbus-call-method
+                      :session
+                      "org.freedesktop.portal.Desktop"
+                      "/org/freedesktop/portal/desktop"
+                      "org.freedesktop.portal.Settings" "Read"
+                      "org.freedesktop.appearance" "color-scheme")))))
+      (_ nil))))
 
 (defun zr-theme-shuffle-set (&optional themes)
   "Randomly select and enable a theme from appropriate category.
