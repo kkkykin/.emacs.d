@@ -283,7 +283,9 @@
   (ex-cycle-other-window nil)
   (viper-syntax-preference 'emacs)
   :custom-face
-  (viper-minibuffer-emacs ((t (:background nil :foreground nil)))))
+  (viper-minibuffer-emacs ((t (:background nil :foreground nil))))
+  :config
+  (setq viper-vi-state-id nil))
 
 (use-package help
   :custom
