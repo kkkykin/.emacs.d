@@ -857,7 +857,8 @@ ref: https://karthinks.com/software/emacs-window-management-almanac/"
   (when-let* ((notify-fn (pcase system-type
                            ('android #'android-notifications-notify)
                            ('windows-nt #'w32-notification-notify)
-                           ('gnu/linux #'notifications-notify)))
+                           ((guard (fboundp #'notifications-notify))
+                            #'notifications-notify)))
               (id (apply notify-fn :title title :body body params))
               (timeout (plist-get params :timeout))
               ((eq system-type 'windows-nt)))
