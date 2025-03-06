@@ -449,6 +449,7 @@ and retries connection after 60 seconds if the SSID is not found in the scan."
   "Toggle display keyboard on scree."
   :init-value touch-screen-display-keyboard
   :lighter " K"
+  (frame-toggle-on-screen-keyboard nil touch-screen-display-keyboard)
   (setq touch-screen-display-keyboard za/display-keyboard-mode))
 
 (defun za/event-apply-prefix (key &optional hide-keyboard)
