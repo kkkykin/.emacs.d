@@ -918,6 +918,9 @@ before calling the original function."
               (list 'menu-item "tramp-menu" zr-tramp-menu))
   (define-key zr-tramp-menu [tramp-cleanup-connection]
               '(menu-item "cleanup-connection" tramp-cleanup-connection))
+  (define-key zr-tramp-menu [tramp-cleanup-bufferless-connections]
+              '(menu-item "cleanup-bufferless-connections"
+                          tramp-cleanup-bufferless-connections))
   (define-key zr-tramp-menu [tramp-cleanup-some-buffers]
               '(menu-item "cleanup-some-buffers" tramp-cleanup-some-buffers))
   :custom
