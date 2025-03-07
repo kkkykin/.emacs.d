@@ -146,17 +146,16 @@ variables."
               (if include-directorys opt
                 (cons'("filesOnly" . t) opt)))))))
 
-(defun zr-rclone-filelist-export (fs remote file &optional regexp prefix)
-  (write-region
-   (mapconcat (lambda (a)
-                (if prefix
-                    (replace-regexp-in-string
-                     (format "^%s:" fs) prefix a)
-                  a))
-              (zr-rclone-directory-files-recursively
-               fs remote (or regexp ".*"))
-              "\n")
-   nil file))
+(defun zr-rclone-filelist-export (fs remote &optional regexp prefix)
+  (let ((filelist (mapconcat (lambda (a)
+                               (if prefix
+                                   (replace-regexp-in-string
+                                    (format "^%s:" fs) prefix a)
+                                 a))
+                             (zr-rclone-directory-files-recursively
+                              fs remote (or regexp ".*"))
+                             "\n")))
+    filelist))
 
 (provide 'init-rclone)
 ;;; init-rclone.el ends here
