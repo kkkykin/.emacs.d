@@ -46,6 +46,20 @@ command line."
 (with-eval-after-load 'plantuml-mode
   (zl/fix-plantuml-args 'plantuml-executable-path 'plantuml-executable-args))
 
+(defun zl/gpg-term ()
+  "Start term and automatically execute commands."
+  (interactive)
+  (ansi-term)
+  (when-let* ((proc (get-buffer-process (current-buffer))))
+    (term-send-string "set +o history\n")
+    (dolist (cmd '("SSH_AUTH_SOCK=\"$(gpgconf --list-dirs agent-ssh-socket)\""
+                   "export SSH_AUTH_SOCK"
+                   "GPG_TTY=\"$(tty)\""
+                   "export GPG_TTY"
+                   "gpg-connect-agent updatestartuptty /bye > /dev/null"))
+      (term-send-string proc (concat cmd "\n")))
+    (term-send-string "set -o history\n")))
+
 (provide 'init-linux)
 ;;; init-linux.el ends here
 
