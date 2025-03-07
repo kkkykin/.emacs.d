@@ -291,6 +291,31 @@ buffer. ref: `org-babel-src-block-names'."
                 (when name (push (cons name (point)) blocks))))))
         blocks))))
 
+(defun zo/babel-display-src-block-result (&optional re-run)
+  "Display image results of source block at point.
+
+If `point' is on a source block then display the results of the source
+code block, otherwise return nil.  With optional prefix argument
+RE-RUN the source-code block is evaluated even if results already
+exist.
+ref: `org-babel-open-src-block-result'"
+  (interactive "P")
+  (pcase (org-babel-get-src-block-info 'no-eval)
+    (`(,_ ,_ ,arguments ,_ ,_ ,start ,_)
+     (save-excursion
+       ;; Go to the results, if there aren't any then run the block.
+       (goto-char start)
+       (goto-char (or (and (not re-run) (org-babel-where-is-src-block-result))
+		              (progn (org-babel-execute-src-block)
+			                 (org-babel-where-is-src-block-result))))
+       (end-of-line)
+       (skip-chars-forward " \r\t\n")
+       ;; Display the results.
+       (when (looking-at org-link-bracket-re)
+         (org-display-inline-images
+          nil t (match-beginning 0) (match-end 0)))))
+    (_ nil)))
+
 (defun zo/babel-execute-named-src-block (&optional name params)
   "Execute a named Babel source block or call in the current Org buffer.
 
@@ -364,6 +389,7 @@ locally, enabling source block-aware completion in org-mode documents."
   (bind-keys
    :map org-babel-map
    ("v" . zo/babel-expand-src-block)
+   ("q" . zo/babel-display-src-block-result)
    ("m" . zo/babel-execute-named-src-block)))
 
 (defvar zo/babel-confirm-replace-tangle 'ask
