@@ -1002,8 +1002,9 @@ before calling the original function."
   (dired-hide-details-hide-absolute-location t)
   (dired-guess-shell-alist-user
    `((,(rx ?. (| "rar" "zip" "7z" "iso" "cab" "apks") (? ".001") eos)
-      #1=(format "%s x -spe -o\"%s\" -aoa -p⑨"
-                 archive-7z-program (file-name-sans-extension file)))
+      #1=(format "%s x -spe -o\"%s\" -aoa -p%s"
+                 archive-7z-program (file-name-sans-extension file)
+                 zr-archive-pwd))
      ("\\.docx?\\'"
       (format "pandoc -o \"%s.org\""
               (file-name-sans-extension file)))
@@ -1074,6 +1075,8 @@ before calling the original function."
     :prefix-map zr-dired-spc-prefix-map
     ("a" . org-attach-dired-to-subtree))
   :config
+  (defvar zr-archive-pwd "⑨"
+    "Default archive passwd.")
   (when-let* ((7z (or (executable-find "7z")
                      (executable-find "7zz")
                      (executable-find "7za"))))
