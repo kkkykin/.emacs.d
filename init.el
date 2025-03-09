@@ -2173,6 +2173,7 @@ before calling the original function."
   ( :map zr-viper-vi-spc-prefix-map
     ("A" . aidermacs-transient-menu))
   :config
+  (setenv "PYTHONIOENCODING" "utf-8")
   (dolist (m '("gemini" "deepseek" "groq"))
     (when-let* ((key (auth-source-pick-first-password :host (concat m ".api"))))
       (setenv (concat (upcase m) "_API_KEY") key))))

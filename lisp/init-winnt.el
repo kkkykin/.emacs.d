@@ -255,8 +255,12 @@ https://learn.microsoft.com/en-us/windows/security/application-security/applicat
 
 (define-advice insert-directory (:around (orig-fun &rest args) fix-cs)
   "Force decode `ls' output with 'utf-8."
-  (let ((coding-system-for-read 'utf-8))
-    (apply orig-fun args)))
+  (condition-case err
+      (let ((coding-system-for-read 'utf-8))
+        (apply orig-fun args))
+    ('file-error
+     (let (ls-lisp-use-insert-directory-program)
+       (apply orig-fun args)))))
 
 (defun zr-dired-change-onedrive-stat (&optional arg)
   "Toggle OneDrive sync attributes for marked files in dired.
@@ -356,7 +360,7 @@ locale encoding for proper handling of non-ASCII filenames."
       `(("cmdproxy" . ,locale-coding-system)
         ("ipconfig" . ,locale-coding-system)
         ("findstr" . ,locale-coding-system)
-        ("aider" . ,locale-coding-system))
+        ("aider" . utf-8))
       file-name-coding-system locale-coding-system
       shr-use-fonts nil)
 
