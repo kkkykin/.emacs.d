@@ -37,6 +37,29 @@
   "Default rclone root directory."
   :type 'directory)
 
+(defcustom zr-rclone-rc-function #'zr-rclone-call-curl
+  "Function to interact with rclone rc api.")
+
+(defun zr-rclone-url-retrieve (user baseurl action args)
+  "Make HTTP call to rclone RC API using url-retrieve-synchronously."
+  (let ((url (concat baseurl "/" action))
+        (url-request-method "POST")
+        (url-request-extra-headers
+         `(("Authorization" . ,(concat "Basic " (base64-encode-string user)))))
+        (url-request-data args))
+    (when args
+      (push '("Content-Type" . "application/json") url-request-extra-headers))
+    (url-insert-file-contents url)))
+
+(defun zr-rclone-call-curl (user baseurl action args)
+  "Make curl call to rclone RC API."
+  (apply #'call-process "curl" nil (current-buffer) nil
+         "-su" user "-XPOST"
+         (concat baseurl "/" action)
+         (when args
+           (append '("-H" "Content-Type: application/json" "-d")
+                   (list args)))))
+
 (defun zr-rclone-rc-contact (action &optional args json-type async baseurl)
   "Contact with rclone."
   (with-current-buffer (get-buffer-create "*rclone-rc*")
@@ -49,12 +72,8 @@
                 (user (concat (plist-get auth :user)
                               ":" (auth-info-password auth))))
       (goto-char begin)
-      (apply #'call-process "curl" nil (current-buffer) nil
-             "-su" user "-XPOST"
-             (concat (or baseurl zr-rclone-baseurl) "/" action)
-             (when args
-               (append '("-H" "Content-Type: application/json" "-d")
-                       (list args))))
+      (funcall zr-rclone-rc-function
+               user (or baseurl zr-rclone-baseurl) action args)
       (with-restriction begin (point-max)
         (goto-char begin)
         (apply #'json-parse-buffer json-type)))))
@@ -147,14 +166,13 @@ variables."
                 (cons'("filesOnly" . t) opt)))))))
 
 (defun zr-rclone-filelist-export (fs remote &optional regexp prefix)
-  (let ((filelist (mapconcat (lambda (a)
-                               (if prefix
-                                   (replace-regexp-in-string
-                                    (format "^%s:" fs) prefix a)
-                                 a))
-                             (zr-rclone-directory-files-recursively
-                              fs remote (or regexp ".*"))
-                             "\n")))
+  (let ((filelist (mapcar (lambda (a)
+                            (if prefix
+                                (replace-regexp-in-string
+                                 (format "^%s:" fs) prefix a)
+                              a))
+                          (zr-rclone-directory-files-recursively
+                           fs remote (or regexp ".*")))))
     filelist))
 
 (provide 'init-rclone)
