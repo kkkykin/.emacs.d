@@ -1008,6 +1008,7 @@ before calling the original function."
      ("\\.docx?\\'"
       (format "pandoc -o \"%s.org\""
               (file-name-sans-extension file)))
+     ("\\.exe\\'" "innounp -x -o -b -u -pixyg688.com")
      ("\\.apk\\'"
       (format "adb %sinstall"
               (let ((devices
