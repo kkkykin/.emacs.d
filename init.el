@@ -1689,7 +1689,14 @@ before calling the original function."
           (css "https://github.com/tree-sitter/tree-sitter-css")
           (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
           (jsdoc "https://github.com/tree-sitter/tree-sitter-jsdoc")
-          (tsx . ("https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")))))
+          (tsx . ("https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src"))
+          ;; doc
+          (markdown . ("https://github.com/tree-sitter-grammars/tree-sitter-markdown" "split_parser" "tree-sitter-markdown/src"))))
+  (defun zr-treesit-install-all ()
+    "ref: https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
+    (interactive)
+    (mapc #'treesit-install-language-grammar
+          (mapcar #'car treesit-language-source-alist))))
 
 (use-package cmake-ts-mode
   :if (treesit-language-available-p 'cmake)
