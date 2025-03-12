@@ -2181,7 +2181,6 @@ before calling the original function."
 
 (use-package aidermacs
   :if (package-installed-p 'aidermacs)
-  :vc (:url "https://github.com/MatthewZMD/aidermacs" :rev :latest)
   :custom
   (aidermacs-extra-args '())
   (aidermacs-auto-commits nil)
