@@ -2074,6 +2074,15 @@ before calling the original function."
   (org-html-postamble nil)
   (org-latex-pdf-process '("tectonic %f"))
   (org-latex-default-class "ctexart")
+  (org-latex-hyperref-template "\\hypersetup{
+ pdfborder={0 0 0},
+ pdfauthor={%a},
+ pdftitle={%t},
+ pdfkeywords={%k},
+ pdfsubject={%d},
+ pdfcreator={%c}, 
+ pdflang={%L}}
+")
   (org-latex-packages-alist '(("margin=1in,a4paper" "geometry" nil)
                               ("" "fvextra" nil)))
   :config
