@@ -4,4 +4,5 @@ myprompt () {
 PROMPT_COMMAND=myprompt
 
 export GIT_PAGER=''
+export EDITOR='emacsclient'
 history -c

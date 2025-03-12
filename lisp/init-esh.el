@@ -33,6 +33,11 @@
       (eshell-set-variable
        (concat (string-join args "_") "_" (car mark)) file))))
 
+(defun eshell/with-editor-maybe (&rest args)
+  "Export EDITOR env."
+  (unless (memq 'with-editor-export-editor eshell-mode-hook)
+    (eshell-set-variable "EDITOR" (car args))))
+
 (defun eshell/vi (&rest args)
   "Open files in Neovim, optionally using a remote server if configured.
 If `zr-viper-default-nvim-server' is bound and non-nil, files are opened

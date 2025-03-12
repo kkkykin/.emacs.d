@@ -1,5 +1,7 @@
 export GIT_PAGER='' TERM='xterm-256color'
 
+with-editor-maybe emacsclient > /dev/null
+
 import-bookmark m
 
 (setq imenu-generic-expression #'(("Prompt" " \$ \\(.*\\)" 1))) > /dev/null

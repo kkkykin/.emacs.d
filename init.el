@@ -2169,7 +2169,8 @@ before calling the original function."
   (magit-wip-mode-lighter nil))
 
 (use-package with-editor
-  :if (package-installed-p 'with-editor)
+  :if (and (not (eq system-type 'windows-nt))
+           (package-installed-p 'with-editor))
   :custom
   (shell-command-with-editor-mode t)
   :hook
