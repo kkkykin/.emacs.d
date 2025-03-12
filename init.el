@@ -1691,12 +1691,17 @@ before calling the original function."
           (jsdoc "https://github.com/tree-sitter/tree-sitter-jsdoc")
           (tsx . ("https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src"))
           ;; doc
+          (markdown-inline "https://github.com/tree-sitter-grammars/tree-sitter-markdown" "split_parser" "tree-sitter-markdown-inline/src")
           (markdown . ("https://github.com/tree-sitter-grammars/tree-sitter-markdown" "split_parser" "tree-sitter-markdown/src"))))
   (defun zr-treesit-install-all ()
     "ref: https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
     (interactive)
     (mapc #'treesit-install-language-grammar
           (mapcar #'car treesit-language-source-alist))))
+
+(use-package markdown-ts-mode
+  :if (treesit-language-available-p 'cmake)
+  :mode "\\.md\\'")
 
 (use-package cmake-ts-mode
   :if (treesit-language-available-p 'cmake)
