@@ -2195,6 +2195,11 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   (aidermacs-extra-args '())
   (aidermacs-auto-commits nil)
   (aidermacs-default-model "deepseek/deepseek-chat")
+  (aidermacs-popular-models
+   (list aidermacs-default-model
+         "gemini/gemini-1.5-pro-latest"
+         "groq/llama3-70b-8192")
+   "ref: https://aider.chat/docs/llms.html#free-models")
   :bind
   ( :map zr-viper-vi-spc-prefix-map
     ("A" . aidermacs-transient-menu))
