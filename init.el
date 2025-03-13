@@ -1694,13 +1694,17 @@ before calling the original function."
           (markdown-inline "https://github.com/tree-sitter-grammars/tree-sitter-markdown" "split_parser" "tree-sitter-markdown-inline/src")
           (markdown . ("https://github.com/tree-sitter-grammars/tree-sitter-markdown" "split_parser" "tree-sitter-markdown/src"))))
   (defun zr-treesit-install-all ()
-    "ref: https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
-    (interactive)
-    (mapc #'treesit-install-language-grammar
-          (mapcar #'car treesit-language-source-alist))))
+    "Install all Tree-sitter grammars defined in `treesit-language-source-alist`.
+With prefix argument FORCE, delete the tree-sitter directory first.
+ref:
+https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
+    (interactive "P")
+    (dolist (g treesit-language-source-alist)
+      (unless (treesit-language-available-p (car g))
+        (treesit-install-language-grammar (car g))))))
 
 (use-package markdown-ts-mode
-  :if (treesit-language-available-p 'cmake)
+  :if (treesit-language-available-p 'markdown)
   :mode "\\.md\\'")
 
 (use-package cmake-ts-mode
