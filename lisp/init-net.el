@@ -975,6 +975,50 @@ number."
          filter))
      chunks " && ")))
 
+
+;; daemon
+
+(defun zn/manage-daemon (name proc timeout)
+  "Manage a daemon process named NAME and kill it after TIMEOUT if its buffer is inactive."
+  (let ((buffer (process-buffer proc))
+        timer)
+    (set-process-query-on-exit-flag proc nil)
+    (with-current-buffer buffer
+      (unless (local-variable-p 'last-change)
+        (make-local-variable 'last-change))
+      (setq last-change (buffer-modified-tick))
+      (setq timer
+            (run-at-time
+             timeout timeout
+             (lambda ()
+               (with-current-buffer buffer
+                 (when (and (process-live-p proc)
+                            (= last-change (buffer-modified-tick buffer)))
+                   (interrupt-process proc)
+                   (kill-process proc)
+                   (message (format-time-string "%H:%M:%S %s process killed due to inactivity." name))))
+                 (setq last-change (buffer-modified-tick))))))
+      (when timer
+        (set-process-sentinel
+         proc
+         (lambda (proc event)
+           (when timer (cancel-timer timer))
+           (pcase (process-status proc)
+             ((or 'exit 'signal)
+              (message "%s process exited." name))
+             ('failed
+              (message "%s process failed to start." name))))))))
+
+(defun zn/trojan-go-daemon ()
+  "Start trojan-go daemon and kill it if the log buffer is inactive."
+  (interactive)
+  (let* ((default-directory (expand-file-name "~/.config/trojan-go"))
+         (proc (start-process "trojan-go-daemon" "*trojan-go*"
+                              "trojan-go" "-config" "config.json")))
+    (if proc
+        (zn/manage-daemon "trojan-go" proc (* 60 5))
+      (message "Failed to start trojan-go-daemon."))))
+
 (provide 'init-net)
 ;;; init-net.el ends here
 
