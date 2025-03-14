@@ -1109,5 +1109,27 @@ the process menu."
   (define-key zr-menu [zr-follow-current-window]
               '(menu-item "zr-follow-current-window" zr-follow-current-window)))
 
+
+;; wallpaper
+
+(defcustom zr-wallpaper-directory nil
+  "Directories containing wallpaper images.
+Can be a single directory or a list of directories."
+  :type (or 'directory
+            (repeat 'directory)))
+
+(defun zr-set-wallpaper-randomly ()
+  "Set a random wallpaper image from `zr-wallpaper-directory'."
+  (interactive)
+  (let ((image-regexp (regexp-opt (mapcar #'car image-type-file-name-regexps)))
+        imgs)
+    (dolist (dir (ensure-list zr-wallpaper-directory))
+      (unless (file-directory-p dir)
+        (user-error "Invalid directory: %s" dir))
+      (setq imgs (append (directory-files-recursively dir image-regexp) imgs)))
+    (if imgs
+        (wallpaper-set (seq-random-elt imgs))
+      (user-error "No image files found in `zr-wallpaper-directory'"))))
+
 (provide 'init-misc)
 ;;; init-misc.el ends here
