@@ -996,18 +996,18 @@ number."
                             (= last-change (buffer-modified-tick buffer)))
                    (interrupt-process proc)
                    (kill-process proc)
-                   (message (format-time-string "%H:%M:%S %s process killed due to inactivity." name))))
-                 (setq last-change (buffer-modified-tick))))))
-      (when timer
-        (set-process-sentinel
-         proc
-         (lambda (proc event)
-           (when timer (cancel-timer timer))
-           (pcase (process-status proc)
-             ((or 'exit 'signal)
-              (message "%s process exited." name))
-             ('failed
-              (message "%s process failed to start." name))))))))
+                   (message (format-time-string "%H:%M:%S %%s process killed due to inactivity.") name))
+                 (setq last-change (buffer-modified-tick)))))))
+    (when timer
+      (set-process-sentinel
+       proc
+       (lambda (proc event)
+         (when timer (cancel-timer timer))
+         (pcase (process-status proc)
+           ((or 'exit 'signal)
+            (message "%s process exited." name))
+           ('failed
+            (message "%s process failed to start." name))))))))
 
 (defun zn/trojan-go-daemon ()
   "Start trojan-go daemon and kill it if the log buffer is inactive."
