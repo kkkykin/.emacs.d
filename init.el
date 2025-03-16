@@ -1001,7 +1001,10 @@ before calling the original function."
   (delete-by-moving-to-trash t)
   (dired-hide-details-hide-absolute-location t)
   (dired-guess-shell-alist-user
-   `((,(rx ?. (| "rar" "zip" "7z" "iso" "cab" "apks") (? ".001") eos)
+   `(("\\.cb7\\'"
+      (format "ebook-convert ? %s --no-process"
+              (shell-quote-argument (file-name-with-extension file "zip"))))
+     (,(rx ?. (| "rar" "zip" "7z" "iso" "cab" "apks" "cb7" "cbz" "cbr") (? ".001") eos)
       #1=(format "%s x -spe -o\"%s\" -aoa -p%s"
                  archive-7z-program (file-name-sans-extension file)
                  zr-archive-pwd))
@@ -1014,7 +1017,7 @@ before calling the original function."
               (let ((devices
                      (mapcar
                       (lambda (a) (replace-regexp-in-string
-                              "[[:blank:]]+device$" "" a))
+                               "[[:blank:]]+device$" "" a))
                       (cl-delete-if-not
                        (lambda (a) (string-suffix-p "device" a))
                        (process-lines "adb" "devices")))))
