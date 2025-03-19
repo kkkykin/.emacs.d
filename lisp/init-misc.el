@@ -1131,5 +1131,21 @@ Can be a single directory or a list of directories."
         (wallpaper-set (seq-random-elt imgs))
       (user-error "No image files found in `zr-wallpaper-directory'"))))
 
+;; term
+
+(defun zr-gpg-term ()
+  "Start term and automatically execute commands."
+  (interactive)
+  (ansi-term (or explicit-shell-file-name shell-file-name))
+  (when-let* ((proc (get-buffer-process (current-buffer))))
+    (term-send-string proc "set +o history\n")
+    (dolist (cmd '("SSH_AUTH_SOCK=\"$(gpgconf --list-dirs agent-ssh-socket)\""
+                   "export SSH_AUTH_SOCK"
+                   "GPG_TTY=\"$(tty)\""
+                   "export GPG_TTY"
+                   "gpg-connect-agent updatestartuptty /bye > /dev/null"))
+      (term-send-string proc (concat cmd "\n")))
+    (term-send-string proc "set -o history\n")))
+
 (provide 'init-misc)
 ;;; init-misc.el ends here
