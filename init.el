@@ -2045,6 +2045,7 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   ;;              `(,(regexp-quote org-babel-error-buffer-name)
   ;;                display-buffer-no-window
   ;;                (allow-no-window . t)))
+  (put 'org-babel-tangle-use-relative-file-links 'safe-local-variable 'null)
   (setq org-babel-default-header-args
         (append '((:noweb . "yes")
                   (:comments . "link")
