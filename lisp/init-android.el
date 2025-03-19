@@ -88,6 +88,11 @@ milliseconds"
                  "com.fooview.android.intent.RUN_WORKFLOW" "-e" "action"
                  cmd "com.fooview.android.fooview/.ShortcutProxyActivity"))
 
+(defun za/rish-command-to-string (cmd)
+  "Wrapper for `shell-command-to-string' with rish."
+  (let ((shell-file-name (executable-find "rish")))
+    (shell-command-to-string cmd)))
+
 (defun za/rish-run (cmd)
   "Run command with rish."
   (start-process "rish-run" nil "rish" "-c" cmd))
