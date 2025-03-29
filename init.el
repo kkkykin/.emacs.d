@@ -1005,9 +1005,11 @@ before calling the original function."
       (format "ebook-convert ? %s --no-process"
               (shell-quote-argument (file-name-with-extension file "zip"))))
      (,(rx ?. (| "rar" "zip" "7z" "iso" "cab" "apks" "cb7" "cbz" "cbr") (? ".001") eos)
-      #1=(format "%s x -spe -o\"%s\" -aoa -p%s"
+      #1=(format "%s x -spe -o\"%s\" -aoa -p\"%s\""
                  archive-7z-program (file-name-sans-extension file)
-                 zr-archive-pwd))
+                 (if zr-sys-winnt-p zr-archive-pwd
+                   (format "$(printf '%s' | iconv -f utf-8 -t gbk)"
+                           zr-archive-pwd))))
      ("\\.docx?\\'"
       (format "pandoc -o \"%s.org\""
               (file-name-sans-extension file)))
