@@ -24,6 +24,34 @@
 
 ;;; Code:
 
+;; org-keys
+
+;; https://sachachua.com/blog/2025/03/org-mode-cutting-the-current-list-item-including-nested-lists-with-a-speed-command/
+(defun zr-org-use-speed-commands ()
+  "Activate speed commands on other items too."
+  (or (and (looking-at org-outline-regexp) (looking-back "^\**" nil))
+      ;; (and (looking-at org-babel-src-block-regexp)
+      ;;      (looking-back "^[ \t]*" nil))
+      (save-excursion
+        (and (looking-at (org-item-re))
+             (looking-back "^[ \t]*" nil)))))
+(setq org-use-speed-commands 'zr-org-use-speed-commands)
+
+(defun zr-org-cut-subtree (&optional n)
+  "Cut current subtree or other."
+  (cond
+   ((and (looking-at org-outline-regexp) (looking-back "^\**" nil))
+    (org-cut-subtree n))
+   ;; ((looking-at org-babel-src-block-regexp)
+   ;;  (org-babel-remove-result-one-or-many n))
+   ((looking-at (org-item-re))
+    (kill-region (org-beginning-of-item) (org-end-of-item)))))
+
+(with-eval-after-load 'org-keys
+  (dolist (key '(("k" . zr-org-cut-subtree)))
+    (setf (alist-get (car key) org-speed-commands nil nil #'string=)
+          (cdr key))))
+
 ;; org-protocol
 
 (defun zo/protocol-cookies-dumper (info)
