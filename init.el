@@ -710,9 +710,6 @@
   (python-shell-interpreter-args "-i -X utf8")
   (python-shell-dedicated t)
   :config
-  (when-let* (((executable-find "uv"))
-              (progs (process-lines "uv" "python" "find")))
-    (setq python-shell-interpreter (car progs)))
   (modify-syntax-entry ?' "\"" inferior-python-mode-syntax-table))
 
 (use-package flymake
