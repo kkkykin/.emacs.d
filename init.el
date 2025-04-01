@@ -1705,6 +1705,12 @@ before calling the original function."
   :after prog-mode
   :custom (treesit-font-lock-level 4)
   :config
+  (pcase system-type
+    ((and 'windows-nt
+          (let ts-extra (substitute-in-file-name
+                         "$USERPROFILE/scoop/apps/treesit-langs/current"))
+          (guard (file-directory-p ts-extra)))
+     (add-to-list 'treesit-extra-load-path ts-extra)))
   (setq treesit-language-source-alist
         '((bash "https://github.com/tree-sitter/tree-sitter-bash")
           (python "https://github.com/tree-sitter/tree-sitter-python")
