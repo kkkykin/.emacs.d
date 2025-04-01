@@ -1268,6 +1268,32 @@ before calling the original function."
   (eglot-send-changes-idle-time 0.1)
   (eglot-events-buffer-config '(:size 0 :format full))
   :config
+  ;; (when (executable-find "deno")
+  ;;   ;; https://docs.deno.com/runtime/getting_started/setup_your_environment/#eglot
+  ;;   ;; https://docs.deno.com/runtime/reference/lsp_integration/#language-ids
+  ;;   (add-to-list 'eglot-server-programs
+  ;;                '(((js-mode :language-id "javascript")
+  ;;                   (js-ts-mode :language-id "javascript")
+  ;;                   (tsx-ts-mode :language-id "typescriptreact")
+  ;;                   (typescript-ts-mode :language-id "typescript")
+  ;;                   (js-json-mode :language-id "json")
+  ;;                   (json-ts-mode :language-id "json")
+  ;;                   (markdown-ts-mode :language-id "markdown"))
+  ;;                  . ("deno" "lsp"
+  ;;                     :initializationOptions
+  ;;                     ( :enable t
+  ;;                       :codeLens.implementations t
+  ;;                       :codeLens.references t
+  ;;                       :codeLens.referencesAllFunctions t
+  ;;                       :codeLens.test t
+  ;;                       :suggest.completeFunctionCalls t
+  ;;                       :suggest.names t
+  ;;                       :suggest.paths t
+  ;;                       :suggest.autoImports t
+  ;;                       :suggest.imports.autoDiscover t
+  ;;                       :suggest.imports.hosts t
+  ;;                       :lint t
+  ;;                       :unstable t)))))
   (add-hook 'eglot-managed-mode-hook
             (lambda () (setq-local project-mode-line (not (eglot-managed-p))))))
 
