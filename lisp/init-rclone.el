@@ -133,6 +133,13 @@ variables."
   (interactive)
   (zr-rclone-rc-contact "core/quit"))
 
+(defun zr-rclone-normalize-remote-path (remote-path)
+  "Make REMOTE-PATH fit rclone's need."
+  (replace-regexp-in-string
+   (rx bos (? ?/) (group-n 1 (*? anychar)) (? ?/) eos)
+   "\\1"
+   remote-path))
+
 (defun zr-rclone-directory-files-internal (fs remote &optional opt)
   "Returns a list of files in the remote directory specified by `remote`.
    The `fs` argument specifies the file system to use for the operation.
@@ -164,6 +171,21 @@ variables."
             (let ((opt '(("noModTime" . t) ("recurse" . t) ("noMimeType" . t))))
               (if include-directorys opt
                 (cons'("filesOnly" . t) opt)))))))
+
+(defun zr-rclone-copy-file
+    (src-fs src-remote dst-fs dst-remote)
+  "Copy a file from source remote to destination remote."
+  (zr-rclone-rc-contact
+   "operations/copyfile"
+   (json-serialize
+    `((srcFs . ,(if (file-directory-p src-fs)
+                    (expand-file-name src-fs)
+                  (concat src-fs ":")))
+      (srcRemote . ,(zr-rclone-normalize-remote-path src-remote))
+      (dstFs . ,(if (file-directory-p dst-fs)
+                    (expand-file-name dst-fs)
+                  (concat dst-fs ":")))
+      (dstRemote . ,(zr-rclone-normalize-remote-path dst-remote))))))
 
 (defun zr-rclone-filelist-export (fs remote &optional regexp prefix)
   (let ((filelist (mapcar (lambda (a)

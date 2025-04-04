@@ -867,6 +867,19 @@ ref: https://karthinks.com/software/emacs-window-management-almanac/"
           (file-attributes file))
          seconds))))
 
+(defun zr-directory-files-recursively
+    (dir regexp &optional include-directorys)
+  "Like `directory-files-recursively', but works on rclone."
+  (if (file-exists-p dir)
+      (directory-files-recursively dir regexp include-directorys)
+    (require 'init-rclone)
+    (pcase-let ((`(,fs ,remote)
+                 (string-split dir ":")))
+      (when (member fs (zr-rclone-list-remotes))
+        (zr-rclone-directory-files-recursively
+         fs (zr-rclone-normalize-remote-path remote)
+         regexp include-directorys)))))
+
 
 ;; etc
 
@@ -1121,14 +1134,30 @@ Can be a single directory or a list of directories."
 (defun zr-set-wallpaper-randomly ()
   "Set a random wallpaper image from `zr-wallpaper-directory'."
   (interactive)
-  (let ((image-regexp (regexp-opt (mapcar #'car image-type-file-name-regexps)))
+  (require 'wallpaper)
+  (let ((image-regexp (wallpaper--image-file-regexp))
         imgs)
     (dolist (dir (ensure-list zr-wallpaper-directory))
-      (unless (file-directory-p dir)
-        (user-error "Invalid directory: %s" dir))
-      (setq imgs (append (directory-files-recursively dir image-regexp) imgs)))
-    (if imgs
-        (wallpaper-set (seq-random-elt imgs))
+      (setq imgs (append (zr-directory-files-recursively dir image-regexp) imgs)))
+    (let ((img (seq-random-elt imgs)))
+      (if (file-exists-p img)
+          (wallpaper-set img)
+        (require 'init-rclone)
+        (pcase-let*
+            ((`(,fs . ,remote)
+              (string-split img ":"))
+             (prefix "emacs-wallpaper-")
+             (base (make-temp-name prefix))
+             (abs (expand-file-name base temporary-file-directory))
+             (zr-rclone-rc-function #'zr-rclone-url-retrieve))
+          (when-let* ((trash (directory-files
+                              temporary-file-directory t
+                              (concat "^" prefix) t)))
+            (mapc #'delete-file trash))
+          (zr-rclone-copy-file fs (string-join remote ":")
+                               temporary-file-directory base)
+          (wallpaper-set abs))))
+    (unless imgs
       (user-error "No image files found in `zr-wallpaper-directory'"))))
 
 ;; term
