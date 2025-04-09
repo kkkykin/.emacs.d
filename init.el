@@ -2465,6 +2465,13 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   (:map envrc-mode-map
         ("C-c e" . envrc-command-map)))
 
+(use-package buffer-env
+  :if (package-installed-p 'buffer-env)
+  :hook
+  (((hack-local-variables
+     comint-mode)
+    . buffer-env-update)))
+
 (use-package simple-httpd
   :if (package-installed-p 'simple-httpd)
   :custom
