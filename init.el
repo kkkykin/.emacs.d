@@ -2573,6 +2573,7 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   :mode ("\\.epub\\'" . nov-mode)
   :custom
   (nov-unzip-program archive-7z-program)
+  (nov-variable-pitch nil)
   (nov-unzip-args '("x" filename))
   :bind
   ( :map nov-mode-map
