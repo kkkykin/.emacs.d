@@ -32,7 +32,8 @@
 (defun zl/fix-plantuml-args (path args)
   "Fix plantuml Warning: -headless flag must be the first one in the
 command line."
-  (when-let* ((link (file-symlink-p (executable-find "plantuml"))))
+  (when-let* ((exe (executable-find "plantuml"))
+              (link (file-symlink-p exe)))
     (with-temp-buffer
       (insert-file-contents link)
       (re-search-forward "^exec .+")
