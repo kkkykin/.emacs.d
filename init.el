@@ -2232,10 +2232,10 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   :custom
   (aidermacs-extra-args '())
   (aidermacs-auto-commits nil)
-  (aidermacs-default-model "deepseek/deepseek-chat")
+  (aidermacs-default-model "gemini-exp")
   (aidermacs-popular-models
    (list aidermacs-default-model
-         "gemini/gemini-1.5-pro-latest"
+         "deepseek/deepseek-chat"
          "groq/llama3-70b-8192")
    "ref: https://aider.chat/docs/llms.html#free-models")
   :bind
@@ -2614,14 +2614,15 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   (ellama-language "Chinese")
   (ellama-translation-provider )
   (ellama-provider
-   (make-llm-openai-compatible
-    :url "https://api.deepseek.com"
-    :chat-model "deepseek-chat"
-    :key (auth-source-pick-first-password :host "deepseek.api")))
+   (make-llm-gemini
+    :key (auth-source-pick-first-password
+          :host "gemini.api")))
   (ellama-providers
-   `(("gemini" . ,(make-llm-gemini
-                   :key (auth-source-pick-first-password
-                         :host "gemini.api")))
+   `(("deepseek"
+      . ,(make-llm-openai-compatible
+          :url "https://api.deepseek.com"
+          :chat-model "deepseek-chat"
+          :key (auth-source-pick-first-password :host "deepseek.api")))
      ("groq" . ,(make-llm-openai-compatible
                  :url "https://api.groq.com/openai/v1"
                  :key (auth-source-pick-first-password
