@@ -199,73 +199,63 @@ Example usage:
            (org-babel-execute-src-block
             nil (org-babel-lob-get-info ele) params type)))))))
 
+(defun zo/execute-link-or-babel-at-point (org-mode-p &optional in-place)
+  "Execute the link or Babel element at point."
+  (if in-place
+      (condition-case nil
+          (org-open-at-point-global)
+        (user-error nil))
+    (let* ((link (match-string-no-properties 0))
+           (element (when org-mode-p (org-element-at-point-no-context)))
+           (type (org-element-type element))
+           (org-link-elisp-confirm-function nil)
+           (org-link-shell-confirm-function nil))
+      (cond
+       ((string-match-p org-link-any-re link)
+        (when (y-or-n-p (format "Open link: %s?" (org-add-props link nil 'face 'org-warning)))
+          (org-link-open-from-string link)))
+       ((memq type '(inline-babel-call babel-call inline-src-block src-block))
+        (zo/call-babel-at-point type nil nil t))
+       (t nil)))))
+
+(defun zo/search-and-execute-link-or-babel (org-mode-p count)
+  "Search for and execute a link or Babel element.
+
+Searches forward or backward based on COUNT.  If ORG-MODE-P is true,
+prioritizes Org links and Babel elements.  Throws an error if no link
+or Babel element is found."
+  (let ((regexp (if org-mode-p
+                    (rx (| (regex org-link-any-re)
+                           (regex "\\(call\\|src\\)_\\|^[ \t]*#\\+\\(BEGIN_SRC\\|CALL:\\)")))
+                  org-link-any-re))
+        (search-direction (if (natnump count) 'forward 'backward))
+        (bound (when (use-region-p)
+                 (if (eq search-direction 'forward)
+                     (region-end)
+                   (region-beginning)))))
+    (if (re-search-forward regexp (or bound nil) t count)
+        (zo/execute-link-or-babel-at-point org-mode-p)
+      (user-error "No link or babel found"))))
+
 (defun zo/exec-link-or-babel-nearby (&optional arg)
-  "Execute a link or Babel block near the point in Org mode.
-Or execute a link near the point in all mode.
+  "Execute link or Babel block/call at point, or nearby.
 
-This function tries to exec a link or babel at the current point.  If
-there is no link at the point, it searches forward for the nearest link
-or Babel block and prompts the user to open it or execute it.
-
-When ARG is provided:
-- If ARG is '-', search backward.
-- If ARG is a number, search that many occurrences forward or backward.
-- Otherwise, search forward.
-
-The function supports:
-- Org mode links
-- Babel calls
-- Inline Babel calls
-- Inline source blocks
-- Source blocks
-
-It handles region selection when searching:
-- If a region is active and COUNT is positive, it searches from the end
-of the region.
-- If COUNT is negative, it searches from the beginning of the region.
-
-If a link is found, the user is prompted to open it.
-If a Babel block is found, it is executed.
-
-In case no link or Babel block is found, a user error is signaled."
+With prefix arg ARG, search backwards.  With universal arg, start from
+beginning of buffer. If on a Babel element, execute it directly.
+Otherwise, search for a link or Babel element and execute/open it."
   (interactive "P")
-  (condition-case nil
-      (org-open-at-point-global)
-    (user-error
-     (let ((count (pcase arg
-                    ('- -1)
-                    ((pred numberp) arg)
-                    (_ 1))))
-       (if-let* ((orgp (eq major-mode 'org-mode))
-                (type (car
-                       (memq (org-element-type (org-element-at-point))
-                             '( babel-call inline-babel-call
-                                inline-src-block src-block)))))
-           (zo/call-babel-at-point type)
-         (save-excursion
-           (re-search-forward
-            (if orgp
-                (rx (| (regex org-link-any-re)
-                       (regex "\\(call\\|src\\)_\\|^[ \t]*#\\+\\(BEGIN_SRC\\|CALL:\\)")))
-              org-link-any-re)
-            (when (use-region-p)
-              (if (natnump count) (region-end) (region-beginning)))
-            t count)
-           (let* ((link (match-string-no-properties 0))
-                  (ele (when orgp (org-element-at-point-no-context)))
-                  (type (org-element-type ele))
-                  (org-link-elisp-confirm-function nil)
-                  (org-link-shell-confirm-function nil))
-             (cond
-              ((string-match-p org-link-any-re link)
-               (when (y-or-n-p
-                      (format "Open link: %s?"
-                              (org-add-props link nil 'face 'org-warning)))
-                 (org-link-open-from-string link)))
-              ((memq type '( inline-babel-call babel-call
-                             inline-src-block src-block))
-               (zo/call-babel-at-point type nil nil t))
-              (t (user-error "No link or babel found"))))))))))
+  (let ((count (pcase arg
+                 ('- -1)
+                 ((pred numberp) arg)
+                 (_ 1)))
+        (org-mode-p (eq major-mode 'org-mode))
+        (in-place t))
+    (save-excursion
+      (when (equal '(4) arg)
+        (goto-char (point-min))
+        (setq in-place nil))
+      (or (zo/execute-link-or-babel-at-point org-mode-p in-place)
+          (zo/search-and-execute-link-or-babel org-mode-p count)))))
 
 (defun zo/babel-expand-src-block ()
   "Expand the Org Babel source block at point.
