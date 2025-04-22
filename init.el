@@ -2387,10 +2387,7 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   ((dired-mode . denote-dired-mode)
    (find-file . denote-fontify-links-mode-maybe))
   :config
-  (require 'denote-silo-extras)
-  (setq denote-directory org-directory
-        denote-silo-extras-directories (list (expand-file-name "~/.config")
-                                             org-directory))
+  (setq denote-directory org-directory)
   (define-advice denote-rename-file-and-buffer (:before-while (old new) rename-dir)
     "Rename directory in dired."
     (if (and (file-directory-p old)
