@@ -2605,6 +2605,7 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   :init
   (require 'llm-gemini)
   (require 'llm-openai)
+  (require 'llm-ollama)
   (define-key zr-menu [ellama]
               '(menu-item "ellama" ellama-transient-main-menu))
   :commands
