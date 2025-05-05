@@ -2173,7 +2173,10 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
 (use-package ahk-mode
   :if (package-installed-p 'ahk-mode)
   :mode "\\.ahk\\'"
-  :vc (:url "https://github.com/tu10ng/ahk-mode" :rev :newest)
+  ;; [[elisp:(package-generate-autoloads "ahk-mode" (expand-file-name "ahk-mode" package-user-dir))]]
+  :vc ( :url "https://github.com/zyt-zsn/ahk-mode"
+        :lisp-dir "."
+        :rev "9e293237eab1626f7c539dec8fd878a0308a96f2")
   :custom
   (ahk-indent-offset 2))
 
