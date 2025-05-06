@@ -2589,8 +2589,20 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
           (kill-local-variable v)
         (setq-local nov-header-line-format nil))
       (nov-render-document)))
+  (defun zr-nov-goto-toc ()
+    "Go to the TOC index and render the TOC document."
+    (interactive)
+    (let ((id nov-documents-index)
+          (cnt 1)
+          (match 1))
+      (nov-goto-toc)
+      (while (and match (< cnt id))
+        (setq match (text-property-search-forward 'shr-tab-stop nil nil t)
+              cnt (1+ cnt)))
+      (goto-char (prop-match-beginning match))))
   (bind-keys
    :map nov-mode-map
+   ("T" . zr-nov-goto-toc)
    ("i" . zr-nov-toggle-header-line))
   ;; advice for 7z cli cannot split "-o" and `direcotry'
   (define-advice nov-unzip-epub (:around (orig-fun &rest args) extract-with-7z)
