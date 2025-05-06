@@ -1005,7 +1005,7 @@ before calling the original function."
       (format "ebook-convert ? %s --no-process"
               (shell-quote-argument (file-name-with-extension file "zip"))))
      (,(rx ?. (| "rar" "zip" "7z" "iso" "cab" "apks" "cb7" "cbz" "cbr") (? ".001") eos)
-      #1=(format "%s x -spe -o\"%s\" -aoa -p\"%s\""
+      #1=(format "%s x -spe -o\"%s\" -aou -p\"%s\""
                  archive-7z-program (file-name-sans-extension file)
                  (if zr-sys-winnt-p zr-archive-pwd
                    (format "$(printf '%s' | iconv -f utf-8 -t gbk)"
@@ -1013,7 +1013,7 @@ before calling the original function."
      ("\\.docx?\\'"
       (format "pandoc -o \"%s.org\""
               (file-name-sans-extension file)))
-     ("\\.exe\\'" "innounp -x -o -b -u -pixyg688.com")
+     ("\\.exe\\'" "innounp -x -q -o -b -u -pixyg688.com")
      ("\\.apk\\'"
       (format "adb %sinstall"
               (let ((devices
@@ -1048,7 +1048,7 @@ before calling the original function."
               zr-emacs-keystore-file))
      (,(rx ?. (| "tzst" "tar.zst") eos)
       "zstd -dc ? | tar -xf -")
-     (,(rx ?. (| "srt") eos)
+     (,(rx ?. (| "srt" "ass") eos)
       (apply #'format
              "ffmpeg -hide_banner -itsoffset 0 -i ? -i %s -c copy -disposition:s:0 default -c:s mov_text %s"
              (mapcar #'shell-quote-argument
