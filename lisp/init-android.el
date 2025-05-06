@@ -46,11 +46,18 @@
 
 ;; hardware
 
-(defun za/mini-screen-setup-maybe ()
+(defun za/mini-screen-setup-maybe (&rest _)
   "Setup for mini screen mobile."
-  (if (= (display-pixel-height) 260)
-      (modifier-bar-mode -1)
-    (modifier-bar-mode 1)))
+  (when (frame-focus-state)
+    (if (= (display-pixel-height) 260)
+        (progn
+          (modifier-bar-mode -1)
+          (menu-bar-mode 1))
+      (modifier-bar-mode 1)
+      (menu-bar-mode -1))))
+
+(add-function :after after-focus-change-function
+              #'za/mini-screen-setup-maybe)
 
 
 ;; dired
@@ -412,8 +419,6 @@ and retries connection after 60 seconds if the SSID is not found in the scan."
 
 
 (setenv "SSH_AUTH_SOCK" (string-trim-right (shell-command-to-string "gpgconf -L agent-ssh-socket")))
-
-(add-hook 'focus-in-hook #'za/mini-screen-setup-maybe)
 
 (defun za/stop-record-tracks ()
   "Stop OpenTracks."
