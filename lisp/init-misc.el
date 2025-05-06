@@ -1176,5 +1176,40 @@ Can be a single directory or a list of directories."
       (term-send-string proc (concat cmd "\n")))
     (term-send-string proc "set -o history\n")))
 
+;; Moyu
+
+(defun zr-set-ime-open-status (status)
+  "Set the IME open status to STATUS on Windows systems.
+Does nothing on other operating systems. STATUS should be non-nil
+to enable IME, nil to disable."
+  (pcase system-type
+    ('windows-nt (w32-set-ime-open-status status))))
+
+(defun zr-moyu-setup (&optional _frame)
+  "Disable IME when focus changes if `zr-moyu-mode' is active.
+Intended for use with `after-focus-change-function'.
+FRAME argument is ignored."
+  (when (and zr-moyu-mode
+             (frame-focus-state))
+    (zr-set-ime-open-status nil)))
+
+(define-minor-mode zr-moyu-mode
+  "Minor mode for \"Moyu\" (slacking off).
+When active, attempts to disable the Input Method Editor (IME)
+on Windows systems to prevent accidental typing. It also tries
+to keep the IME disabled when Emacs frame focus changes or when
+switching buffers.
+This mode currently only affects Windows systems with IME support."
+  :init-value nil
+  :lighter " mo"
+  (if zr-moyu-mode
+      (progn
+        (zr-set-ime-open-status nil)
+        (add-function :after after-focus-change-function #'zr-moyu-setup)
+        (add-hook 'window-buffer-change-functions #'zr-moyu-setup nil t)
+        (add-hook 'window-selection-change-functions #'zr-moyu-setup nil t))
+    (remove-hook 'window-buffer-change-functions #'zr-moyu-setup t)
+    (remove-hook 'window-selection-change-functions #'zr-moyu-setup t)))
+
 (provide 'init-misc)
 ;;; init-misc.el ends here
