@@ -18,8 +18,6 @@
   ((text-mode . visual-line-mode)
    (next-error . recenter))
   :bind
-  ([remap eval-expression] . pp-eval-expression)
-  ([remap eval-last-sexp] . pp-eval-last-sexp)
   ([remap upcase-word] . upcase-dwim)
   ([remap downcase-word] . downcase-dwim)
   ([remap capitalize-word] . capitalize-dwim)
@@ -197,6 +195,11 @@
     ([remap forward-word] . completion-preview-insert-word)
     ([remap forward-sexp] . completion-preview-insert-sexp))
   :hook (prog-mode eshell-mode inferior-emacs-lisp-mode))
+
+(use-package pp
+  :bind
+  ("M-ESC :" . pp-eval-expression)
+  ([remap eval-last-sexp] . pp-eval-last-sexp))
 
 (use-package viper
   :init
