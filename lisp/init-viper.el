@@ -104,7 +104,38 @@ re-raised after restoring the original state of line numbers."
 ;; vi
 
 (defvar zv/default-nvim-server "127.0.0.1:5567"
-  )
+  "Default NeoVim server address in HOST:PORT format.")
+
+(defun zv/nvim-server-port-open-p (server)
+  "Check if the NeoVim server port is open and listening.
+SERVER is the TCP server address (e.g., \"HOST:PORT\").
+Uses `curl` to check connectivity. Returns t if the server
+responds (even with no data), nil otherwise."
+  (let* ((server (concat "http://" server))
+         ;; curl exit code 52: "Server sent nothing (no headers, no data)"
+         ;; This typically means the port is open and listening.
+         (status (call-process "curl" nil nil nil "-sm1" server)))
+    (pcase status
+      (52 t)
+      (_ nil))))
+
+(defun zv/nvim-server-cmd (cmd &optional server)
+  "Send CMD string to the NeoVim server for execution.
+CMD is the command string to be executed by NeoVim.
+SERVER is the TCP server address (e.g., \"HOST:PORT\").
+
+The function first checks if the server is responding using
+`zv/nvim-server-port-open-p`. If responsive, it sends the
+CMD (base64 encoded as `V64cmd ...`) using `nvim --remote-expr`.
+If the server is not responding, a `user-error` is signaled."
+  (let ((server (or server zv/default-nvim-server))
+        (cmd (format "execute('V64cmd %s')"
+                     (base64-encode-string cmd t))))
+    (if (zv/nvim-server-port-open-p server)
+        (call-process "nvim" nil nil nil
+                      "--server" server
+                      "--remote-expr" cmd)
+      (user-error "NeoVim server not responding at %s." server))))
 
 (defun zv/open-with-nvim (&optional file server)
   "Open a FILE with Nvim, optionally specifying a Nvim SERVER.

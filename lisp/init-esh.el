@@ -53,21 +53,16 @@ Neovim instance."
 
 (defun eshell/vt (&rest args)
   "Open a new terminal buffer in Neovim with the specified command.
-If `zr-viper-default-nvim-server' is bound and true, the command is
-executed remotely in the existing Neovim server. Otherwise, it opens a
-new Neovim instance.
+The command is executed remotely in the existing Neovim server.
 
 ARGS: A list of arguments to be passed as the command to execute in the
 terminal."
-  (let ((term (concat "te " (combine-and-quote-strings (flatten-tree args)))))
-    (apply #'call-process "nvim" nil 0 nil
-           (if (bound-and-true-p zr-viper-default-nvim-server)
-               `("--server" ,zr-viper-default-nvim-server "--remote-expr"
-                 ,(format "execute('tabe | tc %s | %s')"
-                          (if (file-remote-p default-directory) ""
-                            default-directory)
-                          (string-replace "'" "''" term)))
-             (list "--cmd" term)))))
+  (let ((cmd (format "tabe | tc %s | te %s"
+                     (if (file-remote-p default-directory) ""
+                       default-directory)
+                     (combine-and-quote-strings (flatten-tree args)))))
+    (require 'init-viper)
+    (zr-viper-nvim-server-cmd cmd)))
 
 (defun ze/invoke-by-nvim (&rest args)
   "Invoke program in neovim."
