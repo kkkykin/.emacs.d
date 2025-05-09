@@ -2607,6 +2607,8 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
    :map nov-mode-map
    ("T" . zr-nov-goto-toc)
    ("i" . zr-nov-toggle-header-line))
+  (with-eval-after-load 'tab-line
+    (push 'nov-mode tab-line-exclude-modes))
   ;; advice for 7z cli cannot split "-o" and `direcotry'
   (define-advice nov-unzip-epub (:around (orig-fun &rest args) extract-with-7z)
     (let ((nov-unzip-args
