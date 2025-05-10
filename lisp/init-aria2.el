@@ -24,6 +24,13 @@
 
 ;;; Code:
 
+(require 'aria2)
+(condition-case nil
+    (setq aria2--cc (eieio-persistent-read aria2-cc-file aria2-controller))
+  (error (setq aria2--cc (make-instance aria2-controller
+                                        "aria2-controller"
+                                        :file aria2-cc-file))))
+
 (defvar z2/on-download-start-functions nil
   "Executed after download got started.")
 
@@ -43,33 +50,49 @@
   "Executed after download aborted due to error.")
 
 (defun z2/event-handler (event gid count &optional file)
-  (require 'aria2)
   (let ((hook (intern (format "zr-aria2-on-%s-functions" event)))
-        (args (pcase event
-                ("download-start"
-                 (list (getUris aria2--cc gid))))))
-    (apply #'run-hook-with-args hook gid args)))
+        info)
+    (pcase event
+      ("download-start"
+       (push (cons 'uris (getUris aria2--cc gid)) info))
+      ("download-complete"
+       (push (cons 'file file) info)
+       (push (cons 'count count) info)))
+    (run-hook-with-args hook gid info)))
 
 (defvar z2/limited-server-regexp
   (rx bos "pixeldrain.com" eos))
 
-(defun z2/change-option-for-uri (gid uris)
-  (let* ((used (cl-find-if
-                (lambda (u) (string= "used" (alist-get 'status u)))
-                uris))
-         (uri (alist-get 'uri used))
-         (urlobj (url-generic-parse-url uri))
-         (host (url-host urlobj))
-         (proxy (zr-net-match-proxy-rule urlobj host))
-         opts)
-    (when (string-match-p z2/limited-server-regexp host)
-      (push '(max-connection-per-server . 1) opts))
-    (unless (string= "DIRECT" proxy)
-      (let ((ps (replace-regexp-in-string "^\\(SOCKS5\\|PROXY\\) "
-                                          "http://" proxy)))
-        (push `(all-proxy . ,ps) opts)))
-    (changeOption aria2--cc gid opts)))
+(defvar z2/option-changed-gid nil)
+
+(defun z2/change-option-for-uri (gid info)
+  (unless (member gid z2/option-changed-gid)
+    (let* ((uris (alist-get 'uris info))
+           (used (cl-find-if
+                  (lambda (u) (string= "used" (alist-get 'status u)))
+                  uris))
+           (uri (alist-get 'uri used))
+           (urlobj (url-generic-parse-url uri))
+           (host (url-host urlobj))
+           (proxy (zr-net-match-proxy-rule urlobj host))
+           opts)
+      (when (string-match-p z2/limited-server-regexp host)
+        (push '(max-connection-per-server . "1") opts))
+      (unless (string= "DIRECT" proxy)
+        (let ((ps (replace-regexp-in-string "^\\(SOCKS5\\|PROXY\\) "
+                                            "http://" proxy t)))
+          (push `(all-proxy . ,ps) opts)))
+      (push gid z2/option-changed-gid)
+      (when opts
+        (pause aria2--cc gid)
+        (changeOption aria2--cc gid opts)
+        (unpause aria2--cc gid)))))
 (add-hook 'z2/on-download-start-functions #'z2/change-option-for-uri)
+
+(defun z2/remove-finished-gid (gid &rest _)
+  (setq z2/option-changed-gid (delete gid z2/option-changed-gid)))
+(add-hook 'z2/on-download-complete-functions #'z2/remove-finished-gid)
+(add-hook 'z2/on-bt-download-complete-functions #'z2/remove-finished-gid)
 
 (provide 'init-aria2)
 ;;; init-aria2.el ends here
