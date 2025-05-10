@@ -2553,7 +2553,7 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   :if (package-installed-p 'aria2)
   :init
   (define-key zr-menu [aria2-download-list]
-              '(menu-item "aria2-download-list" aria2-download-list))
+              '(menu-item "aria2-downloads-list" aria2-downloads-list))
   :config
   (let ((auth (car (auth-source-search :host "aria2.localhost"))))
     (setq aria2-rcp-secret (auth-info-password auth)
