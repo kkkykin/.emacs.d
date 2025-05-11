@@ -66,25 +66,6 @@
     (or (find-operation-coding-system 'call-process program)
         default-process-coding-system)))
 
-(define-advice shell-command-on-region (:around (orig-fun &rest args) fix-coding)
-  "Fix coding system for `shell-command-on-region' when not in a remote
-directory."
-  (if (file-remote-p default-directory)
-      (apply orig-fun args)
-    (let ((process-coding-system-alist
-           `(("cmdproxy" ,@(zw/find-shell-command-coding-system (caddr args))))))
-      (apply orig-fun args))))
-
-(with-eval-after-load 'ob-eval
-  (define-advice org-babel--shell-command-on-region (:around (orig-fun &rest args) fix-coding)
-    "Fix coding system for `org-babel--shell-command-on-region' when not in a
-remote directory."
-    (if (file-remote-p default-directory)
-        (apply orig-fun args)
-      (let ((process-coding-system-alist
-             `(("cmdproxy" ,@(zw/find-shell-command-coding-system (car args))))))
-        (apply orig-fun args)))))
-
 (defun zw/proc-coding-system-fix (&optional proc cmd)
   "Fix the coding system for a process based on its command.
 
@@ -104,10 +85,6 @@ command it is running.  It only applies the fix if the current
                  (or cmd (nth 2 (process-command proc))))))
       (set-process-coding-system proc (car cs) (cdr cs))
     t))
-
-(dolist (h `(,(derived-mode-hook-name async-shell-command-mode)
-             compilation-start-hook))
-  (add-hook h #'zw/proc-coding-system-fix))
 
 (defun zw/output-coding-system-fix (cmd output)
   "Fix coding system by convert string."
@@ -135,7 +112,6 @@ Eshell."
                          shell-file-name))
            (nth 2 cmd)
          (car cmd))))))
-(add-hook 'eshell-exec-hook #'zw/eshell-change-cs-when-exec)
 
 (defun zw/shell-change-cs-before-send-input (proc string)
   "See `zw/eshell-change-cs-when-exec'."
@@ -149,7 +125,6 @@ Eshell."
                         (or explicit-shell-file-name shell-file-name))
     (setq comint-process-echoes t
           comint-input-sender #'zw/shell-change-cs-before-send-input)))
-(add-hook 'shell-mode-hook #'zw/shell-mode-setup)
 
 (defun zw/run-bash ()
   (interactive)
@@ -253,15 +228,6 @@ https://learn.microsoft.com/en-us/windows/security/application-security/applicat
 
 ;; dired
 
-(define-advice insert-directory (:around (orig-fun &rest args) fix-cs)
-  "Force decode `ls' output with 'utf-8."
-  (condition-case err
-      (let ((coding-system-for-read 'utf-8))
-        (apply orig-fun args))
-    ('file-error
-     (let (ls-lisp-use-insert-directory-program)
-       (apply orig-fun args)))))
-
 (defun zr-dired-change-onedrive-stat (&optional arg)
   "Toggle OneDrive sync attributes for marked files in dired.
 
@@ -319,11 +285,6 @@ locale encoding for proper handling of non-ASCII filenames."
 ;; tramp
 
 (with-eval-after-load 'tramp
-  (connection-local-set-profile-variables
-   'winnt-fix-coding-system-profile
-   '((default-process-coding-system . (utf-8-dos . utf-8-unix))))
-  (connection-local-set-profiles
-   '(:application tramp) 'winnt-fix-coding-system-profile)
   (setq tramp-default-method "sshx"
         tramp-use-connection-share nil))
 
@@ -347,20 +308,12 @@ locale encoding for proper handling of non-ASCII filenames."
 (setq grep-program "ug"
       grep-use-null-device nil
       grep-highlight-matches t
-      find-ls-option '("-exec ls -ldh \"{}\" \";\" | iconv -f utf-8 -t gb18030 -cs" . "-ldh")
       ls-lisp-use-insert-directory-program t
-      default-process-coding-system (cons 'utf-8-dos locale-coding-system)
       ispell-extra-args (list "--filter-path" (substitute-in-file-name "$USERPROFILE/scoop/apps/aspell/current/lib/aspell-0.60"))
       Info-default-directory-list
       (mapcar (lambda (a) (concat (getenv "USERPROFILE") "/scoop/apps/" a))
               '("aspell/current/share/info"
                 "mingw-winlibs-llvm-ucrt/current/share/info"))
-      process-coding-system-alist
-      `(("cmdproxy" . ,locale-coding-system)
-        ("ipconfig" . ,locale-coding-system)
-        ("findstr" . ,locale-coding-system)
-        ("aider" . utf-8))
-      file-name-coding-system locale-coding-system
       shr-use-fonts nil)
 
 (setenv "HOME" (file-name-parent-directory user-emacs-directory))
@@ -406,6 +359,60 @@ locale encoding for proper handling of non-ASCII filenames."
                             (buffer-name (process-buffer (car args))))
         (setcdr args (list (string-replace "\n\n" "\r\n\r\n" (cadr args)))))
       args)))
+
+
+;; cp936
+
+(when (eq locale-coding-system 'cp936)
+
+  (define-advice shell-command-on-region (:around (orig-fun &rest args) fix-coding)
+    "Fix coding system for `shell-command-on-region' when not in a remote
+directory."
+    (if (file-remote-p default-directory)
+        (apply orig-fun args)
+      (let ((process-coding-system-alist
+             `(("cmdproxy" ,@(zw/find-shell-command-coding-system (caddr args))))))
+        (apply orig-fun args))))
+
+  (with-eval-after-load 'ob-eval
+    (define-advice org-babel--shell-command-on-region (:around (orig-fun &rest args) fix-coding)
+      "Fix coding system for `org-babel--shell-command-on-region' when not in a
+remote directory."
+      (if (file-remote-p default-directory)
+          (apply orig-fun args)
+        (let ((process-coding-system-alist
+               `(("cmdproxy" ,@(zw/find-shell-command-coding-system (car args))))))
+          (apply orig-fun args)))))
+
+  (dolist (h `(,(derived-mode-hook-name async-shell-command-mode)
+               compilation-start-hook))
+    (add-hook h #'zw/proc-coding-system-fix))
+  (add-hook 'eshell-exec-hook #'zw/eshell-change-cs-when-exec)
+  (add-hook 'shell-mode-hook #'zw/shell-mode-setup)
+
+  (define-advice insert-directory (:around (orig-fun &rest args) fix-cs)
+    "Force decode `ls' output with 'utf-8."
+    (condition-case err
+        (let ((coding-system-for-read 'utf-8))
+          (apply orig-fun args))
+      ('file-error
+       (let (ls-lisp-use-insert-directory-program)
+         (apply orig-fun args)))))
+
+  (with-eval-after-load 'tramp
+    (connection-local-set-profile-variables
+     'winnt-fix-coding-system-profile
+     '((default-process-coding-system . (utf-8-dos . utf-8-unix))))
+    (connection-local-set-profiles
+     '(:application tramp) 'winnt-fix-coding-system-profile))
+  (setq find-ls-option '("-exec ls -ldh \"{}\" \";\" | iconv -f utf-8 -t gb18030 -cs" . "-ldh")
+        process-coding-system-alist
+        `(("cmdproxy" . ,locale-coding-system)
+          ("ipconfig" . ,locale-coding-system)
+          ("findstr" . ,locale-coding-system)
+          ("aider" . utf-8))
+        file-name-coding-system locale-coding-system
+        default-process-coding-system (cons 'utf-8-dos locale-coding-system)))
 
 (provide 'init-winnt)
 ;;; init-winnt.el ends here
