@@ -213,10 +213,16 @@ backreferences in REPLACEMENT.")
     (when (string-match (car transform) file)
       (setq file (replace-match (cdr transform) nil nil file)))))
 
+(defvar zr-rclone-playlist-history nil)
+(with-eval-after-load 'savehist
+  (add-to-list 'savehist-additional-variables 'zr-rclone-playlist-history))
+
 (when (require 'emms nil t)
   (define-emms-source rclone (dir)
     "An EMMS source for rclone remote."
-    (interactive (list (read-string "Play rclone directory: ")))
+    (interactive (list (read-string "Play rclone directory: "
+                                    nil 'zr-rclone-playlist-history)))
+    (add-to-history 'zr-rclone-playlist-history dir 100)
     (let* ((parts (string-split dir ":"))
            (remote (car parts))
            (path (string-join (cdr parts)))
@@ -227,6 +233,31 @@ backreferences in REPLACEMENT.")
         (unless (string-match emms-source-file-exclude-regexp file)
 	      (funcall emms-playlist-insert-track-function 
 		           (emms-track 'url (zr-rclone-transform-file-path file))))))))
+
+(defvar zr-rclone-mpv-args-history nil)
+(with-eval-after-load 'savehist
+  (add-to-list 'savehist-additional-variables 'zr-rclone-mpv-args-history))
+
+(defvar zr-rclone-mpv-ipc-server
+  (pcase system-type
+    ('windows-nt "\\\\.\\pipe\\mpv-rclone")))
+
+(defun zr-rclone-mpv-play-region ()
+  (interactive)
+  (let* ((args (read-shell-command "mpv " nil zr-rclone-mpv-args-history))
+         (proc (apply #'start-process "*mpv*" nil "mpv"
+                      (concat "--input-ipc-server="
+                              zr-rclone-mpv-ipc-server)
+                      "--playlist=-"
+                      (split-string-shell-command args))))
+    (when (process-live-p proc)
+      (add-to-history 'zr-rclone-mpv-args-history args 100))
+    (process-send-string
+     proc
+     (if (use-region-p)
+         (buffer-substring (region-beginning) (region-end))
+       (buffer-string)))
+    (process-send-eof proc)))
 
 (provide 'init-rclone)
 ;;; init-rclone.el ends here

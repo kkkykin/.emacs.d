@@ -147,6 +147,10 @@
   :if (locate-library "init-comint")
   :after comint :defer 0)
 
+(use-package init-rclone
+  :if (locate-library "init-rclone")
+  :defer 5)
+
 (use-package init-pcmpl
   :if (locate-library "init-pcmpl")
   :after pcomplete :defer 0)
@@ -2512,7 +2516,18 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
 
 (use-package mpvi :after emms
   :if (package-installed-p 'mpvi)
-  :commands mpvi-open)
+  :config
+  (advice-remove #'emms-player-mpv-start #'mpvi-emms-player-mpv-start)
+  (define-advice emms-player-mpv-start (:override (track) fix-scope)
+    "Play TRACK in EMMS. Integrate with `mpvi-play'."
+    (setq emms-player-mpv-stopped nil)
+    (emms-player-mpv-proc-playing nil)
+    (let* ((track-name (emms-track-get track 'name))
+           (start-func (lambda () (mpvi-play track-name nil nil t))))
+      (if (and (not (eq system-type 'windows-nt))
+               emms-player-mpv-ipc-stop-command)
+          (setq emms-player-mpv-ipc-stop-command start-func)
+        (funcall start-func)))))
 
 (use-package devdocs-browser
   :if (package-installed-p 'devdocs-browser)
