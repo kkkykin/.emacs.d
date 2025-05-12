@@ -440,78 +440,6 @@ https://scripter.co/using-emacs-advice-to-silence-messages-from-functions"
 
 ;; dired
 
-(defvar zr-mpv-file-transform-alist nil
-  "Alist of transformations to apply to files before play it.
-Each element has the form (ORIG . REPLACEMENT), where ORIG is a regular
-expression and REPLACEMENT is the replacement text.  Every element will
-be tested in turn, allowing more than one transformation to be made.
-
-Note that ORIG and REPLACEMENT are passed as arguments to
-`string-match', so you can, for example, use match groups in ORIG and
-backreferences in REPLACEMENT.")
-
-(defun zr-transform-file-path (file)
-  "Transform FILE path according to `zr-mpv-file-transform-alist'."
-  (dolist (transform zr-mpv-file-transform-alist file)
-    (when (string-match (car transform) file)
-      (setq file (replace-match (cdr transform) nil nil file)))))
-
-(defun zr-dired-mpv-play-files (&optional files &rest args)
-  "Play marked files or FILES using mpv.
-If FILES is provided, it should be a list of file paths.
-Otherwise, uses files marked in dired.
-ARGS are additional arguments passed to mpv.
-
-Files are processed as follows:
-- If file is under a rclone mount point, recursively find matching files
-- Otherwise, find files recursively in directory
-- Transform paths using `zr-mpv-file-transform-alist'
-- Send playlist to mpv process"
-  (interactive "P" dired-mode)
-  (unless (executable-find "mpv")
-    (user-error "mpv executable not found"))
-  
-  (require 'init-rclone)
-  (let* ((files (if files
-                    (mapcar #'expand-file-name (ensure-list files))
-                  (or (dired-get-marked-files)
-                      (user-error "No files selected"))))
-         (mounts (zr-rclone-list-mounts))
-         playlist)
-    
-    ;; Validate files exist
-    (dolist (f files)
-      (unless (file-exists-p f)
-        (user-error "File does not exist: %s" f)))
-    
-    ;; Generate playlist
-    (dolist (f files)
-      (if-let* ((mount (cl-find-if (lambda (m)
-                                     (string-prefix-p (plist-get m :MountPoint) f))
-                                   mounts)))
-          (setq playlist (nconc playlist
-                                (zr-rclone-directory-files-recursively
-                                 (substring (plist-get mount :Fs) 0 -1)
-                                 (file-relative-name f (plist-get mount :MountPoint))
-                                 ".*")))
-        (setq playlist (nconc playlist (directory-files-recursively f "^[.]")))))
-    
-    (unless playlist
-      (user-error "No playable files found"))
-    
-    ;; Start mpv process
-    (let ((proc (apply #'start-process "mpv-player" "*mpv*" "mpv"
-                       "--playlist=-" args)))
-      (unless (process-live-p proc)
-        (user-error "Failed to start mpv process"))
-      
-      (set-process-coding-system proc 'utf-8 'utf-8)
-      (process-send-string proc 
-                           (mapconcat #'zr-transform-file-path
-                                      playlist "\n"))
-      (process-send-eof proc)
-      (message "Playing %d files in mpv" (length playlist)))))
-
 (defun zr-dired-duplicate-file (arg)
   "Duplicate a file from dired with an incremented number.
 If ARG is provided, it sets the counter.

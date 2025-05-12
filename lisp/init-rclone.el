@@ -197,5 +197,36 @@ variables."
                            fs remote (or regexp ".*")))))
     filelist))
 
+(defvar zr-rclone-file-transform-alist nil
+  "Alist of transformations to apply to files before play it.
+Each element has the form (ORIG . REPLACEMENT), where ORIG is a regular
+expression and REPLACEMENT is the replacement text.  Every element will
+be tested in turn, allowing more than one transformation to be made.
+
+Note that ORIG and REPLACEMENT are passed as arguments to
+`string-match', so you can, for example, use match groups in ORIG and
+backreferences in REPLACEMENT.")
+
+(defun zr-rclone-transform-file-path (file)
+  "Transform FILE path according to `zr-rclone-file-transform-alist'."
+  (dolist (transform zr-rclone-file-transform-alist file)
+    (when (string-match (car transform) file)
+      (setq file (replace-match (cdr transform) nil nil file)))))
+
+(when (require 'emms nil t)
+  (define-emms-source rclone (dir)
+    "An EMMS source for rclone remote."
+    (interactive (list (read-string "Play rclone directory: ")))
+    (let* ((parts (string-split dir ":"))
+           (remote (car parts))
+           (path (string-join (cdr parts)))
+           (files (zr-rclone-directory-files-recursively
+                   remote path (emms-source-file-regex))))
+      (emms-playlist-ensure-playlist-buffer)
+      (dolist (file files)
+        (unless (string-match emms-source-file-exclude-regexp file)
+	      (funcall emms-playlist-insert-track-function 
+		           (emms-track 'url (zr-rclone-transform-file-path file))))))))
+
 (provide 'init-rclone)
 ;;; init-rclone.el ends here

@@ -174,6 +174,10 @@
    (emacs-startup . savehist-mode)
    (minibuffer-setup . zr-defer-gc)
    (minibuffer-exit . zr-restore-gc))
+  :bind
+  ( :map completion-in-region-mode-map
+    ("M-n" . minibuffer-next-completion)
+    ("M-p" . minibuffer-previous-completion))
   :config
   (advice-add 'completion-at-point :after #'minibuffer-hide-completions))
 
@@ -2491,7 +2495,20 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   (httpd-start))
 
 (use-package emms
-  :if (package-installed-p 'emms))
+  :if (package-installed-p 'emms)
+  :custom
+  (emms-player-list '(emms-player-mpv))
+  (emms-info-functions '(emms-info-native))
+  (emms-info-asynchronously t)
+  (emms-browser-covers #'emms-browser-cache-thumbnail-async)
+  (emms-browser-thumbnail-small-size 64)
+  (emms-browser-thumbnail-medium-size 128)
+  (emms-source-playlist-default-format 'm3u)
+  :config
+  (emms-minimalistic)
+  (emms-history-load)
+  (when (executable-find "exiftool")
+    (setq emms-info-functions '(emms-info-exiftool))))
 
 (use-package mpvi :after emms
   :if (package-installed-p 'mpvi)
