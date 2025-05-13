@@ -1109,6 +1109,11 @@ Can be a single directory or a list of directories."
 (defvar zr-moyu-buffers nil
   "All `zr-moyu-mode' buffers.")
 
+(defun zr-moyu-remove-buffer (&optional buf)
+  (setq zr-moyu-buffers
+        (delete (or buf (current-buffer)) zr-moyu-buffers)))
+(add-hook 'kill-buffer-hook #'zr-moyu-remove-buffer)
+
 (defun zr-moyu-quit-window ()
   "Quit all `zr-moyu-mode' buffers."
   (interactive)
@@ -1145,7 +1150,7 @@ This mode currently only affects Windows systems with IME support."
         (add-function :after after-focus-change-function #'zr-moyu-setup)
         (add-hook 'window-buffer-change-functions #'zr-moyu-setup nil t)
         (add-hook 'window-selection-change-functions #'zr-moyu-setup nil t))
-    (setq zr-moyu-buffers (delete (current-buffer) zr-moyu-buffers))
+    (zr-moyu-remove-buffer (current-buffer))
     (when (seq-empty-p zr-moyu-buffers)
       (remove-function after-focus-change-function #'zr-moyu-setup))
     (remove-hook 'window-buffer-change-functions #'zr-moyu-setup t)
