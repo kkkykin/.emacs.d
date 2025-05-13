@@ -1106,6 +1106,14 @@ Can be a single directory or a list of directories."
 
 ;; Moyu
 
+(defvar zr-moyu-buffers nil
+  "All `zr-moyu-mode' buffers.")
+
+(defun zr-moyu-quit-window ()
+  "Quit all `zr-moyu-mode' buffers."
+  (interactive)
+  (mapc #'quit-windows-on zr-moyu-buffers))
+
 (defun zr-set-ime-open-status (status)
   "Set the IME open status to STATUS on Windows systems.
 Does nothing on other operating systems. STATUS should be non-nil
@@ -1132,10 +1140,14 @@ This mode currently only affects Windows systems with IME support."
   :lighter " mo"
   (if zr-moyu-mode
       (progn
-        (zr-set-ime-open-status nil)
+        (zr-moyu-setup)
+        (push (current-buffer) zr-moyu-buffers)
         (add-function :after after-focus-change-function #'zr-moyu-setup)
         (add-hook 'window-buffer-change-functions #'zr-moyu-setup nil t)
         (add-hook 'window-selection-change-functions #'zr-moyu-setup nil t))
+    (setq zr-moyu-buffers (delete (current-buffer) zr-moyu-buffers))
+    (when (seq-empty-p zr-moyu-buffers)
+      (remove-function after-focus-change-function #'zr-moyu-setup))
     (remove-hook 'window-buffer-change-functions #'zr-moyu-setup t)
     (remove-hook 'window-selection-change-functions #'zr-moyu-setup t)))
 
