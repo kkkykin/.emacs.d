@@ -1111,7 +1111,9 @@ Can be a single directory or a list of directories."
 
 (defun zr-moyu-remove-buffer (&optional buf)
   (setq zr-moyu-buffers
-        (delete (or buf (current-buffer)) zr-moyu-buffers)))
+        (delete (or buf (current-buffer)) zr-moyu-buffers))
+  (when (seq-empty-p zr-moyu-buffers)
+    (remove-function after-focus-change-function #'zr-moyu-setup)))
 (add-hook 'kill-buffer-hook #'zr-moyu-remove-buffer)
 
 (defun zr-moyu-quit-window ()
@@ -1151,8 +1153,6 @@ This mode currently only affects Windows systems with IME support."
         (add-hook 'window-buffer-change-functions #'zr-moyu-setup nil t)
         (add-hook 'window-selection-change-functions #'zr-moyu-setup nil t))
     (zr-moyu-remove-buffer (current-buffer))
-    (when (seq-empty-p zr-moyu-buffers)
-      (remove-function after-focus-change-function #'zr-moyu-setup))
     (remove-hook 'window-buffer-change-functions #'zr-moyu-setup t)
     (remove-hook 'window-selection-change-functions #'zr-moyu-setup t)))
 
