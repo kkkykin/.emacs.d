@@ -161,6 +161,17 @@ The variables are defined in PARAMS."
   (mapcar (lambda (pair) (format "set \"%s=%s\"" (car pair) (cdr pair)))
           (org-babel--get-vars params)))
 
+(defun zo/org-remote-link-open (url)
+  (let ((auth (car (auth-source-search :host "browse-url.nginx.localhost"
+                                       :max 1))))
+    (start-process "remote-browse-link" nil "curl"
+                   "-H" (concat "origin:ssh://" (system-name))
+                   "-H" (concat "url:" url)
+                   "-H" (concat "authorization:"
+                                (auth-info-password auth))
+                   (format "http://127.0.0.1:%s/lua/browse-url"
+                           (plist-get auth :port)))))
+
 (defun zo/call-babel-at-point (&optional type params position confirm)
   "Execute the Babel block or call at point in Org mode.
 
@@ -201,22 +212,28 @@ Example usage:
 
 (defun zo/execute-link-or-babel-at-point (org-mode-p &optional in-place)
   "Execute the link or Babel element at point."
-  (if in-place
-      (condition-case nil
-          (org-open-at-point-global)
-        (user-error nil))
-    (let* ((link (match-string-no-properties 0))
-           (element (when org-mode-p (org-element-at-point-no-context)))
-           (type (org-element-type element))
-           (org-link-elisp-confirm-function nil)
-           (org-link-shell-confirm-function nil))
-      (cond
-       ((string-match-p org-link-any-re link)
-        (when (y-or-n-p (format "Open link: %s?" (org-add-props link nil 'face 'org-warning)))
-          (org-link-open-from-string link)))
-       ((memq type '(inline-babel-call babel-call inline-src-block src-block))
-        (zo/call-babel-at-point type nil nil t))
-       (t nil)))))
+  (let ((org-link-parameters
+         (append
+          (when (getenv "SSH_CONNECTION" (selected-frame))
+            `(("https" :follow (lambda (s) (zo/org-remote-link-open (concat "https:" s))))
+              ("http" :follow (lambda (s) (zo/org-remote-link-open (concat "http:" s))))))
+          org-link-parameters)))
+    (if in-place
+        (condition-case nil
+            (org-open-at-point-global)
+          (user-error nil))
+      (let* ((link (match-string-no-properties 0))
+             (element (when org-mode-p (org-element-at-point-no-context)))
+             (type (org-element-type element))
+             (org-link-elisp-confirm-function nil)
+             (org-link-shell-confirm-function nil))
+        (cond
+         ((string-match-p org-link-any-re link)
+          (when (y-or-n-p (format "Open link: %s?" (org-add-props link nil 'face 'org-warning)))
+            (org-link-open-from-string link)))
+         ((memq type '(inline-babel-call babel-call inline-src-block src-block))
+          (zo/call-babel-at-point type nil nil t))
+         (t nil))))))
 
 (defun zo/search-and-execute-link-or-babel (org-mode-p count)
   "Search for and execute a link or Babel element.
