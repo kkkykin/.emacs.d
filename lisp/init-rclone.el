@@ -246,11 +246,11 @@ backreferences in REPLACEMENT.")
 
 (defun zr-rclone-mpv-play-region ()
   (interactive)
-  (let* ((args (read-shell-command "mpv " nil zr-rclone-mpv-args-history))
+  (let* ((args (read-shell-command "mpv " nil 'zr-rclone-mpv-args-history))
          (proc (apply #'start-process "*mpv*" nil "mpv"
                       (concat "--input-ipc-server="
                               zr-rclone-mpv-ipc-server)
-                      "--playlist=-"
+                      "--playlist=-" "--terminal=no"
                       (split-string-shell-command args))))
     (when (process-live-p proc)
       (add-to-history 'zr-rclone-mpv-args-history args 100))
