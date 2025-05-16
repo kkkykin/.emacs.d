@@ -163,6 +163,7 @@
   (enable-recursive-minibuffers t)
   (resize-mini-windows t)
   (history-delete-duplicates t)
+  (read-file-name-completion-ignore-case t)
   (completion-styles '(initials partial-completion flex))
   (completion-cycle-threshold 10)
   (completions-max-height 20)
