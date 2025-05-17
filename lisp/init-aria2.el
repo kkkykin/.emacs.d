@@ -60,8 +60,13 @@
        (push (cons 'count count) info)))
     (run-hook-with-args hook gid info)))
 
-(defvar z2/limited-server-regexp
-  (rx bos "pixeldrain.com" eos))
+(defvar z2/server-options
+  '(("^https://pixeldrain\\.com"
+     . #1=((max-connection-per-server . "1")))
+    ("^https://[[:alnum:]]+\\.workupload\\.com"
+     . #1#)
+    ("^https://download[[:digit:]]+\\.uploadhaven\\.com"
+     . ((max-connection-per-server . "2")))))
 
 (defvar z2/option-changed-gid nil)
 
@@ -75,9 +80,11 @@
            (urlobj (url-generic-parse-url uri))
            (host (url-host urlobj))
            (proxy (zr-net-match-proxy-rule urlobj host))
-           opts)
-      (when (string-match-p z2/limited-server-regexp host)
-        (push '(max-connection-per-server . "1") opts))
+           (opts (cl-some
+                  (lambda (s)
+                    (and (string-match-p (car s) uri)
+                         (cdr s)))
+                  z2/server-options)))
       (unless (string= "DIRECT" proxy)
         (let ((ps (replace-regexp-in-string "^\\(SOCKS5\\|PROXY\\) "
                                             "http://" proxy t)))
