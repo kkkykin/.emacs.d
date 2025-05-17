@@ -244,22 +244,33 @@ backreferences in REPLACEMENT.")
   (pcase system-type
     ('windows-nt "\\\\.\\pipe\\mpv-rclone")))
 
-(defun zr-rclone-mpv-local-proc (mpv-args)
-  (apply #'start-process "*mpv*" nil "mpv"
-         (concat "--input-ipc-server="
-                 zr-rclone-mpv-ipc-server)
-         "--playlist=-" "--terminal=no"
-         (split-string-shell-command mpv-args)))
+(defun zr-rclone-mpv-local-proc (mpv-args files)
+  (let ((proc (apply #'start-process "*mpv*" nil "mpv"
+                     (concat "--input-ipc-server="
+                             zr-rclone-mpv-ipc-server)
+                     "--playlist=-" "--terminal=no"
+                     (split-string-shell-command mpv-args))))
+    (when (process-live-p proc)
+      (process-send-string proc files)
+      (process-send-eof proc))))
 
-(defun zr-rclone-mpv-remote-proc (mpv-args)
-  (start-process "*mpv*" nil "curl" "-m1" "--data-binary" "@-"
-                 "-H" "Content-Type: application/vnd.apple.mpegurl"
-                 "-H" (concat "Origin: ssh://" (system-name))
-                 "-H" (concat "Authorization: "
-                              (auth-source-pick-first-password
-                               :host "mpv.nginx.localhost"))
-                 "-H" (concat "args: " mpv-args)
-                 "http://127.0.0.1:7780/lua/mpv"))
+(defun zr-rclone-mpv-remote-proc (mpv-args files)
+  (let ((url-request-method "POST")
+        (url-request-extra-headers
+         `(("Content-Type" . "application/vnd.apple.mpegurl")
+           ("Origin" . ,(concat "ssh://" (system-name)))
+           ("Authorization" . ,(auth-source-pick-first-password
+                                :host "mpv.nginx.localhost"))
+           ("args" . ,mpv-args)))
+        (url-request-data files)
+        (url-queue-timeout 1)
+        (url-http-attempt-keepalives nil))
+    (url-retrieve "http://127.0.0.1:7780/lua/mpv" #'ignore nil t)))
+
+(defvar zr-rclone-mpv-play-function
+  (if (getenv "SSH_CONNECTION" (selected-frame))
+      #'zr-rclone-mpv-remote-proc
+    #'zr-rclone-mpv-local-proc))
 
 (defun zr-rclone-mpv-play-dwim ()
   (interactive)
@@ -270,26 +281,22 @@ backreferences in REPLACEMENT.")
        (files
         (pcase major-mode
           ('dired-mode
-           (mapcan
-            (lambda (item)
-              (mapcar #'zr-rclone-transform-file-path
-                      (if (file-directory-p item)
-                          (directory-files-recursively
-                           item regexp nil nil t)
-                        (list item))))
-            (dired-get-marked-files)))
+           (string-join
+            (mapcan
+             (lambda (item)
+               (mapcar #'zr-rclone-transform-file-path
+                       (if (file-directory-p item)
+                           (directory-files-recursively
+                            item regexp nil nil t)
+                         (list item))))
+             (dired-get-marked-files))
+            "\n"))
           ('emms-playlist-mode
            (if (use-region-p)
                (buffer-substring (region-beginning) (region-end))
-             (buffer-string)))))
-       (proc (funcall (if (getenv "SSH_CONNECTION" (selected-frame))
-                          #'zr-rclone-mpv-remote-proc
-                        #'zr-rclone-mpv-local-proc)
-                      mpv-args))
-       (process-live-p proc))
+             (buffer-string))))))
     (add-to-history 'zr-rclone-mpv-args-history mpv-args 100)
-    (process-send-string proc (string-join files "\n"))
-    (process-send-eof proc)))
+    (funcall zr-rclone-mpv-play-function mpv-args files)))
 
 (with-eval-after-load 'dired
   (bind-keys
