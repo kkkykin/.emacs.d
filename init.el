@@ -2511,6 +2511,7 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   (emms-source-playlist-default-format 'm3u)
   :config
   (emms-minimalistic)
+  (require 'emms-history)
   (emms-history-load)
   (when (executable-find "exiftool")
     (setq emms-info-functions '(emms-info-exiftool))))
