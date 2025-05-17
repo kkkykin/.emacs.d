@@ -244,22 +244,62 @@ backreferences in REPLACEMENT.")
   (pcase system-type
     ('windows-nt "\\\\.\\pipe\\mpv-rclone")))
 
-(defun zr-rclone-mpv-play-region ()
+(defun zr-rclone-mpv-local-proc (mpv-args)
+  (apply #'start-process "*mpv*" nil "mpv"
+         (concat "--input-ipc-server="
+                 zr-rclone-mpv-ipc-server)
+         "--playlist=-" "--terminal=no"
+         (split-string-shell-command mpv-args)))
+
+(defun zr-rclone-mpv-remote-proc (mpv-args)
+  (start-process "*mpv*" nil "curl" "-m1" "--data-binary" "@-"
+                 "-H" "Content-Type: application/vnd.apple.mpegurl"
+                 "-H" (concat "Origin: ssh://" (system-name))
+                 "-H" (concat "Authorization: "
+                              (auth-source-pick-first-password
+                               :host "mpv.nginx.localhost"))
+                 "-H" (concat "args: " mpv-args)
+                 "http://127.0.0.1:7780/lua/mpv"))
+
+(defun zr-rclone-mpv-play-dwim ()
   (interactive)
-  (let* ((args (read-shell-command "mpv " nil 'zr-rclone-mpv-args-history))
-         (proc (apply #'start-process "*mpv*" nil "mpv"
-                      (concat "--input-ipc-server="
-                              zr-rclone-mpv-ipc-server)
-                      "--playlist=-" "--terminal=no"
-                      (split-string-shell-command args))))
-    (when (process-live-p proc)
-      (add-to-history 'zr-rclone-mpv-args-history args 100))
-    (process-send-string
-     proc
-     (if (use-region-p)
-         (buffer-substring (region-beginning) (region-end))
-       (buffer-string)))
+  (when-let*
+      ((mpv-args (read-shell-command "mpv " nil 'zr-rclone-mpv-args-history))
+       (regexp (rx (| (regexp (emms-source-file-regex))
+                      (regexp (image-file-name-regexp)))))
+       (files
+        (pcase major-mode
+          ('dired-mode
+           (mapcan
+            (lambda (item)
+              (mapcar #'zr-rclone-transform-file-path
+                      (if (file-directory-p item)
+                          (directory-files-recursively
+                           item regexp nil nil t)
+                        (list item))))
+            (dired-get-marked-files)))
+          ('emms-playlist-mode
+           (if (use-region-p)
+               (buffer-substring (region-beginning) (region-end))
+             (buffer-string)))))
+       (proc (funcall (if (getenv "SSH_CONNECTION" (selected-frame))
+                          #'zr-rclone-mpv-remote-proc
+                        #'zr-rclone-mpv-local-proc)
+                      mpv-args))
+       (process-live-p proc))
+    (add-to-history 'zr-rclone-mpv-args-history mpv-args 100)
+    (process-send-string proc (string-join files "\n"))
     (process-send-eof proc)))
+
+(with-eval-after-load 'dired
+  (bind-keys
+   :map zr-dired-spc-prefix-map
+   ("m" . zr-rclone-mpv-play-dwim)))
+
+(with-eval-after-load 'emms-playlist-mode
+  (bind-keys
+   :map emms-playlist-mode-map
+   ("m" . zr-rclone-mpv-play-dwim)))
 
 (provide 'init-rclone)
 ;;; init-rclone.el ends here
