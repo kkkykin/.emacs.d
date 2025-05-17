@@ -258,13 +258,14 @@ backreferences in REPLACEMENT.")
   (let ((url-request-method "POST")
         (url-request-extra-headers
          `(("Content-Type" . "application/vnd.apple.mpegurl")
-           ("Origin" . ,(concat "ssh://" (system-name)))
-           ("Authorization" . ,(auth-source-pick-first-password
-                                :host "mpv.nginx.localhost"))
-           ("args" . ,mpv-args)))
-        (url-request-data files)
-        (url-queue-timeout 1)
-        (url-http-attempt-keepalives nil))
+           ("Origin" . ,(encode-coding-string
+                         (concat "ssh://" (system-name)) 'utf-8))
+           ("Authorization"
+            . ,(encode-coding-string (auth-source-pick-first-password
+                                      :host "mpv.nginx.localhost")
+                                     'utf-8))
+           ("args" . ,(encode-coding-string mpv-args 'utf-8))))
+        (url-request-data (encode-coding-string files 'utf-8)))
     (url-retrieve "http://127.0.0.1:7780/lua/mpv" #'ignore nil t)))
 
 (defvar zr-rclone-mpv-play-function
