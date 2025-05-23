@@ -1860,6 +1860,7 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   (org-goto-auto-isearch nil)
   (org-goto-interface 'outline-path-completion)
   (org-default-notes-file (file-name-concat org-directory "inbox.org"))
+  (org-use-sub-superscripts '{})
   (org-startup-folded t)
   (org-cycle-hide-block-startup t)
   (org-refile-use-cache nil)
@@ -1956,12 +1957,6 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   (org-clock-persistence-insinuate))
 
 (use-package org-crypt
-  :bind
-  ( :map org-mode-map
-    ("C-c C-/" . (lambda (_) (interactive "P")
-                   (if _
-                       (org-decrypt-entries)
-                     (org-decrypt-entry)))))
   :config
   (org-crypt-use-before-save-magic)
   (add-to-list 'org-tag-alist (cons org-crypt-tag-matcher ?c) t)
@@ -2498,6 +2493,12 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   ;;              (insert (string-trim-right
   ;;                       (shell-command-to-string cmd))))
   (httpd-start))
+
+(use-package verb
+  :if (package-installed-p 'verb)
+  :bind
+  ( :map org-mode-map
+    ("C-c C-/" . verb-command-map)))
 
 (use-package emms
   :if (package-installed-p 'emms)
