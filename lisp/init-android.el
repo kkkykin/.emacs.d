@@ -65,28 +65,6 @@
 (with-eval-after-load 'dired
   (add-hook 'dired-mode-hook 'dired-hide-details-mode))
 
-;; todo
-(defun za/mpv-intent (scheme &optional sub)
-  "http://mpv-android.github.io/mpv-android/intent.html
-am: [-e|--es <EXTRA_KEY> <EXTRA_STRING_VALUE> ...]  filepath
-scheme: rtmp, rtmps, rtp, rtsp, mms, mmst, mmsh, tcp, udp,
-content, file, http, https example:
-am start -n is.xyz.mpv/is.xyz.mpv.MPVActivity -e filepath
-file:///sdcard/Music/local
-
-optional: - decode_mode (Byte): if set to 2, hardware decoding
-will be disabled - subs (ParcelableArray of Uri): list of
-subtitle URIs to be added as additional tracks -
-subs.enable (ParcelableArray of Uri): specifies which of the
-subtitles should be selected by default, subset of previous array
-- position (Int): starting point of video playback in
-milliseconds"
-  (when (file-exists-p scheme)
-    (let ((url (concat "file://" scheme)))
-      (start-process "" nil "am" "start" "-n"
-                     "is.xyz.mpv/is.xyz.mpv.MPVActivity"
-                     "-e" "filepath" url))))
-
 (defun za/fooview-run (cmd)
   "Run fooview action."
   ;; (start-process "fooview-run" nil "am" "start"

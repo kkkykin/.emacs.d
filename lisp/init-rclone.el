@@ -244,40 +244,77 @@ backreferences in REPLACEMENT.")
   (pcase system-type
     ('windows-nt "\\\\.\\pipe\\mpv-rclone")))
 
-(defun zr-rclone-mpv-local-proc (mpv-args files)
-  (let ((proc (apply #'start-process "*mpv*" nil "mpv"
-                     (concat "--input-ipc-server="
-                             zr-rclone-mpv-ipc-server)
-                     "--playlist=-" "--terminal=no"
-                     (split-string-shell-command mpv-args))))
+(defun zr-rlcone-mpv-m3u8-provide (files timeout)
+  (let* ((m3u8-tempo
+          (concat "HTTP/1.1 200 OK\r\n"
+                  "Content-Type: application/vnd.apple.mpegurl\r\n"
+                  "Content-Length: %s\r\n"
+                  "\r\n%s"))
+         (proc (make-network-process
+                :name "mpv-m3u8-provider"
+                :server t
+                :service t
+                :sentinel
+                (lambda (process event)
+                  (cond
+                   ((string-prefix-p "open from" event)
+                    (process-send-string
+                     process (format m3u8-tempo (length files) files))))))))
     (when (process-live-p proc)
-      (process-send-string proc files)
-      (process-send-eof proc))))
+      (unless (= timeout 0)
+        (run-at-time timeout nil
+                     (lambda ()
+                       (delete-process proc)
+                       (kill-buffer (process-buffer proc)))))
+      proc)))
 
-(defun zr-rclone-mpv-remote-proc (mpv-args files)
-  (let ((url-request-method "POST")
-        (url-request-extra-headers
-         `(("Content-Type" . "application/vnd.apple.mpegurl")
-           ("Origin" . ,(encode-coding-string
-                         (concat "ssh://" (system-name)) 'utf-8))
-           ("Authorization"
-            . ,(encode-coding-string (auth-source-pick-first-password
-                                      :host "mpv.nginx.localhost")
-                                     'utf-8))
-           ("args" . ,(encode-coding-string mpv-args 'utf-8))))
-        (url-request-data (encode-coding-string files 'utf-8)))
+(defun zr-rclone-mpv-android-proc (files)
+  (when-let*
+      ((m3u8-server (zr-rlcone-mpv-m3u8-provide files 5))
+       (data (concat "http://127.0.0.1:"
+                     (process-contact m3u8-server :service))))
+    (call-process "termux-am" nil nil nil
+                  "start" "-a" "android.intent.action.VIEW"
+                  "-t" "video/any" "-p" "is.xyz.mpv.ytdl"
+                  "-d" data)))
+
+(defun zr-rclone-mpv-local-proc (files)
+  (let* ((mpv-extra-args (read-shell-command "mpv " nil 'zr-rclone-mpv-args-history))
+         (mpv-args `(,(concat "--input-ipc-server="
+                              zr-rclone-mpv-ipc-server)
+                     "--playlist=-" "--terminal=no"
+                     ,@(split-string-shell-command mpv-extra-args))))
+    (add-to-history 'zr-rclone-mpv-args-history mpv-extra-args 100)
+    (if (bufferp files)
+        (with-current-buffer files
+          (apply #'call-process-region nil nil "mpv" nil 0 nil mpv-args))
+      (apply #'call-process-region files nil "mpv" nil 0 nil mpv-args))))
+
+(defun zr-rclone-mpv-remote-proc (files)
+  (let* ((mpv-args (read-shell-command "mpv " nil 'zr-rclone-mpv-args-history))
+         (url-request-extra-headers
+          `(("Content-Type" . "application/vnd.apple.mpegurl")
+            ("Origin" . ,(encode-coding-string
+                          (concat "ssh://" (system-name)) 'utf-8))
+            ("Authorization"
+             . ,(encode-coding-string (auth-source-pick-first-password
+                                       :host "mpv.nginx.localhost")
+                                      'utf-8))
+            ("args" . ,(encode-coding-string mpv-args 'utf-8))))
+         (url-request-data (encode-coding-string files 'utf-8)))
+    (add-to-history 'zr-rclone-mpv-args-history mpv-args 100)
     (url-retrieve "http://127.0.0.1:7780/lua/mpv" #'ignore nil t)))
 
 (defvar zr-rclone-mpv-play-function
-  (if (getenv "SSH_CONNECTION" (selected-frame))
-      #'zr-rclone-mpv-remote-proc
-    #'zr-rclone-mpv-local-proc))
+  (cond
+   ((getenv "SSH_CONNECTION" (selected-frame)) #'zr-rclone-mpv-remote-proc)
+   ((eq system-type 'android) #'zr-rclone-mpv-m3u8-proc)
+   (t #'zr-rclone-mpv-local-proc)))
 
 (defun zr-rclone-mpv-play-dwim ()
   (interactive)
   (when-let*
-      ((mpv-args (read-shell-command "mpv " nil 'zr-rclone-mpv-args-history))
-       (regexp (rx (| (regexp (emms-source-file-regex))
+      ((regexp (rx (| (regexp (emms-source-file-regex))
                       (regexp (image-file-name-regexp)))))
        (files
         (pcase major-mode
@@ -292,12 +329,8 @@ backreferences in REPLACEMENT.")
                          (list item))))
              (dired-get-marked-files))
             "\n"))
-          ('emms-playlist-mode
-           (if (use-region-p)
-               (buffer-substring (region-beginning) (region-end))
-             (buffer-string))))))
-    (add-to-history 'zr-rclone-mpv-args-history mpv-args 100)
-    (funcall zr-rclone-mpv-play-function mpv-args files)))
+          ('emms-playlist-mode (current-buffer)))))
+    (funcall zr-rclone-mpv-play-function files)))
 
 (with-eval-after-load 'dired
   (bind-keys
