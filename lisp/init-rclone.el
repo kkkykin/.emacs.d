@@ -249,7 +249,7 @@ backreferences in REPLACEMENT.")
           (concat "HTTP/1.1 200 OK\r\n"
                   "Content-Type: application/vnd.apple.mpegurl\r\n"
                   "Content-Length: %s\r\n"
-                  "\r\n%s"))
+                  "\r\n#EXTM3U\r\n%s"))
          (proc (make-network-process
                 :name "mpv-m3u8-provider"
                 :server t
@@ -271,7 +271,7 @@ backreferences in REPLACEMENT.")
 (defun zr-rclone-mpv-android-proc (files)
   (when-let*
       ((m3u8-server (zr-rlcone-mpv-m3u8-provide files 5))
-       (data (concat "http://127.0.0.1:"
+       (data (format "http://127.0.0.1:%d"
                      (process-contact m3u8-server :service))))
     (call-process "termux-am" nil nil nil
                   "start" "-a" "android.intent.action.VIEW"
@@ -308,7 +308,7 @@ backreferences in REPLACEMENT.")
 (defvar zr-rclone-mpv-play-function
   (cond
    ((getenv "SSH_CONNECTION" (selected-frame)) #'zr-rclone-mpv-remote-proc)
-   ((eq system-type 'android) #'zr-rclone-mpv-m3u8-proc)
+   ((eq system-type 'android) #'zr-rclone-mpv-android-proc)
    (t #'zr-rclone-mpv-local-proc)))
 
 (defun zr-rclone-mpv-play-dwim ()
@@ -329,7 +329,11 @@ backreferences in REPLACEMENT.")
                          (list item))))
              (dired-get-marked-files))
             "\n"))
-          ('emms-playlist-mode (current-buffer)))))
+          ('emms-playlist-mode
+           (if (use-region-p)
+               (buffer-substring (region-beginning)
+                                 (region-end))
+             (buffer-string))))))
     (funcall zr-rclone-mpv-play-function files)))
 
 (with-eval-after-load 'dired
