@@ -133,11 +133,11 @@ variables."
 (defun zr-rclone-android-notification-handler (id event)
   (pcase event
     (_
-     (android-notification-notify
+     (android-notifications-notify
       :title "Quitting emacs rclone"
       :body "Quitting emacs rclone"
       :replaces-id id
-      :timeout 1000)
+      :timeout 1)
      (zr-rclone-quit))))
 
 (defun zr-rclone-rc-start ()
@@ -148,7 +148,7 @@ variables."
          (pass (concat "--rc-pass=" (auth-info-password auth)))
          (par (list addr user pass)))
     (when (eq system-type 'android)
-      (android-nofitication-notify
+      (android-notifications-notify
        :title "Emacs Rclone"
        :body "Rclone RC Running"
        :actions '("quit" "quit")
