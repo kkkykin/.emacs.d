@@ -772,6 +772,38 @@ Argument EVENT tells what has happened to the process."
 
 ;; eww
 
+(defvar zn/url-auth-urls nil
+  "List of URL regexp that require authentication.
+When `zn/url-retrieve-with-auth' is called with a URL that starts
+with any of these prefixes, it will attempt to look up authentication
+credentials.")
+
+(defun zn/url-get-auths (url)
+  "Retrieve authentication credentials for URL from auth-source.
+Parses URL and searches auth-source (e.g., .authinfo.gpg) for matching
+credentials for the host and port."
+  (let ((obj (url-generic-parse-url url)))
+    (auth-source-search :max 1
+                        :host (url-host obj)
+                        :port (url-port obj))))
+
+(defun zn/url-retrieve-with-auth (url)
+  "Retrieve URL with authentication if needed.
+If URL starts with any prefix in `zn/url-auth-urls', looks up and
+applies authentication credentials from auth-source. Otherwise,
+returns the URL unchanged.
+
+Returns either the original URL or a new URL string with embedded
+authentication credentials."
+  (if (cl-find-if (lambda (u) (string-match-p u url))
+                  zn/url-auth-urls)
+      (let ((auth (car (zn/url-get-auths url)))
+            (obj (url-generic-parse-url url)))
+        (setf (url-user obj) (plist-get auth :user))
+        (setf (url-password obj) (auth-info-password auth))
+        (url-recreate-url obj))
+    url))
+
 (defun zn/url-redirect (url)
   (cond
    ((string-match "^https://github.com/\\(.+\\)/commit/\\(\\w+\\)$" url)
@@ -838,17 +870,8 @@ If no custom prefix matches, it calls the original function."
          (replace-regexp-in-string "\\` m " "https://manned.org/man/" url))
         ((rx bos " c " (+ (in alnum)) eos)
          (replace-regexp-in-string "\\` c " "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/" url)))))
-  (define-advice eww-retrieve (:around (orig-fun &rest args) curl-args)
-    "Append curl arguments to eww-retrieve-command when retrieving."
-    (if-let* ((url (car args))
-              ((string-match-p
-                (rx ?. (| "pdf" "tar.gz") eos) url)))
-        (apply orig-fun args)
-      (let ((eww-retrieve-command
-             (append `(,newsticker-wget-name ,@newsticker-wget-arguments "-o-")
-                     (zn/curl-parameters-dwim url))))
-        (apply orig-fun args))))
   (add-to-list 'eww-url-transformers 'zn/url-redirect)
+  (add-to-list 'eww-url-transformers 'zn/url-retrieve-with-auth)
   (add-hook 'eww-after-render-hook #'zn/eww-render-hook))
 
 

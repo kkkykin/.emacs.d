@@ -29,6 +29,8 @@
 
 (defcustom zr-rclone-baseurl "http://127.0.0.1:5572"
   "Default rclone rc baseurl.")
+(with-eval-after-load 'init-net
+  (add-to-list 'zr-net-url-auth-urls (regexp-quote zr-rclone-baseurl)))
 
 (defcustom zr-rclone-root-directory (pcase system-type
                                       ('windows-nt "d:/rclone/")

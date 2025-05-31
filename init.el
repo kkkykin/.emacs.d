@@ -105,7 +105,9 @@
                ("p" . tempo-backward-mark)))
 
 (use-package transient
-  :autoload transient-define-prefix)
+  :autoload
+  transient--set-layout
+  transient-define-prefix)
 
 (use-package mode-local
   :autoload
@@ -884,6 +886,7 @@ before calling the original function."
   :custom
   (eww-search-prefix "https://www.mojeek.com/search?newtab=1&cdate=1&qss=DuckDuckGo&date=1&sst=1&arc=none&q=" "https://wiby.org/?q=")
   (eww-auto-rename-buffer 'title)
+  (eww-readable-adds-to-history nil)
   (shr-cookie-policy nil)
   (shr-use-xwidgets-for-media t)
   (shr-blocked-images (concat "^https?://" (rx (| "www.baidu.com"))))
