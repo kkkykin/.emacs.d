@@ -130,6 +130,33 @@ variables."
   (interactive)
   (zr-rclone-rc-contact "mount/unmountall"))
 
+(defun zr-rclone-android-notification-handler (id event)
+  (pcase event
+    (_
+     (android-notification-notify
+      :title "Quitting emacs rclone"
+      :body "Quitting emacs rclone"
+      :replaces-id id
+      :timeout 1000)
+     (zr-rclone-quit))))
+
+(defun zr-rclone-rc-start ()
+  (interactive)
+  (let* ((auth (car (zr-net-url-get-auths zr-rclone-baseurl)))
+         (addr (format "--rc-addr=%s:%s" (plist-get auth :host) (plist-get auth :port)))
+         (user (concat "--rc-user=" (plist-get auth :user)))
+         (pass (concat "--rc-pass=" (auth-info-password auth)))
+         (par (list addr user pass)))
+    (when (eq system-type 'android)
+      (android-nofitication-notify
+       :title "Emacs Rclone"
+       :body "Rclone RC Running"
+       :actions '("quit" "quit")
+       :resident t
+       :on-action #'zr-rclone-android-notification-handler
+       :on-close #'zr-rclone-android-notification-handler))
+    (apply #'call-process "rclone" nil 0 nil "rcd" "--rc-serve" par)))
+
 (defun zr-rclone-quit ()
   "Exit rclone safely."
   (interactive)
