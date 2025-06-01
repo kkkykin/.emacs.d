@@ -2188,6 +2188,7 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
         :lisp-dir "."
         :rev "9e293237eab1626f7c539dec8fd878a0308a96f2")
   :custom
+  (ahk-chm-path (substitute-in-file-name "$USERPROFILE/scoop/apps/autohotkey/current/v2/AutoHotkey.chm"))
   (ahk-indent-offset 2))
 
 (use-package html-ts-mode
