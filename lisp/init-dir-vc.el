@@ -24,6 +24,8 @@
 
 ;;; Code:
 
+;; TODO: history regexp subdir
+
 (require 'filenotify)
 
 (defvar zr-dir-vc-watches nil
