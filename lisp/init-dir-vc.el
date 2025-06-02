@@ -85,7 +85,7 @@ and set commit time to now."
                      ((not last-msg) current-msg)
                      ((string-match-p
                        (format "\\(created\\|%s\\) %s$"
-                               (regexp-quote action)
+                               action
                                (regexp-quote file))
                        last-msg)
                       last-msg)
@@ -109,23 +109,39 @@ and set commit time to now."
   "Start monitoring DIR for file changes matching REGEXP and FLAGS.
 DIR: directory to monitor
 REGEXP: regexp to match files (nil for all files)
-FLAGS: list of events to monitor (default is '(created deleted renamed changed))"
+FLAGS: list of events to monitor (default is '(created deleted renamed changed))
+
+If directory is not under git control, initialize it. If directory is
+under git control, add and commit any untracked or modified files."
   (interactive "DDirectory to monitor: \nsRegexp to match files (leave empty for all): ")
+  (setq dir (file-truename dir))
+  (zr-dir-vc-stop dir)
   (unless (file-directory-p dir)
     (error "%s is not a directory" dir))
-  (unless (file-directory-p (expand-file-name ".git" dir))
-    (dolist (action '(("init")
-                      ("add" ".")
-                      ("commit" "-m" "init")))
-      (apply #'call-process "git" nil nil nil "-C" dir action)))
+  
+  (let ((git-dir (expand-file-name ".git" dir)))
+    (unless (file-directory-p git-dir)
+      ;; Initialize new git repo
+      (call-process "git" nil nil nil "-C" dir "init")
+      (message "Initialized new git repository in %s" dir))
+    
+    ;; Check for untracked or modified files in existing repo
+    (when (file-directory-p git-dir)
+      (let ((status (process-lines "git" "-C" dir "status" "--porcelain")))
+        (unless (string-empty-p (string-join status))
+          (dolist (action '(("add" "--all")
+                            ("commit" "-m" "Commit any files")))
+            (apply #'call-process "git" nil nil nil "-C" dir action))
+          (message "Added and committed existing files in %s" dir)))))
+  
   (let* ((default-flags '(created deleted renamed changed))
          (watch-flags (or flags default-flags))
          (watch (file-notify-add-watch
-                dir
-                (cond ((member 'attribute-changed watch-flags)
-                       '(change attribute-change))
-                      (t '(change)))
-                'zr-dir-vc-handle-event)))
+                 dir
+                 (cond ((member 'attribute-changed watch-flags)
+                        '(change attribute-change))
+                       (t '(change)))
+                 'zr-dir-vc-handle-event)))
     (push (list watch dir regexp watch-flags) zr-dir-vc-watches)
     (message "Started watching directory: %s%s%s" dir
              (if regexp (format " (matching %s)" regexp) "")
