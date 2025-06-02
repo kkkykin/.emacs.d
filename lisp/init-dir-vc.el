@@ -66,7 +66,8 @@
           (when (eq action 'renamed)
             (call-process "git" nil nil nil "-C" dir "add" file1)
             (setq msg (concat msg " -> " (file-relative-name file1 dir))))
-          (call-process "git" nil nil nil "-C" dir "commit" "-m" msg))))))
+          (unless (zerop (call-process "git" nil nil nil "-C" dir "commit" "-m" msg))
+            (user-error "Dir-VC error: %s %s" dir msg)))))))
 
 (defun zr-dir-vc (dir &optional regexp flags)
   "Start monitoring DIR for file changes matching REGEXP and FLAGS.
