@@ -34,8 +34,24 @@
   (and (not (string-match-p "/\\.git/?$" file))
        (or (null regexp) (string-match-p regexp file))))
 
+(defun zr-dir-vc-last-commit-within-seconds-p (seconds &optional dir)
+  "Check if last git commit was within SECONDS seconds in DIR."
+  (let* ((log-format "%ct")
+         (log-cmd (list "git" "-C" (or dir ".") "log" "-1" "--pretty=format:%ct"))
+         (last-commit-time (string-to-number (car (apply #'process-lines-ignore-status log-cmd))))
+         (current-time (time-to-seconds (current-time))))
+    (and (not (zerop last-commit-time))
+         (< (- current-time last-commit-time) seconds))))
+
+(defun zr-dir-vc-get-last-commit-message (&optional dir)
+  "Get the last git commit message in DIR."
+  (car (process-lines-ignore-status
+        "git" "-C" (or dir ".") "log" "-1" "--pretty=format:%s")))
+
 (defun zr-dir-vc-handle-event (event)
-  "Handle file notification EVENT and commit changes with git."
+  "Handle file notification EVENT and commit changes with git.
+If last commit was within 3 seconds, amend it with accumulated messages
+and set commit time to now."
   (let* ((desc (nth 0 event))
          (action (nth 1 event))
          (file (nth 2 event))
@@ -61,13 +77,33 @@
                        ((or 'deleted
                             'renamed)
                         (list "rm" file))))
-               (msg (format "AC: %s %s" action file)))
+               (current-msg (format "%s %s" action file))
+               (amend-commit (and (zr-dir-vc-last-commit-within-seconds-p 3 dir)
+                                 (not (eq action 'renamed))))
+               (last-msg (and amend-commit (zr-dir-vc-get-last-commit-message dir)))
+               (msg (cond
+                     ((not last-msg) current-msg)
+                     ((string-match-p
+                       (format "\\(created\\|%s\\) %s$"
+                               (regexp-quote action)
+                               (regexp-quote file))
+                       last-msg)
+                      last-msg)
+                     (t (concat last-msg "; " current-msg)))))
+          
           (apply #'call-process "git" nil nil nil "-C" dir args)
           (when (eq action 'renamed)
             (call-process "git" nil nil nil "-C" dir "add" file1)
-            (setq msg (concat msg " -> " (file-relative-name file1 dir))))
-          (unless (zerop (call-process "git" nil nil nil "-C" dir "commit" "-m" msg))
-            (user-error "Dir-VC error: %s %s" dir msg)))))))
+            (setq current-msg (concat current-msg " -> " (file-relative-name file1 dir)))
+            (setq msg (if amend-commit
+                          (concat last-msg "; " current-msg)
+                        current-msg)))
+          
+          (let ((commit-args (if amend-commit
+                                 (list "commit" "--amend" "-m" msg "--reset-author")
+                               (list "commit" "-m" msg))))
+            (unless (zerop (apply #'call-process "git" nil nil nil "-C" dir commit-args))
+              (user-error "Dir-VC error: %s %s" dir msg))))))))
 
 (defun zr-dir-vc (dir &optional regexp flags)
   "Start monitoring DIR for file changes matching REGEXP and FLAGS.
