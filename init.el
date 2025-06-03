@@ -373,7 +373,7 @@
   :unless zr-sys-android-p
   :config
   (when (and battery-status-function
-             (not (string= "unknown"
+             (not (string= "N/A"
                            (battery-format "%B"
                                            (funcall battery-status-function)))))
     (display-battery-mode 1)))
