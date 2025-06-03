@@ -2507,7 +2507,6 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
 (use-package emms
   :if (package-installed-p 'emms)
   :custom
-  (emms-player-list '(emms-player-mpv))
   (emms-info-functions '(emms-info-native))
   (emms-info-asynchronously t)
   (emms-browser-covers #'emms-browser-cache-thumbnail-async)
@@ -2518,6 +2517,8 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   (emms-minimalistic)
   (require 'emms-history)
   (emms-history-load)
+  (unless zr-sys-android-p
+    (setq emms-player-list '(emms-player-mpv)))
   (when (executable-find "exiftool")
     (setq emms-info-functions '(emms-info-exiftool))))
 
