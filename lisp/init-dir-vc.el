@@ -24,17 +24,10 @@
 
 ;;; Code:
 
-;; TODO: history regexp subdir
-
 (require 'filenotify)
 
 (defvar zr-dir-vc-watches nil
-  "List of active file notification watches (DESCRIPTOR . (DIR REGEXP FLAGS))")
-
-(defun zr-dir-vc-matches-p (file regexp)
-  "Check if FILE matches REGEXP and is not git directory."
-  (and (not (string-match-p "/\\.git/?$" file))
-       (or (null regexp) (string-match-p regexp file))))
+  "List of active file notification watches (DESCRIPTOR . (DIR FLAGS))")
 
 (defun zr-dir-vc-last-commit-within-seconds-p (seconds &optional dir)
   "Check if last git commit was within SECONDS seconds in DIR."
@@ -50,104 +43,73 @@
   (car (process-lines-ignore-status
         "git" "-C" (or dir ".") "log" "-1" "--pretty=format:%s")))
 
+(defun zr-dir-vc-status (&optional dir)
+  (process-lines "git" "-C" (or dir ".") "status" "-z" "--porcelain"))
+
+(defun zr-dir-vc-commit-all (&optional dir amend)
+  (dolist (action `(("add" "-A")
+                    ("commit"
+                     ,@(and amend '("--amend" "--reset-author"))
+                     "-m" ,(format-time-string "%F %T"))))
+    (apply #'call-process "git" nil nil nil "-C" (or dir ".") action)))
+
 (defun zr-dir-vc-handle-event (event)
   "Handle file notification EVENT and commit changes with git.
 If last commit was within 3 seconds, amend it with accumulated messages
 and set commit time to now."
-  (let* ((desc (nth 0 event))
-         (action (nth 1 event))
-         (file (nth 2 event))
-         (file1 (and (eq action 'renamed) (nth 3 event)))
-         (watch-info (assoc desc zr-dir-vc-watches))
-         (dir (nth 1 watch-info))
-         (regexp (nth 2 watch-info))
-         (watch-flags (nth 3 watch-info)))
-    
-    (when (and dir (member action watch-flags)
-               (or (zr-dir-vc-matches-p file regexp)
-                   (and file1 (zr-dir-vc-matches-p file1 regexp))))
-      (when debug-on-error
-        (message "Detected %s on %s" action file))
-      
-      (when (executable-find "git")
-        (let* ((file (file-relative-name file dir))
-               (args (pcase action
-                       ((or 'created
-                            'changed
-                            'attribute-changed)
-                        (list "add" file))
-                       ((or 'deleted
-                            'renamed)
-                        (list "rm" file))))
-               (current-msg (format "%s %s" action file))
-               (amend-commit (and (zr-dir-vc-last-commit-within-seconds-p 3 dir)
-                                 (not (eq action 'renamed))))
-               (last-msg (and amend-commit (zr-dir-vc-get-last-commit-message dir)))
-               (msg (cond
-                     ((not last-msg) current-msg)
-                     ((string-match-p
-                       (format "\\(created\\|%s\\) %s$"
-                               action
-                               (regexp-quote file))
-                       last-msg)
-                      last-msg)
-                     (t (concat last-msg "; " current-msg)))))
-          
-          (apply #'call-process "git" nil nil nil "-C" dir args)
-          (when (eq action 'renamed)
-            (call-process "git" nil nil nil "-C" dir "add" file1)
-            (setq current-msg (concat current-msg " -> " (file-relative-name file1 dir)))
-            (setq msg (if amend-commit
-                          (concat last-msg "; " current-msg)
-                        current-msg)))
-          
-          (let ((commit-args (if amend-commit
-                                 (list "commit" "--amend" "-m" msg "--reset-author")
-                               (list "commit" "-m" msg))))
-            (unless (zerop (apply #'call-process "git" nil nil nil "-C" dir commit-args))
-              (user-error "Dir-VC error: %s %s" dir msg))))))))
+  (let* ((path (if (stringp event) event
+                 (let ((desc (car event)))
+                   (nth 1 (assoc desc zr-dir-vc-watches)))))
+         (dir (if (file-directory-p path) path (file-name-directory path))))
+    (unless (string-match-p "/\\.git/?$" (nth 2 event))
+      (when (zr-dir-vc-status dir)
+        (zr-dir-vc-commit-all
+         dir
+         (zr-dir-vc-last-commit-within-seconds-p 3 dir))))))
 
-(defun zr-dir-vc (dir &optional regexp flags)
-  "Start monitoring DIR for file changes matching REGEXP and FLAGS.
-DIR: directory to monitor
-REGEXP: regexp to match files (nil for all files)
+(defun zr-dir-vc (path &optional ignore flags)
+  "Start monitoring PATH (file or directory) for file changes matching FLAGS.
+PATH: file or directory to monitor
+IGNORE: content to write to .gitignore if creating new repo
 FLAGS: list of events to monitor (default is '(created deleted renamed changed))
 
-If directory is not under git control, initialize it. If directory is
-under git control, add and commit any untracked or modified files."
-  (interactive "DDirectory to monitor: \nsRegexp to match files (leave empty for all): ")
-  (setq dir (file-truename dir))
-  (zr-dir-vc-stop dir)
-  (unless (file-directory-p dir)
-    (error "%s is not a directory" dir))
+If path is not under git control, initialize it as a git repo (if directory).
+If path is under git control, add and commit any untracked or modified files."
+  (interactive "fPath to monitor (file or directory): ")
+  (setq path (file-truename path))
+  (zr-dir-vc-stop path)
+  (unless (or (file-directory-p path) (file-exists-p path))
+    (error "%s does not exist" path))
   
-  (let ((git-dir (expand-file-name ".git" dir)))
+  (let* ((dir (if (file-directory-p path) path (file-name-directory path)))
+         (git-dir (expand-file-name ".git" dir))
+         (ignore-file (expand-file-name ".gitignore" dir)))
     (unless (file-directory-p git-dir)
-      ;; Initialize new git repo
-      (call-process "git" nil nil nil "-C" dir "init")
-      (message "Initialized new git repository in %s" dir))
-    
+      ;; Initialize new git repo if monitoring a directory
+      (when (file-directory-p path)
+        (call-process "git" nil nil nil "-C" dir "init")))
+    ;; Handle .gitignore
+    (unless (file-directory-p path)
+      (setq ignore (concat "*\n!" (file-relative-name path dir) "\n")))
+    (when (and ignore (file-exists-p ignore-file))
+      (unless (y-or-n-p (format ".gitignore already exists in %s. Overwrite? " dir))
+        (setq ignore nil)))
+    (when ignore
+      (write-region ignore nil ignore-file))
     ;; Check for untracked or modified files in existing repo
-    (when (file-directory-p git-dir)
-      (let ((status (process-lines "git" "-C" dir "status" "--porcelain")))
-        (unless (string-empty-p (string-join status))
-          (dolist (action '(("add" "--all")
-                            ("commit" "-m" "Commit any files")))
-            (apply #'call-process "git" nil nil nil "-C" dir action))
-          (message "Added and committed existing files in %s" dir)))))
+    (when (and (file-directory-p git-dir) (zr-dir-vc-status dir))
+      (zr-dir-vc-commit-all dir)))
   
   (let* ((default-flags '(created deleted renamed changed))
          (watch-flags (or flags default-flags))
          (watch (file-notify-add-watch
-                 dir
+                 (if (file-directory-p path) path (file-name-directory path))
                  (cond ((member 'attribute-changed watch-flags)
                         '(change attribute-change))
                        (t '(change)))
                  'zr-dir-vc-handle-event)))
-    (push (list watch dir regexp watch-flags) zr-dir-vc-watches)
-    (message "Started watching directory: %s%s%s" dir
-             (if regexp (format " (matching %s)" regexp) "")
-             (format " (events: %S)" watch-flags))))
+    (push (list watch path watch-flags) zr-dir-vc-watches)
+    (message "Started watching file: %s (events: %S)" path watch-flags)))
 
 (defun zr-dir-vc-stop (&optional dir)
   "Stop monitoring DIR. If DIR is nil, stop all monitors."
@@ -167,21 +129,6 @@ under git control, add and commit any untracked or modified files."
         (file-notify-rm-watch (car watch))))
     (setq zr-dir-vc-watches nil)
     (message "Stopped all directory watches")))
-
-(defun zr-dir-vc-list ()
-  "List currently monitored directories."
-  (interactive)
-  (if zr-dir-vc-watches
-      (let ((msg "Currently monitored directories:\n"))
-        (dolist (watch zr-dir-vc-watches)
-          (let ((dir (nth 1 watch))
-                (regexp (nth 2 watch))
-                (flags (nth 3 watch)))
-            (setq msg (concat msg (format "- %s%s%s\n" dir
-                                          (if regexp (format " (matching %s)" regexp) "")
-                                          (format " (events: %S)" flags)))))
-          (message msg)))
-    (message "No directories are currently being monitored")))
 
 (provide 'init-dir-vc)
 ;;; init-dirmon.el ends here
