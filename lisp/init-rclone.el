@@ -297,15 +297,21 @@ backreferences in REPLACEMENT.")
                        (kill-buffer (process-buffer proc)))))
       proc)))
 
+(defvar zr-rclone-mpv-playlist-dir
+  (pcase system-type
+    ('android "/storage/emulated/0/Documents/mpv/playlist")
+    (_ (expand-file-name "~/mpv/playlist"))))
+
 (defun zr-rclone-mpv-android-proc (files)
-  (when-let*
-      ((m3u8-server (zr-rlcone-mpv-m3u8-provide files 5))
-       (data (format "http://127.0.0.1:%d"
-                     (process-contact m3u8-server :service))))
-    (call-process "termux-am" nil nil nil
+  (let ((data (if (string-search "\n" str)
+                  (let ((temporary-file-directory zr-rclone-mpv-playlist-dir))
+                    (mkdir temporary-file-directory t)
+                    (make-temp-file "_tmp_" nil ".m3u8" files))
+                files)))
+    (call-process "am" nil nil nil
                   "start" "-a" "android.intent.action.VIEW"
                   "-t" "video/any" "-p" "is.xyz.mpv.ytdl"
-                  "-d" data)))
+                  "-d" (concat "file://" data)))))
 
 (defun zr-rclone-mpv-local-proc (files)
   (let* ((mpv-extra-args (read-shell-command "mpv " nil 'zr-rclone-mpv-args-history))
