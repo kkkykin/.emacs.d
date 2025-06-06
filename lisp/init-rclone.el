@@ -303,7 +303,7 @@ backreferences in REPLACEMENT.")
     (_ (expand-file-name "~/mpv/playlist"))))
 
 (defun zr-rclone-mpv-android-proc (files)
-  (let ((data (if (string-search "\n" str)
+  (let ((data (if (string-search "\n" files)
                   (let ((temporary-file-directory zr-rclone-mpv-playlist-dir))
                     (mkdir temporary-file-directory t)
                     (make-temp-file "_tmp_" nil ".m3u8" files))
@@ -311,7 +311,7 @@ backreferences in REPLACEMENT.")
     (call-process "am" nil nil nil
                   "start" "-a" "android.intent.action.VIEW"
                   "-t" "video/any" "-p" "is.xyz.mpv.ytdl"
-                  "-d" (concat "file://" data)))))
+                  "-d" (concat "file://" data))))
 
 (defun zr-rclone-mpv-local-proc (files)
   (let* ((mpv-extra-args (read-shell-command "mpv " nil 'zr-rclone-mpv-args-history))
