@@ -273,7 +273,7 @@ backreferences in REPLACEMENT.")
   (pcase system-type
     ('windows-nt "\\\\.\\pipe\\mpv-rclone")))
 
-(defun zr-rlcone-mpv-m3u8-provide (files timeout)
+(defun zr-rclone-mpv-m3u8-provide (files timeout)
   (let* ((m3u8-tempo
           (concat "HTTP/1.1 200 OK\r\n"
                   "Content-Type: application/vnd.apple.mpegurl\r\n"
@@ -303,15 +303,14 @@ backreferences in REPLACEMENT.")
     (_ (expand-file-name "~/mpv/playlist"))))
 
 (defun zr-rclone-mpv-android-proc (files)
-  (let ((data (if (string-search "\n" files)
-                  (let ((temporary-file-directory zr-rclone-mpv-playlist-dir))
-                    (mkdir temporary-file-directory t)
-                    (make-temp-file "_tmp_" nil ".m3u8" files))
-                files)))
-    (call-process "am" nil nil nil
+  (when-let*
+      ((m3u8-server (zr-rclone-mpv-m3u8-provide files 5))
+       (data (format "http://127.0.0.1:%d"
+                     (process-contact m3u8-server :service))))
+    (call-process "termux-am" nil 0 nil
                   "start" "-a" "android.intent.action.VIEW"
                   "-t" "video/any" "-p" "is.xyz.mpv.ytdl"
-                  "-d" (concat "file://" data))))
+                  "-d" data)))
 
 (defun zr-rclone-mpv-local-proc (files)
   (let* ((mpv-extra-args (read-shell-command "mpv " nil 'zr-rclone-mpv-args-history))
