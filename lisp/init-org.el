@@ -232,7 +232,7 @@ Example usage:
           (when (y-or-n-p (format "Open link: %s?" (org-add-props link nil 'face 'org-warning)))
             (org-link-open-from-string link)))
          ((memq type '(inline-babel-call babel-call inline-src-block src-block))
-          (zo/call-babel-at-point type nil nil t))
+          (zo/call-babel-at-point type))
          (t nil))))))
 
 (defun zo/search-and-execute-link-or-babel (org-mode-p count)
@@ -254,25 +254,27 @@ or Babel element is found."
         (zo/execute-link-or-babel-at-point org-mode-p)
       (user-error "No link or babel found"))))
 
-(defun zo/exec-link-or-babel-nearby (&optional arg)
+(defun zo/exec-link-or-babel-nearby (&optional arg file)
   "Execute link or Babel block/call at point, or nearby.
 
 With prefix arg ARG, search backwards.  With universal arg, start from
 beginning of buffer. If on a Babel element, execute it directly.
 Otherwise, search for a link or Babel element and execute/open it."
   (interactive "P")
-  (let ((count (pcase arg
-                 ('- -1)
-                 ((pred numberp) arg)
-                 (_ 1)))
-        (org-mode-p (eq major-mode 'org-mode))
-        (in-place t))
-    (save-excursion
-      (when (equal '(4) arg)
-        (goto-char (point-min))
-        (setq in-place nil))
-      (or (zo/execute-link-or-babel-at-point org-mode-p in-place)
-          (zo/search-and-execute-link-or-babel org-mode-p count)))))
+  (with-current-buffer (if file (find-file-noselect file)
+                         (current-buffer))
+    (let ((count (pcase arg
+                   ('- -1)
+                   ((pred numberp) arg)
+                   (_ 1)))
+          (org-mode-p (eq major-mode 'org-mode))
+          (in-place t))
+      (save-excursion
+        (when (equal '(4) arg)
+          (goto-char (point-min))
+          (setq in-place nil))
+        (or (zo/execute-link-or-babel-at-point org-mode-p in-place)
+            (zo/search-and-execute-link-or-babel org-mode-p count))))))
 
 (defun zo/babel-expand-src-block ()
   "Expand the Org Babel source block at point.
