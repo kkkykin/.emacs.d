@@ -69,9 +69,10 @@
   "Run fooview action."
   ;; (start-process "fooview-run" nil "am" "start"
   ;;                (format "intent:#Intent;action=com.fooview.android.intent.RUN_WORKFLOW;component=com.fooview.android.fooview/.ShortcutProxyActivity;S.action=%s;end" cmd))
-  (start-process "fooview-run" nil "am" "start" "-a"
-                 "com.fooview.android.intent.RUN_WORKFLOW" "-e" "action"
-                 cmd "com.fooview.android.fooview/.ShortcutProxyActivity"))
+  (call-process "termux-am" nil 0 nil
+                "com.fooview.android.intent.RUN_WORKFLOW"
+                "com.fooview.android.fooview/.ShortcutProxyActivity"
+                "-e" "action" cmd))
 
 (defun za/rish-command-to-string (cmd)
   "Wrapper for `shell-command-to-string' with rish."
