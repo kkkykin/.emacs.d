@@ -492,7 +492,8 @@ EXPANDED -- The expanded content to be merged."
 		                 (skip-chars-backward " \t\n")
 		                 (line-beginning-position))))
           (zo/babel-insert-diff-block
-           body-start body-end body (concat expanded "\n")))))))
+           body-start body-end body (concat expanded "\n"))
+          (save-buffer))))))
 
 (defun zo/babel-detangle-1 (&optional source-code-file)
   "Call detangle after bind custom function."
