@@ -222,7 +222,9 @@ Example usage:
         (condition-case nil
             (org-open-at-point-global)
           (user-error nil))
-      (let* ((link (match-string-no-properties 0))
+      (let* ((link (condition-case nil
+                       (match-string-no-properties 0)
+                     (args-out-of-range "")))
              (element (when org-mode-p (org-element-at-point-no-context)))
              (type (org-element-type element))
              (org-link-elisp-confirm-function nil)
