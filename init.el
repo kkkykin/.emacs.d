@@ -992,6 +992,10 @@ before calling the original function."
     ("C-l" . comint-dynamic-list-input-ring)
     :prefix "C-c C-k"
     :prefix-map zr-sql-cc-ck-prefix-map)
+  :hook
+  ((sql-mode sql-interactive-mode)
+   . (lambda ()
+       (setq-local comment-start "-- ")))
   :custom
   (sql-input-ring-file-name (locate-user-emacs-file "sql-history.eld")))
 
