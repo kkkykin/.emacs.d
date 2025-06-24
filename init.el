@@ -951,8 +951,16 @@ before calling the original function."
   (tramp-use-scp-direct-remote-copying t)
   (remote-file-name-inhibit-locks t)
   (remote-file-name-inhibit-auto-save t)
+  (remote-file-name-inhibit-auto-save-visited t)
   (debug-ignored-errors (cons 'remote-file-error debug-ignored-errors))
-  (tramp-use-connection-share t))
+  (tramp-use-connection-share t)
+  :config
+  (connection-local-set-profile-variables
+   'remote-direct-async-process
+   '((tramp-direct-async-process . t)))
+  (connection-local-set-profiles
+   '(:application tramp :protocol "scp")
+   'remote-direct-async-process))
 
 (use-package nxml-mode
   :mode "\\.wsb\\'")
@@ -1658,6 +1666,10 @@ before calling the original function."
   (compilation-environment '("TERM=xterm-256color"))
   (ansi-osc-for-compilation-buffer t)
   :config
+  (unless zr-sys-winnt-p
+    (with-eval-after-load 'tramp
+      (remove-hook 'compilation-mode-hook
+                   #'tramp-compile-disable-ssh-controlmaster-options)))
   (add-hook 'compilation-filter-hook #'ansi-color-compilation-filter)
   (add-hook 'compilation-filter-hook #'ansi-osc-compilation-filter))
 
@@ -2234,6 +2246,10 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
 (use-package magit
   :if (package-installed-p 'magit)
   :custom
+  (magit-commit-show-diff nil)
+  (magit-branch-direct-configure nil)
+  (magit-refresh-status-buffer nil)
+  (magit-tramp-pipe-stty-settings 'pty)
   (magit-wip-mode-lighter nil))
 
 (use-package with-editor
