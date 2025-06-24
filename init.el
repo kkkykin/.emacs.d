@@ -205,7 +205,10 @@
     ("M-p" . completion-preview-prev-candidate)
     ([remap forward-word] . completion-preview-insert-word)
     ([remap forward-sexp] . completion-preview-insert-sexp))
-  :hook (prog-mode eshell-mode inferior-emacs-lisp-mode))
+  :hook (prog-mode inferior-emacs-lisp-mode)
+  :config
+  (unless zr-sys-winnt-p
+    (add-hook 'eshell-mode-hook #'completion-preview-mode)))
 
 (use-package pp
   :bind
