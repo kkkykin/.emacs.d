@@ -1004,9 +1004,10 @@ before calling the original function."
     :prefix "C-c C-k"
     :prefix-map zr-sql-cc-ck-prefix-map)
   :hook
-  ((sql-mode sql-interactive-mode)
-   . (lambda ()
-       (setq-local comment-start "-- ")))
+  (((sql-mode sql-interactive-mode)
+    . (lambda ()
+        (setq-local comment-start "-- ")))
+   ((sql-mode sql-interactive-mode) . sql-indent-enable))
   :custom
   (sql-input-ring-file-name (locate-user-emacs-file "sql-history.eld")))
 
