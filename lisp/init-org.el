@@ -396,6 +396,16 @@ Usage:
             (zo/call-babel-at-point nil params p)
           (user-error "No blocks found."))))))
 
+(defun zo/babel-json-format (name)
+  "Run `json-pretty-print-ordered' on json code block."
+  (let ((pos (org-babel-find-named-block name)))
+    (save-excursion
+      (goto-char pos)
+      (forward-line)
+      (let ((begin (point)))
+        (forward-sexp)
+        (json-pretty-print-ordered begin (point))))))
+
 (defun zo/completion-at-point ()
   "Provide completion-at-point functionality for source blocks in org-mode.
 When point is inside a source block, this function detects the block's
