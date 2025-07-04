@@ -347,7 +347,8 @@ locale encoding for proper handling of non-ASCII filenames."
 
 ;; mysql
 (with-eval-after-load 'sql
-  (setq sql-mysql-options '("-tfn" "--compression-algorithms=zstd")))
+  (setq sql-mysql-options '("-tfn" "--compression-algorithms=zstd"
+                            "--default-character-set=utf8mb4")))
 
 
 ;; jsonrpc
