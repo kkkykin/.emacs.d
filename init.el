@@ -563,7 +563,17 @@
 
 (use-package etags-regen
   :if (and (package-installed-p 'etags-regen)
-           (not zr-sys-android-p)))
+           (not zr-sys-android-p))
+  :hook emacs-startup
+  :custom
+  (etags-regen-tags-file "_tags")
+  (etags-regen-program-options '("--no-fallback-lang"))
+  (etags-regen-regexp-alist
+   '((("lisp")
+      "/(use-package[ \t]+\\([a-zA-Z0-9\\-]+\\)/usep\\/\\1/")
+     (("none")
+      "/^\\*+ \\(.+\\)/oh\\/\\1/"
+      "/^#\\+name: \\(.+\\)/ob\\/\\1/i"))))
 
 (use-package quickurl)
 

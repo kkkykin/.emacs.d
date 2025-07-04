@@ -421,16 +421,18 @@ Returns:
 - nil if point is not in a source block or no completion function exists"
   (let ((ele (org-element-at-point-no-context)))
     (pcase (org-element-type ele)
-      ((and 'src-block
-            (let lan (org-element-property :language ele))
-            (let fn (intern (concat lan "-completion-at-point")))
-            (guard (lambda () fboundp fn)))
-       (funcall fn)))))
+      ('src-block
+       (when-let* ((lan (org-element-property :language ele))
+                   (fn (intern (concat lan "-completion-at-point")))
+                   ((fboundp fn)))
+         (funcall fn)))
+      (_ nil))))
 
 (defun zo/hook-setup ()
   "Set up completion-at-point for org-mode buffers.
 Adds `zo/completion-at-point' to `completion-at-point-functions'
 locally, enabling source block-aware completion in org-mode documents."
+  (add-hook 'completion-at-point-functions #'tags-completion-at-point-function nil t)
   (add-hook 'completion-at-point-functions #'zo/completion-at-point nil t))
 
 (with-eval-after-load 'ob
