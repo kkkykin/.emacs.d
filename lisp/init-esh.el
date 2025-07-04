@@ -71,7 +71,9 @@ terminal."
   (throw 'eshell-replace-command
          (eshell-parse-command "vt" args)))
 
-(dolist (cmd (list (rx bos (| "ping") eos)))
+(dolist (cmd (list (rx bos (| "ping"
+                              "usql")
+                       eos)))
   (add-to-list 'eshell-interpreter-alist (cons cmd 'ze/invoke-by-nvim)))
 
 (provide 'init-esh)
