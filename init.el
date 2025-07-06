@@ -733,6 +733,7 @@
 
 (use-package python
   :custom
+  (python-indent-offset 2)
   (python-indent-block-paren-deeper t)
   (python-shell-interpreter-args "-i -X utf8")
   (python-shell-dedicated t)
