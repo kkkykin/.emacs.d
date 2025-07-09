@@ -1166,11 +1166,7 @@ before calling the original function."
   (advice-add 'archive-rar-summarize :before-until #'archive-7z-summarize)
   (advice-add 'archive-rar-extract :before-until #'archive-7z-extract))
 
-(use-package hexl-mode
-  :bind
-  ( :map hexl-mode-map
-    :prefix "C-h"
-    :prefix-map help-map))
+(use-package hexl)
 
 (use-package dictionary
   :init
