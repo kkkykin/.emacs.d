@@ -750,7 +750,7 @@
                ("p" . flymake-goto-prev-error))
   :custom
   (flymake-mode-line-lighter "F")
-  (flymake-show-diagnostics-at-end-of-line 'short))
+  (flymake-show-diagnostics-at-end-of-line 'fancy))
 
 (use-package gud
   :custom
