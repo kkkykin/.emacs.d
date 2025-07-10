@@ -2685,7 +2685,6 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   :init
   (require 'llm-gemini)
   (require 'llm-openai)
-  (require 'llm-ollama)
   (define-key zr-menu [ellama]
               '(menu-item "ellama" ellama-transient-main-menu))
   :commands
@@ -2693,6 +2692,7 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   :custom
   (ellama-sessions-directory (locate-user-emacs-file "_ellama-sessions"))
   (ellama-language "Chinese")
+  (ellama-auto-scroll t)
   (ellama-translation-provider )
   (ellama-provider
    (make-llm-gemini
@@ -2726,6 +2726,8 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
                         :key (auth-source-pick-first-password
                               :host "openrouter.api")
                         :chat-model (cdr m)))))
+  (advice-add 'pixel-scroll-precision :before #'ellama-disable-scroll)
+  (advice-add 'end-of-buffer :after #'ellama-enable-scroll)
   (ellama-context-header-line-global-mode +1))
 
 (use-package keyfreq
