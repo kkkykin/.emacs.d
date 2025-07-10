@@ -297,7 +297,7 @@ locale encoding for proper handling of non-ASCII filenames."
   (save-restriction
     (widen)
     (let ((tmp (make-temp-file "emacs-" nil nil (buffer-string))))
-      (call-process "sudo" nil nil nil "move"
+      (call-process "sudo" nil nil nil "mv"
                     (subst-char-in-string ?/ ?\\ tmp) (buffer-file-name))))
   (set-buffer-modified-p nil))
 
