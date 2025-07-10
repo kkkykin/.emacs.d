@@ -2277,9 +2277,10 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   :custom
   (aidermacs-extra-args '())
   (aidermacs-auto-commits nil)
-  (aidermacs-default-model "gemini-exp")
+  (aidermacs-default-model "gemini-2.0-flash-exp")
   (aidermacs-popular-models
    (list aidermacs-default-model
+         "openrouter/deepseek/deepseek-chat-v3-0324:free"
          "deepseek/deepseek-chat"
          "groq/llama3-70b-8192")
    "ref: https://aider.chat/docs/llms.html#free-models")
@@ -2288,7 +2289,7 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
     ("A" . aidermacs-transient-menu))
   :config
   (setenv "PYTHONIOENCODING" "utf-8")
-  (dolist (m '("gemini" "deepseek" "groq"))
+  (dolist (m '("gemini" "deepseek" "groq" "openrouter"))
     (when-let* ((key (auth-source-pick-first-password :host (concat m ".api"))))
       (setenv (concat (upcase m) "_API_KEY") key))))
 
@@ -2695,6 +2696,7 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   (ellama-translation-provider )
   (ellama-provider
    (make-llm-gemini
+    :chat-model "gemini-2.0-flash-exp"
     :key (auth-source-pick-first-password
           :host "gemini.api")))
   (ellama-providers
@@ -2715,6 +2717,15 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   :hook
   (org-ctrl-c-ctrl-c-final . ellama-chat-send-last-message)
   :config
+  (dolist (m '(("cy" . "openrouter/cypher-alpha:free")
+               ("ds" . "deepseek/deepseek-chat-v3-0324:free")))
+    (add-to-list 'ellama-providers
+                 (cons (concat "open-" (car m))
+                       (make-llm-openai-compatible
+                        :url "https://openrouter.ai/api/v1"
+                        :key (auth-source-pick-first-password
+                              :host "openrouter.api")
+                        :chat-model (cdr m)))))
   (ellama-context-header-line-global-mode +1))
 
 (use-package keyfreq
