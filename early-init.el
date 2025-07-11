@@ -24,6 +24,8 @@
 ;; Silence stupid startup message
 (setq inhibit-startup-echo-area-message (user-login-name))
 
+(setq load-path-filter-function #'load-path-filter-cache-directory-files)
+
 (setq gc-cons-threshold most-positive-fixnum ; 2^61 bytes
       gc-cons-percentage 0.6)
 (defvar zr-file-name-handler-alist-cache file-name-handler-alist)
