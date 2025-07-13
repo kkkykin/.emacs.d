@@ -326,6 +326,7 @@ backreferences in REPLACEMENT.")
 
 (defun zr-rclone-mpv-remote-proc (files)
   (let* ((mpv-args (read-shell-command "mpv " nil 'zr-rclone-mpv-args-history))
+         (url-request-method "POST")
          (url-request-extra-headers
           `(("Content-Type" . "application/vnd.apple.mpegurl")
             ("Origin" . ,(encode-coding-string
