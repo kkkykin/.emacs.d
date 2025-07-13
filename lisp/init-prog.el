@@ -392,6 +392,33 @@ with `universal argument', select all records."
 
 ;; sqlite
 
+(with-eval-after-load 'sqlite-mode
+  (define-advice sqlite-mode-delete (:override () fix-null)
+    "Delete the row under point."
+    (interactive nil sqlite-mode)
+    (let ((table (get-text-property (point) 'sqlite--type))
+          (row (get-text-property (point) 'sqlite--row))
+          (inhibit-read-only t))
+      (when (or (not (consp table))
+                (not (eq (car table) 'row)))
+        (user-error "No row under point"))
+      (unless (yes-or-no-p "Really delete the row under point? ")
+        (user-error "Not deleting"))
+      (sqlite-execute
+       sqlite--db
+       (format "delete from \"%s\" where %s"
+               (cdr table)
+               (string-join
+                (seq-map-indexed
+                 (lambda (column i)
+                   (format "\"%s\" %s ?"
+                           (car (split-string column " "))
+                           (if (nth i row) "=" "is")))
+                 (cons "rowid" (sqlite-mode--column-names (cdr table))))
+                " and "))
+       row)
+      (delete-region (line-beginning-position) (progn (forward-line 1) (point))))))
+
 (defun zp/sqlite-view-file-magically ()
   "Runs `sqlite-mode-open-file' on the file name visited by the
 current buffer, killing it.
