@@ -2132,6 +2132,7 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
     (dolist (l '("conf"
                  "conf-space"
                  "conf-unix"
+                 "conf-windows"
                  "json"
                  "text"
                  "yml"))
