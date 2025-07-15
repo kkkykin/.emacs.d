@@ -735,9 +735,15 @@
   :custom
   (python-indent-offset 2)
   (python-indent-block-paren-deeper t)
-  (python-shell-interpreter-args "-i -X utf8")
   (python-shell-dedicated t)
   :config
+  (when (executable-find "uv")
+    (setq python-interpreter "uv"
+          python-interpreter-args "run --with isort --with pyflakes python")
+    (when zr-sys-winnt-p
+      (setq python-shell-prompt-detect-failure-warning nil
+            python-shell-interpreter "uv"
+            python-shell-interpreter-args "run --with pyreadline3 python -i -X utf8")))
   (modify-syntax-entry ?' "\"" inferior-python-mode-syntax-table))
 
 (use-package flymake
