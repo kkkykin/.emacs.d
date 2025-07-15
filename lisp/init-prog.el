@@ -206,6 +206,40 @@ NLINES is the number of context lines to show."
 
 ;; sql
 
+(defun zp/sql-connection-to-uri (conn)
+  "Convert a SQL connection alist to a URI string.
+
+  Args:
+    conn: An alist representing the SQL connection parameters.
+      Expected keys are 'sql-product, 'sql-user, 'sql-password,
+      'sql-server, 'sql-port, and 'sql-database.
+
+  Returns:
+    A URI string representing the connection, suitable for use with
+    libraries like CL-POSTGRES or similar.  Returns nil if the
+    conversion fails.
+
+  Example:
+    (zp/sql-connection-to-uri
+     '((sql-product 'postgresql)))
+      (sql-user \"myuser\")
+      (sql-password \"mypassword\")
+      (sql-server \"localhost\")
+      (sql-port 5432)
+      (sql-database \"mydb\")))
+    => \"postgresql://myuser:mypassword@localhost:5432/mydb\"
+  "
+  (let ((urlobj (url-parse-make-urlobj
+                 (symbol-name (cadadr (assoc 'sql-product conn)))
+                 (car-safe (alist-get 'sql-user conn))
+                 (car-safe (alist-get 'sql-password conn))
+                 (car-safe (alist-get 'sql-server conn))
+                 (car-safe (alist-get 'sql-port conn))
+                 (when-let* ((conn (car-safe (alist-get 'sql-database conn))))
+                   (concat "/" conn))
+                 nil nil t)))
+    (url-recreate-url urlobj)))
+
 (defun zp/sqli-buffer-p (buf)
   "Check if BUF is a live SQL interactive buffer.
 BUF can be either a buffer object or a string naming a buffer.
