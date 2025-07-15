@@ -157,6 +157,28 @@ variables."
        :on-close #'zr-rclone-android-notification-handler))
     (apply #'call-process "rclone" nil 0 nil "rcd" "--rc-serve" par)))
 
+(defun zr-rclone-browse-path (&optional path)
+  "Browse a path in rclone using browse-url.
+
+This function constructs a URL from `zr-rclone-baseurl', including
+authentication information, and opens it in a browser using
+`browse-url'.  The optional PATH argument is appended to the base URL.
+
+If `zr-rclone-baseurl' is `\"http://localhost:8080\"` and PATH is
+`\"/path/to/file\"`, and the user and password extracted from the
+auths are `\"user\"` and `\"password\"` respectively, then the
+resulting URL will be
+`\"http://user:password@localhost:8080/path/to/file\"`.
+
+\(fn &optional PATH)"
+  (interactive)
+  (let ((auth (car (zr-net-url-get-auths zr-rclone-baseurl)))
+        (urlobj (url-generic-parse-url zr-rclone-baseurl)))
+    (setf (url-user urlobj) (plist-get auth :user)
+          (url-password urlobj) (auth-info-password auth)
+          (url-filename urlobj) path)
+    (browse-url (url-recreate-url urlobj))))
+
 (defun zr-rclone-quit ()
   "Exit rclone safely."
   (interactive)
