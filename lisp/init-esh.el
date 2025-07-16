@@ -38,6 +38,23 @@
   (unless (memq 'with-editor-export-editor eshell-mode-hook)
     (eshell-set-variable "EDITOR" (car args))))
 
+(defun eshell/call-sq (&rest args)
+  "Wrapper for sq cli.
+
+Use `call-process' instead of `make-process'."
+  (with-temp-buffer
+    (apply #'call-process "sq" nil t nil args)
+    (buffer-string)))
+
+(defun ze/sq-cli-handler (&rest args)
+  (let ((fn (if (memq eshell-in-pipeline-p '(first nil))
+                "call-sq"
+              (executable-find "sq"))))
+    (throw 'eshell-replace-command
+           (eshell-parse-command fn (cdr args)))))
+
+(add-to-list 'eshell-interpreter-alist (cons "^sq$" 'ze/sq-cli-handler))
+
 (defun eshell/vi (&rest args)
   "Open files in Neovim, optionally using a remote server if configured.
 If `zr-viper-default-nvim-server' is bound and non-nil, files are opened
