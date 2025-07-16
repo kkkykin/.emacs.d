@@ -39,14 +39,34 @@
     (eshell-set-variable "EDITOR" (car args))))
 
 (defun eshell/call-sq (&rest args)
-  "Wrapper for sq cli.
+  "Execute the `sq' command-line tool and return its output.
 
-Use `call-process' instead of `make-process'."
+This function is a wrapper around the `sq' CLI. It uses `call-process'
+to execute the command.  If the command is not part of an Eshell
+pipeline and uses either `-C` or `--tsv` flags, the output is
+automatically converted to an Org table.
+
+ARGS are passed directly to the `sq` command."
   (with-temp-buffer
     (apply #'call-process "sq" nil t nil args)
+    (unless eshell-in-pipeline-p
+      (when-let* ((format (cl-intersection '("-C" "--tsv" "--markdown")
+                                           args :test #'string=)))
+        (require 'org-table)
+        (pcase (car format)
+          ("-C" (org-table-convert-region (point-min) (point-max) '(4)))
+          ("--tsv" (org-table-convert-region (point-min) (point-max) '(16)))
+          ("--markdown" (org-table-align)))))
     (buffer-string)))
 
 (defun ze/sq-cli-handler (&rest args)
+  "Eshell command handler for `sq'.
+
+This function determines whether to execute the `sq' command directly
+or through `eshell/call-sq`, depending on whether Eshell is in a
+pipeline.
+
+ARGS are passed directly to the `sq` command."
   (let ((fn (if (memq eshell-in-pipeline-p '(first nil))
                 "call-sq"
               (executable-find "sq"))))
