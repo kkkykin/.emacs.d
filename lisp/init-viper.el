@@ -132,7 +132,7 @@ If the server is not responding, a `user-error` is signaled."
         (cmd (format "execute('V64cmd %s')"
                      (base64-encode-string cmd t))))
     (if (zv/nvim-server-port-open-p server)
-        (call-process "nvim" nil nil nil
+        (call-process "nvim" nil 0 nil
                       "--server" server
                       "--remote-expr" cmd)
       (user-error "NeoVim server not responding at %s." server))))

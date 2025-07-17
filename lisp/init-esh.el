@@ -117,6 +117,11 @@ terminal."
                        eos)))
   (add-to-list 'eshell-interpreter-alist (cons cmd 'ze/invoke-by-nvim)))
 
+(defvar ze/interpreter-command-alist
+  '(("ps1" "powershell" "-NoLogo" "-NoProfile" "-NonInteractive" "-File")
+    ("py" "uv" "run" "-s"))
+  "Alist mapping file extensions to their interpreter commands.")
+
 (defun ze/invoke-by-shebang (&rest args)
   "Modified from `eshell-script-interpreter'."
   (let ((maxlen eshell-command-interpreter-max-length)
@@ -128,16 +133,19 @@ terminal."
       (with-temp-buffer
         (insert-file-contents-literally file nil 0 maxlen)
         (when (looking-at "#!\\(?:/usr\\)?/bin/env -S \\(.+\\)")
-          (when (match-string 1)
-            (setq interp (split-string-shell-command (match-string 1)))))))
+          (when-let* ((cmd (match-string 1)))
+            (setq interp (split-string-shell-command cmd))))))
     (unless interp
-      (setq interp
-            (pcase (file-name-extension file)
-              ("ps1" '("powershell" "-NoLogo" "-NoProfile" "-NonInteractive" "-File"))
-              ("py" '("uv" "run" "-s")))))
+      (setq interp (alist-get (file-name-extension file)
+                              ze/interpreter-command-alist
+                              nil nil #'string=)))
     (throw 'eshell-replace-command
 	       (eshell-parse-command (car interp) (append (cdr interp) args)))))
-(add-to-list 'eshell-interpreter-alist (cons "\\.\\(ps1\\|py\\)\\'" 'ze/invoke-by-shebang))
+
+(add-to-list 'eshell-interpreter-alist
+             (cons (format "\\.%s\\'"
+                           (regexp-opt (mapcar #'car ze/interpreter-command-alist)))
+                   'ze/invoke-by-shebang))
 
 (provide 'init-esh)
 ;;; init-esh.el ends here

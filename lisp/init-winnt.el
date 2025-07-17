@@ -411,6 +411,7 @@ remote directory."
         `(("cmdproxy" . ,locale-coding-system)
           ("ipconfig" . ,locale-coding-system)
           ("findstr" . ,locale-coding-system)
+          ("powershell" . ,(cons 'utf-8-with-signature locale-coding-system))
           ("mysql" . utf-8)
           ("aider" . utf-8))
         file-name-coding-system locale-coding-system

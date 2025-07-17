@@ -92,6 +92,7 @@
   (put 'buffer-file-coding-system 'safe-local-variable 'symbolp)
   (put 'buffer-auto-save-file-name 'safe-local-variable 'null)
   (prefer-coding-system 'utf-8)
+  (setenv "PYTHONIOENCODING" "utf-8")
   (set-charset-priority 'unicode))
 
 ;; [[https://github.com/yilkalargaw/emacs-native-snippets]]
@@ -761,7 +762,7 @@
 (use-package gud
   :custom
   (gud-highlight-current-line t)
-  (gud-pdb-command-name "python -X utf8 -m pdb")
+  ;; (gud-pdb-command-name "python -X utf8 -m pdb")
   :config
   (modify-syntax-entry ?' "\"" gud-mode-syntax-table))
 
@@ -2295,7 +2296,6 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   ( :map zr-viper-vi-spc-prefix-map
     ("A" . aidermacs-transient-menu))
   :config
-  (setenv "PYTHONIOENCODING" "utf-8")
   (dolist (m '("gemini" "deepseek" "groq" "openrouter"))
     (when-let* ((key (auth-source-pick-first-password :host (concat m ".api"))))
       (setenv (concat (upcase m) "_API_KEY") key))))
@@ -2496,7 +2496,11 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   :bind
   ( :map powershell-mode-map
     ("M-`" . nil)
-    ("C-`" . powershell-escape-selection)))
+    ("C-`" . powershell-escape-selection))
+  :config
+  ;; powershell 5.1
+  (setq-mode-local powershell-mode
+                   buffer-file-coding-system 'utf-8-with-signature))
 
 (use-package sqlformat
   :if (package-installed-p 'sqlformat)
