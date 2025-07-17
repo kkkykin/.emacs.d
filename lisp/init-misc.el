@@ -713,6 +713,7 @@ ref: https://karthinks.com/software/emacs-window-management-almanac/"
   "k" #'kill-sexp
   "<backspace>" #'backward-kill-sexp
   "SPC" #'mark-sexp
+  "@" #'mark-sexp
   "t" #'transpose-sexps
   "s" #'delete-pair
   "(" #'insert-parentheses
