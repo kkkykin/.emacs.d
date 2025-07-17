@@ -117,6 +117,28 @@ terminal."
                        eos)))
   (add-to-list 'eshell-interpreter-alist (cons cmd 'ze/invoke-by-nvim)))
 
+(defun ze/invoke-by-shebang (&rest args)
+  "Modified from `eshell-script-interpreter'."
+  (let ((maxlen eshell-command-interpreter-max-length)
+        (file (car args))
+        interp)
+    (when (and (file-readable-p file)
+               (file-regular-p file)
+               (> (file-attribute-size (file-attributes file)) 0))
+      (with-temp-buffer
+        (insert-file-contents-literally file nil 0 maxlen)
+        (when (looking-at "#!\\(?:/usr\\)?/bin/env -S \\(.+\\)")
+          (when (match-string 1)
+            (setq interp (split-string-shell-command (match-string 1)))))))
+    (unless interp
+      (setq interp
+            (pcase (file-name-extension file)
+              ("ps1" '("powershell" "-NoLogo" "-NoProfile" "-NonInteractive" "-File"))
+              ("py" '("uv" "run" "-s")))))
+    (throw 'eshell-replace-command
+	       (eshell-parse-command (car interp) (append (cdr interp) args)))))
+(add-to-list 'eshell-interpreter-alist (cons "\\.\\(ps1\\|py\\)\\'" 'ze/invoke-by-shebang))
+
 (provide 'init-esh)
 ;;; init-esh.el ends here
 
