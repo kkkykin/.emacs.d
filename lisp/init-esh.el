@@ -97,7 +97,11 @@ terminal."
   (let ((cmd (format "tabe | tc %s | te %s"
                      (if (file-remote-p default-directory) ""
                        default-directory)
-                     (combine-and-quote-strings (flatten-tree args)))))
+                     (if args (mapconcat #'shell-quote-argument args " ")
+                       (let ((last (eshell-get-history 1)))
+                         (if (string-prefix-p "*" last)
+                             (substring last 1)
+                           last))))))
     (require 'init-viper)
     (zr-viper-nvim-server-cmd cmd)))
 
