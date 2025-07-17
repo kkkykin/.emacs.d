@@ -142,10 +142,11 @@ terminal."
     (throw 'eshell-replace-command
 	       (eshell-parse-command (car interp) (append (cdr interp) args)))))
 
-(add-to-list 'eshell-interpreter-alist
-             (cons (format "\\.%s\\'"
-                           (regexp-opt (mapcar #'car ze/interpreter-command-alist)))
-                   'ze/invoke-by-shebang))
+(when (eq system-type 'windows-nt)
+  (add-to-list 'eshell-interpreter-alist
+               (cons (format "\\.%s\\'"
+                             (regexp-opt (mapcar #'car ze/interpreter-command-alist)))
+                     'ze/invoke-by-shebang)))
 
 (provide 'init-esh)
 ;;; init-esh.el ends here
