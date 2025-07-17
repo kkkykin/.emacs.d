@@ -2492,7 +2492,11 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   :if (package-installed-p 'lentic))
 
 (use-package powershell
-  :if (package-installed-p 'powershell))
+  :if (package-installed-p 'powershell)
+  :bind
+  ( :map powershell-mode-map
+    ("M-`" . nil)
+    ("C-`" . powershell-escape-selection)))
 
 (use-package sqlformat
   :if (package-installed-p 'sqlformat)
