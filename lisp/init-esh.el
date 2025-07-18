@@ -99,7 +99,8 @@ terminal."
                        default-directory)
                      (if args (mapconcat #'shell-quote-argument args " ")
                        (let ((last (eshell-get-history 1)))
-                         (if (string-prefix-p "*" last)
+                         (if (char-equal eshell-explicit-command-char
+                                         (aref last 0))
                              (substring last 1)
                            last))))))
     (require 'init-viper)
@@ -117,6 +118,14 @@ terminal."
                          "usql")
                   eos)))
   (add-to-list 'eshell-interpreter-alist (cons regexp 'ze/invoke-by-nvim)))
+
+(defun ze/invoke-sudo-on-windows (beg end)
+  "Replace `sudo' with sudo.exe on windows."
+  (unless (file-remote-p default-directory)
+    (save-excursion
+      (goto-char beg)
+      (when (looking-at-p "sudo ")
+        (insert eshell-explicit-command-char)))))
 
 (defvar ze/interpreter-command-alist
   '(("ps1" "powershell" "-NoLogo" "-NoProfile" "-NonInteractive" "-File")
@@ -144,6 +153,7 @@ terminal."
 	       (eshell-parse-command (car interp) (append (cdr interp) args)))))
 
 (when (eq system-type 'windows-nt)
+  (add-to-list 'eshell-expand-input-functions #'ze/invoke-sudo-on-windows)
   (add-to-list 'eshell-interpreter-alist
                (cons (format "\\.%s\\'"
                              (regexp-opt (mapcar #'car ze/interpreter-command-alist)))
