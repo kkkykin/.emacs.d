@@ -130,7 +130,8 @@ CMD (base64 encoded as `V64cmd ...`) using `nvim --remote-expr`.
 If the server is not responding, a `user-error` is signaled."
   (let ((server (or server zv/default-nvim-server))
         (cmd (format "execute('V64cmd %s')"
-                     (base64-encode-string cmd t))))
+                     (base64-encode-string
+                      (encode-coding-string cmd 'utf-8) t))))
     (if (zv/nvim-server-port-open-p server)
         (call-process "nvim" nil 0 nil
                       "--server" server
