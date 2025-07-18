@@ -112,10 +112,11 @@ terminal."
   (throw 'eshell-replace-command
          (eshell-parse-command "vt" args)))
 
-(dolist (cmd (list (rx bos (| "ping"
-                              "usql")
-                       eos)))
-  (add-to-list 'eshell-interpreter-alist (cons cmd 'ze/invoke-by-nvim)))
+(let ((regexp (rx bos (| "ping"
+                         "scoop"
+                         "usql")
+                  eos)))
+  (add-to-list 'eshell-interpreter-alist (cons regexp 'ze/invoke-by-nvim)))
 
 (defvar ze/interpreter-command-alist
   '(("ps1" "powershell" "-NoLogo" "-NoProfile" "-NonInteractive" "-File")

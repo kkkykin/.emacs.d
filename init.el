@@ -1651,6 +1651,9 @@ before calling the original function."
   (eshell-pushd-dunique t)
   (eshell-pushd-dextract t)
   (eshell-scroll-to-bottom-on-output 'others)
+  (eshell-history-size 1000)
+  (eshell-hist-ignoredups 'erase)
+  (eshell-history-isearch 'dwim)
   :config
   (require 'init-esh)
   (modify-syntax-entry ?' "\"" eshell-mode-syntax-table)
