@@ -113,20 +113,6 @@ terminal."
   (throw 'eshell-replace-command
          (eshell-parse-command "vt" args)))
 
-(let ((regexp (rx bos (| "ping"
-                         "scoop"
-                         "usql")
-                  eos)))
-  (add-to-list 'eshell-interpreter-alist (cons regexp 'ze/invoke-by-nvim)))
-
-(defun ze/invoke-sudo-on-windows (beg end)
-  "Replace `sudo' with sudo.exe on windows."
-  (unless (file-remote-p default-directory)
-    (save-excursion
-      (goto-char beg)
-      (when (looking-at-p "sudo ")
-        (insert eshell-explicit-command-char)))))
-
 (defvar ze/interpreter-command-alist
   '(("ps1" "powershell" "-NoLogo" "-NoProfile" "-NonInteractive" "-File")
     ("py" "uv" "run" "-s"))
@@ -152,8 +138,16 @@ terminal."
     (throw 'eshell-replace-command
 	       (eshell-parse-command (car interp) (append (cdr interp) args)))))
 
+(require 'em-term)
+(dolist (c '("usql"))
+  (add-to-list 'eshell-visual-commands c))
+
 (when (eq system-type 'windows-nt)
-  (add-to-list 'eshell-expand-input-functions #'ze/invoke-sudo-on-windows)
+  (delete 'eshell-term eshell-modules-list)
+  (dolist (c '(("scoop" "update" "install")))
+    (add-to-list 'eshell-visual-subcommands c))
+  (add-to-list 'eshell-interpreter-alist
+               (cons #'eshell-visual-command-p 'ze/invoke-by-nvim))
   (add-to-list 'eshell-interpreter-alist
                (cons (format "\\.%s\\'"
                              (regexp-opt (mapcar #'car ze/interpreter-command-alist)))

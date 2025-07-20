@@ -1648,6 +1648,7 @@ before calling the original function."
     :exit
     ("m" . eshell-copy-old-input))
   :custom
+  (eshell-aliases-file nil)
   (eshell-pushd-dunique t)
   (eshell-pushd-dextract t)
   (eshell-scroll-to-bottom-on-output 'others)
@@ -2242,6 +2243,8 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   :if (package-installed-p 'nix-ts-mode)
   :mode "\\.nix\\'"
   :config
+  (setq-mode-local nix-ts-mode
+                   buffer-file-coding-system 'prefer-utf-8-unix)
   (with-eval-after-load 'org-src
     (add-to-list 'org-src-lang-modes '("nix" . nix-ts))))
 

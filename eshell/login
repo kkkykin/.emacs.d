@@ -1,6 +1,11 @@
 export GIT_PAGER=''
 export TERM='xterm-256color'
-export CLICOLOR_FORCE=1
+
+if (eq system-type 'windows-nt) {
+  export CLICOLOR_FORCE=1
+  alias scoop '*scoop.cmd $@*'
+  alias sudo '*sudo $@*'
+}
 
 with-editor-maybe emacsclient > /dev/null
 
