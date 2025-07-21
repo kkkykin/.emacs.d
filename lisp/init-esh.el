@@ -144,7 +144,7 @@ terminal."
 
 (when (eq system-type 'windows-nt)
   (delete 'eshell-term eshell-modules-list)
-  (dolist (c '(("scoop" "update" "install")))
+  (dolist (c '(("scoop.cmd" "update" "install")))
     (add-to-list 'eshell-visual-subcommands c))
   (add-to-list 'eshell-interpreter-alist
                (cons #'eshell-visual-command-p 'ze/invoke-by-nvim))
