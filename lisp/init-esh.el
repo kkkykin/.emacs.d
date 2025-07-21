@@ -38,46 +38,52 @@
   (unless (memq 'with-editor-export-editor eshell-mode-hook)
     (eshell-set-variable "EDITOR" (car args))))
 
-(defun eshell/call-sq (&rest args)
-  "Execute the `sq' command-line tool and return its output.
+(defun ze/pop-output (format)
+  "Extract last Eshell output to a new buffer and format it.
 
-This function is a wrapper around the `sq' CLI. It uses `call-process'
-to execute the command.  If the command is not part of an Eshell
-pipeline and uses either `-C` or `--tsv` flags, the output is
-automatically converted to an Org table.
+FORMAT can be one of the following symbols:
+- 'csv : Convert csv to Org table
+- 'tsv : Convert TSV to Org table
+- 'json : highlight
+- 'markdown : Align Markdown table
+- nil : No formatting (default)
 
-ARGS are passed directly to the `sq` command."
-  (with-temp-buffer
-    (apply #'call-process "sq" nil t nil args)
-    (unless eshell-in-pipeline-p
-      (when-let* ((format (cl-intersection '("-C"
-                                             "-j"
-                                             "--tsv"
-                                             "--markdown")
-                                           args :test #'string=)))
-        (require 'org-table)
-        (pcase (car format)
-          ("-C" (org-table-convert-region (point-min) (point-max) '(4)))
-          ("-j" (json-ts-mode) (font-lock-ensure))
-          ("--tsv" (org-table-convert-region (point-min) (point-max) '(16)))
-          ("--markdown" (org-table-align)))))
-    (buffer-string)))
+Interactively, use a prefix argument to select formatting."
+  (interactive
+   (list (completing-read "Format: " 
+                          '("csv" "tsv" "json" "markdown" "plain")
+                          nil t))
+   eshell-mode)
+  (let ((output-buffer (generate-new-buffer "*Eshell Output*"))
+        (buf (current-buffer))
+        (start (eshell-beginning-of-output))
+        (end (eshell-end-of-output)))
+    (when (> end start)
+      (with-current-buffer output-buffer
+        (insert-buffer-substring buf start end)
+        (pcase format
+          ("csv" (org-table-convert-region (point-min) (point-max) '(4)))
+          ("tsv" (org-table-convert-region (point-min) (point-max) '(16)))
+          ("json" (json-ts-mode))
+          ("markdown" (org-table-align))
+          (_ nil)))
+      (display-buffer output-buffer))))
 
 (defun ze/sq-cli-handler (&rest args)
   "Eshell command handler for `sq'.
 
 This function determines whether to execute the `sq' command directly
-or through `eshell/call-sq`, depending on whether Eshell is in a
+or a wrapper script, depending on whether Eshell is in a
 pipeline.
 
 ARGS are passed directly to the `sq` command."
-  (let ((fn (if (memq eshell-in-pipeline-p '(first nil))
-                "call-sq"
-              (executable-find "sq"))))
+  (let ((rep (if (memq eshell-in-pipeline-p '(first nil))
+                 (cons (expand-file-name "run_command.py"
+                                         eshell-directory-name)
+                       (push "--" args))
+               (cons "*sq" (cdr args)))))
     (throw 'eshell-replace-command
-           (eshell-parse-command fn (cdr args)))))
-
-(add-to-list 'eshell-interpreter-alist (cons "^sq$" 'ze/sq-cli-handler))
+           (eshell-parse-command (car rep) (cdr rep)))))
 
 (defun eshell/vi (&rest args)
   "Open files in Neovim, optionally using a remote server if configured.
@@ -142,6 +148,10 @@ terminal."
     (throw 'eshell-replace-command
 	       (eshell-parse-command (car interp) (append (cdr interp) args)))))
 
+(bind-keys
+ :map eshell-mode-map
+ ("C-c C-v" . ze/pop-output))
+
 (require 'em-term)
 (dolist (c '("usql"))
   (add-to-list 'eshell-visual-commands c))
@@ -150,6 +160,7 @@ terminal."
   (delete 'eshell-term eshell-modules-list)
   (dolist (c '(("scoop.cmd" "update" "install")))
     (add-to-list 'eshell-visual-subcommands c))
+  (add-to-list 'eshell-interpreter-alist (cons "^sq$" 'ze/sq-cli-handler))
   (add-to-list 'eshell-interpreter-alist
                (cons #'eshell-visual-command-p 'ze/invoke-by-nvim))
   (add-to-list 'eshell-interpreter-alist
