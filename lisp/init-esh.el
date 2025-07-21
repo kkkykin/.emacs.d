@@ -50,11 +50,15 @@ ARGS are passed directly to the `sq` command."
   (with-temp-buffer
     (apply #'call-process "sq" nil t nil args)
     (unless eshell-in-pipeline-p
-      (when-let* ((format (cl-intersection '("-C" "--tsv" "--markdown")
+      (when-let* ((format (cl-intersection '("-C"
+                                             "-j"
+                                             "--tsv"
+                                             "--markdown")
                                            args :test #'string=)))
         (require 'org-table)
         (pcase (car format)
           ("-C" (org-table-convert-region (point-min) (point-max) '(4)))
+          ("-j" (json-ts-mode) (font-lock-ensure))
           ("--tsv" (org-table-convert-region (point-min) (point-max) '(16)))
           ("--markdown" (org-table-align)))))
     (buffer-string)))
