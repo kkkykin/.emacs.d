@@ -153,7 +153,8 @@ terminal."
  ("C-c C-v" . ze/pop-output))
 
 (require 'em-term)
-(dolist (c '("usql"))
+(dolist (c '("ssh"
+             "usql"))
   (add-to-list 'eshell-visual-commands c))
 
 (when (eq system-type 'windows-nt)
