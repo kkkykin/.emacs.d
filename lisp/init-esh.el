@@ -169,6 +169,50 @@ terminal."
                              (regexp-opt (mapcar #'car ze/interpreter-command-alist)))
                      'ze/invoke-by-shebang)))
 
+(with-eval-after-load 'em-hist
+  (define-advice eshell-hist-parse-modifier (:around (fn &rest args))
+    "Bypass assert."
+    (let ((eshell-modules-list '(em-pred)))
+      (apply fn args)))
+  (defun eshell-hist-parse-word-designator (hist reference)
+    "Parse a history word designator beginning for HIST in REFERENCE.
+Fix (1+ mth)."
+    (let* ((index (string-match eshell-hist-word-designator reference))
+	       (end (and index (match-end 0))))
+      (unless (memq (aref reference 0) '(?: ?^ ?$ ?* ?%))
+        (error "Invalid history word designator `%s'" reference))
+      (let ((nth (match-string 1 reference))
+	        (mth (match-string 2 reference))
+	        (here (point))
+	        textargs)
+        (insert hist)
+        (setq textargs (car (eshell-hist-parse-arguments here (point))))
+        (delete-region here (point))
+        (if (string= nth "*")
+	        (if mth
+	            (error "Invalid history word designator `%s'"
+		               reference)
+	          (setq nth 1 mth "-$")))
+        (if (not mth)
+	        (if nth
+	            (setq mth nth)
+	          (setq nth 0 mth "$"))
+	      (if (string= mth "-")
+	          (setq mth (- (length textargs) 2))
+	        (if (string= mth "*")
+	            (setq mth "$")
+	          (if (not (and (> (length mth) 1)
+			                (eq (aref mth 0) ?-)))
+		          (error "Invalid history word designator `%s'"
+		                 reference)
+	            (setq mth (substring mth 1))))))
+        (unless (numberp nth)
+	      (setq nth (eshell-hist-word-reference nth)))
+        (unless (numberp mth)
+	      (setq mth (eshell-hist-word-reference mth)))
+        (cons (mapconcat #'identity (seq-subseq textargs nth mth) " ")
+	          end)))))
+
 (provide 'init-esh)
 ;;; init-esh.el ends here
 
