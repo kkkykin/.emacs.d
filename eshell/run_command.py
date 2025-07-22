@@ -69,6 +69,7 @@ def main():
     env = {**os.environ, "PYTHONIOENCODING": "utf-8"}
     process = subprocess.Popen(
       command_args,
+      stdin=subprocess.DEVNULL,
       stdout=subprocess.PIPE,
       stderr=subprocess.PIPE,
       bufsize=0,
