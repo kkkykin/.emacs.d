@@ -80,7 +80,7 @@ ARGS are passed directly to the `sq` command."
   (let ((rep (if (memq eshell-in-pipeline-p '(first nil))
                  (cons (expand-file-name "run_command.py"
                                          eshell-directory-name)
-                       (push "--" args))
+                       (cons "--" args))
                (cons "*sq" (cdr args)))))
     (throw 'eshell-replace-command
            (eshell-parse-command (car rep) (cdr rep)))))
