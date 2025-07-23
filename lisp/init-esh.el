@@ -174,7 +174,7 @@ terminal."
     "Bypass assert."
     (let ((eshell-modules-list '(em-pred)))
       (apply fn args)))
-  (defun eshell-hist-parse-word-designator (hist reference)
+  (defun ze/hist-parse-word-designator (hist reference)
     "Parse a history word designator beginning for HIST in REFERENCE.
 Fix (1+ mth)."
     (let* ((index (string-match eshell-hist-word-designator reference))
@@ -211,7 +211,8 @@ Fix (1+ mth)."
         (unless (numberp mth)
 	      (setq mth (eshell-hist-word-reference mth)))
         (cons (mapconcat #'identity (seq-subseq textargs nth mth) " ")
-	          end)))))
+	          end))))
+  (defalias 'eshell-hist-parse-word-designator 'ze/hist-parse-word-designator))
 
 (provide 'init-esh)
 ;;; init-esh.el ends here
