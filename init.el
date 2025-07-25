@@ -1247,6 +1247,10 @@ before calling the original function."
     ("p" . follow-previous-window)
     ("l" . follow-recenter)))
 
+(use-package ispell
+  :custom
+  (ispell-personal-dictionary (locate-user-emacs-file "_dict.txt")))
+
 (use-package flyspell
   :hook (text-mode
          (prog-mode . flyspell-prog-mode))
@@ -2560,6 +2564,7 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
 (use-package emms
   :if (package-installed-p 'emms)
   :custom
+  (emms-directory (locate-user-emacs-file "_emms"))
   (emms-info-functions '(emms-info-native))
   (emms-info-asynchronously t)
   (emms-browser-covers #'emms-browser-cache-thumbnail-async)
