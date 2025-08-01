@@ -833,12 +833,15 @@ ref: https://karthinks.com/software/emacs-window-management-almanac/"
 `universal-argument' then insert into buffer instead of copy."
   (interactive "P")
   (let ((pass "")
+        (uv-program "uv")
         (xc-program "keepassxc-cli")
         (gpg-program "gpg")
         (ssl-program "openssl")
         (alnum "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"))
     (setq pass
           (cond
+           ((executable-find uv-program)
+            (car (process-lines uv-program "run" "python" "-c" "import secrets,string; print(''.join(secrets.choice(string.ascii_letters + string.digits + string.punctuation) for _ in range(15)))")))
            ((executable-find xc-program)
             (car (process-lines xc-program "generate" "-lUnL15")))
            ((executable-find gpg-program)
