@@ -2743,6 +2743,24 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   :hook
   (org-ctrl-c-ctrl-c-final . ellama-chat-send-last-message)
   :config
+  (dolist (m '(("ds-r1" . "deepseek-ai/DeepSeek-R1-0528")))
+    (add-to-list 'ellama-providers
+                 (cons (concat "one-" (car m))
+                       (make-llm-openai-compatible
+                        :url "https://one-hub.passerbywtj.us.kg/v1"
+                        :key (auth-source-pick-first-password
+                              :host "one.api")
+                        :chat-model (cdr m)))))
+  (dolist (m '(("ds-r1" . "deepseek-ai/DeepSeek-R1-0528")
+               ("qw-coder" . "Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8")))
+    (add-to-list 'ellama-providers
+                 (cons (concat "tar-" (car m))
+                       (make-llm-openai-compatible
+                        :url "https://api.targon.com/v1"
+                        :key (auth-source-pick-first-password
+                              :host "targon.api")
+                        :chat-model (cdr m)
+                        :default-chat-max-tokens 0))))
   (dolist (m '(("cy" . "openrouter/cypher-alpha:free")
                ("ds" . "deepseek/deepseek-chat-v3-0324:free")))
     (add-to-list 'ellama-providers
