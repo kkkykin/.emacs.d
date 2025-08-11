@@ -44,3 +44,4 @@ devdocs/
 
 **/_*
 .aider*
+.env
