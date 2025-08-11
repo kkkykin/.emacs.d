@@ -2290,26 +2290,6 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
        . with-editor-export-editor)
    (#1# . with-editor-export-git-editor)))
 
-(use-package aidermacs
-  :if (package-installed-p 'aidermacs)
-  :custom
-  (aidermacs-extra-args '())
-  (aidermacs-auto-commits nil)
-  (aidermacs-default-model "gemini-2.0-flash-exp")
-  (aidermacs-popular-models
-   (list aidermacs-default-model
-         "openrouter/deepseek/deepseek-chat-v3-0324:free"
-         "deepseek/deepseek-chat"
-         "groq/llama3-70b-8192")
-   "ref: https://aider.chat/docs/llms.html#free-models")
-  :bind
-  ( :map zr-viper-vi-spc-prefix-map
-    ("A" . aidermacs-transient-menu))
-  :config
-  (dolist (m '("gemini" "deepseek" "groq" "openrouter"))
-    (when-let* ((key (auth-source-pick-first-password :host (concat m ".api"))))
-      (setenv (concat (upcase m) "_API_KEY") key))))
-
 (use-package dape
   :if (package-installed-p 'dape)
   :custom
@@ -2722,20 +2702,14 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   (ellama-translation-provider )
   (ellama-provider
    (make-llm-gemini
-    :chat-model "gemini-2.0-flash-exp"
+    :chat-model "gemini-2.5-flash"
     :key (auth-source-pick-first-password
           :host "gemini.api")))
   (ellama-providers
-   `(("deepseek"
-      . ,(make-llm-openai-compatible
-          :url "https://api.deepseek.com"
-          :chat-model "deepseek-chat"
-          :key (auth-source-pick-first-password :host "deepseek.api")))
-     ("groq" . ,(make-llm-openai-compatible
-                 :url "https://api.groq.com/openai/v1"
-                 :key (auth-source-pick-first-password
-                       :host "groq.api")
-                 :chat-model "llama3-70b-8192"))
+   `(("gemini-2.5-pro" . ,(make-llm-gemini
+                           :chat-model "gemini-2.5-pro"
+                           :key (auth-source-pick-first-password
+                                 :host "gemini.api")))
      ("local" . ,(make-llm-openai-compatible
                   :url "http://127.0.0.1:7778"))))
   (llm-warn-on-nonfree nil)
@@ -2743,32 +2717,16 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   :hook
   (org-ctrl-c-ctrl-c-final . ellama-chat-send-last-message)
   :config
-  (dolist (m '(("ds-r1" . "deepseek-ai/DeepSeek-R1-0528")))
+  (dolist (m '(("qwen-coder" . "Qwen/Qwen3-Coder-480B-A35B-Instruct")
+               ("qwen-think" . "Qwen/Qwen3-235B-A22B-Thinking-2507")
+               ("glm" . "ZhipuAI/GLM-4.5")
+               ("ds" . "deepseek-ai/DeepSeek-R1-0528")))
     (add-to-list 'ellama-providers
-                 (cons (concat "one-" (car m))
+                 (cons (concat "ms-" (car m))
                        (make-llm-openai-compatible
-                        :url "https://one-hub.passerbywtj.us.kg/v1"
+                        :url "https://api-inference.modelscope.cn/v1"
                         :key (auth-source-pick-first-password
-                              :host "one.api")
-                        :chat-model (cdr m)))))
-  (dolist (m '(("ds-r1" . "deepseek-ai/DeepSeek-R1-0528")
-               ("qw-coder" . "Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8")))
-    (add-to-list 'ellama-providers
-                 (cons (concat "tar-" (car m))
-                       (make-llm-openai-compatible
-                        :url "https://api.targon.com/v1"
-                        :key (auth-source-pick-first-password
-                              :host "targon.api")
-                        :chat-model (cdr m)
-                        :default-chat-max-tokens 0))))
-  (dolist (m '(("cy" . "openrouter/cypher-alpha:free")
-               ("ds" . "deepseek/deepseek-chat-v3-0324:free")))
-    (add-to-list 'ellama-providers
-                 (cons (concat "open-" (car m))
-                       (make-llm-openai-compatible
-                        :url "https://openrouter.ai/api/v1"
-                        :key (auth-source-pick-first-password
-                              :host "openrouter.api")
+                              :host "modelscope.api")
                         :chat-model (cdr m)))))
   (advice-add 'pixel-scroll-precision :before #'ellama-disable-scroll)
   (advice-add 'end-of-buffer :after #'ellama-enable-scroll)
