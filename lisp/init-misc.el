@@ -1160,5 +1160,50 @@ This mode currently only affects Windows systems with IME support."
     (remove-hook 'window-buffer-change-functions #'zr-moyu-setup t)
     (remove-hook 'window-selection-change-functions #'zr-moyu-setup t)))
 
+;; json
+
+(defun zr-merge-json-files (file1 file2 output-file)
+  "Merge two JSON files, with FILE2 having priority over FILE1.
+The merged result is written to OUTPUT-FILE."
+  (let* ((json1 (json-read-file file1))
+         (json2 (json-read-file file2))
+         (merged (zr-merge-json-objects json1 json2)))
+    (write-region (json-encode merged) nil output-file)))
+
+(defun zr-merge-json-objects (obj1 obj2)
+  "Recursively merge two JSON objects, with OBJ2 having priority."
+  (cond
+   ;; If obj2 is nil, return obj1
+   ((null obj2) obj1)
+   ;; If obj1 is nil, return obj2
+   ((null obj1) obj2)
+   ;; If both are vectors
+   ((and (vectorp obj1) (vectorp obj2))
+    (vconcat obj1 obj2))
+   ;; If both are cons cells
+   ((and (consp obj1) (consp obj2))
+    (cond
+     ;; If both are objects (alist)
+     ((and (consp (car obj1)) (consp (car obj2)))
+      (zr-merge-json-alists obj1 obj2))
+     ;; Mixed types - obj2 takes precedence
+     (t obj2)))
+   ;; For primitive values, obj2 takes precedence
+   (t obj2)))
+
+(defun zr-merge-json-alists (alist1 alist2)
+  "Merge two association lists, with ALIST2 having priority."
+  (let ((result (copy-alist alist1)))
+    (dolist (pair alist2)
+      (let ((key (car pair))
+            (value (cdr pair)))
+        (let ((existing (assoc key result)))
+          (if existing
+              ;; Key exists, merge the values
+              (setcdr existing (zr-merge-json-objects (cdr existing) value))
+            ;; Key doesn't exist, add it
+            (push pair result)))))
+    result))
+
 (provide 'init-misc)
 ;;; init-misc.el ends here
