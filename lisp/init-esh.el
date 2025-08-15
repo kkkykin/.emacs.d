@@ -85,6 +85,14 @@ ARGS are passed directly to the `sq` command."
     (throw 'eshell-replace-command
            (eshell-parse-command (car rep) (cdr rep)))))
 
+(defun ze/git-handler (&rest args)
+  "Eshell command handler that ensures 'git' commands always use colored output."
+  (let ((extra-args (when (memq eshell-in-pipeline-p '(nil last))
+                      '("-c" "color.ui=always")))
+        (cmd (format "%c%s" eshell-explicit-command-char (car args))))
+    (throw 'eshell-replace-command
+           (eshell-parse-command cmd (append extra-args (cdr args))))))
+
 (defun eshell/vi (&rest args)
   "Open files in Neovim, optionally using a remote server if configured.
 If `zr-viper-default-nvim-server' is bound and non-nil, files are opened
@@ -162,6 +170,7 @@ terminal."
   (dolist (c '(("scoop.cmd" "update" "install")))
     (add-to-list 'eshell-visual-subcommands c))
   (add-to-list 'eshell-interpreter-alist (cons "^sq$" 'ze/sq-cli-handler))
+  (add-to-list 'eshell-interpreter-alist (cons "^git$" 'ze/git-handler))
   (add-to-list 'eshell-interpreter-alist
                (cons #'eshell-visual-command-p 'ze/invoke-by-nvim))
   (add-to-list 'eshell-interpreter-alist
