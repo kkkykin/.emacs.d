@@ -292,13 +292,12 @@ locale encoding for proper handling of non-ASCII filenames."
 ;; file
 
 (defun zw/save-with-sudo ()
-  "Save the current buffer with sudo permissions."
+  "Save the current buffer with sudo permissions while preserving original file permissions."
   (interactive)
-  (save-restriction
-    (widen)
-    (let ((tmp (make-temp-file "emacs-" nil nil (buffer-string))))
-      (call-process "sudo" nil nil nil "mv"
-                    (subst-char-in-string ?/ ?\\ tmp) (buffer-file-name))))
+  (call-process-region nil nil "powershell" nil nil nil
+                       "-NoLogo" "-NoProfile" "-WindowStyle" "Hidden"
+                       "-File" (expand-file-name "init/_tangle/save-with-sudo.ps1" zr-dotfiles-dir)
+                       "-FilePath" (buffer-file-name))
   (set-buffer-modified-p nil))
 
 (let ((exec-path (cl-remove "c:/Windows/system32" exec-path
