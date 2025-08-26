@@ -5,6 +5,38 @@
 (require 'cl-lib)
 (require 'nsm)
 
+;; ipv6
+(defun zn/has-public-ipv6-addr-p ()
+  "Return t if at least one interface has a routable (public) IPv6 address."
+  (let (addrs
+        (reserved
+         '(;; ::1/128
+           ([0 0 0 0 0 0 0 1] [65535 65535 65535 65535 65535 65535 65535 65535])
+           ;; fe80::/10
+           ([65152 0 0 0 0 0 0 0] [64512 0 0 0 0 0 0 0])
+           ;; fc00::/7
+           ([64512 0 0 0 0 0 0 0] [65408 0 0 0 0 0 0 0])
+           ;; ff00::/8 (multicast)
+           ([65280 0 0 0 0 0 0 0] [65280 0 0 0 0 0 0 0])
+           ;; ::/128 (unspecified)
+           ([0 0 0 0 0 0 0 0] [65535 65535 65535 65535 65535 65535 65535 65535]))))
+    ;; 收集所有IPv6地址（兼容不同格式）
+    (dolist (iface-addr (network-interface-list nil 'ipv6))
+      (let ((v (cdr iface-addr)))
+        (cond
+         ((= (length v) 9)   ; 标准格式：8个16位 + 前缀
+          (push (seq-subseq v 0 8) addrs))
+         ((= (length v) 8)   ; 纯地址格式
+          (push v addrs)))))
+    ;; 无地址则直接返回nil
+    (if (null addrs)
+        nil
+      ;; 检查是否有地址不属于任何保留网络
+      (cl-loop for addr in addrs
+               unless (cl-loop for (net mask) in reserved
+                               thereis (nsm-network-same-subnet net mask addr))
+               return t))))
+
 ;; url
 
 (defcustom zn/img-cdn-server-list
