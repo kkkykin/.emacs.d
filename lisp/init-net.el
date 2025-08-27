@@ -11,10 +11,11 @@
   (let* (addrs
          (current-ip (network-interface-list nil 'ipv6))
          (effective-ip
-          (and (fboundp 'zr-android-wifi-connection-info)
-               (zr-android-wifi-connection-info 'ipv6)
-               (cl-remove-if (apply-partially #'string-prefix-p "rmnet_data")
-                             current-ip :key #'car)))
+          (or (and (fboundp 'zr-android-wifi-connection-info)
+                   (zr-android-wifi-connection-info 'ipv6)
+                   (cl-remove-if (apply-partially #'string-prefix-p "rmnet_data")
+                                 current-ip :key #'car))
+              current-ip))
          (reserved
           '(;; ::1/128
             ([0 0 0 0 0 0 0 1] [65535 65535 65535 65535 65535 65535 65535 65535])
