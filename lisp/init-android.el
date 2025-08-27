@@ -267,6 +267,11 @@ Other parameters map to termux-notification CLI options."
 
 ;; wifi
 
+(defun za/wifi-connection-info (&optional type)
+  "'wlan0' interface connection info."
+  (let ((ip (network-interface-list nil type)))
+    (cl-find "wlan0" ip :test #'string= :key #'car)))
+
 (define-multisession-variable za/wifi-location-table
   (make-hash-table :test #'equal)
   "Wifi locations.")
