@@ -2701,22 +2701,37 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   (ellama-auto-scroll t)
   (ellama-translation-provider )
   (ellama-provider
-   (make-llm-gemini
-    :chat-model "gemini-2.5-flash"
+   (make-llm-openai-compatible
+    :url "https://apis.iflow.cn/v1"
     :key (auth-source-pick-first-password
-          :host "gemini.api")))
+          :host "iflow.api")
+    :chat-model "glm-4.5"))
   (ellama-providers
-   `(("gemini-2.5-pro" . ,(make-llm-gemini
-                           :chat-model "gemini-2.5-pro"
-                           :key (auth-source-pick-first-password
-                                 :host "gemini.api")))
-     ("local" . ,(make-llm-openai-compatible
+   `(("local" . ,(make-llm-openai-compatible
                   :url "http://127.0.0.1:7778"))))
   (llm-warn-on-nonfree nil)
   (ellama-auto-scroll t)
   :hook
   (org-ctrl-c-ctrl-c-final . ellama-chat-send-last-message)
   :config
+  (dolist (m '(("25pro" . "gemini-2.5-pro")
+               ("25flash" . "gemini-2.5-flash")))
+    (add-to-list 'ellama-providers
+                 (cons (concat "gg-" (car m))
+                       (make-llm-gemini
+                        :chat-model (cdr m)
+                        :key (auth-source-pick-first-password
+                              :host "gemini.api")))))
+  (dolist (m '(("qwen-coder" . "qwen3-coder")
+               ("kimi" . "kimi-k2")
+               ("ds31" . "deepseek-v3.1")))
+    (add-to-list 'ellama-providers
+                 (cons (concat "if-" (car m))
+                       (make-llm-openai-compatible
+                        :url "https://apis.iflow.cn/v1"
+                        :key (auth-source-pick-first-password
+                              :host "iflow.api")
+                        :chat-model (cdr m)))))
   (dolist (m '(("qwen-coder" . "Qwen/Qwen3-Coder-480B-A35B-Instruct")
                ("qwen-think" . "Qwen/Qwen3-235B-A22B-Thinking-2507")
                ("glm" . "ZhipuAI/GLM-4.5")
