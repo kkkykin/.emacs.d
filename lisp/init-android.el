@@ -76,20 +76,22 @@
 
 (defun za/rish-command-to-string (cmd)
   "Wrapper for `shell-command-to-string' with rish."
-  (let ((shell-file-name (executable-find "rish")))
+  (let ((shell-file-name (executable-find "rish"))
+        android-use-exec-loader)
     (shell-command-to-string cmd)))
 
-(defun za/rish-run (cmd)
-  "Run command with rish."
-  (start-process "rish-run" nil "rish" "-c" cmd))
+(defun za/call-rish (cmd)
+  "Call command with rish."
+  (let (android-use-exec-loader)
+    (call-process "rish" nil 0 nil "-c" cmd)))
 
 (defun za/normal-keyboard ()
   "Enable normal keyboard on android."
-  (za/rish-run "ime set com.samsung.android.honeyboard/.service.HoneyBoardService"))
+  (za/call-rish "ime set com.samsung.android.honeyboard/.service.HoneyBoardService"))
 
 (defun za/bare-keyboard ()
   "Enable bare keyboard on android."
-  (za/rish-run "ime set keepass2android.keepass2android/keepass2android.softkeyboard.KP2AKeyboard"))
+  (za/call-rish "ime set keepass2android.keepass2android/keepass2android.softkeyboard.KP2AKeyboard"))
 
 
 ;; sshd
@@ -369,7 +371,7 @@ it removes the suggestion. Otherwise, it retries after 5 minutes."
           (dolist (s near-ssid)
             (when (gethash s table)
               (throw 'found t))))
-        (za/rish-run
+        (za/call-rish
          (combine-and-quote-strings
           (list "cmd" "wifi" "remove-suggestion" ssid)))
       (run-at-time (* 5 60) nil
@@ -393,7 +395,7 @@ and retries connection after 60 seconds if the SSID is not found in the scan."
       ("DISCONNECTED"
        (if (member ssid (za/termux-wifi-scaninfo "ssid"))
            (progn
-             (za/rish-run
+             (za/call-rish
               (combine-and-quote-strings
                `("cmd" "wifi" "add-suggestion" ,ssid "wpa2" ,psk ,@args)))
              (run-at-time (* 5 60) nil
@@ -407,7 +409,7 @@ and retries connection after 60 seconds if the SSID is not found in the scan."
 (defun za/stop-record-tracks ()
   "Stop OpenTracks."
   (interactive)
-  (za/rish-run "am force-stop de.dennisguse.opentracks"))
+  (za/call-rish "am force-stop de.dennisguse.opentracks"))
 
 (easy-menu-define bot-menu global-map
   "Menu for useful commands."
