@@ -552,7 +552,8 @@ inherited) or `zo/tangle-default-dir'.
 ref: https://emacs-china.org/t/header-args-property/27494/2"
   (expand-file-name
    (or name (org-element-property :name (org-element-at-point-no-context)))
-   (or (org-entry-get nil "TANGLE-DIR" (not no-inherit)) zo/tangle-default-dir)))
+   (zo/string-maybe-eval
+    (or (org-entry-get nil "TANGLE-DIR" (not no-inherit)) zo/tangle-default-dir))))
 
 (defun zo/custom-id-get (&optional epom create prefix inherit)
   "ref: `org-id-get'"
