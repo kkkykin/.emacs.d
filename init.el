@@ -2689,7 +2689,6 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
 (use-package ellama
   :if (package-installed-p 'ellama)
   :init
-  (require 'llm-gemini)
   (require 'llm-openai)
   (define-key zr-menu [ellama]
               '(menu-item "ellama" ellama-transient-main-menu))
@@ -2714,6 +2713,7 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   :hook
   (org-ctrl-c-ctrl-c-final . ellama-chat-send-last-message)
   :config
+  (require 'llm-gemini)
   (dolist (m '(("25pro" . "gemini-2.5-pro")
                ("25flash" . "gemini-2.5-flash")))
     (add-to-list 'ellama-providers
