@@ -277,15 +277,18 @@
   :type 'file)
 (add-to-list 'zr-dotfiles-dir-followd-by-vars 'zn/pac-data-file)
 
-(defun zn/init-proxy-rules ()
-  (interactive)
+(defun zn/read-proxy-rules ()
   (with-temp-buffer
     (insert-file-contents-literally zn/pac-data-file)
     (when (string-match-p epa-file-name-regexp zn/pac-data-file)
       (let ((epa-replace-original-text t))
         (epa-decrypt-region (point-min) (point-max))))
     (goto-char 1)
-    (zn/init-proxy-rules-1 (json-parse-buffer))))
+    (json-parse-buffer)))
+
+(defun zn/init-proxy-rules ()
+  (interactive)
+  (zn/init-proxy-rules-1 (zn/read-proxy-rules)))
 
 (defun zn/add-domain-to-proxy (hostname)
   "Add a domain to the proxy rules.
