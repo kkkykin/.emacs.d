@@ -2703,6 +2703,8 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   ((gptel-post-stream . gptel-auto-scroll)
    (gptel-post-response . gptel-end-of-response))
   :config
+  ;; remove chatgpt. ref: https://github.com/karthink/gptel/issues/649#issuecomment-3067343094
+  (setq gptel--known-backends (assoc-delete-all "ChatGPT" gptel--known-backends))
   (let ((proxy "-xsocks5h://127.0.0.1:10807"))
     (gptel-make-openai "modelscope"
       :host "api-inference.modelscope.cn"
