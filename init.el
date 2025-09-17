@@ -1044,7 +1044,7 @@ before calling the original function."
   (dired-maybe-use-globstar t)
   (dired-dwim-target t)
   (dired-use-ls-dired t)
-  (dired-listing-switches "-lHoghvF")
+  (dired-listing-switches "-lHogvFh")
   (dired-ls-F-marks-symlinks t)
   (dired-mouse-drag-files t)
   (delete-by-moving-to-trash t)
