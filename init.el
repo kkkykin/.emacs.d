@@ -2686,66 +2686,33 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   :if (package-installed-p 'fdroid)
   :vc (:url "https://github.com/migalmoreno/fdroid.el"))
 
-(use-package ellama
-  :if (package-installed-p 'ellama)
+(use-package gptel
+  :if (package-installed-p 'gptel)
   :init
-  (require 'llm-openai)
-  (define-key zr-menu [ellama]
-              '(menu-item "ellama" ellama-transient-main-menu))
-  :commands
-  (ellama-transient-main-menu)
+  (define-key zr-menu [gptel] '(menu-item "gptel" gptel-send))
   :custom
-  (ellama-sessions-directory (locate-user-emacs-file "_ellama-sessions"))
-  (ellama-language "Chinese")
-  (ellama-auto-scroll t)
-  (ellama-translation-provider )
-  (ellama-provider
-   (make-llm-openai-compatible
-    :url "https://apis.iflow.cn/v1"
-    :key (auth-source-pick-first-password
-          :host "iflow.api")
-    :chat-model "glm-4.5"))
-  (ellama-providers
-   `(("local" . ,(make-llm-openai-compatible
-                  :url "http://127.0.0.1:7778"))))
-  (llm-warn-on-nonfree nil)
-  (ellama-auto-scroll t)
+  (gptel-default-mode 'org-mode)
+  (gptel-org-branching-context t)
+  (gptel-model 'glm-4.5)
+  (gptel-backend (gptel-make-openai "iflow"
+                   :host "apis.iflow.cn"
+                   :stream t
+                   :models '( glm-4.5 qwen3-coder
+                              kimi-k2-0905 deepseek-v3.1)))
   :hook
-  (org-ctrl-c-ctrl-c-final . ellama-chat-send-last-message)
+  ((gptel-post-stream . gptel-auto-scroll)
+   (gptel-post-response . gptel-end-of-response))
   :config
-  (require 'llm-gemini)
-  (dolist (m '(("25pro" . "gemini-2.5-pro")
-               ("25flash" . "gemini-2.5-flash")))
-    (add-to-list 'ellama-providers
-                 (cons (concat "gg-" (car m))
-                       (make-llm-gemini
-                        :chat-model (cdr m)
-                        :key (auth-source-pick-first-password
-                              :host "gemini.api")))))
-  (dolist (m '(("qwen-coder" . "qwen3-coder")
-               ("kimi" . "kimi-k2")
-               ("ds31" . "deepseek-v3.1")))
-    (add-to-list 'ellama-providers
-                 (cons (concat "if-" (car m))
-                       (make-llm-openai-compatible
-                        :url "https://apis.iflow.cn/v1"
-                        :key (auth-source-pick-first-password
-                              :host "iflow.api")
-                        :chat-model (cdr m)))))
-  (dolist (m '(("qwen-coder" . "Qwen/Qwen3-Coder-480B-A35B-Instruct")
-               ("qwen-think" . "Qwen/Qwen3-235B-A22B-Thinking-2507")
-               ("glm" . "ZhipuAI/GLM-4.5")
-               ("ds" . "deepseek-ai/DeepSeek-R1-0528")))
-    (add-to-list 'ellama-providers
-                 (cons (concat "ms-" (car m))
-                       (make-llm-openai-compatible
-                        :url "https://api-inference.modelscope.cn/v1"
-                        :key (auth-source-pick-first-password
-                              :host "modelscope.api")
-                        :chat-model (cdr m)))))
-  (advice-add 'pixel-scroll-precision :before #'ellama-disable-scroll)
-  (advice-add 'end-of-buffer :after #'ellama-enable-scroll)
-  (ellama-context-header-line-global-mode +1))
+  (let ((proxy "-xsocks5h://127.0.0.1:10807"))
+    (gptel-make-openai "modelscope"
+      :host "api-inference.modelscope.cn"
+      :stream t
+      :models '( deepseek-ai/DeepSeek-V3.1
+                 deepseek-ai/DeepSeek-R1-0528
+                 Qwen/Qwen3-Coder-480B-A35B-Instruct
+                 Qwen/Qwen3-235B-A22B-Thinking-2507
+                 ZhipuAI/GLM-4.5))
+    (gptel-make-gemini "gemini" :stream t :curl-args (list proxy))))
 
 (use-package keyfreq
   :if (package-installed-p 'keyfreq)
