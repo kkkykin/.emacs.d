@@ -2691,6 +2691,7 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   :init
   (define-key zr-menu [gptel] '(menu-item "gptel" gptel-send))
   :custom
+  (gptel-curl-extra-args '("--compressed"))
   (gptel-default-mode 'org-mode)
   (gptel-org-branching-context t)
   (gptel-model 'glm-4.5)
@@ -2706,8 +2707,8 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   :config
   ;; remove chatgpt. ref: https://github.com/karthink/gptel/issues/649#issuecomment-3067343094
   (setq gptel--known-backends (assoc-delete-all "ChatGPT" gptel--known-backends))
-  (let ((prompt "@user\n")
-        (response "@assistant\n"))
+  (let ((prompt "@user\n")
+        (response "@assistant\n"))
     (setf (alist-get 'org-mode gptel-prompt-prefix-alist) prompt)
     (setf (alist-get 'org-mode gptel-response-prefix-alist) response)
     (add-hook 'gptel-mode-hook
