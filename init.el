@@ -2696,25 +2696,45 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   (gptel-model 'glm-4.5)
   (gptel-backend (gptel-make-openai "iflow"
                    :host "apis.iflow.cn"
-                   :stream t
                    :models '( glm-4.5 qwen3-coder
-                              kimi-k2-0905 deepseek-v3.1)))
+                              kimi-k2-0905 deepseek-v3.1)
+                   :key #'gptel-api-key
+                   :stream t))
   :hook
   ((gptel-post-stream . gptel-auto-scroll)
    (gptel-post-response . gptel-end-of-response))
   :config
   ;; remove chatgpt. ref: https://github.com/karthink/gptel/issues/649#issuecomment-3067343094
   (setq gptel--known-backends (assoc-delete-all "ChatGPT" gptel--known-backends))
+  (let ((prompt "@user\n")
+        (response "@assistant\n"))
+    (setf (alist-get 'org-mode gptel-prompt-prefix-alist) prompt)
+    (setf (alist-get 'org-mode gptel-response-prefix-alist) response)
+    (add-hook 'gptel-mode-hook
+              (lambda ()
+                (when (eq major-mode 'org-mode)
+                  (if gptel-mode
+                      (setq
+                       imenu-create-index-function
+                       #'imenu-default-create-index-function
+                       imenu-generic-expression
+                       `(("p" ,(rx bol (literal prompt) (group (1+ any))) 1)
+                         ("r" ,(rx bol (literal response) (group (1+ any))) 1)))
+                    (setq imenu-create-index-function #'org-imenu-get-tree))))))
   (let ((proxy "-xsocks5h://127.0.0.1:10807"))
     (gptel-make-openai "modelscope"
       :host "api-inference.modelscope.cn"
-      :stream t
+      :key #'gptel-api-key
       :models '( deepseek-ai/DeepSeek-V3.1
                  deepseek-ai/DeepSeek-R1-0528
                  Qwen/Qwen3-Coder-480B-A35B-Instruct
                  Qwen/Qwen3-235B-A22B-Thinking-2507
-                 ZhipuAI/GLM-4.5))
-    (gptel-make-gemini "gemini" :stream t :curl-args (list proxy))))
+                 ZhipuAI/GLM-4.5)
+      :stream t)
+    (gptel-make-gemini "gemini"
+      :key #'gptel-api-key
+      :curl-args (list proxy)
+      :stream t)))
 
 (use-package keyfreq
   :if (package-installed-p 'keyfreq)
