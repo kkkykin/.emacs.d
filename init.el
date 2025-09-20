@@ -1622,7 +1622,7 @@ before calling the original function."
   (recentf-mode)
   :custom
   (recentf-max-saved-items 1000)
-  (recentf-exclude `("/data/data/com\\.termux/files/home/tmp" "/tmp/" "/ssh:"
+  (recentf-exclude `("/data/data/com\\.termux/files/usr/tmp" "/tmp/" "/ssh:"
                      "/sshx:" ,(file-name-concat package-user-dir ".*-autoloads\\.el\\'"))))
 
 (use-package term/xterm
@@ -2697,6 +2697,7 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   (gptel-model 'glm-4.5)
   (gptel-backend (gptel-make-openai "iflow"
                    :host "apis.iflow.cn"
+                   :curl-args '("-kxhttp://127.0.0.1:8080")
                    :models '( glm-4.5 qwen3-coder
                               kimi-k2-0905 deepseek-v3.1)
                    :key #'gptel-api-key

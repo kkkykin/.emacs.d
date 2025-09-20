@@ -351,7 +351,7 @@ The file will be saved to the `zr-android-misc-files-directory' directory."
   :group 'my
   :type 'directory)
 
-(defcustom zr-termux-tmp-directory (file-name-concat zr-termux-root-directory "home/tmp/")
+(defcustom zr-termux-tmp-directory (file-name-concat zr-termux-root-directory "usr/tmp/")
   "Android termux tmp path."
   :group 'my
   :type 'directory)
