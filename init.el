@@ -2697,7 +2697,6 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   (gptel-model 'glm-4.5)
   (gptel-backend (gptel-make-openai "iflow"
                    :host "apis.iflow.cn"
-                   :curl-args '("-kxhttp://127.0.0.1:8080")
                    :models '( glm-4.5 qwen3-coder
                               kimi-k2-0905 deepseek-v3.1)
                    :key #'gptel-api-key
