@@ -992,6 +992,7 @@ before calling the original function."
 (use-package sh-script
   :custom
   (sh-basic-offset 2)
+  (sh-shellcheck-arguments '("-e" "SC1017"))
   :config
   (setq-mode-local sh-base-mode
                    buffer-file-coding-system 'prefer-utf-8-unix))
