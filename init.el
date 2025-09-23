@@ -2702,9 +2702,6 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
                               kimi-k2-0905 deepseek-v3.1)
                    :key #'gptel-api-key
                    :stream t))
-  :hook
-  ((gptel-post-stream . gptel-auto-scroll)
-   (gptel-post-response . gptel-end-of-response))
   :config
   ;; remove chatgpt. ref: https://github.com/karthink/gptel/issues/649#issuecomment-3067343094
   (setq gptel--known-backends (assoc-delete-all "ChatGPT" gptel--known-backends))
