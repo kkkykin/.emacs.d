@@ -47,7 +47,9 @@
            (make-symbolic-link "/storage/emulated/0/Fonts/" "~/fonts/" t))
   (push '(scroll-bar-mode . nil) default-frame-alist)
   (push '(tool-bar-mode . nil) default-frame-alist)
-  (scroll-bar-mode -1)
-  (tool-bar-mode -1))
+  (when (boundp 'scroll-bar-mode)
+    (scroll-bar-mode -1))
+  (when (bound-and-true-p tool-bar-mode)
+    (tool-bar-mode -1)))
 
 (menu-bar-mode -1)
