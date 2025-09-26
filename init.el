@@ -13,6 +13,9 @@
 (defconst zr-sys-android-p (eq system-type 'android)
   "Android System.")
 
+(defconst zr-sys-android-gui-p (and zr-sys-android-p (display-graphic-p))
+  "Android System.")
+
 (use-package emacs
   :hook
   ((text-mode . visual-line-mode)
@@ -159,7 +162,7 @@
   :after pcomplete :defer 0)
 
 (use-package touch-screen
-  :if zr-sys-android-p)
+  :if zr-sys-android-gui-p)
 
 (use-package minibuffer
   :custom
@@ -482,7 +485,7 @@
   (tooltip-mode nil))
 
 (use-package tool-bar
-  :if zr-sys-android-p
+  :if zr-sys-android-gui-p
   :custom
   (tool-bar-button-margin 12)
   (tool-bar-position 'bottom)
@@ -1371,7 +1374,7 @@ before calling the original function."
   (ediff-keep-variants nil)
   (ediff-window-setup-function 'ediff-setup-windows-plain)
   :config
-  (unless zr-sys-android-p
+  (unless zr-sys-android-gui-p
     (setq ediff-split-window-function 'split-window-horizontally))
   (add-hook 'ediff-before-setup-hook #'tab-bar-new-tab)
   ;; close tab after 'ediff-cleanup-mess
@@ -1498,7 +1501,7 @@ before calling the original function."
       (add-to-list 'tab-bar-format 'tab-bar-format-global)
       (setopt tab-bar-show t)))
   (add-hook 'server-after-make-frame-hook #'zr-tab-bar-format-setup)
-  (unless zr-sys-android-p
+  (unless zr-sys-android-gui-p
     (setq tab-bar-close-button-show nil))
   (tab-bar-history-mode))
 
@@ -1543,7 +1546,7 @@ before calling the original function."
      newsticker-treeview-list-mode
      newsticker-treeview-mode))
   :config
-  (unless zr-sys-android-p
+  (unless zr-sys-android-gui-p
     (setq tab-line-new-button-show nil
           tab-line-close-button-show nil)))
 
@@ -1584,7 +1587,7 @@ before calling the original function."
   ;;    ((major-mode . completion-list-mode)
   ;;     #3=display-buffer-at-bottom #11#)))
   ;; :config
-  ;; (if zr-sys-android-p
+  ;; (if zr-sys-android-gui-p
   ;;     (setq window-sides-slots '(0 0 0 0))
   ;;   (dolist (v `(((or (major-mode . Info-mode)
   ;;                     (major-mode . help-mode)

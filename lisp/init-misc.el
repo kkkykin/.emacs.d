@@ -872,7 +872,9 @@ ref: https://karthinks.com/software/emacs-window-management-almanac/"
    On windows, an active notification must be removed by calling
    `w32-notification-close' before a new one can be shown."
   (when-let* ((notify-fn (pcase system-type
-                           ('android #'android-notifications-notify)
+                           ('android (if (boundp #'android-notifications-notify)
+                                         #'android-notifications-notify
+                                       #'zr-android-termux-notifications-notify))
                            ('windows-nt #'w32-notification-notify)
                            ((guard (fboundp #'notifications-notify))
                             #'notifications-notify)))

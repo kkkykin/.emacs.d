@@ -37,7 +37,8 @@
 (add-hook 'emacs-startup-hook #'zr-restore-post-init-settings)
 
 ;; Android Setup
-(if (eq system-type 'android)
+(if (and (eq system-type 'android)
+         (display-graphic-p))
     (progn (setenv "PATH"
                    (format "%s:%s" "/data/data/com.termux/files/usr/bin"
                            (getenv "PATH")))

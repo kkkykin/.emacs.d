@@ -56,8 +56,9 @@
       (modifier-bar-mode 1)
       (menu-bar-mode -1))))
 
-(add-function :after after-focus-change-function
-              #'za/mini-screen-setup-maybe)
+(when (display-graphic-p)
+  (add-function :after after-focus-change-function
+                #'za/mini-screen-setup-maybe))
 
 
 ;; dired
@@ -69,7 +70,7 @@
   "Run fooview action."
   ;; (start-process "fooview-run" nil "am" "start"
   ;;                (format "intent:#Intent;action=com.fooview.android.intent.RUN_WORKFLOW;component=com.fooview.android.fooview/.ShortcutProxyActivity;S.action=%s;end" cmd))
-  (call-process "termux-am" nil 0 nil
+  (call-process "am" nil 0 nil
                 "start" "-a" "com.fooview.android.intent.RUN_WORKFLOW"
                 "com.fooview.android.fooview/.ShortcutProxyActivity"
                 "-e" "action" cmd))
@@ -186,7 +187,7 @@
     (json-parse-buffer)))
 
 (defun za/termux-am (&rest args)
-  (apply #'start-process " *termux-am*" nil "termux-am" args))
+  (apply #'start-process " *termux-am*" nil "am" args))
 
 (defun za/termux-battery-status ()
   (za/parse-json-program "termux-battery-status"))
@@ -418,25 +419,23 @@ and retries connection after 60 seconds if the SSID is not found in the scan."
     ["toggle sshd" za/toggle-sshd]
     ["Start alist" zr-net-start-alist]))
 
-(setq select-enable-clipboard nil
-      shell-file-name (expand-file-name "usr/bin/bash" zr-termux-root-directory)
-      overriding-text-conversion-style nil
-      temporary-file-directory zr-termux-tmp-directory
-      Info-default-directory-list `(,(file-name-concat zr-termux-root-directory "usr/share/info/"))
-      android-pass-multimedia-buttons-to-system t)
+(when (display-graphic-p)
+  (setq select-enable-clipboard nil
+        overriding-text-conversion-style nil
+        android-pass-multimedia-buttons-to-system t)
 
-(dolist (path '(".aria2/" ".gitconfig" ".gnupg/" ".ssh/" ".config/"))
-  (make-symbolic-link (file-name-concat
-                       zr-termux-root-directory "home" path)
-                      (file-name-concat "~" path) t))
+  (define-key key-translation-map (kbd "<delete>") (kbd "<escape>"))
+  (define-key key-translation-map (kbd "<deletechar>") (kbd "<escape>"))
+  (keymap-global-set "H-x" 'clipboard-kill-region)
+  (keymap-global-set "H-c" 'clipboard-kill-ring-save)
+  (keymap-global-set "H-v" 'clipboard-yank)
+  
+  (dolist (path '(".aria2/" ".gitconfig" ".gnupg/" ".ssh/" ".config/"))
+    (make-symbolic-link (file-name-concat
+                         zr-termux-root-directory "home" path)
+                        (file-name-concat "~" path) t)))
 
 (setenv "XDG_CONFIG_HOME" (expand-file-name "~/.config/"))
-
-(define-key key-translation-map (kbd "<delete>") (kbd "<escape>"))
-(define-key key-translation-map (kbd "<deletechar>") (kbd "<escape>"))
-(keymap-global-set "H-x" 'clipboard-kill-region)
-(keymap-global-set "H-c" 'clipboard-kill-ring-save)
-(keymap-global-set "H-v" 'clipboard-yank)
 
 
 ;; modifier-bar

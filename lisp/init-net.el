@@ -974,7 +974,7 @@ If no custom prefix matches, it calls the original function."
   (start-process "alist" nil "alist" "server"
                  "--data" zr-alist-data-directory)
   (pcase system-type
-    ('android (android-notifications-notify
+    ('android (zr-notifications-notify
                :title "alist"
                :body "Click to stop alist."
                :on-action (lambda (a b)
