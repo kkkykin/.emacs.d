@@ -38,7 +38,7 @@
 
 ;; Android Setup
 (if (and (eq system-type 'android)
-         (display-graphic-p))
+         (not (getenv "TERMUX_VERSION")))
     (progn (setenv "PATH"
                    (format "%s:%s" "/data/data/com.termux/files/usr/bin"
                            (getenv "PATH")))
