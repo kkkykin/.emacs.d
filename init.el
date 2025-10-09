@@ -2086,6 +2086,7 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   (org-src-preserve-indentation t)
   :config
   (dolist (l '(("json" . json-ts)
+               ("caddy" . caddyfile)
                ("lua" . lua-ts)
                ("py" . python-ts)
                ("yml" . yaml-ts)))
@@ -2158,6 +2159,7 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
                  "conf-unix"
                  "conf-windows"
                  "json"
+                 "caddy"
                  "text"
                  "yml"))
       (dolist (f '("org-babel-expand-body"
@@ -2231,6 +2233,15 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
 
 (use-package htmlize
   :if (package-installed-p 'htmlize))
+
+(use-package caddyfile-mode
+  :if (package-installed-p 'caddyfile-mode)
+  :mode (("Caddyfile\\'" . caddyfile-mode)
+         ("caddy\\.conf\\'" . caddyfile-mode))
+  :hook
+  (caddyfile-mode . (lambda ()
+                      (kill-local-variable 'tab-width)
+                      (kill-local-variable 'indent-tabs-mode))))
 
 (use-package ahk-mode
   :if (package-installed-p 'ahk-mode)
