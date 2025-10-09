@@ -533,7 +533,7 @@
   (windmove-wrap-around t)
   (windmove-allow-all-windows t))
 
-(use-package server :defer 5
+(use-package server
   :config
   (unless server-process
     (server-start)))
