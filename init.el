@@ -1177,6 +1177,11 @@ before calling the original function."
   (advice-add 'archive-rar-summarize :before-until #'archive-7z-summarize)
   (advice-add 'archive-rar-extract :before-until #'archive-7z-extract))
 
+(use-package find-dired
+  :config
+  (unless zr-sys-winnt-p
+    (setq find-ls-option '("-exec ls -ldh {} +" . "-ldh"))))
+
 (use-package hexl)
 
 (use-package dictionary
