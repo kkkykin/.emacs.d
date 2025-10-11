@@ -571,13 +571,19 @@
   :hook emacs-startup
   :custom
   (etags-regen-tags-file "_tags")
-  (etags-regen-program-options '("--no-fallback-lang"))
   (etags-regen-regexp-alist
    '((("lisp")
       "/(use-package[ \t]+\\([a-zA-Z0-9\\-]+\\)/usep\\/\\1/")
      (("none")
       "/^\\*+ \\(.+\\)/oh\\/\\1/"
-      "/^#\\+name: \\(.+\\)/ob\\/\\1/i"))))
+      "/^#\\+name: \\(.+\\)/ob\\/\\1/i")))
+  :config
+  (let ((options (seq-filter
+                  (lambda (s) (string-prefix-p "-" s))
+                  (process-lines etags-regen-program "--help"))))
+    (dolist (option '("--no-fallback-lang"))
+      (when (member option options)
+        (add-to-list 'etags-regen-program-options option)))))
 
 (use-package quickurl)
 
