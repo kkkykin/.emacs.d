@@ -162,15 +162,13 @@ The variables are defined in PARAMS."
           (org-babel--get-vars params)))
 
 (defun zo/org-remote-link-open (url)
-  (let ((auth (car (auth-source-search :host "browse-url.nginx.localhost"
-                                       :max 1))))
-    (start-process "remote-browse-link" nil "curl"
-                   "-H" (concat "origin:ssh://" (system-name))
-                   "-H" (concat "url:" url)
-                   "-H" (concat "authorization:"
-                                (auth-info-password auth))
-                   (format "http://127.0.0.1:%s/lua/browse-url"
-                           (plist-get auth :port)))))
+  (call-process "curl" nil 0 nil
+                "-H" (concat "origin:ssh://" (system-name))
+                "-H" (concat "url:" url)
+                "-H" (concat "authorization:"
+                             (apply #'zr-net-basic-auth-header
+                                    (auth-source-user-and-password "browse-url.caddy.local")))
+                "http://127.0.0.1:7780/browse-url/"))
 
 (defun zo/call-babel-at-point (&optional type params position confirm)
   "Execute the Babel block or call at point in Org mode.

@@ -349,18 +349,19 @@ backreferences in REPLACEMENT.")
 (defun zr-rclone-mpv-remote-proc (files)
   (let* ((mpv-args (read-shell-command "mpv " nil 'zr-rclone-mpv-args-history))
          (url-request-method "POST")
+         (args (split-string-shell-command mpv-args))
          (url-request-extra-headers
-          `(("Content-Type" . "application/vnd.apple.mpegurl")
+          `(("Content-Type" . "application/json")
             ("Origin" . ,(encode-coding-string
                           (concat "ssh://" (system-name)) 'utf-8))
             ("Authorization"
-             . ,(encode-coding-string (auth-source-pick-first-password
-                                       :host "mpv.nginx.localhost")
-                                      'utf-8))
-            ("args" . ,(encode-coding-string mpv-args 'utf-8))))
-         (url-request-data (encode-coding-string files 'utf-8)))
+             . ,(apply #'zr-net-basic-auth-header
+                       (auth-source-user-and-password "mpv.caddy.local")))))
+         (url-request-data
+          (json-serialize `((args . ,(vconcat args))
+                            (stdin . ,files)))))
     (add-to-history 'zr-rclone-mpv-args-history mpv-args 100)
-    (url-retrieve "http://127.0.0.1:7780/lua/mpv" #'ignore nil t)))
+    (url-retrieve "http://127.0.0.1:7780/mpv/" #'ignore nil t)))
 
 (defvar zr-rclone-mpv-play-function
   (cond
