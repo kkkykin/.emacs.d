@@ -1782,6 +1782,7 @@ before calling the original function."
      (add-to-list 'treesit-extra-load-path ts-extra)))
   (setq treesit-language-source-alist
         '((bash "https://github.com/tree-sitter/tree-sitter-bash")
+          (go "https://github.com/tree-sitter/tree-sitter-go")
           (python "https://github.com/tree-sitter/tree-sitter-python")
           (lua "https://github.com/MunifTanjim/tree-sitter-lua")
           (sql "https://github.com/DerekStride/tree-sitter-sql" "gh-pages")
