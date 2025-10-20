@@ -249,20 +249,34 @@ resulting URL will be
     filelist))
 
 (defvar zr-rclone-file-transform-alist nil
-  "Alist of transformations to apply to files before play it.
-Each element has the form (ORIG . REPLACEMENT), where ORIG is a regular
-expression and REPLACEMENT is the replacement text.  Every element will
-be tested in turn, allowing more than one transformation to be made.
+  "Alist of transformations to apply to file paths before use.
+Each element has the form (ORIG . REPLACEMENT).
 
-Note that ORIG and REPLACEMENT are passed as arguments to
-`string-match', so you can, for example, use match groups in ORIG and
-backreferences in REPLACEMENT.")
+ORIG is a regular expression which will be matched against the file path.
+
+REPLACEMENT can be
+  1. a string – passed to `replace-match', so backreferences (\\& \\1 …) work;
+  2. a function – called with two arguments:
+       (ORIG-FILE MATCH-DATA)
+     It must return the new path string.  Within the function you can
+     use (match-string N ORIG-FILE) to access capture groups.
+
+Elements are tried in order, so several rules may cascade.
+
+Examples:
+  ((\"movie/\\\\(.*\\\\)\\\\.mkv\" . \"/mnt/nas/movie/\\\\1.mkv\"))   ; string form
+  ((\"movie/\\\\(.*\\\\)\\\\.mkv\"                                ; function form
+    . (lambda (file md)
+        (format \"/mnt/nas/movie/%s.mkv\" (match-string 1 file)))))")
 
 (defun zr-rclone-transform-file-path (file)
   "Transform FILE path according to `zr-rclone-file-transform-alist'."
   (dolist (transform zr-rclone-file-transform-alist file)
     (when (string-match (car transform) file)
-      (setq file (replace-match (cdr transform) nil nil file)))))
+      (let ((repl (cdr transform)))
+        (setq file (if (functionp repl)
+                       (funcall repl file (match-data))
+                     (replace-match repl nil nil file)))))))
 
 (defvar zr-rclone-playlist-history nil)
 (with-eval-after-load 'savehist
