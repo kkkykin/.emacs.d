@@ -245,12 +245,18 @@
         "DIRECT")))
 
 (defvar zn/url-history '())
-(defun zn/url-proxy-locator (urlobj host)
+
+(defun zn/url-always-use-proxy-for-url (_)
+  "Always return a proxy service."
+  (replace-regexp-in-string "^SOCKS5 " "PROXY "
+                            (zn/match-proxy-rule nil "github.com")))
+
+(defun zn/url-custom-find-proxy-for-url (urlobj host)
   "Determine proxy settings for URL based on host and proxy services."
   (when debug-on-error
     (push (cons (float-time) (url-recreate-url urlobj)) zn/url-history))
   (replace-regexp-in-string "^SOCKS5 " "PROXY " (zn/match-proxy-rule urlobj host)))
-(setq url-proxy-locator #'zn/url-proxy-locator)
+(setq url-proxy-locator #'zn/url-custom-find-proxy-for-url)
 
 (defun zn/curl-parameters-dwim (url &rest args)
   "Generate explicit parameters for curl."
