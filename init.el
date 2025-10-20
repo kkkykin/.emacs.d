@@ -2714,6 +2714,12 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   :if (package-installed-p 'fdroid)
   :vc (:url "https://github.com/migalmoreno/fdroid.el"))
 
+(use-package claude-code-ide
+  :if (package-installed-p 'claude-code-ide)
+  :vc (:url "https://github.com/manzaltu/claude-code-ide.el" :rev :newest)
+  :custom
+  (claude-code-ide-terminal-backend 'eat))
+
 (use-package gptel
   :if (package-installed-p 'gptel)
   :init
