@@ -1674,7 +1674,8 @@ before calling the original function."
   (eshell-history-size 1000)
   (eshell-hist-ignoredups 'erase)
   (eshell-history-isearch 'dwim)
-  (eshell-visual-options '(("nix" "--help")))
+  (eshell-visual-options '(("nix" "--help")
+                           ("nixos-rebuild" "--help")))
   :config
   (require 'init-esh)
   (modify-syntax-entry ?' "\"" eshell-mode-syntax-table)
