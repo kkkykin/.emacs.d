@@ -25,6 +25,7 @@
   ([remap downcase-word] . downcase-dwim)
   ([remap capitalize-word] . capitalize-dwim)
   :custom
+  (elisp-fontify-semantically t)
   (mode-line-compact t)
   (mode-line-frame-identification nil)
   (mode-line-client nil)
