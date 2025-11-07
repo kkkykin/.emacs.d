@@ -1088,23 +1088,17 @@ before calling the original function."
                           (completing-read "Device: " devices))))))
      ("\\.apk\\'"
       (format "%s sign --ks \"%s\" --ks-pass \"pass:emacs1\" --ks-key-alias \"Emacs keystore\""
-              (cond*
-               ((bind* (base-name "apksigner")
-                       (exe (executable-find base-name)))
-                :non-exit)
-               (exe exe)
-               ((bind* (adb (executable-find "adb")))
-                :non-exit)
-               (adb
-                (if-let*
-                    ((build-path (locate-dominating-file adb "build-tools"))
-                     (exe (car (directory-files-recursively
-                                build-path
-                                (format "^%s%s$" base-name
-                                        (regexp-opt exec-suffixes))))))
+              (if-let* ((base-name "apksigner")
+                        (apksigner (executable-find base-name)))
+                  apksigner
+                (if-let* ((adb (executable-find "adb"))
+                          (build-path (locate-dominating-file adb "build-tools"))
+                          (exe (car (directory-files-recursively
+                                     build-path
+                                     (format "^%s%s$" base-name
+                                             (regexp-opt exec-suffixes))))))
                     exe
                   base-name))
-               (t base-name))
               zr-emacs-keystore-file))
      (,(rx ?. (| "tzst" "tar.zst") eos)
       "zstd -dc ? | tar -xf -")
