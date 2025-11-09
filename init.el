@@ -2581,8 +2581,12 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   (emms-history-load)
   (unless zr-sys-android-p
     (setq emms-player-list '(emms-player-mpv)))
-  (when (executable-find "exiftool")
-    (setq emms-info-functions '(emms-info-exiftool))))
+  (add-to-list 'emms-track-initialize-functions #'emms-info-initialize-track)
+  (setq emms-track-description-function #'emms-info-track-description)
+  (require 'emms-cache)
+  (emms-cache 1)
+  (when (locate-library "init-emms")
+    (require 'init-emms)))
 
 (use-package mpvi :after emms
   :if (package-installed-p 'mpvi))
