@@ -246,7 +246,7 @@
 
 (defvar zn/url-history '())
 
-(defun zn/url-always-use-proxy-for-url (_)
+(defun zn/url-always-use-proxy-for-url (&rest _)
   "Always return a proxy service."
   (replace-regexp-in-string "^SOCKS5 " "PROXY "
                             (zn/match-proxy-rule nil "github.com")))
