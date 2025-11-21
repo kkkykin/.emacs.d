@@ -256,7 +256,20 @@
   (when debug-on-error
     (push (cons (float-time) (url-recreate-url urlobj)) zn/url-history))
   (replace-regexp-in-string "^SOCKS5 " "PROXY " (zn/match-proxy-rule urlobj host)))
-(setq url-proxy-locator #'zn/url-custom-find-proxy-for-url)
+
+(defun zn/url-proxy-reset ()
+  "Reset proxy by 'all_proxy' env."
+  (interactive)
+  (if-let* ((proxy (getenv "all_proxy"))
+            (parts (string-split proxy "[/:]+"))
+            (host-port (string-join (cdr parts) ":")))
+      (progn
+        (setf (alist-get "http" url-proxy-services) host-port
+              (alist-get "https" url-proxy-services) host-port)
+        (setq url-proxy-locator #'url-default-find-proxy-for-url))
+    (setq url-proxy-locator #'zn/url-custom-find-proxy-for-url)))
+(with-eval-after-load 'url-vars
+  (zn/url-proxy-reset))
 
 (defun zn/curl-parameters-dwim (url &rest args)
   "Generate explicit parameters for curl."
