@@ -2448,7 +2448,6 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   (denote-sort-keywords t)
   (denote-prompts '(title keywords))
   (denote-date-format nil)
-  (denote-rename-buffer-format "[D] %t")
   (denote-excluded-directories-regexp "_archive")
   :hook
   ((dired-mode . denote-dired-mode)
