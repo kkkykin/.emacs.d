@@ -2165,6 +2165,7 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
                  "json"
                  "caddy"
                  "text"
+                 "toml"
                  "yml"))
       (dolist (f '("org-babel-expand-body"
                    "org-babel-execute"))
