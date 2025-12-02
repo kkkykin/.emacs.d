@@ -2728,14 +2728,6 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   (gptel-curl-extra-args '("--compressed"))
   (gptel-default-mode 'org-mode)
   (gptel-org-branching-context t)
-  (gptel-model 'glm-4.5)
-  (gptel-backend (gptel-make-openai "iflow"
-                   :host "apis.iflow.cn"
-                   :models '( glm-4.6  qwen3-coder-plus
-                              kimi-k2-0905 deepseek-v3.2)
-                   ;; :curl-args '("-kxhttp://127.0.0.1:8080")
-                   :key #'gptel-api-key
-                   :stream t))
   :config
   ;; remove chatgpt. ref: https://github.com/karthink/gptel/issues/649#issuecomment-3067343094
   (setq gptel--known-backends (assoc-delete-all "ChatGPT" gptel--known-backends))
@@ -2745,6 +2737,7 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
     (setf (alist-get 'org-mode gptel-response-prefix-alist) response)
     (add-hook 'gptel-mode-hook
               (lambda ()
+                (gptel-highlight-mode 1)
                 (when (eq major-mode 'org-mode)
                   (if gptel-mode
                       (setq
@@ -2754,19 +2747,29 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
                        `(("p" ,(rx bol (literal prompt) (group (1+ any))) 1)
                          ("r" ,(rx bol (literal response) (group (1+ any))) 1)))
                     (setq imenu-create-index-function #'org-imenu-get-tree))))))
-  (let ((proxy "-xsocks5h://127.0.0.1:10807"))
-    (gptel-make-openai "modelscope"
-      :host "api-inference.modelscope.cn"
-      :key #'gptel-api-key
-      :models '( deepseek-ai/DeepSeek-V3.1
-                 deepseek-ai/DeepSeek-R1-0528
-                 Qwen/Qwen3-Coder-480B-A35B-Instruct
-                 Qwen/Qwen3-235B-A22B-Thinking-2507
-                 ZhipuAI/GLM-4.5)
-      :stream t)
+  (when-let* (((bound-and-true-p zr-dotfiles-dir))
+              (pls-path (expand-file-name ".global.pls" zr-dotfiles-dir))
+              ((file-exists-p pls-path))
+              (zr-local-pls (plstore-open pls-path))
+              (host (concat "gpt-load." (plist-get (cdr (plstore-get zr-local-pls "host")) :main)))
+              (main-models '( glm-4.6
+                              qwen3-coder-plus
+                              qwen3-235b-a22b-thinking-2507
+                              kimi-k2-0905
+                              deepseek-r1
+                              deepseek-v3.2)))
+    (plstore-close zr-local-pls)
+    (setq gptel-model (car main-models)
+          gptel-backend (gptel-make-openai "official"
+                          :host host
+                          :key #'gptel-api-key
+                          :endpoint "/proxy/official/v1/chat/completions"
+                          :models main-models
+                          :stream t))
     (gptel-make-gemini "gemini"
+      :host host
       :key #'gptel-api-key
-      :curl-args (list proxy)
+      :endpoint "/proxy/gemini/v1beta/models"
       :stream t)))
 
 (use-package keyfreq
