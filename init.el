@@ -479,7 +479,9 @@
   (tmm-shortcut-inside-entry t)
   (tmm-completion-prompt nil)
   :config
-  (advice-add 'tmm-add-prompt :after #'minibuffer-hide-completions))
+  (if (fboundp 'tmm-add-prompt)
+      (advice-add 'tmm-add-prompt :after #'minibuffer-hide-completions)
+    (add-to-list 'completion-category-defaults '(tmm (eager-display)))))
 
 (use-package tooltip
   :custom
