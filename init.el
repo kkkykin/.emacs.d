@@ -2754,20 +2754,27 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
               ((file-exists-p pls-path))
               (zr-local-pls (plstore-open pls-path))
               (host (concat "gpt-load." (plist-get (cdr (plstore-get zr-local-pls "host")) :main)))
-              (main-models '( glm-4.6
-                              qwen3-coder-plus
-                              qwen3-235b-a22b-thinking-2507
-                              kimi-k2-0905
-                              deepseek-r1
-                              deepseek-v3.2)))
+              (main-models '( gpt-5
+                              gemini-3-pro-preview-maxthinking)))
     (plstore-close zr-local-pls)
     (setq gptel-model (car main-models)
-          gptel-backend (gptel-make-openai "official"
+          gptel-backend (gptel-make-openai "alive"
                           :host host
                           :key #'gptel-api-key
-                          :endpoint "/proxy/official/v1/chat/completions"
+                          :endpoint "/proxy/alive/v1/chat/completions"
                           :models main-models
                           :stream t))
+    (gptel-make-openai "official"
+      :host host
+      :key #'gptel-api-key
+      :endpoint "/proxy/official/v1/chat/completions"
+      :models '( glm-4.6
+                 qwen3-coder-plus
+                 qwen3-235b-a22b-thinking-2507
+                 kimi-k2-0905
+                 deepseek-r1
+                 deepseek-v3.2)
+      :stream t)
     (gptel-make-gemini "gemini"
       :host host
       :key #'gptel-api-key
