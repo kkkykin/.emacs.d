@@ -2753,33 +2753,36 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
               (pls-path (expand-file-name ".global.pls" zr-dotfiles-dir))
               ((file-exists-p pls-path))
               (zr-local-pls (plstore-open pls-path))
-              (host (concat "gpt-load." (plist-get (cdr (plstore-get zr-local-pls "host")) :main)))
-              (main-models '( gpt-5
-                              gemini-3-pro-preview-maxthinking)))
+              (host (concat "uni-api." (plist-get (cdr (plstore-get zr-local-pls "host")) :main)))
+              (main-models '( gemini-2.5-pro
+                              gemini-2.5-pro-maxthinking
+                              gemini-2.5-pro-nothinking
+                              gemini-2.5-pro-search
+                              gemini-3-pro
+                              gemini-3-pro-maxthinking
+                              gemini-3-pro-nothinking
+                              gemini-3-pro-search
+                              gpt-5
+                              grok-4.1
+                              grok-4.1-thinking
+                              glm-4.6
+                              qwen3-coder-plus
+                              qwen3-235b-a22b-instruct
+                              qwen3-235b-a22b-thinking-2507
+                              qwen3-vl-plus
+                              qwen3-max
+                              kimi-k2
+                              kimi-k2-0905
+                              deepseek-r1
+                              deepseek-v3.2)))
     (plstore-close zr-local-pls)
     (setq gptel-model (car main-models)
-          gptel-backend (gptel-make-openai "alive"
+          gptel-backend (gptel-make-openai "general"
                           :host host
                           :key #'gptel-api-key
-                          :endpoint "/proxy/alive/v1/chat/completions"
+                          :endpoint "/v1/chat/completions"
                           :models main-models
-                          :stream t))
-    (gptel-make-openai "official"
-      :host host
-      :key #'gptel-api-key
-      :endpoint "/proxy/official/v1/chat/completions"
-      :models '( glm-4.6
-                 qwen3-coder-plus
-                 qwen3-235b-a22b-thinking-2507
-                 kimi-k2-0905
-                 deepseek-r1
-                 deepseek-v3.2)
-      :stream t)
-    (gptel-make-gemini "gemini"
-      :host host
-      :key #'gptel-api-key
-      :endpoint "/proxy/gemini/v1beta/models"
-      :stream t)))
+                          :stream t))))
 
 (use-package keyfreq
   :if (package-installed-p 'keyfreq)
