@@ -41,6 +41,22 @@ settings are updated."
            (when (boundp var)
              (custom-reevaluate-setting var)))))
 
+(defcustom zr-secrets-dir-followd-by-vars nil
+  "List of variables that should be re-evaluated when `zr-secrets-dir' changes.
+This allows dependent settings to update automatically when the
+directory changes.")
+
+(defcustom zr-secrets-dir (expand-file-name "~/secrets")
+  "Secrets."
+  :type 'directory
+  :set (lambda (sym val)
+         (set-default sym val)
+         (when (file-directory-p val)
+           (chmod val #o700))
+         (dolist (var zr-secrets-dir-followd-by-vars)
+           (when (boundp var)
+             (custom-reevaluate-setting var)))))
+
 
 ;; theme
 
