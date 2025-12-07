@@ -2727,7 +2727,7 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   :init
   (define-key zr-menu [gptel] '(menu-item "gptel" gptel-send))
   :custom
-  (gptel-curl-extra-args '("--compressed"))
+  (gptel-curl-extra-args '("--compressed" "-H" "AH-Thread-Id: emacs"))
   (gptel-default-mode 'org-mode)
   (gptel-org-branching-context t)
   :config
@@ -2753,19 +2753,8 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
               (pls-path (expand-file-name ".global.pls" zr-dotfiles-dir))
               ((file-exists-p pls-path))
               (zr-local-pls (plstore-open pls-path))
-              (host (concat "uni-api." (plist-get (cdr (plstore-get zr-local-pls "host")) :main)))
-              (main-models '( gemini-2.5-pro
-                              gemini-2.5-pro-maxthinking
-                              gemini-2.5-pro-nothinking
-                              gemini-2.5-pro-search
-                              gemini-3-pro
-                              gemini-3-pro-maxthinking
-                              gemini-3-pro-nothinking
-                              gemini-3-pro-search
-                              gpt-5
-                              grok-4.1
-                              grok-4.1-thinking
-                              glm-4.6
+              (host (concat "axonhub." (plist-get (cdr (plstore-get zr-local-pls "host")) :main)))
+              (main-models '( glm-4.6
                               qwen3-coder-plus
                               qwen3-235b-a22b-instruct
                               qwen3-235b-a22b-thinking-2507
@@ -2773,6 +2762,10 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
                               qwen3-max
                               kimi-k2
                               kimi-k2-0905
+                              gemini-2.5-pro
+                              gemini-3-pro
+                              gpt-5
+                              grok-4.1
                               deepseek-r1
                               deepseek-v3.2)))
     (plstore-close zr-local-pls)
