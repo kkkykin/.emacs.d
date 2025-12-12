@@ -116,7 +116,7 @@ result of evaluating the expression."
 If STRING matches the pattern of a complete Lisp form (starts with '('
 and ends with ')'), evaluate it as a Lisp expression. Otherwise, return
 STRING unchanged."
-  (if (string-match-p (rx bos ?\( (+ anychar) ?\) eos) string)
+  (if (string-match-p (rx bos (? (or ?' ?`)) ?\( (+ anychar) ?\) eos) string)
       (zo/string-eval string)
     string))
 
