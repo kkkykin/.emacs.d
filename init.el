@@ -612,6 +612,15 @@
              (("\\.bash\\'" . "trap error") . "trap.bash")))
     (add-to-list 'auto-insert-alist template)))
 
+(use-package auth-sources-pass
+  :config
+  (when (executable-find "gopass")
+    (setopt auth-source-pass-filename
+            (expand-file-name "gopass/stores/root"
+                              (pcase system-type
+                                ('windows-nt (getenv "LOCALAPPDATA"))
+                                (_ "~/.local/share"))))))
+
 (use-package copyright)
 (use-package executable)
 (use-package time-stamp)
@@ -2715,6 +2724,17 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
 (use-package fdroid
   :if (package-installed-p 'fdroid)
   :vc (:url "https://github.com/migalmoreno/fdroid.el"))
+
+(use-package agent-shell
+  :if (package-installed-p 'agent-shell)
+  :config
+  (let ((codex-host "www.88code.ai"))
+    (setq agent-shell-openai-codex-environment
+          (agent-shell-make-environment-variables
+           "OPENAI_BASE_URL" (format "https://%s/openai/v1" codex-host))
+          agent-shell-openai-authentication
+          (agent-shell-openai-make-authentication
+           :codex-api-key (lambda () (auth-source-pass-get "emacs_api" (format "websites/%s/linuxdo" codex-host))))))))
 
 (use-package claude-code-ide
   :if (package-installed-p 'claude-code-ide)
