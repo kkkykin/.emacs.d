@@ -2734,7 +2734,7 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
            "OPENAI_BASE_URL" (format "https://%s/openai/v1" codex-host))
           agent-shell-openai-authentication
           (agent-shell-openai-make-authentication
-           :codex-api-key (lambda () (auth-source-pass-get "emacs_api" (format "websites/%s/linuxdo" codex-host))))))))
+           :codex-api-key (lambda () (auth-source-pass-get "emacs_api" (format "websites/%s/linuxdo" codex-host)))))))
 
 (use-package claude-code-ide
   :if (package-installed-p 'claude-code-ide)
