@@ -612,9 +612,12 @@
              (("\\.bash\\'" . "trap error") . "trap.bash")))
     (add-to-list 'auto-insert-alist template)))
 
-(use-package auth-sources-pass
+(use-package auth-source
+  :custom
+  (auth-source-pass-port-separator "#")
   :config
   (when (executable-find "gopass")
+    (auth-source-pass-enable)
     (setopt auth-source-pass-filename
             (expand-file-name "gopass/stores/root"
                               (pcase system-type
@@ -1399,25 +1402,26 @@ before calling the original function."
 
 (use-package smtpmail
   :custom
-  (send-mail-command 'smtpmail-send-it)
-  (smtpmail-smtp-server "smtp.qq.com")
-  (smtpmail-smtp-service 465)
-  (smtpmail-stream-type 'ssl)
-  :config
-  (setq smtpmail-smtp-user
-        (plist-get (car (auth-source-search
-	                     :max 1
-	                     :host smtpmail-smtp-server
-	                     :port smtpmail-smtp-service))
-                   :user)))
+  (smtpmail-stream-type 'starttls)
+  (smtpmail-store-queue-variables t))
 
 (use-package message
   :hook (message-send . ispell-message)
   :custom
-  (message-server-alist '())
+  (message-server-alist
+   '(((lambda () (zr-message-from-matches-p "@\\(qq\\|foxmail\\)\\.com\\'" t))
+      . "smtp smtp.qq.com 587")))
   (message-kill-buffer-on-exit t)
-  (message-send-mail-function 'smtpmail-send-it)
-  (message-signature nil))
+  (message-confirm-send t)
+  (message-signature nil)
+  :config
+  (defun zr-message-from-matches-p (regexp &optional set-user-p)
+    (when-let* ((from (cadr (mail-extract-address-components
+                             (message-fetch-field "From"))))
+                ((string-match-p regexp from)))
+      (if set-user-p
+          (setq smtpmail-smtp-user from)
+        t))))
 
 (use-package rmail
   :custom
@@ -1456,8 +1460,6 @@ before calling the original function."
    '(mm-file-name-trim-whitespace
      mm-file-name-collapse-whitespace
      mm-file-name-replace-whitespace))
-  (send-mail-function 'smtpmail-send-it)
-  (smtpmail-stream-type 'ssl)
   :config
   (autoload 'gnus-tree-perhaps-minimize "gnus-salt")
   (auto-image-file-mode)
