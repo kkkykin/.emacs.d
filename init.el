@@ -614,6 +614,7 @@
 
 (use-package auth-source
   :custom
+  (auth-source-pass-extra-query-keywords t)
   (auth-source-pass-port-separator "#")
   :config
   (when (executable-find "gopass")
