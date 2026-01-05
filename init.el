@@ -2668,8 +2668,19 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
     (setq aria2-rcp-secret (auth-info-password auth)
           aria2-rcp-listen-port (string-to-number (plist-get auth :port)))))
 
-(use-package org-fc
-  :if (package-installed-p 'org-fc))
+(use-package org-srs
+  :if (package-installed-p 'org-srs)
+  :hook (org-mode . org-srs-embed-overlay-mode)
+  :bind
+  ( :map org-mode-map
+    ("<f5>" . org-srs-review-rate-easy)
+    ("<f6>" . org-srs-review-rate-good)
+    ("<f7>" . org-srs-review-rate-hard)
+    ("<f8>" . org-srs-review-rate-again))
+  :config
+  (when zr-sys-android-p
+    (setq org-srs-item-confirm #'org-srs-item-confirm-command)
+    (org-srs-ui-mode +1)))
 
 (use-package ox-pandoc :defer 2
   :if (package-installed-p 'ox-pandoc)
