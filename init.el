@@ -2197,6 +2197,7 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   :custom
   (org-export-dispatch-use-expert-ui t)
   (org-export-coding-system 'utf-8)
+  (org-export-with-author nil)
   (org-export-with-smart-quotes t)
   (org-export-with-sub-superscripts nil)
   (org-export-backends '(org html latex md ascii icalendar))
