@@ -619,6 +619,27 @@
   :config
   (when (executable-find "gopass")
     (auth-source-pass-enable)
+
+    (define-advice auth-source-pass-entries (:around (orig-fn &rest args) symlink)
+      "Follow-symlinks."
+      (let ((orig-dfr (symbol-function #'directory-files-recursively)))
+        (cl-letf (((symbol-function #'directory-files-recursively)
+                   (lambda (dir regexp &optional include predicate _follow)
+                     (funcall orig-dfr dir regexp include predicate t))))
+          (apply orig-fn args))))
+
+    (define-advice auth-source-pass--find-match-many
+        (:around (orig-fn hosts users ports &rest args) fix-host-match)
+      "Normalize HOSTS."
+      (let (norm-hosts url-users url-ports)
+        (dolist (h hosts)
+          (pcase-let ((`(,nh ,u ,p) (auth-source-pass--disambiguate h)))
+            (push nh norm-hosts)
+            (when u (push u url-users))
+            (when (and p (not (equal "443" p)))
+              (push p url-ports))))
+        (apply orig-fn norm-hosts (or users url-users) (or ports url-ports) args)))
+
     (setopt auth-source-pass-filename
             (expand-file-name "gopass/stores/root"
                               (pcase system-type
