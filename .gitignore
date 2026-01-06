@@ -5,6 +5,7 @@
 /transient/
 /auto-save-list/
 /eshell/history
+/eshell/alias
 /projects
 /custom.el
 /newsticker/
@@ -37,6 +38,7 @@
 /gnus/.nnmail-cache
 /gnus/.newsrc
 /gnus/mbox/
+/gnus/.newsrc-dribble
 /.org-id-locations
 /org-clock-save.el
 devdocs-browser/
