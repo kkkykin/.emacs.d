@@ -2810,7 +2810,7 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
               (pls-path (expand-file-name ".global.pls" zr-dotfiles-dir))
               ((file-exists-p pls-path))
               (zr-local-pls (plstore-open pls-path))
-              (host (concat "litellm." (plist-get (cdr (plstore-get zr-local-pls "host")) :main)))
+              (host (plist-get (cdr (plstore-get zr-local-pls "host")) :main))
               (litellm-path (expand-file-name "litellm/20251210T201813--litellm__server.org" zr-dotfiles-dir))
               (main-models (if (file-exists-p litellm-path)
                                (mapcar #'intern
@@ -2832,9 +2832,13 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
                                 deepseek-r1
                                 deepseek-v3.2))))
     (plstore-close zr-local-pls)
+    (gptel-make-gemini "gemini"
+      :host (concat "cpa." host)
+      :key #'gptel-api-key
+      :stream t)
     (setq gptel-model (car main-models)
           gptel-backend (gptel-make-openai "general"
-                          :host host
+                          :host (concat "litellm." host)
                           :key #'gptel-api-key
                           :endpoint "/v1/chat/completions"
                           :models main-models
