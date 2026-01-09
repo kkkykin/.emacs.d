@@ -2783,7 +2783,7 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   :init
   (define-key zr-menu [gptel] '(menu-item "gptel" gptel-send))
   :custom
-  (gptel-curl-extra-args '("--compressed" "-H" "AH-Thread-Id: emacs"))
+  (gptel-curl-extra-args '("--compressed" "-H" "x-litellm-tags: general"))
   (gptel-default-mode 'org-mode)
   (gptel-org-branching-context t)
   :config
