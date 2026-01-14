@@ -1078,12 +1078,16 @@ before calling the original function."
 
 (use-package js
   :custom
-  (js-indent-level 2)
+  (js-indent-level 4)
   :init
   (with-eval-after-load 'autoinsert
     (add-to-list 'auto-insert-alist
                  '(("\\.js\\'" . "strict mode")
                    nil "\"use strict\"" n "(() => {" n > _ 10 "})();"))))
+
+(use-package json-ts-mode
+  :custom
+  (json-ts-mode-indent-offset js-indent-level))
 
 (use-package dired
   :custom
