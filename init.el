@@ -1087,7 +1087,7 @@ before calling the original function."
 
 (use-package json-ts-mode
   :custom
-  (json-ts-mode-indent-offset js-indent-level))
+  (json-ts-mode-indent-offset 4))
 
 (use-package dired
   :custom
@@ -2942,7 +2942,7 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
     ("s" . el-search-pattern)
     ("r" . el-search-pattern-backward))
   :config
-  (el-search-install-shift-bindings))
+  (el-search-install-bindings-under-prefix [(meta ?s) ?e]))
 
 (use-package atomic-chrome
   :if (package-installed-p 'atomic-chrome)
