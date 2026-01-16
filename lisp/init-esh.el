@@ -147,7 +147,7 @@ terminal."
       (with-temp-buffer
         (insert-file-contents-literally file nil 0 maxlen)
         (when (looking-at "#!\\(?:/usr\\)?/bin/env -S \\(.+\\)")
-          (when-let* ((cmd (match-string 1)))
+          (when-let* ((cmd (string-trim (match-string 1))))
             (setq interp (split-string-shell-command cmd))))))
     (unless interp
       (setq interp (alist-get (file-name-extension file)
