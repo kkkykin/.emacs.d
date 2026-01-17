@@ -942,6 +942,12 @@ before calling the original function."
     (zr-setup-news-url-list level)
     (newsticker-start t)))
 
+(use-package shr
+  :custom
+  (shr-cookie-policy nil)
+  (shr-inhibit-images t)
+  (shr-use-xwidgets-for-media t))
+
 (use-package eww
   :bind
   ( :map eww-bookmark-mode-map
@@ -954,9 +960,6 @@ before calling the original function."
   (eww-search-prefix "https://www.mojeek.com/search?newtab=1&cdate=1&qss=DuckDuckGo&date=1&sst=1&arc=none&q=" "https://wiby.org/?q=")
   (eww-auto-rename-buffer 'title)
   (eww-readable-adds-to-history nil)
-  (shr-cookie-policy nil)
-  (shr-use-xwidgets-for-media t)
-  (shr-blocked-images (concat "^https?://" (rx (| "www.baidu.com"))))
   :config
   (setq-mode-local eww-bookmark-mode
                    goal-column (1+ (/ (window-width) 2))))
