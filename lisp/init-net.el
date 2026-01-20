@@ -291,17 +291,14 @@
       (apply fn method url args))))
 
 (defcustom zn/pac-data-file
-  (expand-file-name "surfingkeys/pac.json.gpg" zr-dotfiles-dir)
+  (expand-file-name "pac.json" zr-dotfiles-dir)
   "PAC data file path."
   :type 'file)
 (add-to-list 'zr-dotfiles-dir-followd-by-vars 'zn/pac-data-file)
 
 (defun zn/read-proxy-rules ()
   (with-temp-buffer
-    (insert-file-contents-literally zn/pac-data-file)
-    (when (string-match-p epa-file-name-regexp zn/pac-data-file)
-      (let ((epa-replace-original-text t))
-        (epa-decrypt-region (point-min) (point-max))))
+    (call-process "sops" nil t nil "-d" zn/pac-data-file)
     (goto-char 1)
     (json-parse-buffer)))
 
