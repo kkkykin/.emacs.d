@@ -25,7 +25,7 @@
   ([remap downcase-word] . downcase-dwim)
   ([remap capitalize-word] . capitalize-dwim)
   :custom
-  (elisp-fontify-semantically t)
+  (elisp-fontify-semantically nil)
   (mode-line-compact t)
   (mode-line-frame-identification nil)
   (mode-line-client nil)
@@ -1950,6 +1950,7 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
     :exit
     ("u" . org-up-element))
   :custom
+  (org-odd-levels-only t)
   (org-read-date-popup-calendar nil)
   (org-fontify-done-headline nil)
   ;; (org-replace-disputed-keys t "see `'org-disputed-keys'")
@@ -1963,16 +1964,12 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   (org-use-sub-superscripts '{})
   (org-startup-folded t)
   (org-cycle-hide-block-startup t)
-  (org-refile-use-cache nil)
-  (org-outline-path-complete-in-steps nil)
-  (org-refile-use-outline-path 'file)
-  (org-refile-allow-creating-parent-nodes 'confirm)
-  (org-archive-mark-done nil)
-  (org-archive-location "_archive/%s::* Archive")
+  (org-archive-mark-done t)
+  (org-archive-location "archive/%s::datetree/")
   (org-use-fast-todo-selection 'expert)
   (org-treat-S-cursor-todo-selection-as-state-change nil)
   (org-todo-keywords
-   '((sequence "TODO(t)" "WAITING(w@/!)" "STARTED(s!)" "|" "DONE(d!)" "OBSOLETE(o@)")))
+   '((sequence "TODO(t)" "WAIT(w@/!)" "DOING(i!)" "|" "DONE(d!)" "OBSOLETE(o@)")))
   (org-fast-tag-selection-include-todo t)
   (org-track-ordered-property-with-tag t)
   (org-tag-alist '(;; locale
@@ -1988,6 +1985,7 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
                    ("tiny" . ?t)
                    (:endgroup)
                    ;; misc
+                   ("norefile")
                    ("noexport")
                    ("meta")
                    ("review")
@@ -2051,6 +2049,7 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   (org-clock-in-resume t)
   (org-timer-default-timer 5)
   (org-clock-clocked-in-display 'frame-title)
+  (org-clock-in-switch-to-state "DOING")
   :init
   (put 'org-timer-default-timer 'safe-local-variable #'natnump)
   :config
@@ -2083,6 +2082,7 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   (:map global-map
         ("C-c a" . org-agenda))
   :custom
+  (org-agenda-files (list org-directory))
   (org-agenda-compact-blocks t)
   (org-agenda-sticky t)
   (org-agenda-start-on-weekday nil)
@@ -2099,11 +2099,22 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   ;; (org-agenda-use-tag-inheritance nil)
   ;; (org-agenda-ignore-properties '(effort appt stats category))
   (org-agenda-custom-commands
-   '(("n" "Agenda and All Todos"
-      ((agenda)
-       (todo)))
-     ("w" "Work" agenda ""
-      ((org-agenda-files '("work.org"))))))
+   `(("w" "Work"
+      ((agenda "")
+       (todo "TODO")
+       (todo "DOING"))
+      nil
+      (,(expand-file-name "work.org" org-directory)))
+     ("p" "Personal"
+      ((agenda "")
+       (todo "TODO")
+       (todo "DOING"))
+      nil
+      (,(expand-file-name "personal.org" org-directory)))
+     ("a" "All"
+      ((agenda "")
+       (todo "TODO")
+       (todo "DOING")))))
   :config
   (org-agenda-to-appt t))
 
@@ -2113,19 +2124,30 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
         ("C-c c" . org-capture))
   :custom
   (org-capture-templates
-   '(("c" "Default" entry (file "inbox.org")
-      "* %?\n%U\n%i")
-     ("a" "Agenda" entry (file "agenda.org")
-      "* TODO %?\n%U\n%i")
-     ("r" "Reference" entry (file "inbox.org")
-      "* %?\n%U\n%i\n%a")
-     ("l" "Clocking" entry (clock) nil)
-     ;; Define a section
-     ("w" "Work")
-     ("wm" "Work meeting" entry (file+headline "work.org" "Meetings")
-      "** TODO %?\n%U\n%i\n%a")
-     ("wr" "Work report" entry (file+headline "work.org" "Reports")
-      "** TODO %?\n%U\n%i\n%a"))))
+   `(("j" "Journal" entry
+      (file+olp+datetree ,(expand-file-name "journal.org" org-directory))
+      "* %?\nEntered on %T\n%a\n")
+
+     ("p" "Personal" entry
+      (file+headline ,(expand-file-name "personal.org" org-directory) "Inbox")
+      "* TODO %?\n%T\n%a\n")
+
+     ("w" "Work" entry
+      (file+headline ,(expand-file-name "work.org" org-directory) "Inbox")
+      "* TODO %?\n%T\n%a\n"))))
+
+(use-package org-refile
+  :custom
+  (org-log-refile 'time)
+  (org-refile-use-cache t)
+  (org-refile-active-region-within-subtree t)
+  (org-outline-path-complete-in-steps nil)
+  (org-refile-targets '((org-agenda-files . (:maxlevel 1))))
+  (org-refile-use-outline-path 'file)
+  (org-refile-allow-creating-parent-nodes 'confirm)
+  (org-refile-target-verify-function
+   (lambda ()
+     (not (member "norefile" (org-element-property :tags (org-element-at-point)))))))
 
 (use-package org-src
   :custom
@@ -2458,41 +2480,14 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
      :map zr-dired-spc-prefix-map
      ("r" . denote-dired-rename-files)
      ("R" . denote-dired-rename-marked-files-with-keywords)))
-  (with-eval-after-load 'org-capture
-    (dolist (c '(("s" "denote subdir" plain
-                  (file denote-last-path)
-                  (function
-                   (lambda ()
-                     (denote-org-capture-with-prompts :title :keywords :subdirectory)))
-                  . #1=( :no-save t
-                         :immediate-finish nil
-                         :kill-buffer t
-                         :jump-to-captured t))
-                 ("d" "denote date" plain
-                  (file denote-last-path)
-                  (function
-                   (lambda ()
-                     (denote-org-capture-with-prompts :title :keywords :date)))
-                  . #1#)
-                 ("n" "denote" plain
-                  (file denote-last-path)
-                  #'denote-org-capture
-                  . #1#)
-                 ("j" "denote journal" entry
-                  (function denote-journal-extras-new-or-existing-entry)
-                  "* %<%T>\n%a\n%i\n%?"
-                  . #1#)))
-      (add-to-list 'org-capture-templates c))
-    (setq denote-org-capture-specifiers "%l\n%i\n%?"))
   :custom
   (denote-backlinks-show-context t)
-  (denote-known-keywords '("emacs" "entertainment" "reading" "studying" "work"))
   (denote-date-prompt-use-org-read-date t)
   (denote-infer-keywords t)
   (denote-sort-keywords t)
   (denote-prompts '(title keywords))
   (denote-date-format nil)
-  (denote-excluded-directories-regexp "_archive")
+  (denote-excluded-directories-regexp (rx bos (| "archive" "local") eos))
   :hook
   ((dired-mode . denote-dired-mode)
    (find-file . denote-fontify-links-mode-maybe))
