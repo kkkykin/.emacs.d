@@ -2701,6 +2701,13 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
     ("<f6>" . org-srs-review-rate-good)
     ("<f7>" . org-srs-review-rate-hard)
     ("<f8>" . org-srs-review-rate-again))
+  :init
+  (with-eval-after-load 'org-capture
+    (add-to-list 'org-capture-templates
+                 `("s" "SRS" entry
+                   (file+headline ,(expand-file-name "srs.org" org-directory) "Inbox")
+                   "*** %?\n%a\n"
+                   :before-finalize (org-srs-item-create))))
   :config
   (when zr-sys-android-p
     (setq org-srs-item-confirm #'org-srs-item-confirm-command)
