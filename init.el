@@ -1471,6 +1471,7 @@ before calling the original function."
   (gnus-init-file (expand-file-name ".gnus.gpg" gnus-home-directory))
   (gnus-sieve-file (expand-file-name ".sieve" gnus-home-directory))
   (gnus-use-full-window nil)
+  (gnus-inhibit-images t)
   (gnus-save-newsrc-file nil)
   (gnus-read-newsrc-file nil)
   (gnus-use-trees t)
