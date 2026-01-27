@@ -1233,7 +1233,9 @@ before calling the original function."
   (define-key zr-menu [dictionary-search]
               '(menu-item "dictionary-search" dictionary-search))
   :custom
-  (dictionary-server "dict.tw")
+  (dictionary-server (or (auth-source-pick-first-password
+                          :host "dico-server" :user "default")
+                         "dict.tw"))
   (dictionary-use-single-buffer t))
 
 (use-package epg
