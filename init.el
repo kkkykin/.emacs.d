@@ -2705,6 +2705,10 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
     ("<f8>" . org-srs-review-rate-again))
   :init
   (with-eval-after-load 'org-capture
+    (add-hook 'org-capture-mode-hook
+              (lambda ()
+                (when (looking-at (rx "\n\[\[dict:" (group (1+ anychar)) "]["))
+                  (insert (match-string 1)))))
     (add-to-list 'org-capture-templates
                  `("s" "SRS" entry
                    (file+headline ,(expand-file-name "srs.org" org-directory) "Inbox")
