@@ -660,6 +660,61 @@ It behaves differently based on the current context:
    :map viper-vi-global-user-map
    ([remap org-open-at-point-global] . zo/exec-link-or-babel-nearby)))
 
+;; ol
+
+(defun zr-ol-dict-open (path _)
+  "Follow a dict: link by searching PATH via `dictionary-search`."
+  (dictionary-search path))
+
+(defun zr-ol-dict--google-translate-url (word)
+  "Build a Google Translate URL for WORD.
+Default: auto-detect source language, translate to zh-CN."
+  (format "https://translate.google.com/?sl=auto&tl=zh-CN&text=%s&op=translate"
+          (url-hexify-string word)))
+
+(defun zr-ol-dict-export (word description format _)
+  "Export a dict:WORD link to a Google Translate URL."
+  (let* ((url  (zr-ol-dict--google-translate-url word))
+         (desc (or description word)))
+    (pcase format
+      (`html    (format "<a target=\"_blank\" href=\"%s\">%s</a>" url desc))
+      (`latex   (format "\\href{%s}{%s}" url desc))
+      (`texinfo (format "@uref{%s,%s}" url desc))
+      (`ascii   (format "%s (%s)" desc url))
+      (_ url))))
+
+(defun zr-ol-dict--extract-word-from-current-data ()
+  "Try to extract the word from `dictionary-current-data`."
+  (cond
+   ((and (consp dictionary-current-data)
+         (eq (car dictionary-current-data) 'dictionary-new-search-internal)
+         (stringp (cadr dictionary-current-data)))
+    (cadr dictionary-current-data))
+
+   (t nil)))
+
+(defun zr-ol-dict-store-link (&optional _interactive?)
+  "Store a link to the current Dictionary search.
+It reads WORD from `dictionary-current-data` and stores dict:WORD."
+  (when (and (boundp 'dictionary-current-data)
+             dictionary-current-data
+             (derived-mode-p 'dictionary-mode))
+    (let* ((word (zr-ol-dict--extract-word-from-current-data))
+           (link (and word (concat "dict:" word)))
+           (desc (and word (format "Dict: %s" word))))
+      (when word
+        (org-link-store-props
+         :type "dict"
+         :link link
+         :description desc)
+        link))))
+
+(with-eval-after-load 'ol
+  (org-link-set-parameters "dict"
+                           :follow #'zr-ol-dict-open
+                           :export #'zr-ol-dict-export
+                           :store  #'zr-ol-dict-store-link))
+
 (provide 'init-org)
 ;;; init-org.el ends here
 

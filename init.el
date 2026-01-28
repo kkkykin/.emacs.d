@@ -2712,7 +2712,7 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
     (add-to-list 'org-capture-templates
                  `("s" "SRS" entry
                    (file+headline ,(expand-file-name "srs.org" org-directory) "Inbox")
-                   "*** %?\n%a\n"
+                   "*** %?\n%a\n%i"
                    :before-finalize (org-srs-item-create))))
   :config
   (when zr-sys-android-p
