@@ -2231,11 +2231,13 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
                 (cl-delete-if (lambda (a) (memq a '( :noweb :results
                                                 :comments :eval)))
                               org-babel-default-header-args :key #'car)))
+  (setq org-babel-default-header-args:diff '((:comments . "no")))
   (with-eval-after-load 'ob-org
     (dolist (l '("conf"
                  "conf-space"
                  "conf-unix"
                  "conf-windows"
+                 "diff"
                  "json"
                  "caddy"
                  "text"
