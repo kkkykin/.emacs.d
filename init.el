@@ -1551,6 +1551,7 @@ before calling the original function."
                 (remove 'tab-bar-format-global tab-bar-format))
       (add-to-list 'tab-bar-format 'tab-bar-format-global)
       (setopt tab-bar-show t)))
+  (zr-tab-bar-format-setup)
   (add-hook 'server-after-make-frame-hook #'zr-tab-bar-format-setup)
   (unless zr-sys-android-gui-p
     (setq tab-bar-close-button-show nil))
@@ -1679,6 +1680,12 @@ before calling the original function."
   (recentf-max-saved-items 1000)
   (recentf-exclude `("/data/data/com\\.termux/files/usr/tmp" "/tmp/" "/ssh:"
                      "/sshx:" ,(file-name-concat package-user-dir ".*-autoloads\\.el\\'"))))
+
+(use-package term
+  :hook
+  ((term-mode . (lambda ()
+                  (tab-line-mode -1)
+                  (setq mode-line-format nil)))))
 
 (use-package term/xterm
   :custom
