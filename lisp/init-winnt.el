@@ -406,6 +406,7 @@ remote directory."
     (connection-local-set-profiles
      '(:application tramp) 'winnt-fix-coding-system-profile))
   (setq find-ls-option '("-exec ls -ldh \"{}\" \";\" | iconv -f utf-8 -t gb18030 -cs" . "-ldh")
+        vc-git-commits-coding-system locale-coding-system
         process-coding-system-alist
         `(("cmdproxy" . ,locale-coding-system)
           ("ipconfig" . ,locale-coding-system)
