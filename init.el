@@ -764,6 +764,7 @@
 (use-package vc
   :custom
   (vc-git-diff-switches '("--textconv"))
+  (vc-async-checkin t)
   (vc-display-status 'no-backend)
   (vc-handled-backends '(Git SVN))
   (vc-command-messages 'log))
