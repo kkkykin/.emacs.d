@@ -54,6 +54,40 @@
 
 ;; org-protocol
 
+(defun zo/protocol-win-command ()
+  "Return expected registry command string."
+  (let ((p (subst-char-in-string ?/ ?\\ (executable-find "emacsclientw"))))
+    (format "\"%s\" \"%%1\"" p)))
+
+(defun zo/protocol-register ()
+  "Create/overwrite org-protocol registry entries (per-user, HKCU\\Software\\Classes)."
+  (interactive)
+  (pcase system-type
+    ('windows-nt
+     (let ((base "HKCU\\Software\\Classes\\org-protocol")
+           (cmd (zo/protocol-win-command)))
+       (call-process "reg" nil nil nil
+                     "add" base "/ve" "/t" "REG_SZ" "/d" "URL:Org Protocol" "/f")
+       (call-process "reg" nil nil nil
+                     "add" base "/v" "URL Protocol" "/t" "REG_SZ" "/d" "" "/f")
+       (call-process "reg" nil nil nil
+                     "add" (concat base "\\shell\\open\\command")
+                     "/ve" "/t" "REG_SZ" "/d" cmd "/f")))))
+
+(defun zo/protocol-ensure ()
+  "Ensure org-protocol registry entries exist; create if missing."
+  (pcase system-type
+    ('windows-nt
+     (let* ((current (w32-read-registry 'HKCR
+                                        "org-protocol/shell/open/command"
+                                        ""))
+            (expected (zo/protocol-win-command)))
+       (when (or (null current)
+                 (not (string= current expected)))
+         (zo/protocol-register))))))
+
+(add-hook 'after-init-hook #'zo/protocol-ensure)
+
 (defun zo/protocol-cookies-dumper (info)
   (server-delete-client (car server-clients))
   (let* ((parts (org-protocol-parse-parameters info t))
