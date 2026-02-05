@@ -2134,10 +2134,28 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   (:map global-map
         ("C-c c" . org-capture))
   :custom
+  (org-protocol-default-template-key "c")
   (org-capture-templates
    `(("j" "Journal" entry
       (file+olp+datetree ,(expand-file-name "journal.org" org-directory))
       "* %?\nEntered on %T\n%a\n")
+
+     ("c"
+      "org protocol"
+      entry
+      (file+headline ,(expand-file-name "protocol.org" org-directory) "Inbox")
+      ,(string-join
+        '("* %:description"
+          ":PROPERTIES:"
+          ":CREATED: %U"
+          ":END:"
+          "%:annotation"
+          "%i"
+          ""
+          "%?")
+        "\n")
+      :prepend t
+      :empty-lines 1)
 
      ("p" "Personal" entry
       (file+headline ,(expand-file-name "personal.org" org-directory) "Inbox")
