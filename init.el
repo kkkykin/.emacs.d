@@ -2114,14 +2114,12 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
       ((agenda "")
        (todo "TODO")
        (todo "DOING"))
-      nil
-      (,(expand-file-name "work.org" org-directory)))
+      ((org-agenda-files (list (expand-file-name "work.org" org-directory)))))
      ("p" "Personal"
       ((agenda "")
        (todo "TODO")
        (todo "DOING"))
-      nil
-      (,(expand-file-name "personal.org" org-directory)))
+      ((org-agenda-files (list (expand-file-name "personal.org" org-directory)))))
      ("a" "All"
       ((agenda "")
        (todo "TODO")
