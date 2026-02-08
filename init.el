@@ -985,6 +985,9 @@ before calling the original function."
                  ("Bili" .
                   [simple-query "https://www.bilibili.com"
                                 "https://search.bilibili.com/all?keyword=" ""])
+                 ("Galgame" .
+                  [simple-query "https://www.searchgal.top"
+                                "https://www.searchgal.top/?s=" ""])
                  ("NixHome" .
                   [simple-query "https://home-manager-options.extranix.com"
                                 "https://home-manager-options.extranix.com/?query=" ""])
