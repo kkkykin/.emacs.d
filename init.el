@@ -1351,9 +1351,6 @@ before calling the original function."
    (diary-mark-entries . diary-mark-included-diary-files)))
 
 (use-package image
-  :bind
-  ( :map image-map
-    ("k" . image-kill-buffer))
   :custom
   (image-dired-external-viewer "ffplay -fs -an -noborder")
   (image-use-external-converter t)
@@ -1361,6 +1358,11 @@ before calling the original function."
   (doc-view-resolution 300)
   :config
   (add-to-list 'image-file-name-extensions "avif"))
+
+(use-package image-mode
+  :bind
+  ( :map image-mode-map
+    ("k" . image-kill-buffer)))
 
 (use-package eglot
   ;; :bind
