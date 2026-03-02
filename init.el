@@ -1240,7 +1240,9 @@ before calling the original function."
   (dictionary-server (or (auth-source-pick-first-password
                           :host "dico-server" :user "default")
                          "dict.tw"))
-  (dictionary-use-single-buffer t))
+  (dictionary-use-single-buffer t)
+  :config
+  (setq dictionary-port (+ 10000 dictionary-port)))
 
 (use-package epg
   :config
