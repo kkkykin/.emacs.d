@@ -973,6 +973,9 @@ before calling the original function."
   (dolist (web '(("Mojeek" .
                   [simple-query "https://www.mojeek.com"
                                 "https://www.mojeek.com/search?newtab=1&cdate=1&qss=Brave,DuckDuckGo,Google,Metager,Swisscows,Yandex,Yep&date=1&sst=1&arc=none&q=" ""])
+                 ("game-nite07" .
+                  [simple-query "https://game.nite07.com"
+                                "https://game.nite07.com/search?key=" ""])
                  ("Yandex" .
                   [simple-query "https://yandex.com"
                                 "https://yandex.com/search/?text=" ""])
