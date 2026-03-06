@@ -3006,4 +3006,12 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   (add-hook 'atomic-chrome-edit-mode-hook
             (lambda () (when viper-mode (viper-mode))) 1))
 
+(use-package kkp
+  :if (package-installed-p 'kkp)
+  :vc (:url "https://github.com/OrbitalHustler/kkp" :rev :newest)
+  :hook
+  ((emacs-startup . global-kkp-mode))
+  :custom
+  (kkp-terminal-query-timeout 2))
+
 ;;; init.el ends here
