@@ -2668,6 +2668,16 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
 (use-package mpvi :after emms
   :if (package-installed-p 'mpvi))
 
+(use-package plz
+  :if (package-installed-p 'plz)
+  :custom
+  (plz-connect-timeout 10))
+
+(use-package ement
+  :if (package-installed-p 'ement)
+  :hook
+  ((ement-room-compose . ement-room-compose-org)))
+
 (use-package devdocs-browser
   :if (package-installed-p 'devdocs-browser)
   :bind
