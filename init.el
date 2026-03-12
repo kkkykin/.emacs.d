@@ -571,7 +571,6 @@
 (use-package etags-regen
   :if (and (package-installed-p 'etags-regen)
            (not zr-sys-android-p))
-  :hook emacs-startup
   :custom
   (etags-regen-tags-file "_tags")
   (etags-regen-regexp-alist
