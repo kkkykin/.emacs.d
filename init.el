@@ -785,6 +785,7 @@
   (python-shell-dedicated t)
   :config
   (when (executable-find "uv")
+    (setenv "UV_DEFAULT_INDEX" "https://mirrors.cloud.tencent.com/pypi/simple/")
     (setq python-interpreter "uv"
           python-interpreter-args "run --with isort --with pyflakes python")
     (when zr-sys-winnt-p
