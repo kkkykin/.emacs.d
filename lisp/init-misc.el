@@ -1223,5 +1223,17 @@ The merged result is written to OUTPUT-FILE."
             (push pair result)))))
     result))
 
+(defun zr-sops-file-contents (file)
+  "Return the decrypted contents of FILE using sops."
+  (when (file-exists-p file)
+    (with-temp-buffer
+      (call-process "sops" nil t nil "-d" file)
+      (buffer-string))))
+
+(defun zr-sops-parse-json (file)
+  "Parse and return the decrypted contents of FILE as JSON."
+  (when-let* ((s (zr-sops-file-contents file)))
+    (json-parse-string s)))
+
 (provide 'init-misc)
 ;;; init-misc.el ends here
