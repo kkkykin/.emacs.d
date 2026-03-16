@@ -3002,6 +3002,10 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   :config
   (el-search-install-bindings-under-prefix [(meta ?s) ?e]))
 
+(use-package ewv
+  :if (package-installed-p 'ewv)
+  :vc (:url "https://github.com/heartnheart/ewv" :rev :newest))
+
 (use-package atomic-chrome
   :if (package-installed-p 'atomic-chrome)
   :vc (:url "https://github.com/KarimAziev/atomic-chrome" :rev :newest)
