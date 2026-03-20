@@ -2595,6 +2595,24 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   (setq-mode-local powershell-mode
                    buffer-file-coding-system 'utf-8-with-signature))
 
+(use-package clutch
+  :if (package-installed-p 'clutch)
+  :vc (:url "https://github.com/LuciusChen/clutch" :rev :newest)
+  :config
+  (when sql-connection-alist
+    (dolist (con sql-connection-alist)
+      (let ((name (car con))
+            (prop (cdr con)))
+        (add-to-list
+         'clutch-connection-alist
+         (cons name
+               `( :backend ,(eval (car-safe (alist-get 'sql-product prop)))
+                  :host ,(car-safe (alist-get 'sql-server prop))
+                  :port ,(car-safe (alist-get 'sql-port prop))
+                  :user ,(car-safe (alist-get 'sql-user prop))
+                  :password ,(car-safe (alist-get 'sql-password prop))
+                  :database ,(car-safe (alist-get 'sql-database prop)))))))))
+
 (use-package sqlformat
   :if (package-installed-p 'sqlformat)
   :init
