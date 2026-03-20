@@ -3048,4 +3048,12 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   :custom
   (kkp-terminal-query-timeout 2))
 
+(use-package kitty-graphics
+  :if (and (package-installed-p 'kitty-graphics)
+           (equal (getenv "TERM_PROGRAM") "WezTerm"))
+  :vc (:url "https://github.com/cashmeredev/kitty-graphics.el" :rev :newest)
+  :defer 2
+  :config
+  (kitty-graphics-mode 1))
+
 ;;; init.el ends here
