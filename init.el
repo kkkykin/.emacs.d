@@ -2326,6 +2326,8 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   :custom
   ;; (package-install-upgrade-built-in t)
   ;; (package-pinned-packages nil)
+  (package-review-policy t)
+  (package-review-diff-command '("git" "diff" "--no-index" "--color=never" "--diff-filter=d"))
   (package-quickstart t)
   (package-quickstart-file (locate-user-emacs-file "_package-quickstart.el"))
   (package-archives '(("gnu" . "https://mirrors.ustc.edu.cn/elpa/gnu/")
