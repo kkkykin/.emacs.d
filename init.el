@@ -3053,6 +3053,7 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
            (equal (getenv "TERM_PROGRAM") "WezTerm"))
   :vc (:url "https://github.com/cashmeredev/kitty-graphics.el" :rev :newest)
   :defer 2
+  :diminish
   :config
   (kitty-graphics-mode 1))
 
