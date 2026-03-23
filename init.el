@@ -2789,7 +2789,12 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   :if (package-installed-p 'ox-pandoc)
   :after org
   :custom
-  (org-pandoc-options-for-latex-pdf '((pdf-engine . "tectonic"))))
+  (org-pandoc-options-for-latex-pdf '((pdf-engine . "tectonic")))
+  :config
+  (when-let* (((bound-and-true-p zr-dotfiles-dir))
+              (ref (expand-file-name "pandoc/data/reference.docx" zr-dotfiles-dir))
+              ((file-exists-p ref)))
+    (setq org-pandoc-options-for-docx `((reference-doc . ,ref)))))
 
 ;; [[elisp:(custom-reevaluate-setting 'org-pandoc-options)]]
 
