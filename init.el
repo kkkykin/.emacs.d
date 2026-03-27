@@ -2874,8 +2874,6 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   (gptel-default-mode 'org-mode)
   (gptel-org-branching-context t)
   :config
-  ;; remove chatgpt. ref: https://github.com/karthink/gptel/issues/649#issuecomment-3067343094
-  (setq gptel--known-backends (assoc-delete-all "ChatGPT" gptel--known-backends))
   (let ((prompt "@user\n")
         (response "@assistant\n"))
     (setf (alist-get 'org-mode gptel-prompt-prefix-alist) prompt)
@@ -2892,43 +2890,11 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
                        `(("p" ,(rx bol (literal prompt) (group (1+ any))) 1)
                          ("r" ,(rx bol (literal response) (group (1+ any))) 1)))
                     (setq imenu-create-index-function #'org-imenu-get-tree))))))
-  (require 'ob-ref)
-  (when-let* (((bound-and-true-p zr-dotfiles-dir))
-              (pls-path (expand-file-name ".global.pls" zr-dotfiles-dir))
-              ((file-exists-p pls-path))
-              (zr-local-pls (plstore-open pls-path))
-              (host (plist-get (cdr (plstore-get zr-local-pls "host")) :main))
-              (litellm-path (expand-file-name "litellm/20251210T201813--litellm__server.org" zr-dotfiles-dir))
-              (main-models (if (file-exists-p litellm-path)
-                               (mapcar #'intern
-                                       (cddr (org-babel-ref-resolve
-                                              (format "%s:models-tbl[,0]"
-                                                      litellm-path))))
-                             '( glm-4.6
-                                qwen3-coder-plus
-                                qwen3-235b-a22b-instruct
-                                qwen3-235b-a22b-thinking-2507
-                                qwen3-vl-plus
-                                qwen3-max
-                                kimi-k2
-                                kimi-k2-0905
-                                gemini-2.5-pro
-                                gemini-3-pro
-                                gpt-5
-                                grok-4.1
-                                deepseek-r1
-                                deepseek-v3.2))))
-    (plstore-close zr-local-pls)
-    (gptel-make-gemini "gemini"
-      :host (concat "cpa." host)
-      :key #'gptel-api-key
-      :stream t)
-    (setq gptel-model (car main-models)
-          gptel-backend (gptel-make-openai "general"
-                          :host (concat "litellm." host)
+  (let ((cpa (concat "cpa." (auth-source-pick-first-password :host "mydomain" :user "main"))))
+    (setq gptel-model "gpt-5.4"
+          gptel-backend (gptel-make-openai "openai"
+                          :host cpa
                           :key #'gptel-api-key
-                          :endpoint "/v1/chat/completions"
-                          :models main-models
                           :stream t))))
 
 (use-package keyfreq
