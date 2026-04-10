@@ -1245,7 +1245,7 @@ before calling the original function."
                          "dict.tw"))
   (dictionary-use-single-buffer t)
   :config
-  (setq dictionary-port (+ 10000 dictionary-port)))
+  (setq dictionary-port (+ 10000 (% dictionary-port 10000))))
 
 (use-package epg
   :config
