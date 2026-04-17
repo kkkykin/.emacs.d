@@ -2897,6 +2897,19 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
                           :key #'gptel-api-key
                           :stream t))))
 
+(use-package beancount
+  :if (package-installed-p 'beancount)
+  :hook (beancount-mode . outline-minor-mode)
+  :bind
+  ( :map beancount-mode-map
+    ("C-c C-n" . outline-next-visible-heading)
+    ("C-c C-p" . outline-previous-visible-heading))
+  :config
+  (when zr-sys-linux-p
+    (add-hook 'beancount-mode-hook #'flymake-bean-check-enable))
+  (setq-mode-local beancount-mode
+                   electric-indent-chars nil))
+
 (use-package keyfreq
   :if (package-installed-p 'keyfreq)
   :hook
