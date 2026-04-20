@@ -2869,8 +2869,56 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   :if (package-installed-p 'gptel)
   :init
   (define-key zr-menu [gptel] '(menu-item "gptel" gptel-send))
+  (define-multisession-variable zr-gptel-cpa-info nil
+    "CPA infomation for gptel."
+    :package "init")
+  (defun zr-gptel-update-info ()
+    (interactive)
+    (let* ((host (concat "cpa." (auth-source-pick-first-password :host "mydomain" :user "main")))
+           (key (auth-source-pick-first-password :host host :user "apikey"))
+           (url-request-method "GET")
+           (url-request-extra-headers
+            `(("Content-Type" . "application/json")
+              ("Authorization" . ,(concat "Bearer " key)))))
+      ;; ref: https://github.com/karthink/gptel/issues/1330
+      (url-retrieve
+       (format "https://%s/v1/models" host)
+       (lambda (status)
+		 (let ((http-code (url-http-parse-response)))
+           (cond
+            ((plist-get status :error)
+             (user-error "Model update Error: connection failed"))
+            ((not (eq http-code 200))
+             (user-error "Model update Error: %d %s"
+                         http-code
+                         (caddr (assoc http-code url-http-codes))))
+            (t
+             (with-current-buffer (current-buffer)
+               (goto-char url-http-end-of-headers)
+               (let* ((res (condition-case nil
+                               (json-parse-buffer)
+                             (error (warn "Model update Error: Could not parse JSON"))))
+                      (data (gethash "data" res))
+                      main-model
+                      models)
+                 (mapc
+                  (lambda (m)
+                    (when (and (string= "model" (gethash "object" m))
+                               (not (string-match-p (rx bos (| "debug" "disable") ?-)
+                                                    (gethash "owned_by" m))))
+                      (let ((id (gethash "id" m)))
+                        (when (string-suffix-p "kimi-k2" id)
+                          (setq main-model id))
+                        (push id models))))
+                  data)
+                 (setf (multisession-value zr-gptel-cpa-info)
+                       `((host . ,host)
+                         (main-model . ,main-model)
+                         (models . ,models)))
+                 (message "Model update successed."))))))))))
+  ;; (run-with-idle-timer 3 nil #'zr-gptel-update-models)
   :custom
-  (gptel-curl-extra-args '("--compressed" "-H" "x-litellm-tags: general"))
+  (gptel-curl-extra-args '("--compressed"))
   (gptel-default-mode 'org-mode)
   (gptel-org-branching-context t)
   :config
@@ -2890,12 +2938,22 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
                        `(("p" ,(rx bol (literal prompt) (group (1+ any))) 1)
                          ("r" ,(rx bol (literal response) (group (1+ any))) 1)))
                     (setq imenu-create-index-function #'org-imenu-get-tree))))))
-  (let ((cpa (concat "cpa." (auth-source-pick-first-password :host "mydomain" :user "main"))))
-    (setq gptel-model "gpt-5.4"
-          gptel-backend (gptel-make-openai "openai"
-                          :host cpa
-                          :key #'gptel-api-key
-                          :stream t))))
+  (when-let* ((cpa (multisession-value zr-gptel-cpa-info))
+              (host "gateway.ai.cloudflare.com")
+              (cpa-prefix "custom-cpa/"))
+    (setq gptel-model (intern (concat cpa-prefix (alist-get 'main-model cpa)))
+          gptel-backend
+          (gptel-make-openai "cloudflare"
+            :host host
+            :key #'gptel-api-key
+            :endpoint
+            (format "/v1/%s/%s/compat/chat/completions"
+                    (auth-source-pick-first-password :host host :user "account-id")
+                    (auth-source-pick-first-password :host host :user "gateway-id"))
+            :models (mapcar
+                     (lambda (m) (intern (concat cpa-prefix m)))
+                     (alist-get 'models cpa))
+            :stream t))))
 
 (use-package beancount
   :if (package-installed-p 'beancount)
