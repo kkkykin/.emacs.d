@@ -1535,6 +1535,11 @@ before calling the original function."
 (use-package tab-bar
   :hook emacs-startup
   :bind
+  ( :map tab-bar-history-mode-map
+    ("C-x <left>" . tab-bar-history-back)
+    ("C-x <right>" . tab-bar-history-forward)
+    ("C-c <left>" . nil)
+    ("C-c <right>" . nil))
   (:repeat-map tab-bar-move-repeat-map
                ("G" . tab-group)
                ("0" . tab-close)
@@ -1780,6 +1785,10 @@ before calling the original function."
   :custom
   (outline-minor-mode-use-buttons 'in-margins)
   (outline-minor-mode-cycle t)
+  :bind
+  ( :repeat-map outline-mode-repeat-map
+    ("n" . outline-next-visible-heading)
+    ("p" . outline-previous-visible-heading))
   :config
   (require 'foldout))
 
@@ -2959,9 +2968,16 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   :if (package-installed-p 'beancount)
   :hook (beancount-mode . outline-minor-mode)
   :bind
-  ( :map beancount-mode-map
-    ("C-c C-n" . outline-next-visible-heading)
-    ("C-c C-p" . outline-previous-visible-heading))
+  ( :repeat-map beancount-mode-repeat-map
+    ("<left>" . beancount-date-down-day)
+    ("<right>" . beancount-date-up-day))
+  :hook
+  ((beancount-mode
+    . (lambda ()
+        (add-hook 'before-save-hook
+                  (lambda ()
+                    (beancount-align-numbers (point-min) (point-max)))
+                  nil t))))
   :config
   (when zr-sys-linux-p
     (add-hook 'beancount-mode-hook #'flymake-bean-check-enable))
