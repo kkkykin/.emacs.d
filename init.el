@@ -2916,7 +2916,7 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
                                (not (string-match-p (rx bos (| "debug" "disable") ?-)
                                                     (gethash "owned_by" m))))
                       (let ((id (gethash "id" m)))
-                        (when (string-suffix-p "kimi-k2" id)
+                        (when (string-suffix-p "gemini-3-flash-preview" id)
                           (setq main-model id))
                         (push id models))))
                   data)
