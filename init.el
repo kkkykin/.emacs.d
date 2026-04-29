@@ -2853,6 +2853,10 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
                    (list (format "-o%s" (car args))))))
       (apply orig-fun args))))
 
+(use-package komga-reader
+  :if (package-installed-p 'komga-reader)
+  :vc (:url "https://github.com/kkkykin/komga-reader"))
+
 (use-package fdroid
   :if (package-installed-p 'fdroid)
   :vc (:url "https://github.com/migalmoreno/fdroid.el"))
