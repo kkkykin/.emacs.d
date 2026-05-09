@@ -784,6 +784,7 @@
   (python-indent-block-paren-deeper t)
   (python-shell-dedicated t)
   :config
+  (setenv "PYTHON_BASIC_REPL" "1")      ; https://einar.codeberg.page/fix-python-mode-repl-problem.html
   (when (executable-find "uv")
     (setenv "UV_DEFAULT_INDEX" "https://mirrors.cloud.tencent.com/pypi/simple/")
     (setq python-interpreter "uv"
