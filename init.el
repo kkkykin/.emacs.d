@@ -2790,10 +2790,20 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
                    (file+headline ,(expand-file-name "srs.org" org-directory) "Inbox")
                    "*** %?\n%a\n%i"
                    :before-finalize (org-srs-item-create))))
+  :custom
+  (org-srs-review-cram-strategy
+   '(sort (ahead (+ due reviewing) (495966 52223)) interval))
+  (org-srs-item-confirm #'org-srs-item-confirm-command)
   :config
-  (when zr-sys-android-p
-    (setq org-srs-item-confirm #'org-srs-item-confirm-command)
-    (org-srs-ui-mode +1)))
+  (add-hook 'org-srs-review-continue-hook #'save-buffer)
+  (if zr-sys-android-p
+      (org-srs-ui-mode +1)
+    (org-srs-ui-header-line-mode +1)
+    (add-hook 'org-ctrl-c-ctrl-c-hook
+              (lambda ()
+                (when (org-srs-reviewing-p)
+                  (org-srs-item-confirm-command)
+                  t)))))
 
 (use-package ox-pandoc :defer 2
   :if (package-installed-p 'ox-pandoc)
