@@ -998,6 +998,9 @@ before calling the original function."
                  ("NixPackage" .
                   [simple-query "https://search.nixos.org/packages"
                                 "https://search.nixos.org/packages?from=0&size=50&sort=relevance&type=packages&query=" ""])
+                 ("NurPackage" .
+                  [simple-query "https://nur.nix-community.org/"
+                                "https://nur.nix-community.org/?query=" ""])
                  ("NixOption" .
                   [simple-query "https://search.nixos.org/options"
                                 "https://search.nixos.org/options?from=0&size=50&sort=relevance&type=packages&query=" ""])))
@@ -2871,6 +2874,10 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
 (use-package fdroid
   :if (package-installed-p 'fdroid)
   :vc (:url "https://github.com/migalmoreno/fdroid.el"))
+
+(use-package ghostel
+  :if (package-installed-p 'ghostel)
+  )
 
 (use-package agent-shell
   :if (package-installed-p 'agent-shell)
