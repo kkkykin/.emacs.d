@@ -1235,5 +1235,59 @@ The merged result is written to OUTPUT-FILE."
   (when-let* ((s (zr-sops-file-contents file)))
     (json-parse-string s)))
 
+;; wezterm
+(defconst zr-wezterm-chunk-size (* 32 1024))
+
+(defun zr-wezterm--osc (json)
+  (send-string-to-terminal
+   (format "\e]1337;SetUserVar=ZRTransport=%s\a"
+           (base64-encode-string json t))))
+
+(defun zr-wezterm-send-json (object)
+  "Send OBJECT to WezTerm."
+
+  (let* ((payload (json-serialize object))
+         (len (length payload))
+         (chunk-size zr-wezterm-chunk-size)
+         (id (org-id-new))
+         (total (ceiling (/ (float len) chunk-size)))
+         (ok nil))
+
+    (condition-case err
+        (progn
+          (zr-wezterm--osc
+           (json-serialize
+            `((op . "begin")
+              (id . ,id)
+              (total . ,total))))
+
+          (dotimes (i total)
+            (let ((start (* i chunk-size))
+                  (end (min len (+ (* i chunk-size)
+                                   chunk-size))))
+              (zr-wezterm--osc
+               (json-serialize
+                `((op . "chunk")
+                  (id . ,id)
+                  (seq . ,i)
+                  (data . ,(substring payload start end)))))))
+
+          (zr-wezterm--osc
+           (json-serialize
+            `((op . "end")
+              (id . ,id))))
+
+          (setq ok t))
+
+      (error
+       (ignore-errors
+         (zr-wezterm--osc
+          (json-serialize
+           `((op . "abort")
+             (id . ,id)))))
+       (signal (car err) (cdr err))))
+
+    ok))
+
 (provide 'init-misc)
 ;;; init-misc.el ends here
