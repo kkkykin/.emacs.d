@@ -2877,7 +2877,26 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
 
 (use-package ghostel
   :if (package-installed-p 'ghostel)
-  )
+  :init
+  (define-key zr-menu [ghostel] '(menu-item "ghostel" ghostel))
+  :bind
+  ( :map project-prefix-map
+    ("m" . ghostel-project)
+    ("M" . ghostel-project-list-buffers))
+  :config
+  (unless (display-graphic-p)
+    (xterm-mouse-mode))
+  (add-to-list 'project-switch-commands '(ghostel-project "Ghostel") t)
+  (add-to-list 'project-switch-commands '(ghostel-project-list-buffers "Ghostel buffers") t))
+
+(use-package ghostel-eshell
+  :hook (eshell-load . ghostel-eshell-visual-command-mode))
+
+(use-package ghostel-compile
+  :hook (after-init . ghostel-compile-global-mode))
+
+(use-package ghostel-comint
+  :hook (after-init . ghostel-comint-global-mode))
 
 (use-package agent-shell
   :if (package-installed-p 'agent-shell)

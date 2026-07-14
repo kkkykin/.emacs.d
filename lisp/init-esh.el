@@ -166,13 +166,14 @@ terminal."
   (add-to-list 'eshell-visual-commands c))
 
 (when (eq system-type 'windows-nt)
-  (delete 'eshell-term eshell-modules-list)
+  (unless (memq 'ghostel-eshell-visual-command-mode eshell-load-hook)
+    (delete 'eshell-term eshell-modules-list)
+    (add-to-list 'eshell-interpreter-alist
+                 (cons #'eshell-visual-command-p 'ze/invoke-by-nvim)))
   (dolist (c '(("scoop.cmd" "update" "install")))
     (add-to-list 'eshell-visual-subcommands c))
   (add-to-list 'eshell-interpreter-alist (cons "^sq$" 'ze/sq-cli-handler))
   (add-to-list 'eshell-interpreter-alist (cons "^git$" 'ze/git-handler))
-  (add-to-list 'eshell-interpreter-alist
-               (cons #'eshell-visual-command-p 'ze/invoke-by-nvim))
   (add-to-list 'eshell-interpreter-alist
                (cons (format "\\.%s\\'"
                              (regexp-opt (mapcar #'car ze/interpreter-command-alist)))
