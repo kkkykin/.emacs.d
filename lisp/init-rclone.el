@@ -360,7 +360,7 @@ Examples:
           (apply #'call-process-region nil nil "mpv" nil 0 nil mpv-args))
       (apply #'call-process-region files nil "mpv" nil 0 nil mpv-args))))
 
-(defun zr-rclone-mpv-remote-proc (files)
+(defun zr-rclone-mpv-http-proc (files)
   (let* ((mpv-args (read-shell-command "mpv " nil 'zr-rclone-mpv-args-history))
          (url-request-method "POST")
          (args (split-string-shell-command mpv-args))
@@ -377,9 +377,19 @@ Examples:
     (add-to-history 'zr-rclone-mpv-args-history mpv-args 100)
     (url-retrieve "http://127.0.0.1:7780/mpv/" #'ignore nil t)))
 
+(defun zr-rclone-mpv-wezterm-proc (files)
+  (let* ((mpv-args (read-shell-command "mpv " nil 'zr-rclone-mpv-args-history))
+         (args (split-string-shell-command mpv-args))
+         (msg `((args . ,(vconcat args))
+                (type . "mpv")
+                (stdin . ,files))))
+    (add-to-history 'zr-rclone-mpv-args-history mpv-args 100)
+    (zr-wezterm-send-json msg)))
+
 (defvar zr-rclone-mpv-play-function
   (cond
-   ((getenv "SSH_CONNECTION" (selected-frame)) #'zr-rclone-mpv-remote-proc)
+   ((string= "WezTerm" (getenv "TERM_PROGRAM")) #'zr-rclone-mpv-wezterm-proc)
+   ((getenv "SSH_CONNECTION" (selected-frame)) #'zr-rclone-mpv-http-proc)
    ((eq system-type 'android) #'zr-rclone-mpv-android-proc)
    (t #'zr-rclone-mpv-local-proc)))
 
