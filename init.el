@@ -1129,7 +1129,7 @@ before calling the original function."
               (file-name-sans-extension file)))
      ("\\.exe\\'" "innounp -x -q -o -b -u -pixyg688.com")
      ("\\.apk\\'"
-      (format "adb %sinstall"
+      (format "adb %s install --user 0"
               (let ((devices
                      (mapcar
                       (lambda (a) (replace-regexp-in-string
@@ -1137,8 +1137,9 @@ before calling the original function."
                       (cl-delete-if-not
                        (lambda (a) (string-suffix-p "device" a))
                        (process-lines "adb" "devices")))))
-                (if (> 2 (length devices)) ""
-                  (format "-s \"%s\" "
+                (if (> 2 (length devices))
+                    "-e"
+                  (format "-s \"%s\""
                           (completing-read "Device: " devices))))))
      ("\\.apk\\'"
       (format "%s sign --ks \"%s\" --ks-pass \"pass:emacs1\" --ks-key-alias \"Emacs keystore\""
