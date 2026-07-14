@@ -783,9 +783,9 @@
   (python-indent-offset 2)
   (python-indent-block-paren-deeper t)
   (python-shell-dedicated t)
-  :config
-  (setenv "PYTHON_BASIC_REPL" "1")      ; https://einar.codeberg.page/fix-python-mode-repl-problem.html
+  :init
   (when (executable-find "uv")
+    (setenv "PYTHON_BASIC_REPL" "1")      ; https://einar.codeberg.page/fix-python-mode-repl-problem.html
     (setenv "UV_DEFAULT_INDEX" "https://mirrors.cloud.tencent.com/pypi/simple/")
     (setq python-interpreter "uv"
           python-interpreter-args "run --with isort --with pyflakes python")
@@ -793,6 +793,7 @@
       (setq python-shell-prompt-detect-failure-warning nil
             python-shell-interpreter "uv"
             python-shell-interpreter-args "run --with pyreadline3 python -i -X utf8")))
+  :config
   (modify-syntax-entry ?' "\"" inferior-python-mode-syntax-table))
 
 (use-package flymake
@@ -3010,6 +3011,13 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   :if (package-installed-p 'beancount)
   :hook (beancount-mode . outline-minor-mode)
   :bind
+  ( :map beancount-mode-map
+    ("C-c C-f"
+     . (lambda ()
+         (interactive)
+         (call-process "uv" nil 0 nil "--no-config" "tool" "run"
+                       "fava" buffer-file-name)
+         (browse-url "http://127.0.0.1:5000"))))
   ( :repeat-map beancount-mode-repeat-map
     ("<left>" . beancount-date-down-day)
     ("<right>" . beancount-date-up-day))
