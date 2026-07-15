@@ -784,8 +784,8 @@
   (python-indent-block-paren-deeper t)
   (python-shell-dedicated t)
   :init
+  (setenv "PYTHON_BASIC_REPL" "1")      ; https://einar.codeberg.page/fix-python-mode-repl-problem.html
   (when (executable-find "uv")
-    (setenv "PYTHON_BASIC_REPL" "1")      ; https://einar.codeberg.page/fix-python-mode-repl-problem.html
     (setenv "UV_DEFAULT_INDEX" "https://mirrors.cloud.tencent.com/pypi/simple/")
     (setq python-interpreter "uv"
           python-interpreter-args "run --with isort --with pyflakes python")
@@ -2882,6 +2882,9 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   :if (package-installed-p 'ghostel)
   :init
   (define-key zr-menu [ghostel] '(menu-item "ghostel" ghostel))
+  (add-hook 'eshell-load-hook #'ghostel-eshell-visual-command-mode)
+  (add-hook 'after-init-hook #'ghostel-compile-global-mode)
+  (add-hook 'after-init-hook #'ghostel-comint-global-mode)
   :bind
   ( :map project-prefix-map
     ("m" . ghostel-project)
@@ -2891,15 +2894,6 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
     (xterm-mouse-mode))
   (add-to-list 'project-switch-commands '(ghostel-project "Ghostel") t)
   (add-to-list 'project-switch-commands '(ghostel-project-list-buffers "Ghostel buffers") t))
-
-(use-package ghostel-eshell
-  :hook (eshell-load . ghostel-eshell-visual-command-mode))
-
-(use-package ghostel-compile
-  :hook (after-init . ghostel-compile-global-mode))
-
-(use-package ghostel-comint
-  :hook (after-init . ghostel-comint-global-mode))
 
 (use-package agent-shell
   :if (package-installed-p 'agent-shell)
