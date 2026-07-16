@@ -120,6 +120,8 @@
    setq-mode-local))
 
 (use-package multisession
+  :autoload
+  (define-multisession-variable)
   :init
   (when (and (sqlite-available-p)
              (version< "3.40" (sqlite-version)))
@@ -762,6 +764,7 @@
 
 (use-package vc
   :custom
+  (vc-dir-show-key-binding-hints nil)
   (vc-git-diff-switches '("--textconv"))
   (vc-async-checkin t)
   (vc-display-status 'no-backend)
@@ -2349,7 +2352,7 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   (package-archives '(("gnu" . "https://mirrors.ustc.edu.cn/elpa/gnu/")
                       ("nongnu" . "https://mirrors.ustc.edu.cn/elpa/nongnu/")
                       ("melpa" . "https://mirrors.ustc.edu.cn/elpa/melpa/")))
-  :config
+  :init
   (package-initialize))
 
 (use-package engrave-faces :defer nil
@@ -2547,7 +2550,7 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   (denote-excluded-directories-regexp (rx bos (| "archive" "local") eos))
   :hook
   ((dired-mode . denote-dired-mode)
-   (find-file . denote-fontify-links-mode-maybe))
+   (find-file . denote-fontify-links-mode))
   :config
   (setq denote-directory org-directory)
   (define-advice denote-rename-file-and-buffer (:before-while (old new) rename-dir)
