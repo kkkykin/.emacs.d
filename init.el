@@ -2715,15 +2715,13 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
 (use-package ement
   :if (package-installed-p 'ement)
   :bind
-  ( :map ement-room-mode-map
-    ("/" . (lambda ()
-             (interactive)
-             (let ((ement-room-read-string-setup-hook
-                    (cons (lambda () (insert ?/))
-                          ement-room-read-string-setup-hook)))
-               (ement-room-dispatch-new-message)))))
+  ( :repeat-map ement-room-repeat-map
+    ("n" . ement-room-goto-next)
+    ("p" . ement-room-goto-prev))
   :hook
-  ((ement-room-compose . ement-room-compose-org)))
+  ((ement-room-compose . ement-room-compose-org))
+  :config
+  (ement-room-self-insert-mode))
 
 (use-package devdocs-browser
   :if (package-installed-p 'devdocs-browser)
