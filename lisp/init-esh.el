@@ -165,6 +165,9 @@ terminal."
              "usql"))
   (add-to-list 'eshell-visual-commands c))
 
+(dolist (c '(("xpra" "attach")))
+  (add-to-list 'eshell-visual-subcommands c))
+
 (when (eq system-type 'windows-nt)
   (unless (memq 'ghostel-eshell-visual-command-mode eshell-load-hook)
     (delete 'eshell-term eshell-modules-list)

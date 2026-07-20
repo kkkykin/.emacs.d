@@ -1748,6 +1748,7 @@ before calling the original function."
   (eshell-hist-ignoredups 'erase)
   (eshell-history-isearch 'dwim)
   (eshell-visual-options '(("nix" "--help")
+                           ("hermes" "--tui")
                            ("nixos-rebuild" "--help")))
   :config
   (require 'init-esh)
