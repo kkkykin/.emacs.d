@@ -2713,15 +2713,28 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   :custom
   (plz-connect-timeout 10))
 
+(use-package taxy
+  :if (package-installed-p 'taxy)
+  :init
+  (with-eval-after-load 'shortdoc
+    (define-advice shortdoc-add-function (:filter-args (args) fix-nil-section)
+      "https://github.com/alphapapa/taxy.el/issues/19"
+      (when-let* ((section-nil-p (not (cadr args)))
+                  (group (car args)))
+        (setcdr args `(,(symbol-name group) ,@(last args))))
+      args)))
+
 (use-package ement
   :if (package-installed-p 'ement)
+  :vc ( :url "https://github.com/Thaodan/ement.el.git"
+        :branch "yank-media"
+        :rev :newest)
   :bind
   ( :repeat-map ement-room-repeat-map
     ("n" . ement-room-goto-next)
     ("p" . ement-room-goto-prev))
-  :hook
-  ((ement-room-compose . ement-room-compose-org))
   :config
+  (add-hook 'ement-room-compose-hook #'ement-room-compose-org)
   (ement-room-self-insert-mode))
 
 (use-package devdocs-browser
