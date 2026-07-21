@@ -2354,7 +2354,12 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
                       ("nongnu" . "https://mirrors.ustc.edu.cn/elpa/nongnu/")
                       ("melpa" . "https://mirrors.ustc.edu.cn/elpa/melpa/")))
   :init
-  (package-initialize))
+  (package-initialize)
+  :config
+  (add-hook 'kill-emacs-hook
+            (lambda ()
+              (when package-selected-packages
+                (package-autoremove)))))
 
 (use-package engrave-faces :defer nil
   :if (package-installed-p 'engrave-faces)
