@@ -2732,7 +2732,7 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
 (use-package ement
   :if (package-installed-p 'ement)
   :vc ( :url "https://github.com/Thaodan/ement.el.git"
-        :branch "yank-media"
+        :branch "personal_merger"
         :rev :newest)
   :bind
   ( :repeat-map ement-room-repeat-map
