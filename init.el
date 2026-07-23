@@ -2738,8 +2738,20 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   ( :repeat-map ement-room-repeat-map
     ("n" . ement-room-goto-next)
     ("p" . ement-room-goto-prev))
+  :init
+  (defvar zr-ement-menu (make-sparse-keymap "ement-menu"))
+  (define-key zr-menu [ement-menu]
+              (list 'menu-item "ement-menu" zr-ement-menu))
+  (define-key zr-ement-menu [notification]
+              '(menu-item "notification" ement-notify-switch-to-notifications-buffer))
+  (define-key zr-ement-menu [mention]
+              '(menu-item "mention" ement-notify-switch-to-mentions-buffer))
+  (define-key zr-ement-menu [list] '(menu-item "list" ement-list-rooms))
+  (define-key zr-ement-menu [room] '(menu-item "room" ement-view-room))
+  (define-key zr-ement-menu [connect] '(menu-item "connect" ement-connect))
+  :custom
+  (ement-room-send-message-filter #'ement-room-send-org-filter) ; enable @
   :config
-  (add-hook 'ement-room-compose-hook #'ement-room-compose-org)
   (ement-room-self-insert-mode))
 
 (use-package devdocs-browser
