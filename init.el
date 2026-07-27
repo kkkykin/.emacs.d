@@ -2751,6 +2751,7 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   (define-key zr-ement-menu [connect] '(menu-item "connect" ement-connect))
   :custom
   (ement-room-send-message-filter #'ement-room-send-org-filter) ; enable @
+  (ement-room-send-typing nil)
   :config
   (ement-room-self-insert-mode))
 
@@ -2912,7 +2913,7 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
 
 (use-package komga-reader
   :if (package-installed-p 'komga-reader)
-  :vc (:url "https://github.com/kkkykin/komga-reader"))
+  :vc (:url "https://github.com/kkkykin/komga-reader" :rev :newest))
 
 (use-package fdroid
   :if (package-installed-p 'fdroid)
