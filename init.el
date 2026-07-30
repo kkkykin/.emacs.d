@@ -2930,6 +2930,8 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   ( :map project-prefix-map
     ("m" . ghostel-project)
     ("M" . ghostel-project-list-buffers))
+  :custom
+  (ghostel-module-directory (expand-file-name "~/.config/emacs/ghostel/"))
   :config
   (unless (display-graphic-p)
     (xterm-mouse-mode))
