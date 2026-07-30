@@ -388,6 +388,7 @@ Examples:
 
 (defvar zr-rclone-mpv-play-function
   (cond
+   ((eq system-type 'windows-nt) #'zr-rclone-mpv-local-proc)
    ((string= "WezTerm" (getenv "TERM_PROGRAM")) #'zr-rclone-mpv-wezterm-proc)
    ((getenv "SSH_CONNECTION" (selected-frame)) #'zr-rclone-mpv-http-proc)
    ((eq system-type 'android) #'zr-rclone-mpv-android-proc)
