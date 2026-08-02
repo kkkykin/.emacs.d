@@ -294,22 +294,40 @@ Avoids selecting the most recently used theme."
     (zr-theme-enable-only theme)
     (message "Current theme: %S" theme)))
 
-(defvar zr-face-first-time t)
-(defun zr-face-setup ()
-  "Initialize random font and theme configuration.
-When in graphical display:
-1. Calls `zr-font-shuffle-set' to set an appropriate font.
-2. Calls `zr-theme-shuffle-set' to set an appropriate theme"
-  (when (and zr-face-first-time
-             (display-graphic-p))
-    (zr-font-shuffle-set)
-    (zr-theme-shuffle-set)
-    (setq zr-face-first-time nil)))
+(defvar zr-appearance-should-setup-p t
+  "Non-nil means `zr-appearance-setup' should initialize appearance.
+
+When non-nil, `zr-appearance-setup' configures the font and theme
+for the current environment.  It is set to nil after successful
+graphical display setup to avoid repeated initialization.")
+
+(defun zr-appearance-setup ()
+  "Initialize font and theme configuration.
+
+When running in a graphical display:
+1. Calls `zr-font-shuffle-set' to select and apply an appropriate font.
+2. Calls `zr-theme-shuffle-set' to select and apply an appropriate theme.
+
+When running in WezTerm without a graphical display, schedules a
+terminal theme update by sending a JSON command to WezTerm.
+
+This function only performs setup once while
+`zr-appearance-should-setup-p' is non-nil."
+  (when zr-appearance-should-setup-p
+    (if (display-graphic-p)
+        (progn
+          (zr-font-shuffle-set)
+          (zr-theme-shuffle-set)
+          (setq zr-appearance-should-setup-p nil))
+      (when (equal (getenv "TERM_PROGRAM") "WezTerm")
+        (zr-wezterm-send-json
+         '((type . "set_theme")
+           (theme . "Google (light) (terminal.sexy)")))))))
 
 (let ((hook (pcase system-type
               ('android 'window-setup-hook)
               (_ 'server-after-make-frame-hook))))
-  (add-hook hook #'zr-face-setup 50))
+  (add-hook hook #'zr-appearance-setup 50))
 
 (defun zr-set-font-current-buffer (&optional font)
   "Set font for current buffer."
@@ -1245,7 +1263,7 @@ The merged result is written to OUTPUT-FILE."
 
 (defun zr-wezterm-send-json (object)
   "Send OBJECT to WezTerm."
-
+  (require 'org)
   (let* ((payload (json-serialize object))
          (len (length payload))
          (chunk-size zr-wezterm-chunk-size)
