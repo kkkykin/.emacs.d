@@ -505,6 +505,8 @@
   :init
   (define-key zr-menu [speedbar]
               '(menu-item "speedbar" speedbar))
+  :custom
+  (speedbar-prefer-window t)
   :config
   (setopt speedbar-supported-extension-expressions
           (append '(".sql")
