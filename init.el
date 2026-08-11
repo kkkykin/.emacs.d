@@ -631,17 +631,61 @@
                      (funcall orig-dfr dir regexp include predicate t))))
           (apply orig-fn args))))
 
+    (defun zr-auth-source-pass-entry-info (entry)
+      "Extract host/user/port from auth-source-pass ENTRY without decrypting."
+      (let* ((parts (split-string entry "/"))
+             (host-port (nth 1 parts))
+             (user (car (last parts)))
+             host port)
+        (when host-port
+          (if-let ((pos (string-match
+                         (regexp-quote auth-source-pass-port-separator)
+                         host-port)))
+              (setq host (substring host-port 0 pos)
+                    port (substring host-port
+                                    (+ pos
+                                       (length auth-source-pass-port-separator))))
+            (setq host host-port)))
+        (list host user port)))
+
     (define-advice auth-source-pass--find-match-many
-        (:around (orig-fn hosts users ports &rest args) fix-host-match)
-      "Normalize HOSTS."
+        (:around (orig-fn hosts users ports &rest args)
+                 fix-host-match)
+      "Normalize HOSTS and optimize empty HOSTS lookup."
       (let (norm-hosts url-users url-ports)
-        (dolist (h hosts)
-          (pcase-let ((`(,nh ,u ,p) (auth-source-pass--disambiguate h)))
-            (push nh norm-hosts)
-            (when u (push u url-users))
-            (when (and p (not (equal "443" p)))
-              (push p url-ports))))
-        (apply orig-fn norm-hosts (or users url-users) (or ports url-ports) args)))
+
+        (if (equal hosts '(""))
+            ;; 无 hosts 时，从文件名索引 host/user/port
+            (dolist (entry (auth-source-pass-entries))
+              (pcase-let ((`(,host ,user ,port)
+                           (zr-auth-source-pass-entry-info entry)))
+
+                (when (and host
+                           ;; user 过滤
+                           (or (null users)
+                               (member user users))
+                           ;; port 过滤
+                           (or (null ports)
+                               (member port ports)))
+                  (push host norm-hosts))))
+
+          ;; 有 hosts 时，保留原来的 URL disambiguation 行为
+          (dolist (h hosts)
+            (pcase-let ((`(,nh ,u ,p)
+                         (auth-source-pass--disambiguate h)))
+              (push nh norm-hosts)
+              (when u
+                (push u url-users))
+              (when (and p (not (equal "443" p)))
+                (push p url-ports)))))
+
+        ;; 保持原来的优先级：
+        ;; 显式 users/ports > URL 中解析出的 users/ports
+        (apply orig-fn
+               (delete-dups (nreverse norm-hosts))
+               (or users (delete-dups (nreverse url-users)))
+               (or ports (delete-dups (nreverse url-ports)))
+               args)))
 
     (setopt auth-source-pass-filename
             (expand-file-name "gopass/stores/root"
