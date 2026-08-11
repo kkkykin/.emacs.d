@@ -58,7 +58,6 @@
   :group 'my
   :type 'string)
 
-;; https://hub.zzzr.eu.org/curl/curl/wiki/DNS-over-HTTPS E
 (defcustom zn/doh-server-list '("9.9.9.9/dns-query"
                                 "doh.bortzmeyer.fr"
                                 "dns.digitalsize.net/dns-query"
@@ -120,16 +119,84 @@
             (url-queue-timeout 30))
     (apply orig-fun args)))
 
-(define-advice url-retrieve-internal (:around (orig-fun &rest args) custom)
-  "Custom retrieve by url."
-  (pcase (car args)
-    ((rx bos "https://attach.52pojie.cn/")
-     (let ((url-request-extra-headers
-            (append
-             '(("Referer" . "https://www.52pojie.cn/"))
-             url-request-extra-headers)))
-       (apply orig-fun args)))
-    (_ (apply orig-fun args))))
+;; siteproxy
+(defvar zn/url-retrieve-by-siteproxy-p nil
+  "Non-nil means rewrite HTTP(S) requests through siteproxy.
+
+When enabled, `url-retrieve-internal' rewrites URLs to the siteproxy
+format before fetching them.  This affects all callers of Emacs URL
+retrieval functions that eventually invoke `url-retrieve-internal'.
+
+Set this variable to nil to disable siteproxy rewriting.")
+
+(defvar zn/siteproxy-auth nil
+  "Cached authentication information for siteproxy.
+
+The value is the plist returned by `auth-source-search'.  It is cached
+to avoid querying auth-source on every URL retrieval.")
+
+(defconst zn/siteproxy-url-regexp
+  (rx bos (group "http" (? ?s)) "://")
+  "Regexp used to strip the scheme from proxied URLs.
+
+The first capture group preserves the original scheme (`http' or
+`https') so that it can be inserted into the siteproxy URL path.")
+
+(defun zn/siteproxy-auth ()
+  "Return cached siteproxy authentication information.
+
+The authentication entry is obtained from `auth-source-search' using
+the user name \"siteproxy\".  The result is cached in
+`zn/siteproxy-auth' for subsequent calls.
+
+Return nil if no matching authentication entry exists."
+  (or zn/siteproxy-auth
+      (setq zn/siteproxy-auth
+            (car (auth-source-search
+                  :host ""
+                  :user "siteproxy")))))
+
+(defun zn/siteproxy-url (url)
+  "Rewrite URL through siteproxy when enabled.
+
+URL must be an absolute HTTP or HTTPS URL.
+
+When `zn/url-retrieve-by-siteproxy-p' is non-nil and siteproxy
+credentials are available, return a rewritten URL in the form:
+
+  https://HOST/PASSWORD/http(s)/original-host/path
+
+Otherwise return URL unchanged."
+  (let ((auth (zn/siteproxy-auth)))
+    (if (and auth zn/url-retrieve-by-siteproxy-p)
+        (format "https://%s/%s/%s"
+                (plist-get auth :host)
+                (auth-info-password auth)
+                (replace-regexp-in-string
+                 zn/siteproxy-url-regexp
+                 "\\1/"
+                 url))
+      url)))
+
+(define-advice url-retrieve-internal
+    (:around (orig-fun orig-url &rest args) siteproxy)
+  "Rewrite URL retrieval requests through siteproxy.
+
+This advice wraps `url-retrieve-internal'.  Before the original
+function is called, HTTP(S) URLs may be rewritten by
+`zn/siteproxy-url' when `zn/url-retrieve-by-siteproxy-p' is enabled.
+
+The original URL is used for matching special cases; the rewritten URL
+is passed to the underlying URL retrieval implementation."
+  (let ((url (zn/siteproxy-url orig-url)))
+    (pcase orig-url
+      ((rx bos "https://attach.52pojie.cn/")
+       (let ((url-request-extra-headers
+              (append
+               '(("Referer" . "https://www.52pojie.cn/"))
+               url-request-extra-headers)))
+         (apply orig-fun url args)))
+      (_ (apply orig-fun url args)))))
 
 (defun zn/url-http-parse-response ()
   "Parse http response, From 'https://emacs-china.org/t/elisp-http/18432/2'."
