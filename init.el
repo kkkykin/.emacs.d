@@ -3035,18 +3035,15 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
                                (json-parse-buffer)
                              (error (warn "Model update Error: Could not parse JSON"))))
                       (data (gethash "data" res))
-                      main-model
+                      (main-model "el/default")
                       models)
                  (mapc
                   (lambda (m)
-                    (when (and (string= "model" (gethash "object" m))
-                               (not (string-match-p (rx bos (| "debug" "disable") ?-)
-                                                    (gethash "owned_by" m))))
+                    (when (string= "model" (gethash "object" m))
                       (let ((id (gethash "id" m)))
-                        (when (string-suffix-p "gemini-3-flash-preview" id)
-                          (setq main-model id))
                         (push id models))))
                   data)
+                 (add-to-list 'models main-model)
                  (setf (multisession-value zr-gptel-cpa-info)
                        `((host . ,host)
                          (main-model . ,main-model)
@@ -3075,20 +3072,13 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
                          ("r" ,(rx bol (literal response) (group (1+ any))) 1)))
                     (setq imenu-create-index-function #'org-imenu-get-tree))))))
   (when-let* ((cpa (multisession-value zr-gptel-cpa-info))
-              (host "gateway.ai.cloudflare.com")
-              (cpa-prefix "custom-cpa/"))
-    (setq gptel-model (intern (concat cpa-prefix (alist-get 'main-model cpa)))
+              (host (concat "cpa." (auth-source-pick-first-password :host "mydomain" :user "main"))))
+    (setq gptel-model (intern (alist-get 'main-model cpa))
           gptel-backend
-          (gptel-make-openai "cloudflare"
+          (gptel-make-openai "cpa"
             :host host
             :key #'gptel-api-key
-            :endpoint
-            (format "/v1/%s/%s/compat/chat/completions"
-                    (auth-source-pick-first-password :host host :user "account-id")
-                    (auth-source-pick-first-password :host host :user "gateway-id"))
-            :models (mapcar
-                     (lambda (m) (intern (concat cpa-prefix m)))
-                     (alist-get 'models cpa))
+            :models (mapcar #'intern (alist-get 'models cpa))
             :stream t))))
 
 (use-package beancount
