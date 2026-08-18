@@ -1180,7 +1180,7 @@ before calling the original function."
               (file-name-sans-extension file)))
      ("\\.exe\\'" "innounp -x -q -o -b -u -pixyg688.com")
      ("\\.apk\\'"
-      (format "adb %s install --user 0"
+      (format "adb %s install --bypass-low-target-sdk-block --user 0"
               (let ((devices
                      (mapcar
                       (lambda (a) (replace-regexp-in-string
