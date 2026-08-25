@@ -632,9 +632,9 @@
              (user (car (last parts)))
              host port)
         (when host-port
-          (if-let ((pos (string-match
-                         (regexp-quote auth-source-pass-port-separator)
-                         host-port)))
+          (if-let* ((pos (string-match
+                          (regexp-quote auth-source-pass-port-separator)
+                          host-port)))
               (setq host (substring host-port 0 pos)
                     port (substring host-port
                                     (+ pos
