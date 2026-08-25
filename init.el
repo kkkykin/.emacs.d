@@ -2,7 +2,8 @@
 ;;; Commentary:
 ;;; Code:
 
-(add-to-list 'load-path (file-name-concat user-emacs-directory "lisp"))
+(unless (bound-and-true-p user-lisp-directory)
+  (add-to-list 'load-path (locate-user-emacs-file "user-lisp/")))
 
 (defconst zr-sys-winnt-p (eq system-type 'windows-nt)
   "Windows System.")
@@ -109,19 +110,12 @@
                ("n" . tempo-forward-mark)
                ("p" . tempo-backward-mark)))
 
-(use-package transient
-  :autoload
-  transient--set-layout
-  transient-define-prefix)
-
 (use-package mode-local
   :autoload
   (mode-local-bind
    setq-mode-local))
 
 (use-package multisession
-  :autoload
-  (define-multisession-variable)
   :init
   (when (and (sqlite-available-p)
              (version< "3.40" (sqlite-version)))
@@ -1871,7 +1865,7 @@ before calling the original function."
   :config
   (setq file-cache-alist '(("aria2.conf" "~/.config/aria2/")
                            ("init.el" "~/.emacs.d/")
-                           ("default.el" "~/.emacs.d/lisp/")
+                           ("default.el" "~/.emacs.d/user-lisp/")
                            ("pip.ini" "~/.config/pip/")
                            ("config.txt" "~/.config/yt-dlp/"))))
 

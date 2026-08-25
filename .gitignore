@@ -24,7 +24,8 @@
 *.elc
 /network-security.data
 /notes
-/lisp/default.el
+/user-lisp/default.el
+/user-lisp/.user-lisp-autoloads.el
 /shadow_todo
 /places
 /info/

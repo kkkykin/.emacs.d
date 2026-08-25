@@ -410,6 +410,8 @@ with `universal argument', select all records."
   str & ": " "LOOP" \n "  "_ \n "END LOOP " str ";"\n)
 
 (with-eval-after-load 'sql
+  (defvar zr-sql-cc-ck-prefix-map
+    (make-sparse-keymap))
   (bind-keys
    :map zr-sql-cc-ck-prefix-map
    ("s" . zp/sql-table-selector))

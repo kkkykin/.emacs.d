@@ -4,6 +4,7 @@
 
 (require 'cl-lib)
 (require 'nsm)
+(require 'multisession)
 
 ;; ipv6
 (defun zn/has-public-ipv6-addr-p ()

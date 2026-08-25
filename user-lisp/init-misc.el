@@ -3,6 +3,8 @@
 ;;; Code:
 
 (require 'cl-lib)
+(require 'multisession)
+(require 'transient)
 
 (defvar-keymap zr-mpc-prefix-map
   :doc "A keymap for mpc."
@@ -145,21 +147,18 @@ Automatically selects appropriate pixel size based on display width:
   "List of available light themes for the current Emacs session.
 Persists across multiple Emacs sessions and defaults to built-in
 `default' theme."
-  :package "init-misc"
-  :key "theme")
+  :package "init-misc")
 
 (define-multisession-variable zr-theme-dark-list nil
   "List of available dark themes for the current Emacs session.
 Persists across multiple Emacs sessions and starts empty by default."
-  :package "init-misc"
-  :key "theme")
+  :package "init-misc")
 
 (define-multisession-variable zr-theme-last-list '(default)
   "List of most recently used themes in the current Emacs session.
 Persists across multiple Emacs sessions and defaults to built-in
 `default' theme."
-  :package "init-misc"
-  :key "theme")
+  :package "init-misc")
 
 (defvar zr-theme-disabled-list '(light-blue)
   "List of disabled themes. Most of them are obsolete.")
