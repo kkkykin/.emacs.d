@@ -252,50 +252,6 @@ If the current major mode is `wdired-mode', execute the command using
    ("t" . zr-dired-mark-target)
    ("T" . zr-dired-unmark-target)))
 
-
-;; window
-
-(defun zr-buffer-to-side (side &optional buf)
-  "Move the current buffer to a window on the specified SIDE.
-
-This function moves the buffer of the currently selected window to a window
-at the specified SIDE (left, right, top, or bottom) of the frame. If there
-is no window at the specified side, a new window is created by splitting
-the frame root window.
-
-The buffer currently in the target window is swapped with the current buffer.
-
-SIDE is a symbol representing the side of the frame where the current buffer
-should be moved. It is selected interactively from the options: 'left', 'right',
-'top', and 'bottom'."
-  (interactive
-   (list (intern (completing-read "Side: "
-                                  '("left" "right" "top" "bottom")))))
-  (if-let* ((fb (or buf (current-buffer)))
-            (fw (get-buffer-window fb)))
-      (let* ((tws (window-at-side-list nil side))
-             (tw (if (< 1 (length tws))
-                     (split-window (frame-root-window) nil
-                                   (pcase side
-                                     ('top 'above)
-                                     ('bottom 'below)
-                                     (_ side)))
-                   (car tws)))
-             (tb (window-buffer tw)))
-        (set-window-buffer tw fb)
-        (if (eq tb fb)
-            (delete-window fw)
-          (set-window-buffer fw tb))
-        (select-window tw))
-    (display-buffer-in-direction fb `((direction . ,side) (window . main)))))
-
-(bind-keys
- :map zv/cw-prefix-map
- ("H" . (lambda () (interactive) (zr-buffer-to-side 'left)))
- ("L" . (lambda () (interactive) (zr-buffer-to-side 'right)))
- ("K" . (lambda () (interactive) (zr-buffer-to-side 'top)))
- ("J" . (lambda () (interactive) (zr-buffer-to-side 'bottom))))
-
 (provide 'init-viper)
 ;;; init-viper.el ends here
 

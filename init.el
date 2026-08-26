@@ -28,6 +28,11 @@
   :custom
   (elisp-fontify-semantically nil)
   (mode-line-compact t)
+  (mode-line-collapse-minor-modes '(completion-preview-mode
+                                    subword-mode
+                                    whitespace-mode
+                                    abbrev-mode
+                                    hs-minor-mode))
   (mode-line-frame-identification nil)
   (mode-line-client nil)
   (mode-line-front-space nil)
@@ -177,6 +182,9 @@
   (minibuffer-visible-completions t)
   (minibuffer-regexp-mode t)
   (completions-sort 'historical)
+
+  ;; ver 31
+  (completion-pcm-leading-wildcard t)
   :hook
   ((emacs-startup . minibuffer-electric-default-mode)
    (emacs-startup . savehist-mode)
@@ -199,7 +207,6 @@
 
 (use-package completion-preview
   :if (package-installed-p 'completion-preview)
-  :diminish
   :bind
   ( :map completion-preview-active-mode-map
     ("M-n" . completion-preview-next-candidate)
@@ -208,6 +215,8 @@
     ([remap forward-sexp] . completion-preview-insert-sexp))
   :hook (prog-mode inferior-emacs-lisp-mode)
   :config
+  (add-hook 'completion-preview-inhibit-functions
+            (lambda (_) (and (featurep 'repeat) repeat-in-progress)))
   (unless zr-sys-winnt-p
     (add-hook 'eshell-mode-hook #'completion-preview-mode)))
 
@@ -397,7 +406,6 @@
 
 (use-package subword
   :unless zr-sys-android-p
-  :diminish
   :hook prog-mode)
 
 (use-package glasses
@@ -428,7 +436,6 @@
 ;; https://github.com/VernonGrant/discovering-emacs/blob/main/show-notes/4-using-whitespace-mode.md
 (use-package whitespace
   ;; :hook (emacs-startup . global-whitespace-mode)
-  :diminish
   :custom
   (whitespace-style
    '(face empty spaces tabs newline trailing tab-mark newline-mark))
@@ -588,7 +595,6 @@
 (use-package quickurl)
 
 (use-package abbrev
-  :diminish '(abbrev-mode . " A")
   :custom
   (abbrev-suggest t))
 
@@ -755,7 +761,6 @@
 
 ;; https://karthinks.com/software/simple-folding-with-hideshow/
 (use-package hideshow
-  :diminish (hs-minor-mode . nil)
   :hook ((prog-mode . hs-minor-mode)
          ((ediff-prepare-buffer vc-before-checkin) . turn-off-hideshow)))
 
@@ -1461,21 +1466,8 @@ before calling the original function."
 
 (use-package smerge-mode
   :bind
-  (:repeat-map zr-smerge-repeat-map
-               ("n" . smerge-next)
-               ("p" . smerge-prev)
-               ("r" . smerge-resolve)
-               ("a" . smerge-keep-all)
-               ("b" . smerge-keep-base)
-               ("l" . smerge-keep-lower)
-               ("u" . smerge-keep-upper)
-               ("m" . smerge-keep-current)
-               ("E" . smerge-ediff)
-               ("C" . smerge-combine-with-next)
-               ("R" . smerge-refine)
-               ("<" . smerge-diff-base-upper)
-               (">" . smerge-diff-base-lower)
-               ("=" . smerge-diff-upper-lower)))
+  ( :repeat-map smerge-repeat-map
+    ("E" . smerge-ediff)))
 
 (use-package ediff
   :custom
@@ -1892,7 +1884,9 @@ before calling the original function."
 
 (use-package treesit :defer 1
   :after prog-mode
-  :custom (treesit-font-lock-level 4)
+  :custom
+  (treesit-font-lock-level 4)
+  (treesit-enabled-modes t)
   :config
   (pcase system-type
     ((and 'windows-nt
@@ -2953,7 +2947,11 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
 
 (use-package komga-reader
   :if (package-installed-p 'komga-reader)
-  :vc (:url "https://github.com/kkkykin/komga-reader" :rev :newest))
+  :vc (:url "https://github.com/kkkykin/komga-reader" :rev :newest)
+  :config
+  (when (fboundp #'mode-line-invisible-mode)
+    (add-hook 'komga-reader-reader-mode-hook
+              #'mode-line-invisible-mode)))
 
 (use-package fdroid
   :if (package-installed-p 'fdroid)
@@ -3229,8 +3227,9 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
            (equal (getenv "TERM_PROGRAM") "WezTerm"))
   :vc (:url "https://github.com/cashmeredev/kitty-graphics.el" :rev :newest)
   :defer 2
-  :diminish
   :config
+  (when (boundp 'mode-line-collapse-minor-modes)
+    (add-to-list 'mode-line-collapse-minor-modes 'kitty-graphics-mode))
   (kitty-graphics-mode 1))
 
 ;;; init.el ends here

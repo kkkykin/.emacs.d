@@ -6,6 +6,7 @@
 (require 'multisession)
 (require 'transient)
 (require 'tab-line)
+(require 'bookmark)
 
 (defvar-keymap zr-mpc-prefix-map
   :doc "A keymap for mpc."

@@ -3,39 +3,6 @@
 ;;; Code:
 
 
-;; treesit
-
-(defun zp/ts-mode-enable ()
-  "Auto map available ts-mode."
-  (interactive)
-  (dolist (lan (mapcar #'car treesit-language-source-alist))
-    (if-let* ((avaip (treesit-language-available-p lan))
-              (name (symbol-name lan))
-              (fn (intern (format "%s-mode" name)))
-              (ts-fn (intern (format "%s-ts-mode"
-                                     (pcase name
-                                       ("javascript" "js")
-                                       (_ name)))))
-              (ts-fnp (functionp ts-fn))
-              (ori-fn (pcase lan
-                        (_ (or (seq-some
-                                (lambda (x) (and (string-match-p (car x) (concat "a." name)) (cdr x)))
-                                auto-mode-alist)
-                               (and (functionp fn) fn)))))
-              (remap (not (eq ori-fn ts-fn))))
-        (add-to-list 'major-mode-remap-alist `(,ori-fn . ,ts-fn))
-      (when ts-fnp
-        (add-to-list 'auto-mode-alist
-                     (pcase lan
-                       ('yaml `("\\.ya?ml\\'" . ,ts-fn))
-                       ('rust `("\\.rs\\'" . ,ts-fn))
-                       ('dockerfile `("\\(?:Dockerfile\\(?:\\..*\\)?\\|\\.[Dd]ockerfile\\)\\'" . ,ts-fn))
-                       (_ `(,(format "\\.%s\\'" name) . ,ts-fn))))))))
-
-(with-eval-after-load 'treesit
-  (zp/ts-mode-enable))
-
-
 ;; occur
 
 (defun zp/grep-files ()
