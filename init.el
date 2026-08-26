@@ -184,7 +184,7 @@
   (completions-sort 'historical)
 
   ;; ver 31
-  (completion-pcm-leading-wildcard t)
+  (completion-pcm-leading-wildcard nil)
   :hook
   ((emacs-startup . minibuffer-electric-default-mode)
    (emacs-startup . savehist-mode)
@@ -507,7 +507,7 @@
   (define-key zr-menu [speedbar]
               '(menu-item "speedbar" speedbar))
   :custom
-  (speedbar-prefer-window t)
+  (speedbar-prefer-window nil)
   :config
   (setopt speedbar-supported-extension-expressions
           (append '(".sql")
@@ -1315,6 +1315,18 @@ before calling the original function."
     :local 'permanent-only))
 
 (use-package mpc
+  :bind
+  ( :prefix "C-x c"
+    :prefix-map zr-mpc-prefix-map
+    ("s" . mpc-toggle-play)
+    ("n" . mpc-next)
+    ("p" . mpc-prev)
+    ("b" . mpc-status-buffer-show)
+    ("g" . mpc-seek-current)
+    ("r" . mpc-toggle-repeat)
+    ("z" . mpc-toggle-shuffle)
+    ("a" . mpc-toggle-single)
+    ("u" . mpc-update))
   :custom
   (mpc-host "127.0.0.1"))
 

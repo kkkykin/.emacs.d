@@ -8,29 +8,23 @@
 (require 'tab-line)
 (require 'bookmark)
 
-(defvar-keymap zr-mpc-prefix-map
-  :doc "A keymap for mpc."
-  "s" #'mpc-toggle-play
-  "n" #'mpc-next
-  "p" #'mpc-prev
-  "b" #'mpc-status-buffer-show
-  "g" #'mpc-seek-current
-  "r" #'mpc-toggle-repeat
-  "z" #'mpc-toggle-shuffle
-  "a" #'mpc-toggle-single
-  "u" #'mpc-update)
-(keymap-set ctl-x-map "c" zr-mpc-prefix-map)
-
 (defun zr-always-yes (&rest args)
   "ref: https://goykhman.ca/gene/blog/2024-06-09-always-yes-in-emacs-lisp.html"
   (cl-letf (((symbol-function 'yes-or-no-p) #'always)
             ((symbol-function 'y-or-n-p) #'always))
     (funcall-interactively (car args) (cdr args))))
 
+(defgroup zr nil
+  "Used by this configuration."
+  :group 'environment
+  :prefix "zr-")
+
 (defcustom zr-dotfiles-dir-followd-by-vars nil
   "List of variables that should be re-evaluated when `zr-dotfiles-dir' changes.
 This allows dependent settings to update automatically when the
-directory changes.")
+directory changes."
+  :type '(repeat variable)
+  :group 'zr)
 
 (defcustom zr-dotfiles-dir (expand-file-name "~/.config")
   "The directory where dotfiles are stored.
@@ -39,6 +33,7 @@ customized.  When this value is changed, any variables listed in
 `zr-dotfiles-dir-followd-by-vars' are re-evaluated to ensure dependent
 settings are updated."
   :type 'directory
+  :group 'zr
   :set (lambda (sym val)
          (set-default sym val)
          (dolist (var zr-dotfiles-dir-followd-by-vars)
@@ -48,11 +43,14 @@ settings are updated."
 (defcustom zr-secrets-dir-followd-by-vars nil
   "List of variables that should be re-evaluated when `zr-secrets-dir' changes.
 This allows dependent settings to update automatically when the
-directory changes.")
+directory changes."
+  :type '(repeat variable)
+  :group 'zr)
 
 (defcustom zr-secrets-dir (expand-file-name "~/secrets")
   "Secrets."
   :type 'directory
+  :group 'zr
   :set (lambda (sym val)
          (set-default sym val)
          (when (file-directory-p val)
@@ -241,6 +239,7 @@ Restores the previous theme state after checking."
           (zr-theme-enable-only enabled t)))
     (color-dark-p (color-name-to-rgb (face-attribute 'default :background)))))
 
+(defvar xterm-extra-capabilities)
 (defun zr-system-dark-mode-enabled-p ()
   "Check if system-wide dark mode is enabled.
 Returns non-nil if dark mode is active:
@@ -349,20 +348,20 @@ This function only performs setup once while
 (defcustom zr-android-misc-files-directory
   (locate-user-emacs-file "modules/android/")
   "Directory to store miscellaneous Android-related files."
-  :group 'my
+  :group 'zr
   :type 'directory)
 
 (defcustom zr-emacs-keystore-file
   (expand-file-name "emacs-keystore" zr-android-misc-files-directory)
   "File path to save the emacs.keystore file."
-  :group 'my
+  :group 'zr
   :type 'file)
 
 (defcustom zr-emacs-keystore-url
   "https://git.savannah.gnu.org/cgit/emacs.git/plain/java/emacs.keystore"
   "URL of the emacs.keystore file in the Emacs Git repository."
   :type 'string
-  :group 'my)
+  :group 'zr)
 
 (defun zr-download-emacs-keystore ()
   "Download the emacs.keystore file from the Emacs Git repository asynchronously.
@@ -375,7 +374,7 @@ The file will be saved to the `zr-android-misc-files-directory' directory."
          (curl-process (apply #'start-process "downloading-emacs-ks" nil curl-command)))
     (set-process-sentinel
      curl-process
-     (lambda (process event)
+     (lambda (_ event)
        (pcase event
          ("finished\n"
           (message "emacs.keystore downloaded to %s" zr-emacs-keystore-file))
@@ -383,14 +382,16 @@ The file will be saved to the `zr-android-misc-files-directory' directory."
 
 (defcustom zr-termux-root-directory "/data/data/com.termux/files/"
   "Andriod termux root path."
-  :group 'my
+  :group 'zr
   :type 'directory)
 
 (defcustom zr-termux-tmp-directory (file-name-concat zr-termux-root-directory "usr/tmp/")
   "Android termux tmp path."
-  :group 'my
+  :group 'zr
   :type 'directory)
 
+(defvar tramp-connection-properties)
+(defvar tramp-remote-path)
 (with-eval-after-load 'tramp
   (add-to-list 'tramp-connection-properties
                (list (regexp-quote "termux") "remote-shell"
@@ -418,12 +419,12 @@ The file will be saved to the `zr-android-misc-files-directory' directory."
 
 (defcustom zr-bookmark-shared-prefix "s/"
   "Prefix of shared bookmark name."
-  :group 'my
+  :group 'zr
   :type 'string)
 
 (defcustom zr-bookmark-shared-file (expand-file-name "bookmark-share" user-emacs-directory)
   "Shared bookmark file cross device."
-  :group 'my
+  :group 'zr
   :type 'file)
 (when (file-exists-p zr-bookmark-shared-file)
   (bookmark-load zr-bookmark-shared-file nil t))
@@ -496,6 +497,7 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
       (copy-file file new-file))
     (dired-revert)))
 
+(defvar dired-subdir-alist)
 (defun zr-dired-goto-random-file ()
   "Goto random file in current-buffer."
   (interactive nil dired-mode)
@@ -503,6 +505,8 @@ https://www.emacs.dyerdwelling.family/emacs/20231013153639-emacs--more-flexible-
    (seq-random-elt
     (mapcan (lambda (a) (directory-files (car a) t "^[^.]" t)) dired-subdir-alist))))
 
+(defvar image-dired-cmd-create-thumbnail-program)
+(defvar image-dired-cmd-create-thumbnail-options)
 (defun zr-advice-image-dired-create-thumb-maybe-gs (oldfun &rest args)
   (if (string= (file-name-extension (car args)) "pdf")
       (let ((image-dired-cmd-create-thumbnail-program "gs")
@@ -545,6 +549,7 @@ ref: https://pandoc.org/MANUAL.html#general-options"
   (let ((file (buffer-file-name)))
     (shell-command-do-open (list (if arg file (file-name-directory file))))))
 
+(defvar dired-mode-map)
 (with-eval-after-load 'dired
   (bind-keys
    :map dired-mode-map
@@ -555,6 +560,7 @@ ref: https://pandoc.org/MANUAL.html#general-options"
    ("o" . zr-dired-open-with-pandoc)
    ("s" . zr-dired-goto-random-file)))
 
+(defvar zr-menu)
 (with-eval-after-load 'dired-aux
   (when (fboundp #'shell-command-do-open)
     (define-key zr-menu [zr-shell-do-open]
@@ -571,12 +577,15 @@ ref: https://pandoc.org/MANUAL.html#general-options"
 
 
 ;; speedbar
+
+(defvar speedbar-show-unknown-files)
 (defun zr-speedbar-show-unknown-files ()
   "Temporary show unknown files."
   (interactive)
   (let ((speedbar-show-unknown-files t))
     (speedbar-refresh)))
 
+(defvar speedbar-last-selected-file)
 (defun zr-speedbar-item-diff ()
   "Diff the item under the cursor or mouse with
 `speedbar-last-selected-file'."
@@ -588,6 +597,7 @@ ref: https://pandoc.org/MANUAL.html#general-options"
         (dframe-close-frame))
     (error "Not a file")))
 
+(defvar speedbar-file-key-map)
 (with-eval-after-load 'speedbar
   (bind-keys
     :map speedbar-file-key-map
@@ -605,6 +615,8 @@ ref: https://pandoc.org/MANUAL.html#general-options"
    wildcards
    "\\|"))
 
+(defvar reb-target-buffer)
+(defvar reb-overlays)
 (defun zr-reb-copy-match (&optional group)
   "Copy current match strings into the `kill-ring'. With
 `universal-argument' select nth group. Default copy first group."
@@ -617,6 +629,8 @@ ref: https://pandoc.org/MANUAL.html#general-options"
           (format "%s
 " (buffer-substring-no-properties (overlay-start a) (overlay-end a)))))
       (reverse reb-overlays)))))
+
+(defvar reb-mode-map)
 (with-eval-after-load 're-builder
   (keymap-set reb-mode-map "C-c M-w" 'zr-reb-copy-match))
 
@@ -710,7 +724,9 @@ ref: https://karthinks.com/software/emacs-window-management-almanac/"
 (defcustom zr-tab-line-excluded-buffer-list
   `(,(rx (| "*Async-native-compile-log*"
             "*Pp Eval Output*")))
-  "Buffer which never show in tab-line.")
+  "Buffer which never show in tab-line."
+  :type 'regexp
+  :group 'zr)
 
 (defun zr-tab-line-tabs-buffer-group-by-mode-exclude-some-buffer
     (&optional buffer)
@@ -816,7 +832,7 @@ ref: https://karthinks.com/software/emacs-window-management-almanac/"
         (pcase major-mode
           ((guard (memq major-mode '(python-ts-mode)))
            (python-shell-send-defun))
-          (_ (eval-defun)))))
+          (_ (call-interactively #'eval-defun)))))
 
 
 ;; file
@@ -847,6 +863,7 @@ ref: https://karthinks.com/software/emacs-window-management-almanac/"
 
 ;; etc
 
+(defvar org-id-method)
 (defun zr-generate-uuid (&optional obj)
   "Generate UUID format string."
   (interactive)
@@ -893,6 +910,7 @@ ref: https://karthinks.com/software/emacs-window-management-almanac/"
 
 ;; tools
 
+(defvar url-get-url-filename-chars)
 (defun zr-pure-pure-pure-url (url)
   "Remove invalid char in url."
   (interactive (list (read-string "Url: " nil nil (current-kill 0 t))))
@@ -918,9 +936,9 @@ ref: https://karthinks.com/software/emacs-window-management-almanac/"
               ((eq system-type 'windows-nt)))
     (run-with-timer timeout nil (lambda () (w32-notification-close id)))))
 
-(defun zr-appt-notification-notify (min-to-app new-time appt-msg)
+(defvar appt-display-interval)
+(defun zr-appt-notification-notify (min-to-app _ appt-msg)
   "Display appointment due in MIN-TO-APP (a string) minutes.
-NEW-TIME is a string giving the current date.
 Displays the appointment message APPT-MSG via notification.
 ref: `appt-disp-window'"
   (let ((timeout (and (eq system-type 'windows-nt) 0)))
@@ -939,6 +957,7 @@ ref: `appt-disp-window'"
   (dolist (h (number-sequence 8 23))
     (appt-add (format "%d:00" h) "💧 Stay hydrated!" 0)))
 
+(defvar appt-disp-window-function)
 (with-eval-after-load 'appt
   (setq appt-disp-window-function #'zr-appt-notification-notify)
   (zr-appt-habits))
@@ -971,7 +990,7 @@ actual processes. CNT is the prefix argument indicating how many entries
 to delete."
   (interactive "p")
   (let (deleted)
-    (dotimes (i cnt)
+    (dotimes (_ cnt)
       (push (tabulated-list-delete-entry) deleted))
     (setq tabulated-list-entries
           (cl-nset-difference tabulated-list-entries deleted :key #'car))))
@@ -985,7 +1004,7 @@ kill.  Refreshes the buffer after deletion."
   (interactive "p")
   (let ((revert-buffer-function #'ignore))
     (if (tabulated-list-get-id)
-        (dotimes (i cnt)
+        (dotimes (_ cnt)
           (process-menu-delete-process)
           (forward-line))
       (forward-line)
@@ -1100,6 +1119,7 @@ Can be a single directory or a list of directories."
   :type (or 'directory
             (repeat 'directory)))
 
+(defvar zr-rclone-rc-function)
 (defun zr-set-wallpaper-randomly ()
   "Set a random wallpaper image from `zr-wallpaper-directory'."
   (interactive)
@@ -1131,6 +1151,7 @@ Can be a single directory or a list of directories."
 
 ;; term
 
+(defvar explicit-shell-file-name)
 (defun zr-gpg-term ()
   "Start term and automatically execute commands."
   (interactive)
@@ -1148,7 +1169,27 @@ Can be a single directory or a list of directories."
 ;; Moyu
 
 (defvar zr-moyu-buffers nil
-  "All `zr-moyu-mode' buffers.")
+  "All moyu buffers.")
+
+(define-minor-mode zr-moyu-mode
+  "Minor mode for \"Moyu\" (slacking off).
+When active, attempts to disable the Input Method Editor (IME)
+on Windows systems to prevent accidental typing. It also tries
+to keep the IME disabled when Emacs frame focus changes or when
+switching buffers.
+This mode currently only affects Windows systems with IME support."
+  :init-value nil
+  :lighter " mo"
+  (if zr-moyu-mode
+      (progn
+        (zr-moyu-setup)
+        (push (current-buffer) zr-moyu-buffers)
+        (add-function :after after-focus-change-function #'zr-moyu-setup)
+        (add-hook 'window-buffer-change-functions #'zr-moyu-setup nil t)
+        (add-hook 'window-selection-change-functions #'zr-moyu-setup nil t))
+    (zr-moyu-remove-buffer (current-buffer))
+    (remove-hook 'window-buffer-change-functions #'zr-moyu-setup t)
+    (remove-hook 'window-selection-change-functions #'zr-moyu-setup t)))
 
 (defun zr-moyu-remove-buffer (&optional buf)
   (setq zr-moyu-buffers
@@ -1176,26 +1217,6 @@ FRAME argument is ignored."
   (when (and zr-moyu-mode
              (frame-focus-state))
     (zr-set-ime-open-status nil)))
-
-(define-minor-mode zr-moyu-mode
-  "Minor mode for \"Moyu\" (slacking off).
-When active, attempts to disable the Input Method Editor (IME)
-on Windows systems to prevent accidental typing. It also tries
-to keep the IME disabled when Emacs frame focus changes or when
-switching buffers.
-This mode currently only affects Windows systems with IME support."
-  :init-value nil
-  :lighter " mo"
-  (if zr-moyu-mode
-      (progn
-        (zr-moyu-setup)
-        (push (current-buffer) zr-moyu-buffers)
-        (add-function :after after-focus-change-function #'zr-moyu-setup)
-        (add-hook 'window-buffer-change-functions #'zr-moyu-setup nil t)
-        (add-hook 'window-selection-change-functions #'zr-moyu-setup nil t))
-    (zr-moyu-remove-buffer (current-buffer))
-    (remove-hook 'window-buffer-change-functions #'zr-moyu-setup t)
-    (remove-hook 'window-selection-change-functions #'zr-moyu-setup t)))
 
 ;; json
 
