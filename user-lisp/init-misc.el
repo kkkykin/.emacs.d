@@ -5,6 +5,7 @@
 (require 'cl-lib)
 (require 'multisession)
 (require 'transient)
+(require 'tab-line)
 
 (defvar-keymap zr-mpc-prefix-map
   :doc "A keymap for mpc."
@@ -712,15 +713,15 @@ ref: https://karthinks.com/software/emacs-window-management-almanac/"
 
 (defun zr-tab-line-tabs-buffer-group-by-mode-exclude-some-buffer
     (&optional buffer)
-  "Exclude some buffer and group by mode."
+  "Exclude some buffers and group the others BUFFER by mode."
   (when-let* ((buf (or buffer (current-buffer)))
-              (exclude-p (cl-find-if-not
-                          (lambda (a) (buffer-match-p a buf))
-                          zr-tab-line-excluded-buffer-list)))
-    (if (boundp 'tab-line-tabs-buffer-group-by-mode)
-        (funcall 'tab-line-tabs-buffer-group-by-mode buf)
-      (let ((tab-line-tabs-buffer-group-function nil))
-        (funcall 'tab-line-tabs-buffer-group-name buf)))))
+              ((not (cl-find-if
+                     (lambda (regexp)
+                       (buffer-match-p regexp buf))
+                     zr-tab-line-excluded-buffer-list))))
+    (if (fboundp 'tab-line-tabs-buffer-group-by-mode)
+        (tab-line-tabs-buffer-group-by-mode buf)
+      (buffer-local-value 'major-mode buf))))
 
 (setq tab-line-tabs-buffer-group-function
       #'zr-tab-line-tabs-buffer-group-by-mode-exclude-some-buffer)
