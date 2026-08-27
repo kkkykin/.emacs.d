@@ -1355,7 +1355,7 @@ before calling the original function."
   (:repeat-map zr-master-repeat-map
                ("n" . master-says-scroll-up)
                ("p" . master-says-scroll-down)
-               ("l" . master-says-recenter)
+               ("z" . master-says-recenter)
                ("<" . master-says-beginning-of-buffer)
                (">" . master-says-end-of-buffer)))
 
@@ -1376,7 +1376,7 @@ before calling the original function."
   ( :repeat-map zr-follow-repeat-map
     ("n" . follow-next-window)
     ("p" . follow-previous-window)
-    ("l" . follow-recenter)))
+    ("z" . follow-recenter)))
 
 (use-package ispell
   :custom
@@ -2782,6 +2782,7 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
         :rev :newest)
   :bind
   ( :repeat-map ement-room-repeat-map
+    ("z" . recenter)
     ("n" . ement-room-goto-next)
     ("p" . ement-room-goto-prev))
   :init
