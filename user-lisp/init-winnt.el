@@ -27,6 +27,29 @@
 (require 'cl-lib)
 (require 'derived)
 
+(declare-function dired-get-marked-files "dired")
+(declare-function comint-simple-send "comint")
+(defvar eshell-in-pipeline-p)
+(defvar explicit-shell-file-name)
+(defvar comint-process-echoes)
+(defvar comint-input-sender)
+(defvar auto-insert-directory)
+(defvar dired-guess-shell-alist-user)
+(defvar zr-dired-spc-prefix-map)
+(defvar dired-mode-map)
+(defvar dired-compress-files-alist)
+(defvar tramp-default-method)
+(defvar tramp-use-connection-share)
+(defvar zr-dotfiles-dir)
+(defvar grep-use-null-device)
+(defvar ispell-extra-args)
+(defvar shr-use-fonts)
+(defvar zr-viper-extra-ex-token-alist)
+(defvar vc-git-program)
+(defvar sql-mysql-options)
+(defvar find-ls-option)
+(defvar vc-git-commits-coding-system)
+
 
 ;; UWP
 
@@ -239,7 +262,7 @@ pinned (-p) attribute and setting the unpinned (+u) attribute.
 The function operates recursively on directories (/s) and includes both
 files and directories (/d) in the operation.
 
-The command uses the Windows 'attrib' utility and respects the system's
+The command uses the Windows `attrib' utility and respects the system's
 locale encoding for proper handling of non-ASCII filenames."
   (interactive "P")
   (let ((opt '("/s" "/d"))
@@ -266,20 +289,23 @@ locale encoding for proper handling of non-ASCII filenames."
    :map dired-mode-map
    ("N" . woman-dired-find-file)))
 
+(defun zr-advice-dired-shell-seqentially-exec (args)
+  "Fix `;' cannot sequentially execute command on windows."
+  (when-let* ((localp (not (file-remote-p default-directory)))
+              (cmd (car args)))
+    (setcar args
+            (replace-regexp-in-string "\\(.*\\);[ \t]*\\(&?[ \t]*\\)\\'"
+                                      "/wait \\1\\2" cmd)))
+  args)
+
 (with-eval-after-load 'dired-aux
   (dolist (item `(("\\.exe\\'" .
                    ,(let ((cab (string-replace "/" "\\" (concat temporary-file-directory "cab-" (md5 (system-name))))))
                       (format "makecab %%i %s && copy /b/y \"%s\"+\"%s\" %%o & del /q/f \"%s\""
                               cab (string-replace "/" "\\" (executable-find "extrac32")) cab cab)))))
     (add-to-list 'dired-compress-files-alist item))
-  (define-advice dired-shell-stuff-it (:filter-args (args) fix-seqentially-exec)
-    "Fix `;' cannot sequentially execute command on windows."
-    (when-let* ((localp (not (file-remote-p default-directory)))
-                (cmd (car args)))
-      (setcar args
-              (replace-regexp-in-string "\\(.*\\);[ \t]*\\(&?[ \t]*\\)\\'"
-                                        "/wait \\1\\2" cmd)))
-    args))
+  (advice-add 'dired-shell-stuff-it
+              :filter-args #'zr-advice-dired-shell-seqentially-exec))
 
 
 ;; tramp
@@ -292,7 +318,7 @@ locale encoding for proper handling of non-ASCII filenames."
 ;; file
 
 (defun zw/save-with-sudo ()
-  "Save the current buffer with sudo permissions while preserving original file permissions."
+  "Save the buffer with sudo."
   (interactive)
   (call-process-region nil nil "powershell" nil nil nil
                        "-NoLogo" "-NoProfile" "-WindowStyle" "Hidden"
@@ -334,14 +360,17 @@ locale encoding for proper handling of non-ASCII filenames."
 
 ;; pcmpl
 
+(defun zr-advice-pcomplete-from-help-fix-git (args)
+  "Full document of `git' not work on windows."
+  (let ((cmd (car args)))
+    (when (and (equal `(,vc-git-program "help") (seq-take cmd 2))
+               (not (string= "-a" (caddr cmd))))
+      (setcar args (list vc-git-program (elt cmd 2) "-h"))))
+  args)
+
 (with-eval-after-load 'pcmpl-git
-  (define-advice pcomplete-from-help (:filter-args (args) fix-git-help)
-    "Full document of `git' not work on windows."
-    (let ((cmd (car args)))
-      (when (and (equal `(,vc-git-program "help") (seq-take cmd 2))
-                 (not (string= "-a" (caddr cmd))))
-        (setcar args (list vc-git-program (elt cmd 2) "-h"))))
-    args))
+  (advice-add 'pcomplete-from-help
+              :filter-args #'zr-advice-pcomplete-from-help-fix-git))
 
 
 ;; mysql
@@ -350,54 +379,50 @@ locale encoding for proper handling of non-ASCII filenames."
                             "--default-character-set=utf8mb4")))
 
 
-;; jsonrpc
-(with-eval-after-load 'gdscript-mode
-  (with-eval-after-load 'eglot
-    (define-advice jsonrpc--process-filter (:filter-args (args) fix-newline)
-      "gdscript eglot."
-      (when (string-match-p "\\` \\*EGLOT (.+/.*gdscript-.+) output\\*\\'"
-                            (buffer-name (process-buffer (car args))))
-        (setcdr args (list (string-replace "\n\n" "\r\n\r\n" (cadr args)))))
-      args)))
-
-
 ;; cp936
+
+(defun zr-advice-ob-shell-command-fix-cs (orig-fun &rest args)
+  "Fix coding system for `org-babel--shell-command-on-region' when not in a
+remote directory."
+  (if (file-remote-p default-directory)
+      (apply orig-fun args)
+    (let ((process-coding-system-alist
+           `(("cmdproxy" ,@(zw/find-shell-command-coding-system (car args))))))
+      (apply orig-fun args))))
+
+(defun zr-advice-shell-command-fix-cs (orig-fun &rest args)
+  "Fix coding system for `shell-command-on-region' when not in a remote
+directory."
+  (if (file-remote-p default-directory)
+      (apply orig-fun args)
+    (let ((process-coding-system-alist
+           `(("cmdproxy" ,@(zw/find-shell-command-coding-system (caddr args))))))
+      (apply orig-fun args))))
+
+(defun zr-advice-insert-directory-fix-cs (orig-fun &rest args)
+  "Force decode `ls' output with utf-8."
+  (condition-case nil
+      (let ((coding-system-for-read 'utf-8))
+        (apply orig-fun args))
+    (file-error
+     (let (ls-lisp-use-insert-directory-program)
+       (apply orig-fun args)))))
 
 (when (eq locale-coding-system 'cp936)
 
-  (define-advice shell-command-on-region (:around (orig-fun &rest args) fix-coding)
-    "Fix coding system for `shell-command-on-region' when not in a remote
-directory."
-    (if (file-remote-p default-directory)
-        (apply orig-fun args)
-      (let ((process-coding-system-alist
-             `(("cmdproxy" ,@(zw/find-shell-command-coding-system (caddr args))))))
-        (apply orig-fun args))))
+  (advice-add 'shell-command-on-region
+              :around #'zr-advice-shell-command-fix-cs)
+  (advice-add 'insert-directory :around #'zr-advice-insert-directory-fix-cs)
 
   (with-eval-after-load 'ob-eval
-    (define-advice org-babel--shell-command-on-region (:around (orig-fun &rest args) fix-coding)
-      "Fix coding system for `org-babel--shell-command-on-region' when not in a
-remote directory."
-      (if (file-remote-p default-directory)
-          (apply orig-fun args)
-        (let ((process-coding-system-alist
-               `(("cmdproxy" ,@(zw/find-shell-command-coding-system (car args))))))
-          (apply orig-fun args)))))
+    (advice-add 'org-babel--shell-command-on-region
+                :around #'zr-advice-ob-shell-command-fix-cs))
 
   (dolist (h `(,(derived-mode-hook-name async-shell-command-mode)
                compilation-start-hook))
     (add-hook h #'zw/proc-coding-system-fix))
   (add-hook 'eshell-exec-hook #'zw/eshell-change-cs-when-exec)
   (add-hook 'shell-mode-hook #'zw/shell-mode-setup)
-
-  (define-advice insert-directory (:around (orig-fun &rest args) fix-cs)
-    "Force decode `ls' output with 'utf-8."
-    (condition-case err
-        (let ((coding-system-for-read 'utf-8))
-          (apply orig-fun args))
-      ('file-error
-       (let (ls-lisp-use-insert-directory-program)
-         (apply orig-fun args)))))
 
   (with-eval-after-load 'tramp
     (connection-local-set-profile-variables

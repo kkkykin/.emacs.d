@@ -25,6 +25,17 @@
 ;;; Code:
 
 (require 'cl-lib)
+(require 'viper)
+(require 'viper-cmd)
+(require 'viper-ex)
+
+(declare-function dired-dwim-target-recent "dired-aux")
+(declare-function dired-current-directory "dired")
+(declare-function dired-get-marked-files "dired")
+(defvar display-line-numbers-mode)
+(defvar zr-viper-vi-spc-prefix-map)
+(defvar dired-dwim-target)
+(defvar zr-dired-spc-prefix-map)
 
 
 ;; ex
@@ -147,17 +158,8 @@ specified, the current buffer's file or the default directory is
 used. You can also optionally specify a Nvim server name to target a
 specific Nvim instance.
 
-When called interactively:
-- If FILE is provided (with a prefix argument), prompt the user to select a file.
-- If no FILE is provided, use the current buffer's file or the default directory.
-
 SERVER specifies the name of the Nvim server to use. If no server name is
-provided, the default server name `zv/default-nvim-server' is used.
-
-Usage:
-- Call this function interactively to open the current buffer's file in Nvim.
-- Call this function with a prefix argument to specify a file to open in Nvim.
-- Optionally provide a server name to target a specific Nvim instance."
+provided, the default server name `zv/default-nvim-server' is used."
   (interactive "P")
   (let ((file (or (when file (read-file-name "File: "))
                  (buffer-file-name)

@@ -23,6 +23,9 @@
 
 ;;; Code:
 
+(require 'pcomplete)
+(defvar archive-7z-program)
+
 (defun zr-pcmpl-7z--list-archive ()
   "List archive files with 7z."
   (let ((pass (or (seq-some (lambda (a) (and (string-prefix-p "-p" a) a))

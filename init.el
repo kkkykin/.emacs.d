@@ -107,7 +107,6 @@
 
 ;; [[https://github.com/yilkalargaw/emacs-native-snippets]]
 (use-package tempo
-  :autoload tempo-define-template
   :bind
   ("M-g M-n" . 'tempo-forward-mark)
   ("M-g M-p" . 'tempo-backward-mark)
@@ -1242,7 +1241,9 @@ If no custom prefix matches, it calls the original function."
         (setq-local comment-start "-- ")))
    ((sql-mode sql-interactive-mode) . sql-indent-enable))
   :custom
-  (sql-input-ring-file-name (locate-user-emacs-file "sql-history.eld")))
+  (sql-input-ring-file-name (locate-user-emacs-file "sql-history.eld"))
+  :config
+  (require 'init-sql))
 
 (use-package js
   :custom

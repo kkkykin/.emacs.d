@@ -24,6 +24,33 @@
 
 ;;; Code:
 
+(require 'org)
+(require 'org-src)
+(require 'org-id)
+(require 'org-element)
+(require 'org-macs)
+(require 'ol)
+(require 'ob-core)
+(require 'ob-tangle)
+(require 'tempo)
+
+(declare-function ex-write "viper-ex")
+(declare-function json-pretty-print-ordered "json")
+(declare-function auth-source-user-and-password "auth-source")
+(declare-function zr-net-basic-auth-header "init-net")
+(declare-function url-cookie-write-file "url-cookie")
+(declare-function url-cookie-parse-file-netscape "url-cookie")
+(declare-function org-protocol-parse-parameters "org-protocol")
+(declare-function server-delete-client "server")
+(defvar server-clients)
+(defvar url-configuration-directory)
+(defvar org-protocol-protocol-alist)
+(defvar org-tempo-keywords-alist)
+(defvar org-export-options-alist)
+(defvar zr-viper-extra-ex-token-alist)
+(defvar viper-vi-global-user-map)
+(defvar dictionary-current-data)
+
 ;; org-keys
 
 ;; https://sachachua.com/blog/2025/03/org-mode-cutting-the-current-list-item-including-nested-lists-with-a-speed-command/
@@ -60,7 +87,7 @@
     (format "\"%s\" \"%%1\"" p)))
 
 (defun zo/protocol-register ()
-  "Create/overwrite org-protocol registry entries (per-user, HKCU\\Software\\Classes)."
+  "Create/overwrite org-protocol registry entries."
   (interactive)
   (pcase system-type
     ('windows-nt
@@ -147,8 +174,8 @@ result of evaluating the expression."
 
 (defun zo/string-maybe-eval (string)
   "Conditionally evaluate STRING as a Lisp expression if it appears to be one.
-If STRING matches the pattern of a complete Lisp form (starts with '('
-and ends with ')'), evaluate it as a Lisp expression. Otherwise, return
+If STRING matches the pattern of a complete Lisp form (starts with \"(\"
+and ends with \")\"), evaluate it as a Lisp expression. Otherwise, return
 STRING unchanged."
   (if (string-match-p (rx bos (? (or ?' ?`)) ?\( (+ anychar) ?\) eos) string)
       (zo/string-eval string)
@@ -212,8 +239,8 @@ point, optionally moving to a specified position before executing.
 
 Optional argument TYPE specifies the type of element to execute. If not
 provided, the function determines the type based on the element at point.
-Supported types are 'src-block', 'inline-src-block', 'babel-call', and
-'inline-babel-call'.
+Supported types are `src-block', `inline-src-block', `babel-call', and
+`inline-babel-call'.
 
 Optional argument PARAMS provides additional parameters to pass to the
 execution function.
@@ -223,12 +250,7 @@ before executing the Babel block or call.
 
 Optional argument CONFIRM, if non-nil, overrides the value of
 `org-confirm-babel-evaluate', determining whether to ask for confirmation
-before executing the block.
-
-Example usage:
-- Execute a specific Babel call at a given position with confirmation:
-  (zo/call-babel-at-point 'babel-call '((:var . \"a=\\\"ddd\\\"\"))
-  1234 t)."
+before executing the block."
   (save-excursion
     (when position (goto-char position))
     (let ((org-confirm-babel-evaluate confirm))
@@ -275,15 +297,15 @@ Example usage:
 Searches forward or backward based on COUNT.  If ORG-MODE-P is true,
 prioritizes Org links and Babel elements.  Throws an error if no link
 or Babel element is found."
-  (let ((regexp (if org-mode-p
-                    (rx (| (regex org-link-any-re)
-                           (regex "\\(call\\|src\\)_\\|^[ \t]*#\\+\\(BEGIN_SRC\\|CALL:\\)")))
-                  org-link-any-re))
-        (search-direction (if (natnump count) 'forward 'backward))
-        (bound (when (use-region-p)
-                 (if (eq search-direction 'forward)
-                     (region-end)
-                   (region-beginning)))))
+  (let* ((regexp (if org-mode-p
+                     (rx (| (regex org-link-any-re)
+                            (regex "\\(call\\|src\\)_\\|^[ \t]*#\\+\\(BEGIN_SRC\\|CALL:\\)")))
+                   org-link-any-re))
+         (search-direction (if (natnump count) 'forward 'backward))
+         (bound (when (use-region-p)
+                  (if (eq search-direction 'forward)
+                      (region-end)
+                    (region-beginning)))))
     (if (re-search-forward regexp (or bound nil) t count)
         (zo/execute-link-or-babel-at-point org-mode-p)
       (user-error "No link or babel found"))))
@@ -372,7 +394,7 @@ exist.
 ref: `org-babel-open-src-block-result'"
   (interactive "P")
   (pcase (org-babel-get-src-block-info 'no-eval)
-    (`(,_ ,_ ,arguments ,_ ,_ ,start ,_)
+    (`(,_ ,_ ,_ ,_ ,_ ,start ,_)
      (save-excursion
        ;; Go to the results, if there aren't any then run the block.
        (goto-char start)
@@ -401,12 +423,7 @@ from the available blocks and calls.
 
 Optional argument PARAMS provides additional parameters to pass to the execution
 function. These parameters are merged with a default parameter that sets the
-`:results` property to \"silent\" to suppress output.
-
-Usage:
-- Execute a specific named Babel block: `M-x zo/babel-execute-named-src-block`
-- Execute a named Babel block with additional parameters:
-  (zo/babel-execute-named-src-block \"block-name\" '((:lexical . \"yes\")))."
+`:results` property to \"silent\" to suppress output."
   (interactive nil org-mode)
   (save-excursion
     (save-restriction
@@ -445,8 +462,9 @@ language and calls the corresponding completion function if it
 exists. For example, if point is in a Python source block, it will call
 `python-completion-at-point'.
 
-The function looks for a completion function named <language>-completion-at-point
-where <language> is the source block's language property.
+The function looks for a completion function named
+<language>-completion-at-point where <language> is the source block's
+language property.
 
 Returns:
 - The result of calling the language-specific completion function if found
@@ -547,7 +565,7 @@ EXPANDED -- The expanded content to be merged."
              #'zo/babel-update-block-body))
     (org-babel-detangle source-code-file)))
 
-(defun zo/babel-detangle (&optional source-code-file)
+(defun zo/babel-detangle (&optional source-code-file force)
   "Support detangle single block, call custom babel link, replace by diff
 results."
   (interactive "P")
@@ -603,55 +621,59 @@ ref: https://emacs-china.org/t/header-args-property/27494/2"
 			 (buffer-file-name (buffer-base-buffer)))))
       id))))
 
-(with-eval-after-load 'ob-tangle
-  (define-advice org-babel-tangle--unbracketed-link
-      (:before (params) create-custom-id)
-    "If create comments, also create custom-id."
-    (unless (string= "no" (cdr (assq :comments params)))
-      (zo/custom-id-get nil t))))
+(defun zr-advice-ob-tangle-create-custom-id (params)
+  "If create comments, also create custom-id."
+  (unless (string= "no" (cdr (assq :comments params)))
+    (zo/custom-id-get nil t)))
 
-(with-eval-after-load 'ox-pandoc
-  (defun zo/pandoc-options-fix (body backend info)
-    "Fix OPTIONS metadata when export org via pandoc.
+(with-eval-after-load 'ob-tangle
+  (advice-add 'org-babel-tangle--unbracketed-link
+              :before #'zr-advice-ob-tangle-create-custom-id))
+
+(defun zo/pandoc-options-fix (body backend info)
+  "Fix OPTIONS metadata when export org via pandoc.
 
 This function ensures proper handling of export options when exporting
 org-mode using the pandoc backend. It prepends the necessary OPTIONS
 metadata to the exported content."
-    (if (eq 'pandoc backend)
-        (let ((options-string
-               (string-join
-                (cl-loop for opt in org-export-options-alist
-                         for key = (nth 2 opt)
-                         for value = (plist-get info (car opt))
-                         when key
-                         collect (format "%s:%S" key value))
-                " ")))
-          (format "#+OPTIONS: %s\n%s" options-string
-                  (if (memq 'subtree (plist-get info :export-options))
-                      body
-                    (replace-regexp-in-string "^#\\+options:.+" "" body))))
-      body))
+  (if (eq 'pandoc backend)
+      (let ((options-string
+             (string-join
+              (cl-loop for opt in org-export-options-alist
+                       for key = (nth 2 opt)
+                       for value = (plist-get info (car opt))
+                       when key
+                       collect (format "%s:%S" key value))
+              " ")))
+        (format "#+OPTIONS: %s\n%s" options-string
+                (if (memq 'subtree (plist-get info :export-options))
+                    body
+                  (replace-regexp-in-string "^#\\+options:.+" "" body))))
+    body))
+
+(with-eval-after-load 'ox-pandoc
   (add-hook 'org-export-filter-final-output-functions
             #'zo/pandoc-options-fix))
 
-(with-eval-after-load 'ox-latex
-  (defun zo/latex-filter-link-fix (link backend info)
-    "Use correct path when export directory not `default-directory'.
+(defun zo/latex-filter-link-fix (link backend info)
+  "Use correct path when export directory not `default-directory'.
      Append zero-width-space after link avoid error: No line here to end."
-    (if (eq 'latex backend)
-        (replace-regexp-in-string
-         "\\(\\includegraphics.+{\\)\\(.+\\)}\\([^z-a]+\\)"
-         (lambda (s)
-           (let ((link (match-string 2 s))
-                 (out-dir (file-name-directory
-                           (expand-file-name (plist-get info :output-file)))))
-             (format "%s%s}%s\u200b"
-                     (match-string 1 s)
-                     (file-relative-name (expand-file-name link)
-                                         out-dir)
-                     (match-string 3 s))))
-         link t t)
-      link))
+  (if (eq 'latex backend)
+      (replace-regexp-in-string
+       "\\(\\includegraphics.+{\\)\\(.+\\)}\\([^z-a]+\\)"
+       (lambda (s)
+         (let ((link (match-string 2 s))
+               (out-dir (file-name-directory
+                         (expand-file-name (plist-get info :output-file)))))
+           (format "%s%s}%s\u200b"
+                   (match-string 1 s)
+                   (file-relative-name (expand-file-name link)
+                                       out-dir)
+                   (match-string 3 s))))
+       link t t)
+    link))
+
+(with-eval-after-load 'ox-latex
   (add-hook 'org-export-filter-link-functions
             #'zo/latex-filter-link-fix))
 

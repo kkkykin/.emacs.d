@@ -24,9 +24,18 @@
 
 ;;; Code:
 
+(require 'bookmark)
+(require 'eshell)
+(require 'em-hist)
+(require 'esh-mode)
+
+(declare-function zr-viper-nvim-server-cmd "init-viper")
+(declare-function zr-win-display-windows-terminal "init-winnt")
+(declare-function org-table-align "org-table")
+(declare-function org-table-convert-region "org-table")
+
 (defun eshell/import-bookmark (&rest args)
   "Set env from files of bookmarks."
-  (require 'bookmark)
   (dolist (mark bookmark-alist)
     (when-let* ((file (bookmark-get-filename mark))
                 ((not (bookmark-get-handler mark))))
@@ -42,10 +51,10 @@
   "Extract last Eshell output to a new buffer and format it.
 
 FORMAT can be one of the following symbols:
-- 'csv : Convert csv to Org table
-- 'tsv : Convert TSV to Org table
-- 'json : highlight
-- 'markdown : Align Markdown table
+- csv : Convert csv to Org table
+- tsv : Convert TSV to Org table
+- json : highlight
+- markdown : Align Markdown table
 - nil : No formatting (default)
 
 Interactively, use a prefix argument to select formatting."
@@ -86,7 +95,7 @@ ARGS are passed directly to the `sq` command."
            (eshell-parse-command (car rep) (cdr rep)))))
 
 (defun ze/git-handler (&rest args)
-  "Eshell command handler that ensures 'git' commands always use colored output."
+  "Eshell command handler that ensures git commands always use colored output."
   (let ((extra-args (when (memq eshell-in-pipeline-p '(nil last))
                       '("-c" "color.ui=always")))
         (cmd (format "%c%s" eshell-explicit-command-char (car args))))

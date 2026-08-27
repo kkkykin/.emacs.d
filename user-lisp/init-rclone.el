@@ -24,11 +24,35 @@
 
 ;;; Code:
 
+(require 'init-misc)
+(require 'url-parse)
+
+(declare-function dired-get-marked-files "dired")
+(declare-function auth-source-user-and-password "auth-source")
+(declare-function zr-net-basic-auth-header "init-net")
+(declare-function emms-track "emms")
+(declare-function emms-source-file-regex "emms")
+(declare-function emms-playlist-ensure-playlist-buffer "emms")
+(declare-function define-emms-source "emms")
+(declare-function zr-net-url-get-auths "init-net")
+(declare-function auth-info-password "auth-source")
+(declare-function auth-source-search "auth-source")
+(defvar zr-net-url-auth-urls)
+(defvar url-request-method)
+(defvar url-request-data)
+(defvar savehist-additional-variables)
+(defvar emms-source-file-exclude-regexp)
+(defvar emms-playlist-insert-track-function)
+(defvar emms-playlist-mode-map)
+(defvar url-request-extra-headers)
+(defvar zr-dired-spc-prefix-map)
 
 ;; rclone
 
 (defcustom zr-rclone-baseurl "http://127.0.0.1:5572"
-  "Default rclone rc baseurl.")
+  "Default rclone rc baseurl."
+  :type 'string
+  :group 'zr)
 (with-eval-after-load 'init-net
   (add-to-list 'zr-net-url-auth-urls (regexp-quote zr-rclone-baseurl)))
 
@@ -37,10 +61,13 @@
                                       ('gnu/linux (expand-file-name
                                                    "~/rclone/")))
   "Default rclone root directory."
-  :type 'directory)
+  :type 'directory
+  :group 'zr)
 
 (defcustom zr-rclone-rc-function #'zr-rclone-call-curl
-  "Function to interact with rclone rc api.")
+  "Function to interact with rclone rc api."
+  :type 'function
+  :group 'zr)
 
 (defun zr-rclone-url-retrieve (user baseurl action args)
   "Make HTTP call to rclone RC API using url-retrieve-synchronously."
@@ -62,7 +89,7 @@
            (append '("-H" "Content-Type: application/json" "-d")
                    (list args)))))
 
-(defun zr-rclone-rc-contact (action &optional args json-type async baseurl)
+(defun zr-rclone-rc-contact (action &optional args json-type)
   "Contact with rclone."
   (with-current-buffer (get-buffer-create "*rclone-rc*")
     (when-let* ((begin (point-max))
@@ -75,12 +102,12 @@
                               ":" (auth-info-password auth))))
       (goto-char begin)
       (funcall zr-rclone-rc-function
-               user (or baseurl zr-rclone-baseurl) action args)
+               user zr-rclone-baseurl action args)
       (with-restriction begin (point-max)
         (goto-char begin)
         (apply #'json-parse-buffer json-type)))))
 
-;; [[elisp:(zr-rclone-rc-contact "rc/noop" (json-encode '(("potato" . 1) ("sausage" . 2))))]]
+;; [[elisp:(zr-rclone-rc-contact "rc/noop" (json-serialize '((potato . 1) (sausage . 2))))]]
 
 ;; [[elisp:(zr-rclone-rc-contact "config/listremotes")]]
 
@@ -109,9 +136,9 @@ variables."
     (make-directory root t)
     (zr-rclone-rc-contact
      "mount/mount"
-     (json-encode `(("fs" . ,(concat remote ":" (or remote-path "")))
-                    ("mountPoint" . ,path)
-                    ("vfsOpt" . ,(json-encode '(("vfs-cache-mode" . "writes")))))))
+     (json-serialize `((fs . ,(concat remote ":" (or remote-path "")))
+                       (mountPoint . ,path)
+                       (vfsOpt . ,(json-serialize '((vfs-cache-mode . "writes")))))))
     (when (called-interactively-p t)
       (dired path))))
 
@@ -123,7 +150,7 @@ variables."
                                   (zr-rclone-list-mounts)))))
   (zr-rclone-rc-contact
    "mount/unmount"
-   (json-encode `(("mountPoint" . ,point)))))
+   (json-serialize `((mountPoint . ,point)))))
 
 (defun zr-rclone-unmount-all ()
   "Unmount all active mounts."
@@ -131,6 +158,7 @@ variables."
   (zr-rclone-rc-contact "mount/unmountall"))
 
 (defun zr-rclone-android-notification-handler (id event)
+  "Notification for android."
   (pcase event
     (_
      (zr-notifications-notify
@@ -198,9 +226,9 @@ resulting URL will be
    operation."
   (gethash "list"
            (zr-rclone-rc-contact "operations/list"
-                                 (json-encode `(("fs" . ,(concat fs ":"))
-                                                ("remote" . ,remote)
-                                                ("opt" . ,opt))))))
+                                 (json-serialize `((fs . ,(concat fs ":"))
+                                                   (remote . ,remote)
+                                                   (opt . ,opt))))))
 
 (defun zr-rclone-directory-files (fs remote &optional full)
   "Return a list of names of files in rclone remote."

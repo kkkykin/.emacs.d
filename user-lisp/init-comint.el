@@ -24,6 +24,13 @@
 
 ;;; Code:
 
+(require 'init-misc)
+(require 'comint)
+
+(declare-function shell-dirtrack-mode "shell")
+(defvar explicit-shell-file-name)
+(defvar dirtrack-list)
+
 
 ;; shell
 

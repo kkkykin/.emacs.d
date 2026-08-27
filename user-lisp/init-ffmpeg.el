@@ -23,6 +23,8 @@
 
 ;;; Code:
 
+(require 'transient)
+
 (transient-define-prefix zr-ffmpeg-menu ()
   "ffmpeg Menu."
   ["Global Options"

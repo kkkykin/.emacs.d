@@ -32,7 +32,8 @@
 (defun zr-dir-vc-last-commit-within-seconds-p (seconds &optional dir)
   "Check if last git commit was within SECONDS seconds in DIR."
   (let* ((log-format "%ct")
-         (log-cmd (list "git" "-C" (or dir ".") "log" "-1" "--pretty=format:%ct"))
+         (log-cmd (list "git" "-C" (or dir ".") "log" "-1"
+                        (format "--pretty=format:%s" log-format)))
          (last-commit-time (string-to-number (car (apply #'process-lines-ignore-status log-cmd))))
          (current-time (time-to-seconds (current-time))))
     (and (not (zerop last-commit-time))
@@ -71,7 +72,7 @@ and set commit time to now."
   "Start monitoring PATH (file or directory) for file changes matching FLAGS.
 PATH: file or directory to monitor
 IGNORE: content to write to .gitignore if creating new repo
-FLAGS: list of events to monitor (default is '(created deleted renamed changed))
+FLAGS: list of events to monitor (default is (created deleted renamed changed))
 
 If path is not under git control, initialize it as a git repo (if directory).
 If path is under git control, add and commit any untracked or modified files."
