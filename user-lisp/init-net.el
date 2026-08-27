@@ -986,14 +986,13 @@ This advice intercepts calls to `eww--dwim-expand-url' and checks
 if the URL starts with certain prefixes. For example, if a match is found, it
 expands the URL according to predefined rules:
 
-- \" c \" prefix is expanded to \"https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/\"
-- \" m \" prefix is expanded to \"https://manned.org/man/\"
-
 If no custom prefix matches, it calls the original function."
     (let ((url (string-trim-right (car args))))
       (pcase url
         ((rx bos " m " (+ (in alnum "\\-_")) eos)
          (replace-regexp-in-string "\\` m " "https://manned.org/man/" url))
+        ((rx bos " n " (+ (in alnum ".-_")) eos)
+         (replace-regexp-in-string "\\` n " "https://crt.name/v1/search?apex=" url))
         ((rx bos " c " (+ (in alnum)) eos)
          (replace-regexp-in-string "\\` c " "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/" url)))))
   (add-to-list 'eww-url-transformers 'zn/url-redirect)
