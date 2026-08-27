@@ -25,13 +25,19 @@
 ;;; Code:
 
 (require 'cl-lib)
-(require 'viper)
-(require 'viper-cmd)
-(require 'viper-ex)
 
 (declare-function dired-dwim-target-recent "dired-aux")
 (declare-function dired-current-directory "dired")
 (declare-function dired-get-marked-files "dired")
+(declare-function viper-exec-key-in-emacs "viper-cmd")
+(declare-function viper-ex "viper-ex")
+(defvar ex-token-alist)
+(defvar viper-vi-global-user-map)
+(defvar viper-emacs-state-id)
+(defvar viper-major-mode-modifier-list)
+(defvar viper-insert-state-mode-list)
+(defvar viper-emacs-state-mode-list)
+(defvar viper-vi-state-mode-list)
 (defvar display-line-numbers-mode)
 (defvar zr-viper-vi-spc-prefix-map)
 (defvar dired-dwim-target)
