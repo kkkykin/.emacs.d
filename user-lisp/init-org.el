@@ -42,6 +42,7 @@
 (declare-function url-cookie-parse-file-netscape "url-cookie")
 (declare-function org-protocol-parse-parameters "org-protocol")
 (declare-function server-delete-client "server")
+(declare-function zr-wezterm-send-json "init-misc")
 (defvar server-clients)
 (defvar url-configuration-directory)
 (defvar org-protocol-protocol-alist)
@@ -222,14 +223,9 @@ The variables are defined in PARAMS."
   (mapcar (lambda (pair) (format "set \"%s=%s\"" (car pair) (cdr pair)))
           (org-babel--get-vars params)))
 
-(defun zo/org-remote-link-open (url)
-  (call-process "curl" nil 0 nil
-                "-H" (concat "origin:ssh://" (system-name))
-                "-H" (concat "url:" url)
-                "-H" (concat "authorization:"
-                             (apply #'zr-net-basic-auth-header
-                                    (auth-source-user-and-password "browse-url.caddy.local")))
-                "http://127.0.0.1:7780/browse-url/"))
+(defun zo/wezterm-link-open (url)
+  (zr-wezterm-send-json `((type . "open_uri")
+                          (uri . ,url))))
 
 (defun zo/call-babel-at-point (&optional type params position confirm)
   "Execute the Babel block or call at point in Org mode.
@@ -269,8 +265,8 @@ before executing the block."
   (let ((org-link-parameters
          (append
           (when (getenv "SSH_CONNECTION" (selected-frame))
-            `(("https" :follow (lambda (s) (zo/org-remote-link-open (concat "https:" s))))
-              ("http" :follow (lambda (s) (zo/org-remote-link-open (concat "http:" s))))))
+            `(("https" :follow (lambda (s) (zo/wezterm-link-open (concat "https:" s))))
+              ("http" :follow (lambda (s) (zo/wezterm-link-open (concat "http:" s))))))
           org-link-parameters)))
     (if in-place
         (condition-case nil
