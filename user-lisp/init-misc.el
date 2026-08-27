@@ -1220,47 +1220,52 @@ FRAME argument is ignored."
 
 ;; json
 
+(defun zr-parse-json-file (file)
+  "Parse JSON from FILE and return its Lisp representation."
+  (with-temp-buffer
+    (insert-file-contents file)
+    (json-parse-buffer)))
+
 (defun zr-merge-json-files (file1 file2 output-file)
-  "Merge two JSON files, with FILE2 having priority over FILE1.
-The merged result is written to OUTPUT-FILE."
-  (let* ((json1 (json-read-file file1))
-         (json2 (json-read-file file2))
+  "Merge JSON FILE1 and FILE2 into OUTPUT-FILE.
+Values from FILE2 take priority over values from FILE1.
+JSON objects are merged recursively, while arrays are concatenated."
+  (let* ((json1 (zr-parse-json-file file1))
+         (json2 (zr-parse-json-file file2))
          (merged (zr-merge-json-objects json1 json2)))
-    (write-region (json-encode merged) nil output-file)))
+    (with-temp-file output-file
+      (json-insert merged))))
 
 (defun zr-merge-json-objects (obj1 obj2)
-  "Recursively merge two JSON objects, with OBJ2 having priority."
+  "Recursively merge JSON values OBJ1 and OBJ2.
+Values from OBJ2 take priority over values from OBJ1.
+JSON objects are merged recursively and arrays are concatenated."
   (cond
-   ;; If obj2 is nil, return obj1
-   ((null obj2) obj1)
-   ;; If obj1 is nil, return obj2
-   ((null obj1) obj2)
-   ;; If both are vectors
-   ((and (vectorp obj1) (vectorp obj2))
+   ;; JSON objects.
+   ((and (hash-table-p obj1)
+         (hash-table-p obj2))
+    (zr-merge-json-hash-tables obj1 obj2))
+
+   ;; JSON arrays.
+   ((and (vectorp obj1)
+         (vectorp obj2))
     (vconcat obj1 obj2))
-   ;; If both are cons cells
-   ((and (consp obj1) (consp obj2))
-    (cond
-     ;; If both are objects (alist)
-     ((and (consp (car obj1)) (consp (car obj2)))
-      (zr-merge-json-alists obj1 obj2))
-     ;; Mixed types - obj2 takes precedence
-     (t obj2)))
-   ;; For primitive values, obj2 takes precedence
+
+   ;; Primitive values and mismatched types.
    (t obj2)))
 
-(defun zr-merge-json-alists (alist1 alist2)
-  "Merge two association lists, with ALIST2 having priority."
-  (let ((result (copy-alist alist1)))
-    (dolist (pair alist2)
-      (let ((key (car pair))
-            (value (cdr pair)))
-        (let ((existing (assoc key result)))
-          (if existing
-              ;; Key exists, merge the values
-              (setcdr existing (zr-merge-json-objects (cdr existing) value))
-            ;; Key doesn't exist, add it
-            (push pair result)))))
+(defun zr-merge-json-hash-tables (table1 table2)
+  "Merge JSON object TABLE1 and TABLE2.
+Values from TABLE2 take priority."
+  (let ((result (copy-hash-table table1)))
+    (maphash
+     (lambda (key value)
+       (if (gethash key result)
+           (puthash key
+                    (zr-merge-json-objects (gethash key result) value)
+                    result)
+         (puthash key value result)))
+     table2)
     result))
 
 (defun zr-sops-file-contents (file)
