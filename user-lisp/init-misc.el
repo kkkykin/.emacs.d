@@ -8,6 +8,29 @@
 (require 'tab-line)
 (require 'bookmark)
 
+(declare-function shell-command-do-open "dired-aux")
+(declare-function dired-goto-file "dired")
+(declare-function dired-revert "dired")
+(declare-function dired-get-file-for-visit "dired")
+(declare-function dbus-call-method "dbus")
+(declare-function dbus-ignore-errors "dbus")
+(declare-function dframe-close-frame "dframe.el")
+(declare-function speedbar-line-file "speedbar")
+(declare-function speedbar-refresh "speedbar")
+(declare-function xterm--query "xterm")
+(declare-function zr-rclone-normalize-remote-path "init-rclone")
+(declare-function zr-rclone-directory-files-recursively "init-rclone")
+(declare-function zr-rclone-list-remotes "init-rclone")
+(declare-function org-id-new "org-id")
+(declare-function zr-android-termux-notifications-notify "init-android")
+(declare-function notifications-notify "notifications")
+(declare-function android-notifications-notify "androidselect.c")
+(declare-function viper-add-local-keys "viper-keym")
+(declare-function zr-rclone-copy-file "init-rclone")
+(declare-function zr-rclone-url-retrieve "init-rclone")
+(declare-function wallpaper--image-file-regexp "wallpaper")
+(declare-function term-send-string "term")
+
 (defun zr-always-yes (&rest args)
   "ref: https://goykhman.ca/gene/blog/2024-06-09-always-yes-in-emacs-lisp.html"
   (cl-letf (((symbol-function 'yes-or-no-p) #'always)
@@ -744,97 +767,6 @@ ref: https://karthinks.com/software/emacs-window-management-almanac/"
       #'zr-tab-line-tabs-buffer-group-by-mode-exclude-some-buffer)
 
 
-;; repeat
-
-(defvar-keymap zr-structure-repeat-map
-  :repeat (:enter ( treesit-beginning-of-defun beginning-of-defun
-                    treesit-end-of-defun end-of-defun
-                    indent-pp-sexp prog-indent-sexp
-                    c-beginning-of-defun c-end-of-defun
-                    c-awk-beginning-of-defun c-awk-end-of-defun
-                    python-nav-backward-up-list backward-up-list
-                    python-shell-send-defun eval-defun))
-  "r" #'raise-sexp
-  "i" (lambda ()
-        (interactive)
-        (setq repeat-map 'zr-structure-repeat-map)
-        (pcase major-mode
-          ('emacs-lisp-mode (indent-pp-sexp))
-          (_ (prog-indent-sexp))))
-  "k" #'kill-sexp
-  "<backspace>" #'backward-kill-sexp
-  "SPC" #'mark-sexp
-  "@" #'mark-sexp
-  "t" #'transpose-sexps
-  "s" #'delete-pair
-  "(" #'insert-parentheses
-  "'" (lambda ()
-        (interactive)
-        (setq repeat-map 'zr-structure-repeat-map)
-        (insert-pair nil ?\' ?\'))
-  "\"" (lambda ()
-         (interactive)
-         (setq repeat-map 'zr-structure-repeat-map)
-         (insert-pair nil ?\" ?\"))
-  "<" (lambda ()
-        (interactive)
-        (setq repeat-map 'zr-structure-repeat-map)
-        (insert-pair nil ?\< ?\>))
-  "[" (lambda ()
-        (interactive)
-        (setq repeat-map 'zr-structure-repeat-map)
-        (insert-pair nil ?\[ ?\]))
-  "{" (lambda ()
-        (interactive)
-        (setq repeat-map 'zr-structure-repeat-map)
-        (insert-pair nil ?\{ ?\}))
-  "/" #'undo
-  "w" #'hs-show-all
-  "z" #'hs-hide-all
-  "c" #'hs-toggle-hiding
-  "u" (lambda ()
-        (interactive)
-        (setq repeat-map 'zr-structure-repeat-map)
-        (pcase major-mode
-          ((guard (memq major-mode '(python-ts-mode)))
-           (python-nav-backward-up-list))
-          (_ (backward-up-list))))
-  "d" #'down-list
-  "n" #'forward-list
-  "p" #'backward-list
-  "f" #'forward-sexp
-  "b" #'backward-sexp
-  "a" (lambda ()
-        (interactive)
-        (setq repeat-map 'zr-structure-repeat-map)
-        (pcase major-mode
-          ((guard (memq major-mode '(python-ts-mode)))
-           (treesit-beginning-of-defun))
-          ((guard (memq major-mode '(c++-mode c-mode)))
-           (c-beginning-of-defun))
-          ('awk-mode
-           (c-awk-beginning-of-defun))
-          (_ (beginning-of-defun))))
-  "e" (lambda ()
-        (interactive)
-        (setq repeat-map 'zr-structure-repeat-map)
-        (pcase major-mode
-          ((guard (memq major-mode '(python-ts-mode)))
-           (treesit-end-of-defun))
-          ((guard (memq major-mode '(c++-mode c-mode)))
-           (c-end-of-defun))
-          ('awk-mode
-           (c-awk-end-of-defun))
-          (_ (end-of-defun))))
-  "x" (lambda ()
-        (interactive)
-        (setq repeat-map 'zr-structure-repeat-map)
-        (pcase major-mode
-          ((guard (memq major-mode '(python-ts-mode)))
-           (python-shell-send-defun))
-          (_ (call-interactively #'eval-defun)))))
-
-
 ;; file
 
 (defun zr-file-modified-recently-p (file seconds)
@@ -846,6 +778,10 @@ ref: https://karthinks.com/software/emacs-window-management-almanac/"
          (file-attribute-modification-time
           (file-attributes file))
          seconds))))
+
+(declare-function zr-rclone-normalize-remote-path "init-rclone")
+(declare-function zr-rclone-directory-files-recursively "init-rclone")
+(declare-function zr-rclone-list-remotes "init-rclone")
 
 (defun zr-directory-files-recursively
     (dir regexp &optional include-directorys)
@@ -864,6 +800,8 @@ ref: https://karthinks.com/software/emacs-window-management-almanac/"
 ;; etc
 
 (defvar org-id-method)
+(declare-function org-id-new "org-id")
+
 (defun zr-generate-uuid (&optional obj)
   "Generate UUID format string."
   (interactive)
@@ -919,6 +857,9 @@ ref: https://karthinks.com/software/emacs-window-management-almanac/"
 
 
 ;; appt
+(declare-function zr-android-termux-notifications-notify "init-android")
+(declare-function notifications-notify "notifications")
+(declare-function android-notifications-notify "androidselect.c")
 
 (defun zr-notifications-notify (title body &rest params)
   "Send system notification with TITLE and BODY based on current OS.
@@ -1091,6 +1032,8 @@ the process menu."
 
 
 ;; follow
+(declare-function viper-add-local-keys "viper-keym")
+
 (defun zr-follow-current-window (&optional arg)
   "Follow the window."
   (interactive "P")
@@ -1120,6 +1063,10 @@ Can be a single directory or a list of directories."
             (repeat 'directory)))
 
 (defvar zr-rclone-rc-function)
+(declare-function zr-rclone-copy-file "init-rclone")
+(declare-function zr-rclone-url-retrieve "init-rclone")
+(declare-function wallpaper--image-file-regexp "wallpaper")
+
 (defun zr-set-wallpaper-randomly ()
   "Set a random wallpaper image from `zr-wallpaper-directory'."
   (interactive)
@@ -1152,6 +1099,8 @@ Can be a single directory or a list of directories."
 ;; term
 
 (defvar explicit-shell-file-name)
+(declare-function term-send-string "term")
+
 (defun zr-gpg-term ()
   "Start term and automatically execute commands."
   (interactive)
@@ -1333,6 +1282,111 @@ Values from TABLE2 take priority."
        (signal (car err) (cdr err))))
 
     ok))
+
+;; debug
+(defun zr-insert-declarations-from-compile-log (warning-buffer)
+  "Insert declarations for warnings in WARNING-BUFFER.
+
+Function warnings generate `declare-function' forms.
+Free-variable warnings generate `defvar' forms.
+
+Target buffers are found by the file names in the warnings."
+  (interactive
+   (list (read-buffer "Warning buffer: " "*Compile-Log*" t)))
+  (let ((warnings (make-hash-table :test #'equal)))
+    ;; Collect warnings, grouped by file.
+    (with-current-buffer warning-buffer
+      (save-excursion
+        (goto-char (point-min))
+        (while (re-search-forward
+                "^\\([^:\n]+\\.el\\):[0-9]+:[0-9]+: Warning: \\(.*\\)$"
+                nil t)
+          (push (match-string-no-properties 2)
+                (gethash (match-string-no-properties 1) warnings)))))
+
+    (let ((inserted 0)
+          (not-found nil))
+      (maphash
+       (lambda (file warning-list)
+         (let ((buffer
+                (seq-find
+                 (lambda (buffer)
+                   (with-current-buffer buffer
+                     (and buffer-file-name
+                          (string-equal
+                           file
+                           (file-name-nondirectory buffer-file-name)))))
+                 (buffer-list)))
+               functions
+               variables)
+           (if (not buffer)
+               (push file not-found)
+             ;; Parse warnings.
+             (dolist (warning warning-list)
+               (cond
+                ((string-match
+                  "the function `\\([^']+\\)' is not known to be defined"
+                  warning)
+                 (push (intern (match-string 1 warning))
+                       functions))
+                ((string-match
+                  "reference to free variable `\\([^']+\\)'"
+                  warning)
+                 (push (intern (match-string 1 warning))
+                       variables))))
+
+             (setq functions (delete-dups functions)
+                   variables (delete-dups variables))
+
+             (with-current-buffer buffer
+               (let (forms)
+                 ;; declare-function
+                 (dolist (function functions)
+                   (unless
+                       (save-excursion
+                         (goto-char (point-min))
+                         (re-search-forward
+                          (format
+                           "^(declare-function[ \t]+%s\\(?:[ \t\n)]\\)"
+                           (regexp-quote (symbol-name function)))
+                          nil t))
+                     (let* ((source (symbol-file function 'defun))
+                            (library (and source
+                                          (file-name-base source)))
+                            )
+                       (push
+                        (format "(declare-function %s %S)"
+                                function
+                                library)
+                        forms))))
+
+                 ;; defvar
+                 (dolist (variable variables)
+                   (unless
+                       (save-excursion
+                         (goto-char (point-min))
+                         (re-search-forward
+                          (format
+                           "^(defvar[ \t]+%s\\(?:[ \t\n)]\\)"
+                           (regexp-quote (symbol-name variable)))
+                          nil t))
+                     (push
+                      (format "(defvar %s)" variable)
+                      forms)))
+
+                 (when forms
+                   (goto-char (point-min))
+                   (insert (string-join (nreverse forms) "\n")
+                           "\n\n")
+                   (setq inserted (+ inserted (length forms)))))))))
+       warnings)
+
+      (message "Inserted %d declarations%s"
+               inserted
+               (if not-found
+                   (format "; buffers not found: %s"
+                           (string-join not-found ", "))
+                 "")))))
 
 (provide 'init-misc)
 ;;; init-misc.el ends here

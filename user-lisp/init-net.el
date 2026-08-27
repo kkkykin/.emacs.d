@@ -5,6 +5,34 @@
 (require 'cl-lib)
 (require 'nsm)
 (require 'multisession)
+(require 'url-parse)
+(require 'init-misc)
+
+(declare-function eww-readable "eww")
+(declare-function newsticker--desc "newst-backend")
+(declare-function newsticker--title "newst-backend")
+(declare-function newsticker--treeview-item-window "newst-treeview")
+(declare-function newsticker--sentinel-work "newst-backend")
+(declare-function auth-source-pick-first-password "auth-source")
+(declare-function org-babel-tangle-file "ob-tangle")
+(declare-function url-default-find-proxy-for-url "url-proxy")
+(declare-function auth-info-password "auth-source")
+(declare-function auth-source-search "auth-source")
+(defvar zr-sys-winnt-p)
+(defvar url-request-extra-headers)
+(defvar url-http-end-of-headers)
+(defvar url-proxy-services)
+(defvar url-proxy-locator)
+(defvar org-confirm-babel-evaluate)
+(defvar newsticker-dir)
+(defvar auto-insert-directory)
+(defvar newsticker-wget-arguments)
+(defvar newsticker-wget-name)
+(defvar newsticker--process-ids)
+(defvar newsticker-url-list-defaults)
+(defvar newsticker-treeview-mode-map)
+(defvar eww-data)
+(defvar eww-url-transformers)
 
 ;; ipv6
 (defun zn/has-public-ipv6-addr-p ()
@@ -81,11 +109,11 @@
 (defun zn/internet-up-p (&optional host callback)
   "Test connectivity via ping."
   (interactive)
-  (let* ((args (if zn/sys-winnt-p '("-n" "1" "-w" "1") '("-c1" "-W1")))
+  (let* ((args (if zr-sys-winnt-p '("-n" "1" "-w" "1") '("-c1" "-W1")))
          (proc (apply #'start-process "internet-test" nil "ping"
                       (if host host "baidu.com") args))
          (callback (if callback callback 'zn/default-callback)))
-    (set-process-sentinel proc (lambda (proc signal)
+    (set-process-sentinel proc (lambda (proc _)
                                  (apply callback
                                         (if (= 0 (process-exit-status proc))
                                             '(t) nil))))))
@@ -102,7 +130,7 @@
                  "-o/dev/null" "-w%{http_code}" ,url))
          (proc (apply #'start-process "url-test" nil "curl" args))
          (callback (if callback callback 'zn/default-callback)))
-    (set-process-filter proc (lambda (proc line)
+    (set-process-filter proc (lambda (_ line)
                                (apply callback
                                       (if (string= "200" line)
                                           '(t) nil))))))
@@ -200,7 +228,7 @@ is passed to the underlying URL retrieval implementation."
       (_ (apply orig-fun url args)))))
 
 (defun zn/url-http-parse-response ()
-  "Parse http response, From 'https://emacs-china.org/t/elisp-http/18432/2'."
+  "Parse http response, From https://emacs-china.org/t/elisp-http/18432/2."
   (set-buffer-multibyte t)
   (goto-char (point-min))
   (let ((headers `(("Status"
@@ -238,11 +266,12 @@ is passed to the underlying URL retrieval implementation."
   (let ((mask (make-vector 4 0)))
     (dotimes (i 4)
       (let ((bits (- prefix-len (* i 8))))
-        (cond 
-         ((>= bits 8) (aset mask i 255))
-         ((> bits 0) (aset mask i (logand (lsh 255 (- 8 bits)) 255)))
-         (t (aset mask i 0)))))
-    mask))
+        (cond
+         ((>= bits 8)
+          (aset mask i 255))
+         ((> bits 0)
+          (aset mask i (ash 255 (- bits 8))))))
+    mask)))
 
 (defun zn/generate-ipv6-mask (prefix-len)
   "Generate IPv6 netmask vector for given prefix length."
@@ -296,7 +325,7 @@ is passed to the underlying URL retrieval implementation."
     (setf (multisession-value zn/proxy-rules-hash) hash
           (multisession-value zn/proxy-rules-patterns) pattern)))
 
-(defun zn/match-proxy-rule (urlobj host)
+(defun zn/match-proxy-rule (_ host)
   "Match URL against proxy rules. Returns proxy string or \"DIRECT\"."
   (let* ((hash (multisession-value zn/proxy-rules-hash))
          (pattern (multisession-value zn/proxy-rules-patterns))
@@ -326,20 +355,20 @@ is passed to the underlying URL retrieval implementation."
   (replace-regexp-in-string "^SOCKS5 " "PROXY " (zn/match-proxy-rule urlobj host)))
 
 (defun zn/url-proxy-reset ()
-  "Reset proxy by 'all_proxy' env."
+  "Reset proxy by all_proxy env."
   (interactive)
   (if-let* ((proxy (getenv "all_proxy"))
             (parts (string-split proxy "[/:]+"))
             (host-port (string-join (cdr parts) ":")))
       (progn
-        (setf (alist-get "http" url-proxy-services) host-port
-              (alist-get "https" url-proxy-services) host-port)
+        (setf (alist-get "http" url-proxy-services nil nil #'equal) host-port
+              (alist-get "https" url-proxy-services nil nil #'equal) host-port)
         (setq url-proxy-locator #'url-default-find-proxy-for-url))
     (setq url-proxy-locator #'zn/url-custom-find-proxy-for-url)))
 (with-eval-after-load 'url-vars
   (zn/url-proxy-reset))
 
-(defun zn/curl-parameters-dwim (url &rest args)
+(defun zn/curl-parameters-dwim (url &rest _)
   "Generate explicit parameters for curl."
   (let* ((urlobj (url-generic-parse-url url))
          (proxy (zn/match-proxy-rule urlobj (url-host urlobj)))
@@ -351,16 +380,10 @@ is passed to the underlying URL retrieval implementation."
         (setq parameters (list (concat "-x" prefix (cadr u))))))
     parameters))
 
-(with-eval-after-load 'plz
-  (define-advice plz (:around (fn method url &rest args) append-arg)
-    (let ((plz-curl-default-args
-           (append (zn/curl-parameters-dwim url)
-                   plz-curl-default-args)))
-      (apply fn method url args))))
-
 (defcustom zn/pac-data-file
   (expand-file-name "pac.json" zr-dotfiles-dir)
   "PAC data file path."
+  :group 'zr
   :type 'file)
 (add-to-list 'zr-dotfiles-dir-followd-by-vars 'zn/pac-data-file)
 
@@ -412,80 +435,6 @@ https://support.microsoft.com/en-us/topic/how-to-disable-automatic-proxy-caching
       "surfingkeys/20241214T081602--surfingkeys__browser.org"
       zr-dotfiles-dir)
      nil "^javascript$")))
-
-(defun zn/proxy-up-p (&optional proxy callback)
-  "Test Proxy availability."
-  (interactive)
-  (let ((args `(:proxy ,(if proxy proxy
-                          (concat "http://" zn/centaur-proxy))
-                       :callback ,(when callback callback))))
-    (apply #'zn/url-up-p "https://www.baidu.com" :max-time 2 args)))
-
-(defun zn/proxy-http-show ()
-  "Show HTTP/HTTPS proxy."
-  (interactive)
-  (if url-proxy-services
-      (message "Current HTTP proxy is `%s'" zn/centaur-proxy)
-    (message "No HTTP proxy")))
-
-(defun zn/proxy-http-enable ()
-  "Enable HTTP/HTTPS proxy."
-  (interactive)
-  (setq url-proxy-services
-        `(("http" . ,zn/centaur-proxy)
-          ("https" . ,zn/centaur-proxy)
-          ("no_proxy" . "^\\(localhost\\|192.168.*\\|10.*\\)")))
-  (zn/proxy-http-show))
-
-(defun zn/proxy-http-disable ()
-  "Disable HTTP/HTTPS proxy."
-  (interactive)
-  (setq url-proxy-services nil)
-  (zn/proxy-http-show))
-
-(defun zn/proxy-http-toggle ()
-  "Toggle HTTP/HTTPS proxy."
-  (interactive)
-  (if (bound-and-true-p url-proxy-services)
-      (zn/proxy-http-disable)
-    (zn/proxy-http-enable)))
-
-(defun zn/proxy-socks-show ()
-  "Show SOCKS proxy."
-  (interactive)
-  (if (bound-and-true-p socks-noproxy)
-      (message "Current SOCKS%d proxy is %s:%s"
-               (cadddr socks-server) (cadr socks-server) (caddr socks-server))
-    (message "No SOCKS proxy")))
-
-(defun zn/proxy-socks-enable ()
-  "Enable SOCKS proxy."
-  (interactive)
-  (require 'socks)
-  (setq url-gateway-method 'socks
-        socks-noproxy '("localhost"))
-  (let* ((proxy (split-string zn/centaur-socks-proxy ":"))
-         (host (car proxy))
-         (port (string-to-number (cadr proxy))))
-    (setq socks-server `("Default server" ,host ,port 5)))
-  (setenv "all_proxy" (concat "socks5://" zn/centaur-socks-proxy))
-  (zn/proxy-socks-show))
-
-(defun zn/proxy-socks-disable ()
-  "Disable SOCKS proxy."
-  (interactive)
-  (setq url-gateway-method 'native
-        socks-noproxy nil
-        socks-server nil)
-  (setenv "all_proxy" "")
-  (zn/proxy-socks-show))
-
-(defun zn/proxy-socks-toggle ()
-  "Toggle SOCKS proxy."
-  (interactive)
-  (if (bound-and-true-p socks-noproxy)
-      (proxy-socks-disable)
-    (zn/proxy-socks-enable)))
 
 
 ;; Newsticker
@@ -586,7 +535,7 @@ https://support.microsoft.com/en-us/topic/how-to-disable-automatic-proxy-caching
   "Convert any site to RSS feed using CSS selectors. The bridge first
 selects the element describing the article entries. It then extracts
 the links to the articles from these elements. It then, depending on
-the setting 'load_pages', either parses the selected elements,
+the setting LOAD-PAGES, either parses the selected elements,
 or downloads the page for each article and parses those. Parsing the
 elements or page is done using the provided selectors."
   (concat (zn/rss-bridge-generator "CssSelectorComplexBridge")
@@ -659,14 +608,14 @@ items are fetched from each feed."
                 ("filterout_description" ,fo-desc)
                 ("filterout_author" ,fo-author)
                 ("filterout_category" ,fo-cat)
-                ;; ("image_hotlink_template" ,zn/img-cdn-server)
+                ("image_hotlink_template" ,(or img-tp zn/img-cdn-server))
                 ("domain" ,domain)
                 ("code" ,(md5 (concat (url-filename url) code))))
               :key #'cadr)))))
 
 (cl-defun zn/rss-hub-transform
     ( url s-fmt &key title item item-title item-title-a item-link
-      item-link-a item-desc iten-desc-a item-pub item-pub-a extra)
+      item-link-a item-desc item-desc-a item-pub item-pub-a extra)
   "Pass URL and transformation rules to convert HTML/JSON into RSS."
   (apply
    #'zn/rss-hub-generator
@@ -712,8 +661,7 @@ items are fetched from each feed."
             (delete-region (point-min) (point-max))
             (mapc
              (lambda (a)
-               (let* ((min (point))
-                      (updated (or (plist-get a :updated) updated))
+               (let* ((updated (or (plist-get a :updated) updated))
                       (author (or (plist-get a :author) author))
                       (title (or (plist-get a :title) title))
                       (link (or (string-replace "&" "&amp;" (plist-get a :link)) link))
@@ -757,7 +705,8 @@ items are fetched from each feed."
           `( :updated
              ,(format-time-string
                "%FT%T%z"
-               (time-convert (/ (gethash "lastModifyTime" a) 1000)))
+               (time-convert (/ (gethash "lastModifyTime" a) 1000)
+                             current-time-list))
              :author ,(gethash "brandName" a)
              :link ,(format "https://www.zhipin.com/job_detail/%s.html"
                             (gethash "encryptJobId" a))
@@ -780,7 +729,7 @@ Argument EVENT tells what has happened to the process."
          (exit-status (process-exit-status process))
          (feed-name (process-get  process 'nt-feed-name))
          (feed-channel (process-get  process 'nt-feed-channel))
-         (feed-limit (process-get  process 'nt-feed-limit))
+         ;; (feed-limit (process-get  process 'nt-feed-limit))
          (command (process-command process))
          (feed-url (car (last command)))
          (buffer (process-buffer process)))
@@ -790,7 +739,7 @@ Argument EVENT tells what has happened to the process."
              (list feed-name feed-url buffer))
       (newsticker--sentinel-work event t feed-name command buffer))))
 
-(defun zn/newsticker--url-stuff-it (channel &optional title args)
+(defun zn/newsticker--url-stuff-it (channel &optional _ args)
   "Generate url for feeds."
   (pcase channel
     ("boss"
@@ -841,6 +790,14 @@ Argument EVENT tells what has happened to the process."
                                             newsticker--process-ids))
         (force-mode-line-update)))))
 
+(defun zr-advice-newsticker-funcall-customize (orig-fun feed-name function)
+  "Get feeds maybe by build atom feeds.
+     ((\"zzz\" ignore 1 3600 (\"-c\" \"3\") \"boss\" 10 (:dd 3)))"
+  (if-let* ((item (assoc feed-name newsticker-url-list-defaults)))
+      (zn/newsticker--get-news-by-build
+       feed-name (nth 5 item) (nth 4 item) (nth 6 item) (nth 7 item))
+    (funcall orig-fun feed-name function)))
+
 (defun zn/advice-newsticker--get-news-by-wget (args)
   (setcar (cddr args)
           (append (caddr args)
@@ -876,16 +833,8 @@ Argument EVENT tells what has happened to the process."
 (with-eval-after-load 'newsticker
   (setq newsticker-wget-arguments
         (append `("--doh-url" ,zn/doh-server) newsticker-wget-arguments))
-
-  (define-advice newsticker--get-news-by-funcall
-      (:around (orig-fun feed-name function) build-feeds)
-    "Get feeds maybe by build atom feeds.
-     '((\"zzz\" ignore 1 3600 (\"-c\" \"3\") \"boss\" 10 (:dd 3)))"
-    (if-let* ((item (assoc feed-name newsticker-url-list-defaults)))
-        (zn/newsticker--get-news-by-build
-         feed-name (nth 5 item) (nth 4 item) (nth 6 item) (nth 7 item))
-      (funcall orig-fun feed-name function)))
   
+  (advice-add 'newsticker--get-news-by-funcall :around #'zr-advice-newsticker-funcall-customize)
   (advice-add 'newsticker--get-news-by-wget :filter-args #'zn/advice-newsticker--get-news-by-wget)
   (advice-add 'newsticker-save-item :before-until #'zn/advice-newsticker-save-item)
   (dolist (fn '(newsticker--image-sentinel newsticker--sentinel-work))
@@ -978,23 +927,6 @@ The function checks the URL and applies the following rules:
       ((rx ?. "go" eos) (go-ts-mode)))))
 
 (with-eval-after-load 'eww
-  (define-advice eww--dwim-expand-url
-      (:before-until (&rest args) other-search-prefix)
-    "Expand URL with custom prefixes before falling back to original function.
-
-This advice intercepts calls to `eww--dwim-expand-url' and checks
-if the URL starts with certain prefixes. For example, if a match is found, it
-expands the URL according to predefined rules:
-
-If no custom prefix matches, it calls the original function."
-    (let ((url (string-trim-right (car args))))
-      (pcase url
-        ((rx bos " m " (+ (in alnum "\\-_")) eos)
-         (replace-regexp-in-string "\\` m " "https://manned.org/man/" url))
-        ((rx bos " n " (+ (in alnum ".-_")) eos)
-         (replace-regexp-in-string "\\` n " "https://crt.name/v1/search?apex=" url))
-        ((rx bos " c " (+ (in alnum)) eos)
-         (replace-regexp-in-string "\\` c " "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/" url)))))
   (add-to-list 'eww-url-transformers 'zn/url-redirect)
   (add-to-list 'eww-url-transformers 'zn/url-retrieve-with-auth)
   (add-hook 'eww-after-render-hook #'zn/eww-render-hook))
@@ -1004,6 +936,7 @@ If no custom prefix matches, it calls the original function."
 
 (defcustom zn/aria2-conf-file (expand-file-name "aria2.conf" "~/.aria2")
   "Default aria2 configuration file path."
+  :group 'zr
   :type '(string))
 
 (defun zn/get-bt-tracker (url)
@@ -1052,15 +985,15 @@ If no custom prefix matches, it calls the original function."
 (defun zn/start-alist ()
   "Start alist server."
   (interactive)
-  (rename-file (expand-file-name "log/log.log" zr-alist-data-directory)
-               (file-name-concat zr-alist-data-directory "log" (format-time-string "%+4Y-%m-%d-%H-%M")))
+  (rename-file (expand-file-name "log/log.log" zn/alist-data-directory)
+               (file-name-concat zn/alist-data-directory "log" (format-time-string "%+4Y-%m-%d-%H-%M")))
   (start-process "alist" nil "alist" "server"
-                 "--data" zr-alist-data-directory)
+                 "--data" zn/alist-data-directory)
   (pcase system-type
     ('android (zr-notifications-notify
                :title "alist"
                :body "Click to stop alist."
-               :on-action (lambda (a b)
+               :on-action (lambda (&rest _)
                             (call-process "pkill" nil nil nil "alist"))))))
 
 
@@ -1126,30 +1059,33 @@ number."
 
 ;; daemon
 
+(defvar-local zn/daemon-last-change)
+
 (defun zn/manage-daemon (name proc timeout)
-  "Manage a daemon process named NAME and kill it after TIMEOUT if its buffer is inactive."
+  "Manage a daemon process named NAME.
+Kill it after TIMEOUT if its buffer is inactive."
   (let ((buffer (process-buffer proc))
         timer)
     (set-process-query-on-exit-flag proc nil)
     (with-current-buffer buffer
-      (unless (local-variable-p 'last-change)
-        (make-local-variable 'last-change))
-      (setq last-change (buffer-modified-tick))
+      (unless (local-variable-p 'zn/daemon-last-change)
+        (make-local-variable 'zn/daemon-last-change))
+      (setq zn/daemon-last-change (buffer-modified-tick))
       (setq timer
             (run-at-time
              timeout timeout
              (lambda ()
                (with-current-buffer buffer
                  (when (and (process-live-p proc)
-                            (= last-change (buffer-modified-tick buffer)))
+                            (= zn/daemon-last-change (buffer-modified-tick buffer)))
                    (interrupt-process proc)
                    (kill-process proc)
                    (message (format-time-string "%H:%M:%S %%s process killed due to inactivity.") name))
-                 (setq last-change (buffer-modified-tick)))))))
+                 (setq zn/daemon-last-change (buffer-modified-tick)))))))
     (when timer
       (set-process-sentinel
        proc
-       (lambda (proc event)
+       (lambda (proc _)
          (when timer (cancel-timer timer))
          (pcase (process-status proc)
            ((or 'exit 'signal)
@@ -1167,7 +1103,7 @@ number."
         (zn/manage-daemon "trojan-go" proc (* 60 5))
       (message "Failed to start trojan-go-daemon."))))
 
-(defun zn/basic-auth-header (user password &optional auth-info)
+(defun zn/basic-auth-header (user password)
   "Build basic auth header string."
   (format "Basic %s" (base64-encode-string (format "%s:%s" user password) t)))
 

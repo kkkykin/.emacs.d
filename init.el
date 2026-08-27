@@ -751,6 +751,94 @@
                ("1" . delete-other-windows)
                ("b" . switch-to-buffer))
   :config
+  (defvar-keymap zr-structure-repeat-map
+    :repeat (:enter ( treesit-beginning-of-defun beginning-of-defun
+                      treesit-end-of-defun end-of-defun
+                      indent-pp-sexp prog-indent-sexp
+                      c-beginning-of-defun c-end-of-defun
+                      c-awk-beginning-of-defun c-awk-end-of-defun
+                      python-nav-backward-up-list backward-up-list
+                      python-shell-send-defun eval-defun))
+    "r" #'raise-sexp
+    "i" (lambda ()
+          (interactive)
+          (setq repeat-map 'zr-structure-repeat-map)
+          (pcase major-mode
+            ('emacs-lisp-mode (indent-pp-sexp))
+            (_ (prog-indent-sexp))))
+    "k" #'kill-sexp
+    "<backspace>" #'backward-kill-sexp
+    "DEL" #'backward-kill-sexp
+    "SPC" #'mark-sexp
+    "@" #'mark-sexp
+    "t" #'transpose-sexps
+    "s" #'delete-pair
+    "(" #'insert-parentheses
+    "'" (lambda ()
+          (interactive)
+          (setq repeat-map 'zr-structure-repeat-map)
+          (insert-pair nil ?\' ?\'))
+    "\"" (lambda ()
+           (interactive)
+           (setq repeat-map 'zr-structure-repeat-map)
+           (insert-pair nil ?\" ?\"))
+    "<" (lambda ()
+          (interactive)
+          (setq repeat-map 'zr-structure-repeat-map)
+          (insert-pair nil ?\< ?\>))
+    "[" (lambda ()
+          (interactive)
+          (setq repeat-map 'zr-structure-repeat-map)
+          (insert-pair nil ?\[ ?\]))
+    "{" (lambda ()
+          (interactive)
+          (setq repeat-map 'zr-structure-repeat-map)
+          (insert-pair nil ?\{ ?\}))
+    "/" #'undo
+    "w" #'hs-show-all
+    "z" #'hs-hide-all
+    "c" #'hs-toggle-hiding
+    "u" (lambda ()
+          (interactive)
+          (setq repeat-map 'zr-structure-repeat-map)
+          (pcase major-mode
+            ((guard (memq major-mode '(python-ts-mode)))
+             (python-nav-backward-up-list))
+            (_ (backward-up-list))))
+    "d" #'down-list
+    "n" #'forward-list
+    "p" #'backward-list
+    "f" #'forward-sexp
+    "b" #'backward-sexp
+    "a" (lambda ()
+          (interactive)
+          (setq repeat-map 'zr-structure-repeat-map)
+          (pcase major-mode
+            ((guard (memq major-mode '(python-ts-mode)))
+             (treesit-beginning-of-defun))
+            ((guard (memq major-mode '(c++-mode c-mode)))
+             (c-beginning-of-defun))
+            ('awk-mode
+             (c-awk-beginning-of-defun))
+            (_ (beginning-of-defun))))
+    "e" (lambda ()
+          (interactive)
+          (setq repeat-map 'zr-structure-repeat-map)
+          (pcase major-mode
+            ((guard (memq major-mode '(python-ts-mode)))
+             (treesit-end-of-defun))
+            ((guard (memq major-mode '(c++-mode c-mode)))
+             (c-end-of-defun))
+            ('awk-mode
+             (c-awk-end-of-defun))
+            (_ (end-of-defun))))
+    "x" (lambda ()
+          (interactive)
+          (setq repeat-map 'zr-structure-repeat-map)
+          (pcase major-mode
+            ((guard (memq major-mode '(python-ts-mode)))
+             (python-shell-send-defun))
+            (_ (call-interactively #'eval-defun)))))
   (keymap-unset comint-repeat-map "C-n")
   (keymap-unset comint-repeat-map "C-p")
   )
@@ -1012,6 +1100,23 @@ before calling the original function."
   (eww-auto-rename-buffer 'title)
   (eww-readable-adds-to-history nil)
   :config
+  (define-advice eww--dwim-expand-url
+      (:before-until (&rest args) other-search-prefix)
+    "Expand URL with custom prefixes before falling back to original function.
+
+This advice intercepts calls to `eww--dwim-expand-url' and checks
+if the URL starts with certain prefixes. For example, if a match is found, it
+expands the URL according to predefined rules:
+
+If no custom prefix matches, it calls the original function."
+    (let ((url (string-trim-right (car args))))
+      (pcase url
+        ((rx bos " m " (+ (in alnum "\\-_")) eos)
+         (replace-regexp-in-string "\\` m " "https://manned.org/man/" url))
+        ((rx bos " n " (+ (in alnum ".-_")) eos)
+         (replace-regexp-in-string "\\` n " "https://crt.name/v1/search?apex=" url))
+        ((rx bos " c " (+ (in alnum)) eos)
+         (replace-regexp-in-string "\\` c " "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/" url)))))
   (setq-mode-local eww-bookmark-mode
                    goal-column (1+ (/ (window-width) 2))))
 
@@ -2762,7 +2867,14 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
 (use-package plz
   :if (package-installed-p 'plz)
   :custom
-  (plz-connect-timeout 10))
+  (plz-connect-timeout 10)
+  :config
+  (require 'init-net)
+  (define-advice plz (:around (fn method url &rest args) append-arg)
+    (let ((plz-curl-default-args
+           (append (zn/curl-parameters-dwim url)
+                   plz-curl-default-args)))
+      (apply fn method url args))))
 
 (use-package taxy
   :if (package-installed-p 'taxy)
