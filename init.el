@@ -2368,6 +2368,18 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
                ("yml" . yaml-ts)))
     (add-to-list 'org-src-lang-modes l)))
 
+(use-package org-protocol
+  :config
+  (when zr-sys-android-gui-p
+    (define-advice org-protocol-check-filename-for-protocol
+        (:filter-args (args) compat-android-gui)
+      "Remove prefix when called by intent."
+      (let ((h (getenv "HOME"))
+            (f (car args)))
+        (when (string-prefix-p (format "%s/%s:/" h org-protocol-the-protocol) f)
+          (setcar args (substring f (1+ (length h)))))
+        args))))
+
 (use-package ol
   :commands org-insert-link-global
   :init

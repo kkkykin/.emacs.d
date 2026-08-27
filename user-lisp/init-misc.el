@@ -1329,9 +1329,12 @@ Target buffers are found by the file names in the warnings."
                   warning)
                  (push (intern (match-string 1 warning))
                        functions))
-                ((string-match
-                  "reference to free variable `\\([^']+\\)'"
-                  warning)
+                ((or (string-match
+                      "\\(?:reference\\|assignment\\) to free variable `\\([^']+\\)'"
+                      warning)
+                     (string-match
+                      "Unused lexical variable `\\([^']+\\)'"
+                      warning))
                  (push (intern (match-string 1 warning))
                        variables))))
 

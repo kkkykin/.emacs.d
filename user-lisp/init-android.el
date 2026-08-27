@@ -24,24 +24,20 @@
 
 ;;; Code:
 
+(require 'multisession)
+(require 'init-misc)
+
+(defvar which-func-display)
+(defvar android-use-exec-loader)
+(defvar overriding-text-conversion-style)
+(defvar android-pass-multimedia-buttons-to-system)
+(defvar org-protocol-the-protocol)
+
 
 ;; which-func
 
 (with-eval-after-load 'which-func
   (setq which-func-display 'header))
-
-
-;; org
-
-(with-eval-after-load 'org-protocol
-  (define-advice org-protocol-check-filename-for-protocol
-      (:filter-args (args) compat-android)
-    "Remove prefix when called by intent."
-    (let ((h (getenv "HOME"))
-          (f (car args)))
-      (when (string-prefix-p (format "%s/%s:/" h org-protocol-the-protocol) f)
-        (setcar args (substring f (1+ (length h)))))
-      args)))
 
 
 ;; hardware
@@ -271,7 +267,7 @@ Other parameters map to termux-notification CLI options."
 ;; wifi
 
 (defun za/wifi-connection-info (&optional type)
-  "'wlan0' interface connection info."
+  "wlan0 interface connection info."
   (let ((ip (network-interface-list nil type)))
     (cl-find "wlan0" ip :test #'string= :key #'car)))
 
@@ -299,15 +295,10 @@ If LOC is not provided, it will be prompted for selection."
         (setf (multisession-value za/wifi-location-table) table)))))
 
 (defun za/where-am-i (&optional ssid)
-  "Determine the current location based on the SSID of the connected Wi-Fi network.
+  "Determine the current location based on the SSID.
 If no SSID is provided, it scans for nearby SSIDs and checks if any of
-them are in `za/wifi-location-table'. Returns the location if found, otherwise nil.
-
-Args:
-  ssid (optional): The SSID of the Wi-Fi network to check.
-
-Returns:
-  The location associated with the SSID, or nil if no matching SSID is found."
+them are in `za/wifi-location-table'. Returns the location if found,
+otherwise nil."
   (let ((table (multisession-value za/wifi-location-table)))
     (if ssid (gethash ssid table)
       (let ((near-ssid (za/termux-wifi-scaninfo "ssid")))
@@ -319,15 +310,10 @@ Returns:
 (defun za/near-known-wifi-p (&optional near-ssid)
   "Check if any of the nearby Wi-Fi SSIDs are known.
 
-This function compares the SSIDs of nearby Wi-Fi networks with a list of known SSIDs.
-If `near-ssid` is provided, it is split into a list of SSIDs. Otherwise, it retrieves
-the SSIDs of nearby networks using `za/termux-wifi-scaninfo`.
-
-Args:
-  near-ssid (Optional): A string containing SSIDs separated by newlines.
-
-Returns:
-  A list of SSIDs that are both nearby and known, or nil if no matches are found."
+This function compares the SSIDs of nearby Wi-Fi networks with a list of
+known SSIDs.  If `near-ssid` is provided, it is split into a list of
+SSIDs. Otherwise, it retrieves the SSIDs of nearby networks using
+`za/termux-wifi-scaninfo`."
   (let ((known-ssid (hash-table-keys (multisession-value za/wifi-location-table)))
         (near-ssid (or (string-split near-ssid "\n")
                        (za/termux-wifi-scaninfo "ssid"))))
@@ -341,15 +327,18 @@ a WiFi management command. It is set to nil when no timer is active.")
 (defun za/wifi-set-timer (minutes &rest args)
   "Set or remove a timer for executing a WiFi management command.
 
-If MINUTES is 0, cancel the existing timer and set `za/wifi-timer` to nil.
-Otherwise, if no timer is currently active, create a new timer that will execute
-a WiFi management command after the specified number of MINUTES (defaulting to 0).
-The command is executed using `start-process` with the provided ARGS.
+If MINUTES is 0, cancel the existing timer and set `za/wifi-timer` to
+nil.  Otherwise, if no timer is currently active, create a new timer
+that will execute a WiFi management command after the specified number
+of MINUTES (defaulting to 0).  The command is executed using
+`start-process` with the provided ARGS.
 
-ARGS should be a list of arguments to pass to the `zr-wifi-manage` command.
+ARGS should be a list of arguments to pass to the `zr-wifi-manage`
+command.
 
 Example usage:
-  (za/wifi-set-timer 5 \"connect\" \"my-wifi-ssid\")  ; Schedule a WiFi connection in 5 minutes
+  (za/wifi-set-timer 5 \"connect\" \"my-wifi-ssid\") ; Schedule a WiFi
+  connection in 5 minutes
   (za/wifi-set-timer 0)  ; Cancel the existing timer"
   (if (zerop minutes)
       (progn
@@ -364,8 +353,9 @@ Example usage:
 
 (defun za/wifi-try-remove-tmp-connection (ssid)
   "Attempt to remove a temporary Wi-Fi connection suggestion for SSID.
-If the SSID is found in the nearby Wi-Fi scan and exists in the Wi-Fi location table,
-it removes the suggestion. Otherwise, it retries after 5 minutes."
+If the SSID is found in the nearby Wi-Fi scan and exists in the Wi-Fi
+location table, it removes the suggestion. Otherwise, it retries after 5
+minutes."
   (let ((near-ssid (za/termux-wifi-scaninfo "ssid"))
         (table (multisession-value za/wifi-location-table)))
     (if (catch 'found
@@ -380,9 +370,10 @@ it removes the suggestion. Otherwise, it retries after 5 minutes."
 
 (defun za/wifi-try-connect (ssid psk &rest args)
   "Attempt to connect to a Wi-Fi network with the given SSID and PSK.
-If the current Wi-Fi state is COMPLETED and not connected to the desired SSID,
-it prompts the user to switch. If DISCONNECTED, it adds a suggestion for the SSID
-and retries connection after 60 seconds if the SSID is not found in the scan."
+If the current Wi-Fi state is COMPLETED and not connected to the desired
+SSID, it prompts the user to switch. If DISCONNECTED, it adds a
+suggestion for the SSID and retries connection after 60 seconds if the
+SSID is not found in the scan."
   (let* ((info (za/termux-wifi-connectioninfo))
          (cur-ssid (gethash "ssid" info)))
     (pcase (gethash "supplicant_state" info)
@@ -391,7 +382,7 @@ and retries connection after 60 seconds if the SSID is not found in the scan."
        (unless (or (equal ssid cur-ssid)
                    (za/where-am-i cur-ssid))
          (when-let* ((use-dialog-box t)
-                     ((y-or-n-p ("Switch to wifi: %s?" ssid))))
+                     ((y-or-n-p (format "Switch to wifi: %s?" ssid))))
            (za/fooview-run "Internet"))))
       ("DISCONNECTED"
        (if (member ssid (za/termux-wifi-scaninfo "ssid"))
