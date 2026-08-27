@@ -28,24 +28,13 @@
 (require 'url-parse)
 
 (declare-function dired-get-marked-files "dired")
-(declare-function auth-source-user-and-password "auth-source")
+(declare-function emms-source-file-regex "emms-source-file")
 (declare-function zr-net-basic-auth-header "init-net")
-(declare-function emms-track "emms")
-(declare-function emms-source-file-regex "emms")
-(declare-function emms-playlist-ensure-playlist-buffer "emms")
-(declare-function define-emms-source "emms")
 (declare-function zr-net-url-get-auths "init-net")
-(declare-function auth-info-password "auth-source")
-(declare-function auth-source-search "auth-source")
 (defvar zr-net-url-auth-urls)
-(defvar url-request-method)
-(defvar url-request-data)
 (defvar savehist-additional-variables)
-(defvar emms-source-file-exclude-regexp)
-(defvar emms-playlist-insert-track-function)
-(defvar emms-playlist-mode-map)
-(defvar url-request-extra-headers)
 (defvar zr-dired-spc-prefix-map)
+(defvar emms-playlist-mode-map)
 
 ;; rclone
 
@@ -157,16 +146,14 @@ variables."
   (interactive)
   (zr-rclone-rc-contact "mount/unmountall"))
 
-(defun zr-rclone-android-notification-handler (id event)
+(defun zr-rclone-android-notification-handler (id _)
   "Notification for android."
-  (pcase event
-    (_
-     (zr-notifications-notify
-      :title "Quitting emacs rclone"
-      :body "Quitting emacs rclone"
-      :replaces-id id
-      :timeout 1)
-     (zr-rclone-quit))))
+  (zr-notifications-notify
+   :title "Quitting emacs rclone"
+   :body "Quitting emacs rclone"
+   :replaces-id id
+   :timeout 1)
+  (zr-rclone-quit))
 
 (defun zr-rclone-rc-start ()
   (interactive)
@@ -309,25 +296,6 @@ Examples:
 (defvar zr-rclone-playlist-history nil)
 (with-eval-after-load 'savehist
   (add-to-list 'savehist-additional-variables 'zr-rclone-playlist-history))
-
-(when (require 'emms nil t)
-  (define-emms-source rclone (dir)
-    "An EMMS source for rclone remote."
-    (interactive (list (read-string "Play rclone directory: "
-                                    nil 'zr-rclone-playlist-history)))
-    (emms-playlist-ensure-playlist-buffer)
-    (add-to-history 'zr-rclone-playlist-history dir 100)
-    (let* ((parts (string-split dir ":"))
-           (remote (car parts))
-           (path (string-join (cdr parts)))
-           (files (zr-rclone-directory-files-recursively
-                   remote path
-                   (rx (| (regexp (emms-source-file-regex))
-                          (regexp (image-file-name-regexp)))))))
-      (dolist (file files)
-        (unless (string-match emms-source-file-exclude-regexp file)
-	      (funcall emms-playlist-insert-track-function 
-		           (emms-track 'url (zr-rclone-transform-file-path file))))))))
 
 (defvar zr-rclone-mpv-args-history nil)
 (with-eval-after-load 'savehist

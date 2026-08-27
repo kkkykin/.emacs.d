@@ -172,83 +172,6 @@ Eshell."
   (string-replace (string ?\r ?\n) (string ?\n) s))
 
 
-;; sandbox
-
-(cl-defun zw/generate-sandbox-conf
-    (&key (gpu "Disable") (net "Disable") map-dirs cmds
-          (audio "Disable") (video "Disable") (protect "Enable")
-          (printer "Disable") (clip "Disable") (memory "4096"))
-  "Generate Windows Sandbox Configuration. ref:
-https://learn.microsoft.com/en-us/windows/security/application-security/application-isolation/windows-sandbox/windows-sandbox-configure-using-wsb-file"
-  (with-temp-buffer
-    (insert-file-contents-literally
-     (expand-file-name "sandbox.wsb" auto-insert-directory))
-    (let ((param-list
-           (list :gpu gpu :net net :audio audio :video video
-                 :protect protect :printer printer :clip clip
-                 :memory memory :cmds cmds :map-dirs map-dirs))
-          (desktop "C:/Users/WDAGUtilityAccount/Desktop")
-          (script-dir (expand-file-name (make-temp-name "emacs-tmp-sandbox-cmds-")
-                                        temporary-file-directory)))
-      (while-let (((re-search-forward (rx "${" (group-n 1 ?: (1+ (not (or ?: ?})))) ?}) nil t))
-                  (key (intern (match-string 1))))
-        (let ((var (plist-get param-list key)))
-          (replace-match
-           (pcase key
-             ((guard (null var)) "")
-             (:cmds
-              (cl-letf
-                  (((symbol-function 'build-cmd)
-                    (lambda (a)
-                      (format
-                       "<Command>powershell -%s</Command>"
-                       (if (stringp a)
-                           (concat "E "
-                                   (base64-encode-string
-                                    (encode-coding-string a 'utf-16le-dos)))
-                         (let ((new (concat (make-temp-name "") ".ps1")))
-                           (if (plist-member a :script)
-                               (write-region (plist-get a :script) nil
-                                             (expand-file-name new script-dir))
-                             (make-symbolic-link
-                              (plist-get a :file)
-                              (expand-file-name new script-dir) t))
-                           (format "ex Bypsss \"%s/script/%s\"" desktop new)))))))
-                (if (stringp var) (build-cmd var)
-                  (make-directory script-dir)
-                  (push `(:host ,script-dir :box "script") map-dirs)
-                  (if (atom (car var)) (build-cmd var)
-                    (build-cmd (mapconcat
-                                (lambda (a) (replace-regexp-in-string "^<Command>\\(.+\\)</Command>$" "\\1" a))
-                                (mapcar #'build-cmd var) ";"))))))
-             (:map-dirs
-              (cl-letf
-                  (((symbol-function 'build-map-dirs)
-                    (lambda (a)
-                      (apply #'format "<MappedFolder>
-  <HostFolder>%s</HostFolder>
-  <SandboxFolder>%s</SandboxFolder>
-  <ReadOnly>%s</ReadOnly>
-</MappedFolder>"
-                             (let* ((host (plist-get a :host))
-                                    (box (plist-get a :box))
-                                    (base (file-name-base (directory-file-name host))))
-                               (list
-                                (string-replace "/" "\\" host)
-                                (string-replace
-                                 "/" "\\"
-                                 (pcase box
-                                   ('nil (expand-file-name base desktop))
-                                   ((pred file-name-absolute-p) box)
-                                   (_ (expand-file-name box desktop))))
-                                (or (plist-get a :ro) "true")))))))
-                (if (atom (car map-dirs)) (build-map-dirs map-dirs)
-                  (mapconcat #'build-map-dirs map-dirs))))
-             (_ var))
-           nil t))))
-    (buffer-string)))
-
-
 ;; dired
 
 (defun zr-dired-change-onedrive-stat (&optional arg)

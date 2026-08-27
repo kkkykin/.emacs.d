@@ -2871,6 +2871,24 @@ https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
   (setq emms-track-description-function #'emms-info-track-description)
   (require 'emms-cache)
   (emms-cache 1)
+  (when (require 'init-rclone nil t)
+    (define-emms-source rclone (dir)
+      "An EMMS source for rclone remote."
+      (interactive (list (read-string "Play rclone directory: "
+                                      nil 'zr-rclone-playlist-history)))
+      (emms-playlist-ensure-playlist-buffer)
+      (add-to-history 'zr-rclone-playlist-history dir 100)
+      (let* ((parts (string-split dir ":"))
+             (remote (car parts))
+             (path (string-join (cdr parts)))
+             (files (zr-rclone-directory-files-recursively
+                     remote path
+                     (rx (| (regexp (emms-source-file-regex))
+                            (regexp (image-file-name-regexp)))))))
+        (dolist (file files)
+          (unless (string-match emms-source-file-exclude-regexp file)
+	        (funcall emms-playlist-insert-track-function 
+		             (emms-track 'url (zr-rclone-transform-file-path file))))))))
   (when (locate-library "init-emms")
     (require 'init-emms)))
 
