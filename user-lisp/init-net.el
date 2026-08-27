@@ -1059,7 +1059,7 @@ number."
 
 ;; daemon
 
-(defvar-local zn/daemon-last-change)
+(defvar-local zn/daemon-last-change 0)
 
 (defun zn/manage-daemon (name proc timeout)
   "Manage a daemon process named NAME.
