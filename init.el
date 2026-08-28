@@ -2058,6 +2058,20 @@ If no custom prefix matches, it calls the original function."
   :mode "\\.md\\'"
   :config
   (when (require 'markdown-ts-mode-x nil t)
+    (let ((pandoc
+           (list :command "pandoc"
+                 :input '(file stdin)
+                 :output '(file)
+                 :arguments-function
+                 (lambda (input-file output-file)
+                   (append
+                    (list "-f" "gfm"
+                          "-t" "docx"
+                          "-o" output-file)
+                    (when input-file
+                      (list input-file)))))))
+      (setf (alist-get 'docx markdown-ts-converters)
+            (list (cons 'pandoc pandoc))))
     (let ((pdf-pandoc (alist-get 'pandoc (alist-get 'pdf markdown-ts-converters))))
       (setf (plist-get pdf-pandoc :arguments-function)
             (lambda (input-file output-file)
@@ -2071,7 +2085,7 @@ If no custom prefix matches, it calls the original function."
                       (when input-file
                         (list input-file))))))
     (if (display-graphic-p)
-        (setq markdown-ts-default-converter '(pdf . pandoc)
+        (setq markdown-ts-default-converter '(docx . pandoc)
               markdown-ts-convert-display-function 'browse-url-of-file)
       (setq markdown-ts-default-converter '(html . pandoc)))))
 
