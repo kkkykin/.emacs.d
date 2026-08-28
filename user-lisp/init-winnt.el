@@ -358,6 +358,7 @@ directory."
         process-coding-system-alist
         `(("cmdproxy" . ,locale-coding-system)
           ("ipconfig" . ,locale-coding-system)
+          ("pandoc" . utf-8)
           ("findstr" . ,locale-coding-system)
           ("powershell" . ,(cons 'utf-8-with-signature locale-coding-system))
           ("mysql" . utf-8)

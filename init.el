@@ -2030,7 +2030,7 @@ If no custom prefix matches, it calls the original function."
                  '((bash "https://github.com/tree-sitter/tree-sitter-bash")
                    (go "https://github.com/tree-sitter/tree-sitter-go")
                    (python "https://github.com/tree-sitter/tree-sitter-python")
-                   (lua "https://github.com/MunifTanjim/tree-sitter-lua")
+                   (lua "https://github.com/tree-sitter-grammars/tree-sitter-lua")
                    (sql "https://github.com/DerekStride/tree-sitter-sql" "gh-pages")
                    (gdscript "https://github.com/PrestonKnopp/tree-sitter-gdscript")
                    (rust "https://github.com/tree-sitter/tree-sitter-rust")
@@ -2038,7 +2038,8 @@ If no custom prefix matches, it calls the original function."
                    (cmake "https://github.com/uyha/tree-sitter-cmake")
                    (dockerfile "https://github.com/camdencheek/tree-sitter-dockerfile")
                    (nix "https://github.com/nix-community/tree-sitter-nix")
-                   (yaml "https://github.com/ikatyang/tree-sitter-yaml")
+                   (yaml "https://github.com/tree-sitter-grammars/tree-sitter-yaml")
+                   (toml "https://github.com/tree-sitter-grammars/tree-sitter-toml")
                    (json "https://github.com/tree-sitter/tree-sitter-json")
                    ;; frontend
                    (html "https://github.com/tree-sitter/tree-sitter-html")
@@ -2057,9 +2058,21 @@ If no custom prefix matches, it calls the original function."
   :mode "\\.md\\'"
   :config
   (when (require 'markdown-ts-mode-x nil t)
+    (let ((pdf-pandoc (alist-get 'pandoc (alist-get 'pdf markdown-ts-converters))))
+      (setf (plist-get pdf-pandoc :arguments-function)
+            (lambda (input-file output-file)
+              (append (list "-f" "gfm"
+                            "-t" "pdf"
+                            "--pdf-engine" "tectonic"
+                            "-V" "documentclass=ctexart"
+                            "-V" "geometry:margin=1in"
+                            "-V" "colorlinks=true"
+                            "-o" output-file)
+                      (when input-file
+                        (list input-file))))))
     (if (display-graphic-p)
         (setq markdown-ts-default-converter '(pdf . pandoc)
-              (markdown-ts-convert-display-function 'browse-url-of-file))
+              markdown-ts-convert-display-function 'browse-url-of-file)
       (setq markdown-ts-default-converter '(html . pandoc)))))
 
 (use-package cmake-ts-mode
