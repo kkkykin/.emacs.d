@@ -31,6 +31,7 @@
   (mode-line-collapse-minor-modes '(completion-preview-mode
                                     subword-mode
                                     whitespace-mode
+                                    which-key-mode
                                     abbrev-mode
                                     hs-minor-mode))
   (mode-line-frame-identification nil)
@@ -1743,19 +1744,12 @@ If no custom prefix matches, it calls the original function."
                 (setcdr (cdddr mode-line-format)
                         (cons 'mode-line-buffer-identification
                               (cddddr mode-line-format)))))))
-  :init
-  (when (version< emacs-version "30")
-    (defvar-keymap tab-line-mode-map
-      :doc "Keymap for keys of `tab-line-mode'."))
   :bind
-  (:map tab-line-mode-map
-        ("C-<tab>" . tab-line-switch-to-next-tab)
-        ("C-S-<tab>" . tab-line-switch-to-prev-tab)
-        ("C-S-<iso-lefttab>" . tab-line-switch-to-prev-tab)
-        ("C-x C-<left>" . nil)
-        ("C-x C-<right>" . nil)
-        ("C-x <left>" . nil)
-        ("C-x <right>" . nil))
+  ( :map ctl-x-map
+    ("C-<left>" . tab-line-switch-to-prev-tab)
+    ("M-<left>" . tab-line-move-tab-backward)
+    ("C-<right>" . tab-line-switch-to-next-tab)
+    ("M-<right>" . tab-line-move-tab-forward))
   :custom
   (tab-line-tabs-function 'tab-line-tabs-buffer-groups)
   (tab-line-exclude-modes
@@ -1774,6 +1768,12 @@ If no custom prefix matches, it calls the original function."
      newsticker-treeview-list-mode
      newsticker-treeview-mode))
   :config
+  (when (and (boundp 'tab-line-mode-map)
+             (keymap-lookup tab-line-mode-map "C-x <left>"))
+    (bind-keys
+     :map tab-line-mode-map
+     ("C-x <left>" . nil)
+     ("C-x <right>" . nil)))
   (unless zr-sys-android-gui-p
     (setq tab-line-new-button-show nil
           tab-line-close-button-show nil)))
