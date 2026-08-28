@@ -2026,42 +2026,41 @@ If no custom prefix matches, it calls the original function."
                          "$USERPROFILE/scoop/apps/treesit-langs/current"))
           (guard (file-directory-p ts-extra)))
      (add-to-list 'treesit-extra-load-path ts-extra)))
-  (setq treesit-language-source-alist
-        '((bash "https://github.com/tree-sitter/tree-sitter-bash")
-          (go "https://github.com/tree-sitter/tree-sitter-go")
-          (python "https://github.com/tree-sitter/tree-sitter-python")
-          (lua "https://github.com/MunifTanjim/tree-sitter-lua")
-          (sql "https://github.com/DerekStride/tree-sitter-sql" "gh-pages")
-          (gdscript "https://github.com/PrestonKnopp/tree-sitter-gdscript")
-          (rust "https://github.com/tree-sitter/tree-sitter-rust")
-          ;; ini
-          (cmake "https://github.com/uyha/tree-sitter-cmake")
-          (dockerfile "https://github.com/camdencheek/tree-sitter-dockerfile")
-          (nix "https://github.com/nix-community/tree-sitter-nix")
-          (yaml "https://github.com/ikatyang/tree-sitter-yaml")
-          (json "https://github.com/tree-sitter/tree-sitter-json")
-          ;; frontend
-          (html "https://github.com/tree-sitter/tree-sitter-html")
-          (css "https://github.com/tree-sitter/tree-sitter-css")
-          (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
-          (jsdoc "https://github.com/tree-sitter/tree-sitter-jsdoc")
-          (tsx . ("https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src"))
-          ;; doc
-          (markdown-inline "https://github.com/tree-sitter-grammars/tree-sitter-markdown" "split_parser" "tree-sitter-markdown-inline/src")
-          (markdown . ("https://github.com/tree-sitter-grammars/tree-sitter-markdown" "split_parser" "tree-sitter-markdown/src"))))
-  (defun zr-treesit-install-all ()
-    "Install all Tree-sitter grammars defined in `treesit-language-source-alist`.
-With prefix argument FORCE, delete the tree-sitter directory first.
-ref:
-https://www.masteringemacs.org/article/how-to-get-started-tree-sitter"
-    (interactive "P")
-    (dolist (g treesit-language-source-alist)
-      (unless (treesit-language-available-p (car g))
-        (treesit-install-language-grammar (car g))))))
+  (pcase-dolist (`(,lang . ,src)
+                 '((bash "https://github.com/tree-sitter/tree-sitter-bash")
+                   (go "https://github.com/tree-sitter/tree-sitter-go")
+                   (python "https://github.com/tree-sitter/tree-sitter-python")
+                   (lua "https://github.com/MunifTanjim/tree-sitter-lua")
+                   (sql "https://github.com/DerekStride/tree-sitter-sql" "gh-pages")
+                   (gdscript "https://github.com/PrestonKnopp/tree-sitter-gdscript")
+                   (rust "https://github.com/tree-sitter/tree-sitter-rust")
+                   ;; ini
+                   (cmake "https://github.com/uyha/tree-sitter-cmake")
+                   (dockerfile "https://github.com/camdencheek/tree-sitter-dockerfile")
+                   (nix "https://github.com/nix-community/tree-sitter-nix")
+                   (yaml "https://github.com/ikatyang/tree-sitter-yaml")
+                   (json "https://github.com/tree-sitter/tree-sitter-json")
+                   ;; frontend
+                   (html "https://github.com/tree-sitter/tree-sitter-html")
+                   (css "https://github.com/tree-sitter/tree-sitter-css")
+                   (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
+                   (jsdoc "https://github.com/tree-sitter/tree-sitter-jsdoc")
+                   (tsx . ("https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src"))
+                   ;; doc
+                   (markdown-inline "https://github.com/tree-sitter-grammars/tree-sitter-markdown" "split_parser" "tree-sitter-markdown-inline/src")
+                   (markdown . ("https://github.com/tree-sitter-grammars/tree-sitter-markdown" "split_parser" "tree-sitter-markdown/src"))))
+    (unless (assoc lang treesit-language-source-alist)
+      (push (cons lang src) treesit-language-source-alist))))
 
 (use-package markdown-ts-mode
   :if (treesit-language-available-p 'markdown)
-  :mode "\\.md\\'")
+  :mode "\\.md\\'"
+  :config
+  (when (require 'markdown-ts-mode-x nil t)
+    (if (display-graphic-p)
+        (setq markdown-ts-default-converter '(pdf . pandoc)
+              (markdown-ts-convert-display-function 'browse-url-of-file))
+      (setq markdown-ts-default-converter '(html . pandoc)))))
 
 (use-package cmake-ts-mode
   :if (treesit-language-available-p 'cmake)
