@@ -1586,6 +1586,20 @@ If no custom prefix matches, it calls the original function."
 (use-package smerge-mode
   :bind
   ( :repeat-map smerge-repeat-map
+    ("n" . smerge-next)
+    ("p" . smerge-prev)
+    ("r" . smerge-resolve)
+    ("a" . smerge-keep-all)
+    ("b" . smerge-keep-base)
+    ("l" . smerge-keep-lower)
+    ("u" . smerge-keep-upper)
+    ("C" . smerge-combine-with-next)
+    ("R" . smerge-refine)
+    ("C-m" . smerge-keep-current)
+    ("<" . smerge-diff-base-upper)
+    (">" . smerge-diff-base-lower)
+    ("=" . smerge-diff-upper-lower)
+    ;; ^^^ copy from 31.1
     ("E" . smerge-ediff)))
 
 (use-package ediff
