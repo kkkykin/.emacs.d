@@ -2943,7 +2943,7 @@ If no custom prefix matches, it calls the original function."
   (require 'init-net)
   (define-advice plz (:around (fn method url &rest args) append-arg)
     (let ((plz-curl-default-args
-           (append (zn/curl-parameters-dwim url)
+           (append (zr-net-curl-parameters-dwim url)
                    plz-curl-default-args)))
       (apply fn method url args))))
 
