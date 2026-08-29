@@ -407,9 +407,7 @@ Examples:
                             item regexp nil nil t)
                          (list item))))
              (or (dired-get-marked-files)
-                 (directory-files-recursively
-                  (dired-get-subdir)
-                  "^[^.]")))
+                 (list (dired-get-subdir))))
             "\n"))
           ('emms-playlist-mode
            (if (use-region-p)
