@@ -406,7 +406,10 @@ Examples:
                            (directory-files-recursively
                             item regexp nil nil t)
                          (list item))))
-             (dired-get-marked-files))
+             (or (dired-get-marked-files)
+                 (directory-files-recursively
+                  (dired-get-subdir)
+                  "^[^.]")))
             "\n"))
           ('emms-playlist-mode
            (if (use-region-p)
