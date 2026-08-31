@@ -2050,30 +2050,32 @@ If no custom prefix matches, it calls the original function."
   :mode "\\.md\\'"
   :config
   (when (require 'markdown-ts-mode-x nil t)
-    (let ((pandoc
-           (list :command "pandoc"
-                 :input '(file stdin)
-                 :output '(file)
-                 :arguments-function
-                 (lambda (input-file output-file)
-                   (append
-                    (list "-f" "gfm"
-                          "-t" "docx"
-                          "-o" output-file)
-                    (when input-file
-                      (list input-file)))))))
+    (let* ((pandoc-data-dir (expand-file-name "pandoc/_tangle"
+                                              zr-dotfiles-dir))
+           (pandoc-args `("-d" ,(expand-file-name "common" pandoc-data-dir)))
+           (docx-pandoc (list :command "pandoc"
+                              :input '(file stdin)
+                              :output '(file)
+                              :arguments-function
+                              (lambda (input-file output-file)
+                                (append
+                                 pandoc-args
+                                 (list "-f" "gfm"
+                                       "-t" "docx"
+                                       "-o" output-file)
+                                 (when input-file
+                                   (list input-file))))))
+           (pdf-pandoc (alist-get 'pandoc
+                                  (alist-get 'pdf markdown-ts-converters))))
+      
       (setf (alist-get 'docx markdown-ts-converters)
-            (list (cons 'pandoc pandoc))))
-    (let ((pdf-pandoc (alist-get 'pandoc (alist-get 'pdf markdown-ts-converters))))
+            (list (cons 'pandoc docx-pandoc)))
       (setf (plist-get pdf-pandoc :arguments-function)
             (lambda (input-file output-file)
               (append (list "-f" "gfm"
                             "-t" "pdf"
-                            "--pdf-engine" "tectonic"
-                            "-V" "documentclass=ctexart"
-                            "-V" "geometry:margin=1in"
-                            "-V" "colorlinks=true"
                             "-o" output-file)
+                      pandoc-args
                       (when input-file
                         (list input-file))))))
     (if (display-graphic-p)
@@ -3080,12 +3082,12 @@ If no custom prefix matches, it calls the original function."
   :custom
   (org-pandoc-options-for-latex-pdf '((pdf-engine . "tectonic")))
   :config
+  (let ((pandoc-data-dir (expand-file-name "pandoc/_tangle" zr-dotfiles-dir)))
+    (add-to-list 'org-pandoc-options
+                 (cons 'defaults
+                       (expand-file-name "org.yaml" pandoc-data-dir))))
   (when zr-sys-winnt-p
-    (setq org-pandoc-command "pandoc.exe"))
-  (when-let* (((bound-and-true-p zr-dotfiles-dir))
-              (ref (expand-file-name "pandoc/data/reference.docx" zr-dotfiles-dir))
-              ((file-exists-p ref)))
-    (setq org-pandoc-options-for-docx `((reference-doc . ,ref)))))
+    (setq org-pandoc-command "pandoc.exe")))
 
 ;; [[elisp:(custom-reevaluate-setting 'org-pandoc-options)]]
 
