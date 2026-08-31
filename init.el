@@ -94,12 +94,6 @@
     "My useful menu."
     '("zr"
       ["scratch" scratch-buffer]))
-  (defun zr-defer-gc ()
-    (setq gc-cons-threshold most-positive-fixnum))
-  (defun zr-do-restore-gc ()
-    (setq gc-cons-threshold 80000000))
-  (defun zr-restore-gc ()
-    (run-at-time 1 nil #'zr-do-restore-gc))
   (put 'buffer-file-coding-system 'safe-local-variable 'symbolp)
   (put 'buffer-auto-save-file-name 'safe-local-variable 'null)
   (prefer-coding-system 'utf-8)
@@ -187,9 +181,7 @@
   (completion-pcm-leading-wildcard nil)
   :hook
   ((emacs-startup . minibuffer-electric-default-mode)
-   (emacs-startup . savehist-mode)
-   (minibuffer-setup . zr-defer-gc)
-   (minibuffer-exit . zr-restore-gc))
+   (emacs-startup . savehist-mode))
   :bind
   ( :map completion-in-region-mode-map
     ("M-n" . minibuffer-next-completion)

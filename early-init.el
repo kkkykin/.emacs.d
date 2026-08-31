@@ -24,18 +24,6 @@
 ;; Silence stupid startup message
 (setq inhibit-startup-echo-area-message (user-login-name))
 
-(setq load-path-filter-function #'load-path-filter-cache-directory-files)
-
-(setq gc-cons-threshold most-positive-fixnum ; 2^61 bytes
-      gc-cons-percentage 0.6)
-(defvar zr-file-name-handler-alist-cache file-name-handler-alist)
-(setq file-name-handler-alist nil)
-(defun zr-restore-post-init-settings ()
-  (setq gc-cons-threshold 80000000
-        gc-cons-percentage 0.1)
-  (setq file-name-handler-alist zr-file-name-handler-alist-cache))
-(add-hook 'emacs-startup-hook #'zr-restore-post-init-settings)
-
 ;; Android Setup
 (if (and (eq system-type 'android)
          (not (getenv "TERMUX_VERSION")))
