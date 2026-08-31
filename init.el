@@ -3080,6 +3080,8 @@ If no custom prefix matches, it calls the original function."
   :custom
   (org-pandoc-options-for-latex-pdf '((pdf-engine . "tectonic")))
   :config
+  (when zr-sys-winnt-p
+    (setq org-pandoc-command "pandoc.exe"))
   (when-let* (((bound-and-true-p zr-dotfiles-dir))
               (ref (expand-file-name "pandoc/data/reference.docx" zr-dotfiles-dir))
               ((file-exists-p ref)))
