@@ -2050,6 +2050,9 @@ If no custom prefix matches, it calls the original function."
   :mode "\\.md\\'"
   :config
   (when (require 'markdown-ts-mode-x nil t)
+    (bind-keys
+     :map markdown-ts-mode-map
+     ("C-c C-e" . markdown-ts-convert))
     (let* ((pandoc-data-dir (expand-file-name "pandoc/_tangle"
                                               zr-dotfiles-dir))
            (pandoc-args `("-d" ,(expand-file-name "common" pandoc-data-dir)))
