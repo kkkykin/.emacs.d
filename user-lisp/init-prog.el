@@ -274,6 +274,36 @@ NLINES is the number of context lines to show."
    ("P" . vc-push)))
 
 
+;; elisp
+(defun zp/emacs-mirror-url (&optional blame)
+  "Copy the current Emacs source file's GitHub URL.
+With prefix argument BLAME, open its blame page."
+  (interactive "P")
+  (let* ((file (or (buffer-file-name)
+                   (user-error "Current buffer has no file")))
+         (path (and (string-match
+                     "[/\\\\]lisp[/\\\\]\\(.+?\\)\\(?:\\.gz\\)?\\'"
+                     file)
+                    (match-string 1 file))))
+    (unless path
+      (user-error "Not an Emacs source file under lisp/"))
+    (setq path (subst-char-in-string ?\\ ?/ path))
+    (let ((url (format "https://github.com/emacs-mirror/emacs/%s/lisp/%s"
+                       (if blame
+                           "blame/master"
+                         "raw/refs/heads/master")
+                       path)))
+      (if blame
+          (browse-url url)
+        (kill-new url)
+        (message "Copied: %s" url)))))
+
+(with-eval-after-load 'elisp-mode
+  (bind-keys
+   :map emacs-lisp-mode-map
+   ("C-c RET" . zp/emacs-mirror-url)))
+
+
 (provide 'init-prog)
 ;;; init-prog.el ends here
 
