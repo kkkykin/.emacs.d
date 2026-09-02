@@ -363,7 +363,7 @@ and expand it."
         (org-babel-goto-named-src-block name)
         (cl-callf org-babel-process-params (nth 2 info))
         (funcall-interactively #'org-babel-expand-src-block nil info))
-    (funcall-interactively #'org-babel-expand-src-block)))
+    (call-interactively #'org-babel-expand-src-block)))
 
 (defun zo/babel-src-and-call-blocks (&optional file)
   "Return the names of source and call blocks in FILE or the current
