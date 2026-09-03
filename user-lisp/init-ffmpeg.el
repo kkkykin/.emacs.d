@@ -23,27 +23,96 @@
 
 ;;; Code:
 
-(require 'transient)
+(defvar savehist-additional-variables)
+(defvar zr-dotfiles-dir)
 
-(transient-define-prefix zr-ffmpeg-menu ()
-  "ffmpeg Menu."
-  ["Global Options"
-   ("b" "Suppress printing banner." (nil "-hide_banner"))
-   ("y" "Overwrite output files without asking." (nil "-y"))
-   ("h" "Use hardware acceleration to decode the matching stream(s)."
-    ("-hwaccel" "auto"))]
+(defcustom zr-ffmpeg-program "ffmpeg"
+  "FFmpeg executable."
+  :group 'zr
+  :type 'string)
 
-  ["Input Options"]
+(defcustom zr-ffmpeg-window-script
+  (expand-file-name "uv/_tangle/scripts/win-windows.py" zr-dotfiles-dir)
+  "Python script used to enumerate Windows."
+  :group 'zr
+  :type 'file)
 
-  ["Output Options"
-   ("c"
-    "Codex copy."
-    ("-c" "copy"))
-   ("s"
-    "Embed subtitles to video. `-disposition:s:0 default' or `-c:s mov_text'"
-    ("-disposition:s:0" "default"))])
+(defcustom zr-ffmpeg-live-framerate 30
+  "Screen capture framerate."
+  :group 'zr
+  :type 'integer)
 
+(defcustom zr-ffmpeg-live-video-codec "libx264"
+  "Video codec."
+  :group 'zr
+  :type 'string)
 
+(defcustom zr-ffmpeg-live-preset "veryfast"
+  "x264 preset."
+  :group 'zr
+  :type 'string)
+
+(defcustom zr-ffmpeg-rtsp-transport "tcp"
+  "RTSP transport."
+  :group 'zr
+  :type '(choice
+          (const "tcp")
+          (const "udp")))
+
+(defcustom zr-ffmpeg-live-extra-args '("-nostats")
+  "Additional FFmpeg arguments."
+  :group 'zr
+  :type '(repeat string))
+
+(defun zr-ffmpeg-windows ()
+  "Return available Windows windows as (TITLE . HWND)."
+  (let ((output
+         (with-temp-buffer
+           (call-process
+            "uv" nil t nil
+            "run" zr-ffmpeg-window-script)
+           (buffer-string))))
+    (mapcar
+     (lambda (line)
+       (pcase-let ((`(,hwnd ,title)
+                    (split-string line "\t" t)))
+         (cons title hwnd)))
+     (split-string output "\n" t))))
+
+(defvar zr-ffmpeg-publish-history nil)
+(with-eval-after-load 'savehist
+  (add-to-list 'savehist-additional-variables 'zr-ffmpeg-publish-history))
+
+;;;###autoload
+(defun zr-ffmpeg-publish-rtsp-window ()
+  "Capture a Windows window with FFmpeg and publish it to MediaMTX."
+  (interactive)
+  (let* ((windows (zr-ffmpeg-windows))
+         (title (completing-read "Window: " (mapcar #'car windows)))
+         (rtsp (read-string "rtsp: " nil
+                            'zr-ffmpeg-publish-history
+                            (car zr-ffmpeg-publish-history)))
+         (args
+          (append
+           (list
+            "-f" "gdigrab"
+            "-framerate" (number-to-string zr-ffmpeg-live-framerate)
+            "-i" (format "title=%s" title)
+            "-c:v" zr-ffmpeg-live-video-codec
+            "-preset" zr-ffmpeg-live-preset
+            "-f" "rtsp"
+            "-rtsp_transport" zr-ffmpeg-rtsp-transport
+            rtsp)
+           zr-ffmpeg-live-extra-args))
+         (process
+          (apply #'start-process
+                 "ffmpeg-publish"
+                 "*ffmpeg-publish*"
+                 zr-ffmpeg-program
+                 args)))
+    (add-to-history 'zr-ffmpeg-publish-history rtsp 5)
+    (message "FFmpeg publishing %s" title)
+    process))
 
 (provide 'init-ffmpeg)
 ;;; init-ffmpeg.el ends here
