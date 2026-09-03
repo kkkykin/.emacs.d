@@ -254,3 +254,7 @@ From https://christiantietze.de/posts/2024/01/emacs-sqlite-mode-open-sqlite-file
 
 (provide 'init-sql)
 ;;; init-sql.el ends here
+
+;; Local Variables:
+;; read-symbol-shorthands: (("zp/" . "zr-prog-"))
+;; End:
