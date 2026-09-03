@@ -224,7 +224,7 @@ resulting URL will be
               (if full (concat fs ":" f)
                 (file-name-nondirectory f))))
           (zr-rclone-directory-files-internal
-           fs remote '(("noModTime" . t) ("noMimeType" . t)))))
+           fs remote '((noModTime . t) (noMimeType . t)))))
 
 (defun zr-rclone-directory-files-recursively
     (fs remote regexp &optional include-directorys)
@@ -234,9 +234,9 @@ resulting URL will be
    (mapcar (lambda (a) (format "%s:%s" fs (gethash "Path" a)))
            (zr-rclone-directory-files-internal
             fs remote
-            (let ((opt '(("noModTime" . t) ("recurse" . t) ("noMimeType" . t))))
+            (let ((opt '((noModTime . t) (recurse . t) (noMimeType . t))))
               (if include-directorys opt
-                (cons'("filesOnly" . t) opt)))))))
+                (cons'(filesOnly . t) opt)))))))
 
 (defun zr-rclone-copy-file
     (src-fs src-remote dst-fs dst-remote)
