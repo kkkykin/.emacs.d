@@ -45,7 +45,12 @@
   :group 'zr
   :type 'string)
 
-(defcustom zr-ffmpeg-live-audio-codec "aac"
+(defcustom zr-ffmpeg-live-video-bitrate "3M"
+  "Video bitrate."
+  :group 'zr
+  :type 'string)
+
+(defcustom zr-ffmpeg-live-audio-codec "libopus"
   "Audio codec."
   :group 'zr
   :type 'string)
@@ -54,6 +59,16 @@
   "Audio bitrate."
   :group 'zr
   :type 'string)
+
+(defcustom zr-ffmpeg-live-audio-sample-rate 48000
+  "Audio sample rate."
+  :group 'zr
+  :type 'integer)
+
+(defcustom zr-ffmpeg-live-audio-channels 2
+  "Audio channel count."
+  :group 'zr
+  :type 'integer)
 
 (defcustom zr-ffmpeg-live-capture-system-audio t
   "Whether to capture audio."
@@ -65,13 +80,6 @@
   "Default DirectShow audio device."
   :group 'zr
   :type 'string)
-
-(defcustom zr-ffmpeg-rtsp-transport "tcp"
-  "RTSP transport."
-  :group 'zr
-  :type '(choice
-          (const :tag "TCP" "tcp")
-          (const :tag "UDP" "udp")))
 
 (defcustom zr-ffmpeg-live-extra-args '("-nostats")
   "Additional FFmpeg arguments."
@@ -163,13 +171,14 @@
 (defun zr-ffmpeg--make-gfxcapture-filter (window-exe)
   "Return gfxcapture filter string for WINDOW-EXE."
   (format
+   ;; "gfxcapture=window_exe='%s':max_framerate=%d:width=1280:height=720:resize_mode=scale_aspect,hwdownload,format=bgra"
    "gfxcapture=window_exe='%s':max_framerate=%d,hwdownload,format=bgra"
    (regexp-quote window-exe)
    zr-ffmpeg-live-framerate))
 
 (defun zr-ffmpeg--build-publish-args
-    (window-exe audio-device rtsp)
-  "Build FFmpeg arguments for WINDOW-EXE, AUDIO-DEVICE and RTSP."
+    (window-exe audio-device whip)
+  "Build FFmpeg arguments for WINDOW-EXE, AUDIO-DEVICE and WHIP."
   (let ((video-filter
          (zr-ffmpeg--make-gfxcapture-filter window-exe)))
     (append
@@ -196,26 +205,35 @@
      (list
       "-c:v" zr-ffmpeg-live-video-codec
       "-preset" zr-ffmpeg-live-preset
+      "-b:v" zr-ffmpeg-live-video-bitrate
+      "-profile:v" "main"
+      "-bf" "0"
+      "-tune" "ll"
+      "-g" "60"
+      "-fps_mode" "vfr"
+      "-maxrate" "4M"
+      "-bufsize" "4M"
       "-pix_fmt" "yuv420p")
 
      ;; Audio encoding.
      (when audio-device
        (list
         "-c:a" zr-ffmpeg-live-audio-codec
+        "-ar" (number-to-string zr-ffmpeg-live-audio-sample-rate)
+        "-ac" (number-to-string zr-ffmpeg-live-audio-channels)
         "-b:a" zr-ffmpeg-live-audio-bitrate))
 
-     ;; RTSP output.
+     ;; WHIP / WebRTC output.
      (list
-      "-f" "rtsp"
-      "-rtsp_transport" zr-ffmpeg-rtsp-transport
-      rtsp)
+      "-ts_buffer_size" "2M"
+      "-f" "whip"
+      whip)
 
-     ;; User supplied arguments.
      zr-ffmpeg-live-extra-args)))
 
 ;;;###autoload
-(defun zr-ffmpeg-publish-rtsp-window ()
-  "Capture a Windows window and publish it to MediaMTX via RTSP."
+(defun zr-ffmpeg-publish-window ()
+  "Capture a Windows window and publish it to MediaMTX via WHIP."
   (interactive)
 
   (let* ((window-exe
@@ -226,9 +244,9 @@
           (when zr-ffmpeg-live-capture-system-audio
             (zr-ffmpeg--read-audio-device)))
 
-         (rtsp
+         (whip
           (read-string
-           "RTSP URL: "
+           "WHIP URL: "
            nil
            'zr-ffmpeg-publish-history
            (car zr-ffmpeg-publish-history)))
@@ -237,7 +255,7 @@
           (zr-ffmpeg--build-publish-args
            window-exe
            audio-device
-           rtsp))
+           whip))
 
          (old-process
           (get-process "ffmpeg-publish"))
@@ -258,10 +276,10 @@
             :connection-type 'pipe
             :noquery t)))
 
-      ;; Save selected RTSP URL.
+      ;; Save selected WHIP URL.
       (add-to-history
        'zr-ffmpeg-publish-history
-       rtsp
+       whip
        20)
 
       ;; Make it clear what was started.
@@ -271,7 +289,7 @@
        (if audio-device
            (format " with audio=%s" audio-device)
          "")
-       rtsp)
+       whip)
 
       process)))
 
