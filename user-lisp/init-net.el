@@ -1103,7 +1103,7 @@ Kill it after TIMEOUT if its buffer is inactive."
         (zn/manage-daemon "trojan-go" proc (* 60 5))
       (message "Failed to start trojan-go-daemon."))))
 
-(defun zn/basic-auth-header (user password)
+(defun zn/basic-auth-header (user password &rest _)
   "Build basic auth header string."
   (format "Basic %s" (base64-encode-string (format "%s:%s" user password) t)))
 
