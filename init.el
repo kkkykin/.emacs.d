@@ -4,6 +4,7 @@
 
 (unless (bound-and-true-p user-lisp-directory)
   (add-to-list 'load-path (locate-user-emacs-file "user-lisp/")))
+(add-to-list 'load-path (locate-user-emacs-file "site-lisp/"))
 
 (defconst zr-sys-winnt-p (eq system-type 'windows-nt)
   "Windows System.")
@@ -2542,6 +2543,9 @@ If no custom prefix matches, it calls the original function."
                    ("\\section{%s}" . "\\section*{%s}")
                    ("\\subsection{%s}" . "\\subsection*{%s}")
                    ("\\subsubsection{%s}" . "\\subsubsection*{%s}")))))
+
+(use-package zr-ffmpeg
+  :commands zr-ffmpeg)
 
 (use-package package
   :custom
