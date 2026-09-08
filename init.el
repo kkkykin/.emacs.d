@@ -2239,6 +2239,7 @@ If no custom prefix matches, it calls the original function."
       (eshell . t)
       (gnuplot . t)
       (haskell . nil)
+      (jq . t)
       (js . t)
       (latex . nil)
       (ledger . nil)
@@ -3430,5 +3431,25 @@ If no custom prefix matches, it calls the original function."
   (when (boundp 'mode-line-collapse-minor-modes)
     (add-to-list 'mode-line-collapse-minor-modes 'kitty-graphics-mode))
   (kitty-graphics-mode 1))
+
+(use-package jq-mode
+  :if (package-installed-p 'jq-mode)
+  :hook
+  ((yaml-ts-mode
+    . (lambda ()
+        (setq-local jq-interactive-command "yq"
+                    jq-interactive-font-lock-mode #'yaml-ts-mode
+                    jq-interactive-default-options "--yaml-roundtrip"))))
+  :custom
+  (jq-interactive-font-lock-mode #'json-ts-mode)
+  :config
+  (with-eval-after-load 'json-ts-mode
+    (bind-keys
+     :map json-ts-mode-map
+     ("C-c C-j" . jq-interactively)))
+  (with-eval-after-load 'yaml-ts-mode
+    (bind-keys
+     :map yaml-ts-mode-map
+     ("C-c C-j" . jq-interactively))))
 
 ;;; init.el ends here
