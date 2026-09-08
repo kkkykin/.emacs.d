@@ -2483,6 +2483,7 @@ If no custom prefix matches, it calls the original function."
                               org-babel-default-header-args :key #'car)))
   (setq org-babel-default-header-args:diff '((:comments . "no")))
   (with-eval-after-load 'ob-org
+    (defalias #'org-babel-expand-body:jq #'org-babel-expand-body:org)
     (dolist (l '("conf"
                  "conf-space"
                  "conf-unix"
