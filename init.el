@@ -3268,10 +3268,16 @@ If no custom prefix matches, it calls the original function."
               (host (concat "cpa." (auth-source-pick-first-password :host "mydomain" :user "main"))))
     (setq gptel-model (intern (alist-get 'main-model cpa))
           gptel-backend
-          (gptel-make-openai "cpa"
+          (gptel-make-openai-responses "cpa"
             :host host
             :key #'gptel-api-key
             :models (mapcar #'intern (alist-get 'models cpa))
+            :header (lambda (info)
+                      (append
+                       (when-let* ((key (gptel--get-api-key)))
+                         `(("Authorization" . ,(concat "Bearer " key))))
+                       `(("x-opencode-session"
+                          . ,(secure-hash 'md5 (buffer-name (plist-get info :buffer)))))))
             :stream t))))
 
 (use-package beancount
