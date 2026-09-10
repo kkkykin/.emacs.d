@@ -3277,7 +3277,14 @@ If no custom prefix matches, it calls the original function."
                        (when-let* ((key (gptel--get-api-key)))
                          `(("Authorization" . ,(concat "Bearer " key))))
                        `(("x-opencode-session"
-                          . ,(secure-hash 'md5 (buffer-name (plist-get info :buffer)))))))
+                          . ,(secure-hash
+                              'md5
+                              (if-let* ((buf (plist-get info :buffer))
+                                        ((eq (buffer-local-value 'major-mode buf) 'org-mode))
+                                        (topic (org-entry-get (plist-get info :position)
+                                                              "GPTEL_TOPIC" t)))
+                                  topic
+                                (buffer-name buf)))))))
             :stream t))))
 
 (use-package beancount
