@@ -2688,9 +2688,6 @@ If no custom prefix matches, it calls the original function."
 ;; https://karthinks.com/software/avy-can-do-anything/
 (use-package avy
   :if (package-installed-p 'avy)
-  :init
-  (define-key zr-menu [avy-resume]
-              '(menu-item "avy-resume" avy-resume))
   :bind
   (("M-g M-g" . avy-goto-line)
    ("C-," . avy-goto-char-timer))
@@ -2971,17 +2968,6 @@ If no custom prefix matches, it calls the original function."
     ("z" . recenter)
     ("n" . ement-room-goto-next)
     ("p" . ement-room-goto-prev))
-  :init
-  (defvar zr-ement-menu (make-sparse-keymap "ement-menu"))
-  (define-key zr-menu [ement-menu]
-              (list 'menu-item "ement-menu" zr-ement-menu))
-  (define-key zr-ement-menu [notification]
-              '(menu-item "notification" ement-notify-switch-to-notifications-buffer))
-  (define-key zr-ement-menu [mention]
-              '(menu-item "mention" ement-notify-switch-to-mentions-buffer))
-  (define-key zr-ement-menu [list] '(menu-item "list" ement-list-rooms))
-  (define-key zr-ement-menu [room] '(menu-item "room" ement-view-room))
-  (define-key zr-ement-menu [connect] '(menu-item "connect" ement-connect))
   :custom
   (ement-room-send-message-filter #'ement-room-send-org-filter) ; enable @
   (ement-room-send-typing nil)
@@ -3042,9 +3028,6 @@ If no custom prefix matches, it calls the original function."
 
 (use-package aria2
   :if (package-installed-p 'aria2)
-  :init
-  (define-key zr-menu [aria2-download-list]
-              '(menu-item "aria2-downloads-list" aria2-downloads-list))
   :config
   (let ((auth (car (auth-source-search :host "aria2.localhost"))))
     (setq aria2-rcp-secret (auth-info-password auth)
@@ -3161,7 +3144,6 @@ If no custom prefix matches, it calls the original function."
 (use-package ghostel
   :if (package-installed-p 'ghostel)
   :init
-  (define-key zr-menu [ghostel] '(menu-item "ghostel" ghostel))
   (add-hook 'eshell-load-hook #'ghostel-eshell-visual-command-mode)
   (add-hook 'after-init-hook #'ghostel-compile-global-mode)
   (add-hook 'after-init-hook #'ghostel-comint-global-mode)
@@ -3197,7 +3179,6 @@ If no custom prefix matches, it calls the original function."
 (use-package gptel
   :if (package-installed-p 'gptel)
   :init
-  (define-key zr-menu [gptel] '(menu-item "gptel" gptel-send))
   (define-multisession-variable zr-gptel-cpa-info nil
     "CPA infomation for gptel."
     :package "init")
