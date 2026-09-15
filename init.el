@@ -3257,7 +3257,7 @@ If no custom prefix matches, it calls the original function."
                       (append
                        (when-let* ((key (gptel--get-api-key)))
                          `(("Authorization" . ,(concat "Bearer " key))))
-                       `(("x-opencode-session"
+                       `(("session-id"
                           . ,(secure-hash
                               'md5
                               (if-let* ((buf (plist-get info :buffer))
