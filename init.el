@@ -1262,7 +1262,7 @@ If no custom prefix matches, it calls the original function."
   (dired-listing-switches "-lHogvh")
   ;; (dired-ls-F-marks-symlinks t)
   (dired-mouse-drag-files t)
-  (delete-by-moving-to-trash t)
+  ;; (delete-by-moving-to-trash t)
   (dired-hide-details-hide-absolute-location t)
   (dired-guess-shell-alist-user
    `(("\\.cb7\\'"
