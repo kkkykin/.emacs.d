@@ -140,6 +140,12 @@
                 (_ 'server-after-make-frame-hook))))
     (add-hook hook #'zr-face-appearance-setup 50)))
 
+(use-package zr-mpv
+  :if (locate-library "zr-mpv")
+  :bind
+  ( :map zr-dired-spc-prefix-map
+    ("m" . zr-mpv-play-dwim)))
+
 (use-package init-winnt :demand t
   :if (and zr-sys-winnt-p (locate-library "init-winnt")))
 
