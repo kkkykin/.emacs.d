@@ -125,6 +125,21 @@
   :if (locate-library "init-misc")
   :demand t)
 
+(use-package zr-face
+  :if (locate-library "zr-face")
+  :demand t
+  :config
+  (let ((func '(zr-face-font-find-available-font
+                zr-face-theme-list-update)))
+    (dolist (f func) (add-hook 'server-after-make-frame-hook f))
+    (when (display-graphic-p)
+      (dolist (f func) (add-hook 'window-setup-hook f))))
+
+  (let ((hook (pcase system-type
+                ('android 'window-setup-hook)
+                (_ 'server-after-make-frame-hook))))
+    (add-hook hook #'zr-face-appearance-setup 50)))
+
 (use-package init-winnt :demand t
   :if (and zr-sys-winnt-p (locate-library "init-winnt")))
 
