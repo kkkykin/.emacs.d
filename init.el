@@ -249,6 +249,7 @@
     ("C-v" . viper-exec-key-in-emacs)
     ("C-w" . viper-exec-key-in-emacs)
     ("C-\\" . viper-exec-key-in-emacs)
+    ("DEL" . viper-exec-key-in-emacs)
     ("<backspace>" . viper-exec-key-in-emacs)
     ("RET" . viper-exec-key-in-emacs))
   ( :map viper-vi-global-user-map
