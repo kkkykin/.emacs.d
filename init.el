@@ -140,6 +140,20 @@
                 (_ 'server-after-make-frame-hook))))
     (add-hook hook #'zr-face-appearance-setup 50)))
 
+(use-package zr-proxy
+  :if (locate-library "zr-proxy")
+  :config
+  (let ((main-domain (auth-source-pick-first-password :host "mydomain" :user "main"))
+        (siteproxy (car (auth-source-search :host "" :user "siteproxy"))))
+    (setq zr-proxy-xget-base-url (concat "https://xget." main-domain)
+          zr-proxy-transform-alist
+          `(("^https?://github\\.com/.+"
+             . ,(format "https://hub.%s/\\&" main-domain))
+            ("^\\(https?\\)://\\(lite\\.duckduckgo\\.com/.*\\)"
+             . ,(format "https://%s/%s/\\1/\\2"
+                        (plist-get siteproxy :host)
+                        (auth-info-password siteproxy)))))))
+
 (use-package zr-mpv
   :if (locate-library "zr-mpv")
   :bind
@@ -1111,10 +1125,12 @@ before calling the original function."
     ("M-n" . eww-next-bookmark)
     ("M-p" . eww-previous-bookmark))
   :custom
-  ;; (eww-search-prefix "https://wiby.org/?q=")
+  (eww-search-prefix "https://quackquackgo.net/?q=" "https://lite.duckduckgo.com/lite/?q=" "https://wiby.org/?q=")
   (eww-auto-rename-buffer 'title)
   (eww-readable-adds-to-history nil)
   :config
+  (when (require 'zr-proxy nil t)
+    (add-to-list 'eww-url-transformers 'zr-proxy-transform-url))
   (define-advice eww--dwim-expand-url
       (:before-until (&rest args) other-search-prefix)
     "Expand URL with custom prefixes before falling back to original function.
