@@ -1424,7 +1424,7 @@ If no custom prefix matches, it calls the original function."
 (use-package find-dired
   :config
   (unless zr-sys-winnt-p
-    (setq find-ls-option '("-exec ls -ldh {} +" . "-ldh"))))
+    (setq find-ls-option '("-exec ls -ldh --quoting-style=literal {} +" . "-ldh"))))
 
 (use-package hexl)
 
