@@ -158,7 +158,10 @@
   :if (locate-library "zr-mpv")
   :bind
   ( :map zr-dired-spc-prefix-map
-    ("m" . zr-mpv-play-dwim)))
+    ("m" . zr-mpv-play-dwim))
+  :config
+  (when zr-sys-winnt-p
+    (setq zr-mpv-backend 'local)))
 
 (use-package init-winnt :demand t
   :if (and zr-sys-winnt-p (locate-library "init-winnt")))
