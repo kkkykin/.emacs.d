@@ -154,6 +154,11 @@
                         (plist-get siteproxy :host)
                         (auth-info-password siteproxy)))))))
 
+(use-package zr-rclone
+  :if (locate-library "zr-rclone")
+  :commands
+  (zr-rclone))
+
 (use-package zr-mpv
   :if (locate-library "zr-mpv")
   :bind
