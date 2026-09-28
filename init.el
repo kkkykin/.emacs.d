@@ -280,6 +280,7 @@
   :hook (window-setup
          (( calc-embedded-mode
             change-log-mode
+            gnus-article-mode
             edebug-mode
             org-mode
             org-capture-mode
@@ -1665,16 +1666,19 @@ If no custom prefix matches, it calls the original function."
   :hook (message-send . ispell-message)
   :custom
   (message-server-alist
-   '(((lambda () (zr-message-from-matches-p "@\\(qq\\|foxmail\\)\\.com\\'" t))
+   '(((lambda () (zr-message-from-matches-p "@\\(qq\\|foxmail\\)\\.com>?\\'" t))
       . "smtp smtp.qq.com 587")))
   (message-kill-buffer-on-exit t)
   (message-confirm-send t)
   (message-signature nil)
+  (message-mail-alias-type 'ecomplete)
+  (ecomplete-auto-select t)
+  (ecomplete-database-file (locate-user-emacs-file "_ecompleterc"))
   :config
   (defun zr-message-from-matches-p (regexp &optional set-user-p)
     (when-let* ((from (cadr (mail-extract-address-components
-                             (message-fetch-field "From"))))
-                ((string-match-p regexp from)))
+                             (message-fetch-field "From" t))))
+                ((string-match-p regexp (string-trim from))))
       (if set-user-p
           (setq smtpmail-smtp-user from)
         t))))
@@ -2622,6 +2626,11 @@ If no custom prefix matches, it calls the original function."
 
 (use-package htmlize
   :if (package-installed-p 'htmlize))
+
+(use-package auth-source-xoauth2-plugin
+  :if (package-installed-p 'auth-source-xoauth2-plugin)
+  :custom
+  (auth-source-xoauth2-plugin-mode t))
 
 (use-package caddyfile-mode
   :if (package-installed-p 'caddyfile-mode)
