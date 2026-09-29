@@ -1726,6 +1726,15 @@ If no custom prefix matches, it calls the original function."
   (auto-image-file-mode)
   (gnus-delay-initialize))
 
+(use-package erc
+  :custom
+  (erc-sasl-auth-source-function #'erc-auth-source-search)
+  (erc-sasl-mechanism 'plain)
+  (erc-sasl-user :nick)
+  (erc-prompt-for-password nil)
+  :config
+  (add-to-list 'erc-modules 'sasl))
+
 (use-package remember
   :custom
   (remember-diary-file (file-name-concat org-directory "remember"))
