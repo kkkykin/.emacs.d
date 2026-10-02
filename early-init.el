@@ -40,4 +40,7 @@
   (when (bound-and-true-p tool-bar-mode)
     (tool-bar-mode -1)))
 
+(when (eq system-type 'windows-nt)
+  (setenv "HOME" (file-name-parent-directory user-emacs-directory)))
+
 (menu-bar-mode -1)

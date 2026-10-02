@@ -4,7 +4,11 @@
 
 (unless (bound-and-true-p user-lisp-directory)
   (add-to-list 'load-path (locate-user-emacs-file "user-lisp/")))
-(add-to-list 'load-path (locate-user-emacs-file "site-lisp/"))
+
+(defvar zr-dotfiles-dir (expand-file-name "~/.config"))
+(defvar zr-secrets-dir (expand-file-name "~/secrets"))
+(defvar zr-emacs-keystore-file (locate-user-emacs-file "modules/android/emacs-keystore"))
+(defvar zr-dired-spc-prefix-map (make-sparse-keymap))
 
 (defconst zr-sys-winnt-p (eq system-type 'windows-nt)
   "Windows System.")
@@ -101,6 +105,83 @@
   (setenv "PYTHONIOENCODING" "utf-8")
   (set-charset-priority 'unicode))
 
+(use-package zr-bookmark
+  :after bookmark :demand t
+  :config (zr-bookmark-shared-mode 1))
+
+(use-package zr-process-menu
+  :hook (process-menu-mode . zr-process-menu-mode)
+  :custom
+  (zr-process-menu-omit-regexp "\\`\\(?:server\\|ispell\\)\\(?: <.*>\\)?\\'")
+  :bind (:map process-menu-mode-map
+              ("(" . zr-process-menu-mode)
+              (")" . zr-process-menu-filter)
+              ("k" . zr-process-menu-hide)
+              ("/" . zr-process-menu-group)
+              ("d" . zr-process-menu-delete)))
+
+(use-package zr-data
+  :commands (zr-data-read-json zr-data-merge-json-files zr-data-sops-json
+                             zr-data-uuid zr-data-generate-password))
+
+(use-package zr-elisp
+  :bind (:map emacs-lisp-mode-map ("C-c RET" . zr-elisp-source-url)))
+
+(use-package zr-windows
+  :if zr-sys-winnt-p
+  :demand t
+  :hook (shell-mode . zr-windows-shell-setup)
+  :config
+  (zr-windows-encoding-mode 1)
+  (setq tramp-default-method "sshx"
+        tramp-use-connection-share nil
+        grep-program "ug"
+        grep-use-null-device nil
+        grep-highlight-matches t
+        ls-lisp-use-insert-directory-program t
+        shr-use-fonts nil)
+  (add-to-list 'exec-suffixes ".ps1")
+  (when (eq locale-coding-system 'cp936)
+    (setq process-coding-system-alist
+          `(("cmdproxy" . ,locale-coding-system)
+            ("ipconfig" . ,locale-coding-system)
+            ("^pandoc$" . utf-8)
+            ("findstr" . ,locale-coding-system)
+            ("powershell" . (utf-8-with-signature . ,locale-coding-system))
+            ("mysql" . utf-8))
+          default-process-coding-system (cons 'utf-8-dos locale-coding-system)))
+  (with-eval-after-load 'viper
+    (add-hook 'viper-vi-state-hook
+              (lambda () (when (fboundp 'w32-set-ime-open-status) (w32-set-ime-open-status nil))))))
+
+(use-package zr-android
+  :commands (zr-android-adb-activity zr-android-fooview)
+  :init
+  (when zr-sys-android-p
+    (add-hook 'after-init-hook (lambda () (require 'zr-android))))
+  :config
+  (when zr-sys-android-gui-p
+    (zr-android-toolbar-mode 1)
+    (add-function :after after-focus-change-function #'zr-android-small-screen-setup)
+    (setq select-enable-clipboard nil
+          overriding-text-conversion-style nil
+          android-pass-multimedia-buttons-to-system t)
+    (keymap-set key-translation-map "<delete>" "<escape>")
+    (keymap-set key-translation-map "<deletechar>" "<escape>")
+    (keymap-global-set "H-x" #'clipboard-kill-region)
+    (keymap-global-set "H-c" #'clipboard-kill-ring-save)
+    (keymap-global-set "H-v" #'clipboard-yank))
+  (when zr-sys-android-p
+    (with-eval-after-load 'which-func (setq which-func-display 'header))
+    (add-hook 'dired-mode-hook #'dired-hide-details-mode)))
+
+(use-package zr-termux
+  :after tramp :demand t
+  :commands (zr-termux-battery zr-termux-notifications zr-termux-wifi-info
+                              zr-termux-wifi-scan zr-termux-toast zr-termux-notify)
+  :config
+  (zr-termux-configure-tramp '(:application tramp :protocol "sshx" :user "t")))
+
 ;; [[https://github.com/yilkalargaw/emacs-native-snippets]]
 (use-package tempo
   :bind
@@ -120,10 +201,6 @@
   (when (and (sqlite-available-p)
              (version< "3.40" (sqlite-version)))
     (setq multisession-storage 'sqlite)))
-
-(use-package init-misc
-  :if (locate-library "init-misc")
-  :demand t)
 
 (use-package zr-face
   :if (locate-library "zr-face")
@@ -167,39 +244,6 @@
   :config
   (when zr-sys-winnt-p
     (setq zr-mpv-backend 'local)))
-
-(use-package init-winnt :demand t
-  :if (and zr-sys-winnt-p (locate-library "init-winnt")))
-
-(use-package init-linux :demand t
-  :if (and zr-sys-linux-p (locate-library "init-linux")))
-
-(use-package init-android :demand t
-  :if (and zr-sys-android-p (locate-library "init-android")))
-
-(use-package init-prog
-  :if (locate-library "init-prog")
-  :demand t)
-
-(use-package init-net
-  :if (locate-library "init-net")
-  :demand t)
-
-(use-package init-org
-  :if (locate-library "init-org")
-  :after viper :defer 1)
-
-(use-package init-comint
-  :if (locate-library "init-comint")
-  :after comint :defer 0)
-
-(use-package init-rclone
-  :if (locate-library "init-rclone")
-  :defer 5)
-
-(use-package init-pcmpl
-  :if (locate-library "init-pcmpl")
-  :after pcomplete :defer 0)
 
 (use-package touch-screen
   :if zr-sys-android-gui-p)
@@ -263,7 +307,7 @@
 
 (use-package viper
   :init
-  (setq viper-custom-file-name (locate-library "init-viper")
+  (setq viper-custom-file-name (locate-user-emacs-file "user-lisp/zr-viper.el")
         viper-inhibit-startup-message t
         viper-expert-level 5
         viper-vi-style-in-minibuffer nil
@@ -351,6 +395,30 @@
   (viper-minibuffer-emacs ((t (:background nil :foreground nil))))
   :config
   (setq viper-vi-state-id nil))
+
+(use-package zr-viper
+  :after viper :demand t
+  :custom
+  (zr-viper-ex-commands '(("tabe" (tab-new)) ("tabc" (tab-close)) ("w" (zr-viper-save))))
+  :bind (:map viper-vi-global-user-map
+              (":" . zr-viper-ex)
+              ([remap org-open-at-point-global] . zr-org-babel-execute-nearby))
+  :config
+  (setopt viper-major-mode-modifier-list
+          (append '((sql-interactive-mode insert-state viper-comint-mode-modifier-map)
+                    (sql-interactive-mode vi-state viper-comint-mode-modifier-map)
+                    (eshell-mode insert-state viper-comint-mode-modifier-map)
+                    (eshell-mode vi-state viper-comint-mode-modifier-map)
+                    (inferior-python-mode insert-state viper-comint-mode-modifier-map)
+                    (inferior-python-mode vi-state viper-comint-mode-modifier-map))
+                  viper-major-mode-modifier-list))
+  (setq viper-insert-state-mode-list
+        (append viper-insert-state-mode-list '(apropos-mode log-view-mode vc-dir-mode)
+                viper-emacs-state-mode-list)
+        viper-emacs-state-mode-list nil)
+  (dolist (mode '(diff-mode dun-mode outline-mode reb-mode sql-interactive-mode))
+    (setq viper-vi-state-mode-list (delq mode viper-vi-state-mode-list))
+    (add-to-list 'viper-insert-state-mode-list mode)))
 
 (use-package help
   :custom
@@ -550,6 +618,11 @@
   (setopt speedbar-supported-extension-expressions
           (append '(".sql")
                   speedbar-supported-extension-expressions)))
+
+(use-package zr-speedbar
+  :after speedbar
+  :bind (:map speedbar-file-key-map
+              ("=" . zr-speedbar-diff) ("(" . zr-speedbar-show-all)))
 
 (use-package electric
   :custom
@@ -942,6 +1015,25 @@
   (vc-handled-backends '(Git SVN))
   (vc-command-messages 'log))
 
+(use-package zr-vc
+  :hook ((log-edit . zr-vc-commit-setup)
+         (server-switch . zr-vc-server-commit-setup)
+         (server-switch . (lambda ()
+                            (when (and buffer-file-name
+                                       (equal (file-name-nondirectory buffer-file-name) "COMMIT_EDITMSG"))
+                              (local-set-key (kbd "C-c C-c") #'server-edit)
+                              (local-set-key (kbd "C-c C-k") #'zr-vc-abort-server-edit)))))
+  :bind (:map vc-dir-mode-map ("w" . zr-vc-copy-filenames) ("b m" . vc-merge))
+  :config
+  (with-eval-after-load 'log-view (keymap-set log-view-mode-map "P" #'vc-push))
+  (with-eval-after-load 'vc-git
+    (define-prefix-command 'zr-vc-git-map)
+    (keymap-set vc-prefix-map "t" zr-vc-git-map)
+    (dolist (entry '(("s" . vc-git-stash-snapshot) ("c" . vc-git-stash)
+                     ("d" . vc-git-stash-delete) ("v" . vc-git-stash-show)
+                     ("a" . vc-git-stash-apply) ("p" . vc-git-stash-pop) ("g" . vc-git-grep)))
+      (keymap-set zr-vc-git-map (car entry) (cdr entry)))))
+
 (use-package add-log
   :custom
   (add-log-keep-changes-together t)
@@ -1069,56 +1161,6 @@
   :custom
   (Buffer-menu-group-by nil))
 
-(use-package newsticker :defer 5
-  :bind
-  ( :map newsticker-mode-map
-    ("n" . newsticker-next-new-item)
-    ("p" . newsticker-previous-new-item)
-    ("N" . newsticker-next-item)
-    ("P" . newsticker-previous-item))
-  :custom
-  (newsticker-obsolete-item-max-age 864000)
-  (newsticker-treeview-date-format "%y.%m.%d, %H:%M")
-  (newsticker-url-list-defaults nil)
-  (newsticker-automatically-mark-items-as-old nil)
-  (newsticker-hide-old-items-in-newsticker-buffer t "plainview only")
-  (newsticker-retrieval-interval 1800)
-  (newsticker-retrieval-method 'extern)
-  (newsticker-wget-name "curl")
-  (newsticker-wget-arguments '("-Lkqsm30" "-A" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 Edg/124.0.0.0"))
-  :config
-  (dolist (map (list newsticker-treeview-mode-map
-                     newsticker-treeview-list-mode-map
-                     newsticker-treeview-item-mode-map))
-    (bind-keys
-     :map map
-     ("n" . newsticker-treeview-next-new-or-immortal-item)
-     ("p" . newsticker-treeview-prev-new-or-immortal-item)
-     ("N" . newsticker-treeview-next-item)
-     ("P" . newsticker-treeview-prev-item)))
-  (define-advice newsticker--treeview-window-init (:before () display-in-new-tab)
-    "Display in new tab if not in new frame."
-    (unless newsticker-treeview-own-frame
-      (tab-bar-new-tab)))
-  (define-advice newsticker-treeview-quit (:after () close-created-tab)
-    "Close created tab for newsticker."
-    (unless (or newsticker-treeview-own-frame
-                (> 2 (length (funcall tab-bar-tabs-function))))
-      (tab-bar-close-tab)))
-  (define-advice newsticker-get-news (:around (orig-fun &rest args) fix-default-directory)
-    "Fix issue where `newsticker-get-news' throws an error when the current
-directory is deleted.  This bind `default-directory' to `newsticker-dir'
-before calling the original function."
-    (let ((default-directory newsticker-dir))
-      (apply orig-fun args)))
-
-  (defun zr-init-and-start-newsticker (level)
-    (interactive "nPrivacy level: ")
-    ;; (auth-source-forget-all-cached)
-    (load "init-rss.el.gpg" t t)
-    (zr-setup-news-url-list level)
-    (newsticker-start t)))
-
 (use-package shr
   :custom
   (shr-cookie-policy nil)
@@ -1159,6 +1201,22 @@ If no custom prefix matches, it calls the original function."
          (replace-regexp-in-string "\\` c " "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/" url)))))
   (setq-mode-local eww-bookmark-mode
                    goal-column (1+ (/ (window-width) 2))))
+
+(use-package zr-eww
+  :after eww
+  :custom
+  (zr-eww-url-rules
+   '(("\\`https://github.com/\\(.+\\)/commit/\\([^/]+\\)\\'" . "https://github.com/\\1/commit/\\2.patch")
+     ("\\`https://github.com/\\(.+\\)/pull/\\([0-9]+\\)\\'" . "https://github.com/\\1/pull/\\2.patch")
+     ("\\`https://github.com/\\(.+\\)/blob/\\(.+\\)" . "https://github.com/\\1/raw/\\2")
+     ("\\`https://www.reddit.com" . "https://old.reddit.com")))
+  (zr-eww-readable-patterns
+   '("\\`https?://manned.org/man/" "\\`https?://nixos.org/manual/nix/"
+     "\\`https?://www.mojeek.com/search?" "\\`https?://www.wireshark.org/docs/wsug_html_chunked/"
+     "\\`https?://nginx.org/en/docs/" "\\`https?://learn.microsoft.com/en-us/windows-server/administration/windows-commands/"))
+  (zr-eww-content-modes '(("\\.patch\\'" . diff-mode) ("\\.el\\'" . emacs-lisp-mode)
+                          ("\\.rs\\'" . rust-ts-mode) ("\\.go\\'" . go-ts-mode)))
+  :config (zr-eww-mode 1))
 
 (use-package webjump
   :init
@@ -1282,9 +1340,7 @@ If no custom prefix matches, it calls the original function."
         (setq-local comment-start "-- ")))
    ((sql-mode sql-interactive-mode) . sql-indent-enable))
   :custom
-  (sql-input-ring-file-name (locate-user-emacs-file "sql-history.eld"))
-  :config
-  (require 'init-sql))
+  (sql-input-ring-file-name (locate-user-emacs-file "sql-history.eld")))
 
 (use-package js
   :custom
@@ -1393,6 +1449,14 @@ If no custom prefix matches, it calls the original function."
                      (executable-find "7zz")
                      (executable-find "7za"))))
     (setq archive-7z-program (file-name-base 7z))))
+
+(use-package zr-dired
+  :after dired :demand t
+  :custom (dired-dwim-target #'zr-dired-targets)
+  :bind (:map zr-dired-spc-prefix-map
+              ("d" . zr-dired-duplicate) ("o" . zr-dired-pandoc)
+              ("s" . zr-dired-random-file) ("t" . zr-dired-mark-target)
+              ("T" . zr-dired-unmark-target) (":" . zr-viper-dired-ex)))
 
 (use-package dired-aux
   :custom
@@ -1733,7 +1797,7 @@ If no custom prefix matches, it calls the original function."
   (erc-sasl-user :nick)
   (erc-prompt-for-password nil)
   :config
-  (add-to-list 'erc-modules 'sasl))
+  (setopt erc-modules `(settings sasl ,@erc-modules)))
 
 (use-package remember
   :custom
@@ -1755,6 +1819,12 @@ If no custom prefix matches, it calls the original function."
   (pcomplete-autolist t)
   (pcomplete-recexact t)
   (pcomplete-termination-string ""))
+
+(use-package zr-pcmpl
+  :after pcomplete
+  :config
+  (setq zr-pcmpl-archive-program (or (executable-find "7z") (executable-find "7zz") "7z"))
+  (zr-pcmpl-mode 1))
 
 (use-package forms)
 (use-package ses)
@@ -1843,6 +1913,15 @@ If no custom prefix matches, it calls the original function."
   (unless zr-sys-android-gui-p
     (setq tab-line-new-button-show nil
           tab-line-close-button-show nil)))
+
+(use-package zr-window
+  :after tab-line :demand t
+  :commands zr-window-follow-columns
+  :custom
+  (zr-window-excluded-buffers '("\\`\\*Async-native-compile-log\\*" "\\`\\*Pp Eval Output\\*"))
+  (tab-line-tabs-buffer-group-function #'zr-window-tab-group)
+  :config
+  (define-key zr-menu [follow-columns] '(menu-item "Follow columns" zr-window-follow-columns)))
 
 (use-package mouse
   :config
@@ -1967,11 +2046,26 @@ If no custom prefix matches, it calls the original function."
                            ("hermes" "--tui")
                            ("nixos-rebuild" "--help")))
   :config
-  (require 'init-esh)
   (modify-syntax-entry ?' "\"" eshell-mode-syntax-table)
   (add-hook 'eshell-expand-input-functions #'eshell-expand-history-references)
   (dolist (mod '(eshell-smart eshell-elecslash eshell-tramp eshell-xtra))
     (add-to-list 'eshell-modules-list mod)))
+
+(use-package zr-eshell
+  :bind (:map eshell-mode-map ("C-c C-v" . zr-eshell-pop-output))
+  :custom
+  (zr-eshell-interpreters '(("ps1" "powershell" "-NoLogo" "-NoProfile" "-NonInteractive" "-File")
+                            ("py" "uv" "run" "-s")))
+  :config
+  (defalias 'eshell/import-bookmark #'zr-eshell-import-bookmarks)
+  (defalias 'eshell/with-editor-maybe #'zr-eshell-set-editor)
+  (require 'em-term)
+  (dolist (command '("ssh" "usql")) (add-to-list 'eshell-visual-commands command))
+  (add-to-list 'eshell-visual-subcommands '("xpra" "attach"))
+  (when zr-sys-winnt-p
+    (add-to-list 'eshell-visual-subcommands '("scoop.cmd" "update" "install"))
+    (add-to-list 'eshell-interpreter-alist
+                 (cons "\\.\\(?:py\\|ps1\\)\\'" #'zr-eshell-script-interpreter))))
 
 (use-package comint
   :bind
@@ -1990,6 +2084,10 @@ If no custom prefix matches, it calls the original function."
                   comint-truncate-buffer
                   comint-osc-process-output))
       (add-hook 'comint-output-filter-functions hook)))
+
+(use-package zr-comint
+  :hook ((comint-mode . zr-comint-history-mode) (shell-mode . zr-comint-shell-setup))
+  :custom (zr-comint-kill-buffer-on-exit t))
 
 (use-package compile
   :custom
@@ -2214,6 +2312,17 @@ If no custom prefix matches, it calls the original function."
   :config
   (appt-activate 1))
 
+(use-package zr-notify
+  :after appt :demand t
+  :custom (appt-disp-window-function #'zr-notify-appointment)
+  :config
+  (defun zr-personal-hydration-reminders ()
+    (zr-notify-add-reminders
+     (mapcar (lambda (hour) (list (format "%d:00" hour) "💧 Stay hydrated!" 0))
+             (number-sequence 8 23))))
+  (zr-personal-hydration-reminders)
+  (add-hook 'midnight-hook #'zr-personal-hydration-reminders))
+
 (use-package org
   :init
   (setq org-directory "~/org")
@@ -2317,6 +2426,22 @@ If no custom prefix matches, it calls the original function."
       (sqlite . t))))
   (dolist (mod '(org-tempo org-crypt org-protocol))
     (add-to-list 'org-modules mod)))
+
+(use-package zr-org
+  :hook (org-mode . zr-org-mode)
+  :commands (zr-org-table-select org-dblock-write:zr-file-finder)
+  :bind (:map org-mode-map ("C-c i n" . zr-org-insert-noweb) ("C-c i c" . zr-org-insert-call))
+  :config
+  (with-eval-after-load 'org-tempo
+    (dolist (entry '(("d" . "header") ("n" . "name")))
+      (setf (alist-get (car entry) org-tempo-keywords-alist nil nil #'equal) (cdr entry)))
+    (org-tempo-add-templates)
+    (tempo-define-template "zr-org-noweb"
+                           '((call-interactively #'zr-org-insert-noweb))
+                           "<N" "Insert a noweb reference" 'org-tempo-tags)
+    (tempo-define-template "zr-org-call"
+                           '((call-interactively #'zr-org-insert-call))
+                           "<x" "Insert a Babel call" 'org-tempo-tags)))
 
 (use-package org-attach
   :custom
@@ -2479,6 +2604,11 @@ If no custom prefix matches, it calls the original function."
           (setcar args (substring f (1+ (length h)))))
         args))))
 
+(use-package zr-org-protocol
+  :after org-protocol :demand t
+  :commands zr-org-protocol-register-windows
+  :config (zr-org-protocol-mode 1))
+
 (use-package ol
   :commands org-insert-link-global
   :init
@@ -2494,6 +2624,13 @@ If no custom prefix matches, it calls the original function."
   (org-link-use-indirect-buffer-for-internals t)
   :config
   (setcdr (assoc 'file org-link-frame-setup) 'find-file))
+
+(use-package zr-org-link
+  :after ol :demand t
+  :commands zr-org-link-open-wezterm
+  :config
+  (zr-org-link-mode 1)
+  (add-hook 'org-open-at-point-functions #'zr-org-link-open-at-point))
 
 (use-package ob
   :bind
@@ -2565,6 +2702,23 @@ If no custom prefix matches, it calls the original function."
           (cons '(:results . "replace verbatim")
                 (assq-delete-all :results org-babel-default-header-args:plantuml)))))
 
+(use-package zr-org-babel
+  :hook (org-mode . zr-org-babel-mode)
+  :commands zr-org-babel-execute-nearby
+  :bind (:map org-babel-map ("v" . zr-org-babel-expand)
+              ("q" . zr-org-babel-display-result) ("m" . zr-org-babel-execute-named))
+  :config
+  (setq org-babel-default-header-args:ahk '((:shebang . "#Requires AutoHotkey 2.0+"))
+        org-babel-default-header-args:bat '((:prologue . "SETLOCAL") (:epilogue . "ENDLOCAL")))
+  (zr-org-babel-bat-mode 1)
+  (keymap-set org-src-mode-map "C-x C-s" #'zr-org-babel-save-source)
+  (add-hook 'org-src-mode-hook #'smerge-start-session))
+
+(use-package zr-org-tangle
+  :after ob-tangle :demand t
+  :commands (zr-org-tangle-path zr-org-tangle-detangle)
+  :config (zr-org-tangle-id-mode 1))
+
 (use-package ox
   :custom
   (org-export-dispatch-use-expert-ui t)
@@ -2604,6 +2758,10 @@ If no custom prefix matches, it calls the original function."
                    ("\\section{%s}" . "\\section*{%s}")
                    ("\\subsection{%s}" . "\\subsection*{%s}")
                    ("\\subsubsection{%s}" . "\\subsubsection*{%s}")))))
+
+(use-package zr-org-export
+  :after ox :demand t
+  :config (zr-org-export-mode 1))
 
 (use-package zr-ffmpeg
   :commands zr-ffmpeg)
@@ -2974,27 +3132,7 @@ If no custom prefix matches, it calls the original function."
   (add-to-list 'emms-track-initialize-functions #'emms-info-initialize-track)
   (setq emms-track-description-function #'emms-info-track-description)
   (require 'emms-cache)
-  (emms-cache 1)
-  (when (require 'init-rclone nil t)
-    (define-emms-source rclone (dir)
-      "An EMMS source for rclone remote."
-      (interactive (list (read-string "Play rclone directory: "
-                                      nil 'zr-rclone-playlist-history)))
-      (emms-playlist-ensure-playlist-buffer)
-      (add-to-history 'zr-rclone-playlist-history dir 100)
-      (let* ((parts (string-split dir ":"))
-             (remote (car parts))
-             (path (string-join (cdr parts)))
-             (files (zr-rclone-directory-files-recursively
-                     remote path
-                     (rx (| (regexp (emms-source-file-regex))
-                            (regexp (image-file-name-regexp)))))))
-        (dolist (file files)
-          (unless (string-match emms-source-file-exclude-regexp file)
-	        (funcall emms-playlist-insert-track-function 
-		             (emms-track 'url (zr-rclone-transform-file-path file))))))))
-  (when (locate-library "init-emms")
-    (require 'init-emms)))
+  (emms-cache 1))
 
 (use-package mpvi :after emms
   :if (package-installed-p 'mpvi))
@@ -3002,14 +3140,7 @@ If no custom prefix matches, it calls the original function."
 (use-package plz
   :if (package-installed-p 'plz)
   :custom
-  (plz-connect-timeout 10)
-  :config
-  (require 'init-net)
-  (define-advice plz (:around (fn method url &rest args) append-arg)
-    (let ((plz-curl-default-args
-           (append (zr-net-curl-parameters-dwim url)
-                   plz-curl-default-args)))
-      (apply fn method url args))))
+  (plz-connect-timeout 10))
 
 (use-package taxy
   :if (package-installed-p 'taxy)
@@ -3160,7 +3291,7 @@ If no custom prefix matches, it calls the original function."
     ("<left>" . nov-scroll-down)
     ("<right>" . nov-scroll-up)
     ("k" . kill-current-buffer)
-    ("&" . zr-shell-do-open))
+    ("&" . zr-dired-open-externally))
   :config
   (defun zr-nov-toggle-header-line ()
     (interactive)

@@ -7,6 +7,8 @@ if (eq system-type 'windows-nt) {
   alias sudo '*sudo $@*'
 }
 
+require `zr-eshell > /dev/null
+
 with-editor-maybe emacsclient > /dev/null
 
 import-bookmark m
