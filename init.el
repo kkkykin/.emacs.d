@@ -219,6 +219,7 @@
 
 (use-package zr-proxy
   :if (locate-library "zr-proxy")
+  :autoload zr-proxy-transform-url
   :config
   (let ((main-domain (auth-source-pick-first-password :host "mydomain" :user "main"))
         (siteproxy (car (auth-source-search :host "" :user "siteproxy"))))
@@ -235,15 +236,6 @@
   :if (locate-library "zr-rclone")
   :commands
   (zr-rclone))
-
-(use-package zr-mpv
-  :if (locate-library "zr-mpv")
-  :bind
-  ( :map zr-dired-spc-prefix-map
-    ("m" . zr-mpv-play-dwim))
-  :config
-  (when zr-sys-winnt-p
-    (setq zr-mpv-backend 'local)))
 
 (use-package touch-screen
   :if zr-sys-android-gui-p)
@@ -296,7 +288,7 @@
   :hook (prog-mode inferior-emacs-lisp-mode)
   :config
   (add-hook 'completion-preview-inhibit-functions
-            (lambda (_) (and (featurep 'repeat) repeat-in-progress)))
+            (lambda (&rest _) (and (featurep 'repeat) repeat-in-progress)))
   (unless zr-sys-winnt-p
     (add-hook 'eshell-mode-hook #'completion-preview-mode)))
 
@@ -1180,8 +1172,7 @@
   (eww-auto-rename-buffer 'title)
   (eww-readable-adds-to-history nil)
   :config
-  (when (require 'zr-proxy nil t)
-    (add-to-list 'eww-url-transformers 'zr-proxy-transform-url))
+  (add-to-list 'eww-url-transformers 'zr-proxy-transform-url)
   (define-advice eww--dwim-expand-url
       (:before-until (&rest args) other-search-prefix)
     "Expand URL with custom prefixes before falling back to original function.
@@ -1499,6 +1490,14 @@ If no custom prefix matches, it calls the original function."
   (unless zr-sys-winnt-p
     (setq find-ls-option '("-exec ls -ldh --quoting-style=literal {} +" . "-ldh"))))
 
+(use-package zr-mpv
+  :bind
+  ( :map zr-dired-spc-prefix-map
+    ("m" . zr-mpv-play-dwim))
+  :config
+  (when zr-sys-winnt-p
+    (setq zr-mpv-backend 'local)))
+
 (use-package hexl)
 
 (use-package dictionary
@@ -1791,13 +1790,85 @@ If no custom prefix matches, it calls the original function."
   (gnus-delay-initialize))
 
 (use-package erc
+  :bind
+  ( :map erc-mode-map
+    ("M-RET" . zr-erc-reply)
+    ("C-c C-v" . zr-erc-media-show))
   :custom
   (erc-sasl-auth-source-function #'erc-auth-source-search)
   (erc-sasl-mechanism 'plain)
   (erc-sasl-user :nick)
   (erc-prompt-for-password nil)
+  (erc-fill-wrap-merge nil)
+  (zr-erc-media-max-age 1800)
   :config
-  (setopt erc-modules `(settings sasl ,@erc-modules)))
+  (let* ((mods `(sasl
+                 fill-wrap              ; needed by zr-display
+                 zr-display
+                 zr-reply
+                 zr-stitch
+                 zr-media
+                 zr-completion
+                 ,@erc-modules))
+         (domain (auth-source-pick-first-password :host "mydomain" :user "main"))
+         (libera-svr "irc.libera.chat")
+         (libera-usr (plist-get (car (auth-source-search :host libera-svr)) :user))
+         (erc-sets
+          `(((and (id . dadada) (not erc-server-process-alive))
+             (erc-server ,(concat "icu." domain))
+             (erc-port 6697))
+            ((and (id . Libera.Chat) (not erc-server-process-alive))
+             (erc-server ,libera-svr)
+             (erc-nick ,libera-usr)
+             (erc-port 6697))
+            ((and (network . dadada)
+                  ,(rx bos ?#
+                       (| "catcat"
+                          "brmk"
+                          "bridge-test")
+                       eos)
+                  erc-channel-buffer-p)
+             (zr-erc-display-rules
+              (( :source sender
+                 :regexp "\\`\\(.+\\)-\\([0-9]+\\)/onebot\\'"
+                 :replace-sender "\\1")))
+             (zr-erc-completion-rules
+              (( :source sender
+                 :regexp "\\`\\(.+\\)-\\([0-9]+\\)/onebot\\'"
+                 :groups (1 2))))
+             (zr-erc-stitch-rules
+              (( :match (:sender "/onebot\\'")
+                 :end " <clipped message>\\'")))
+             (zr-erc-media-rules
+              (( :match (:body "\\[图片\\] ")
+                 :regexp "\\`https://multimedia\\.nt\\.qq\\.com\\.cn/download\\?.*\\'"
+                 :type image
+                 :auto-show nil :ffmpeg t
+                 :max-width 0.85 :max-height 0.6))))
+            ((and (network . Libera.Chat)
+                  ,(rx bos "#archlinux-cn")
+                  erc-channel-buffer-p)
+             (zr-erc-display-rules
+              (( :match (:sender ,(rx bos "nichi_bot" eos))
+                 :source body
+                 :regexp ,(rx "[" (group (+ (not "]"))) "] ")
+                 :replace-sender "\\1"
+                 :replace-text "")))
+             (zr-erc-completion-rules
+              (( :match (:sender ,(rx bos "nichi_bot" eos))
+                 :source body
+                 :regexp ,(rx "[" (group (+ (not "]"))) "]")
+                 :groups (1))))
+             (zr-erc-media-rules
+              (( :regexp "\\`https://matrix\\.nichi\\.co/_matrix/media/v1/download/nichi\\.co/.+"
+                 :type image
+                 :ffmpeg t
+                 :max-width 0.85 :max-height 0.6)))))))
+    (if (require 'erc-settings nil t)
+        (progn
+          (setopt erc-modules (cons 'settings mods))
+          (setq erc-settings erc-sets))
+      (setopt erc-modules mods))))
 
 (use-package remember
   :custom
