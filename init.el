@@ -1576,7 +1576,7 @@ If no custom prefix matches, it calls the original function."
   (mpc-host "127.0.0.1"))
 
 (use-package avoid :defer 15
-  :unless zr-sys-android-p
+  :when zr-sys-winnt-p
   :config
   (mouse-avoidance-mode 'exile))
 
@@ -3285,6 +3285,10 @@ If no custom prefix matches, it calls the original function."
         (setcdr args `(,(symbol-name group) ,@(last args))))
       args)))
 
+(use-package telega
+  :custom
+  (telega-use-images nil))
+
 (use-package ement
   :if (package-installed-p 'ement)
   :vc ( :url "https://github.com/Thaodan/ement.el.git"
@@ -3737,9 +3741,9 @@ If no custom prefix matches, it calls the original function."
 
 (use-package kkp
   :if (package-installed-p 'kkp)
-  :vc (:url "https://github.com/OrbitalHustler/kkp" :rev :newest)
   :hook
-  ((emacs-startup . global-kkp-mode))
+  ((emacs-startup . global-kkp-mode)
+   (server-after-make-frame . kkp-enable-in-terminal))
   :custom
   (kkp-terminal-query-timeout 2))
 
