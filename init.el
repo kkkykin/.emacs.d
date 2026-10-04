@@ -1197,16 +1197,27 @@ If no custom prefix matches, it calls the original function."
   :after eww
   :custom
   (zr-eww-url-rules
-   '(("\\`https://github.com/\\(.+\\)/commit/\\([^/]+\\)\\'" . "https://github.com/\\1/commit/\\2.patch")
-     ("\\`https://github.com/\\(.+\\)/pull/\\([0-9]+\\)\\'" . "https://github.com/\\1/pull/\\2.patch")
-     ("\\`https://github.com/\\(.+\\)/blob/\\(.+\\)" . "https://github.com/\\1/raw/\\2")
-     ("\\`https://www.reddit.com" . "https://old.reddit.com")))
+   '(("\\`https://github.com/\\(.+\\)/commit/\\([^/]+\\)\\'"
+      . "https://github.com/\\1/commit/\\2.patch")
+     ("\\`https://github.com/\\(.+\\)/pull/\\([0-9]+\\)\\'"
+      . "https://github.com/\\1/pull/\\2.patch")
+     ("\\`https://github.com/\\(.+\\)/blob/\\(.+\\)"
+      . "https://github.com/\\1/raw/\\2")
+     ("\\`https://www.reddit.com"
+      . "https://old.reddit.com")))
   (zr-eww-readable-patterns
-   '("\\`https?://manned.org/man/" "\\`https?://nixos.org/manual/nix/"
-     "\\`https?://www.mojeek.com/search?" "\\`https?://www.wireshark.org/docs/wsug_html_chunked/"
-     "\\`https?://nginx.org/en/docs/" "\\`https?://learn.microsoft.com/en-us/windows-server/administration/windows-commands/"))
-  (zr-eww-content-modes '(("\\.patch\\'" . diff-mode) ("\\.el\\'" . emacs-lisp-mode)
-                          ("\\.rs\\'" . rust-ts-mode) ("\\.go\\'" . go-ts-mode)))
+   '("\\`https?://manned.org/man/"
+     "\\`https?://nixos.org/manual/nix/"
+     "\\`https?://www.mojeek.com/search?"
+     "\\`https?://www.wireshark.org/docs/wsug_html_chunked/"
+     "\\`https?://nginx.org/en/docs/"
+     "\\`https?://learn.microsoft.com/en-us/windows-server/administration/windows-commands/"))
+  (zr-eww-content-modes
+   '(("\\.patch\\'" . diff-mode)
+     ("\\.el\\'" . emacs-lisp-mode)
+     ("\\.md\\'" . markdown-ts-mode)
+     ("\\.rs\\'" . rust-ts-mode)
+     ("\\.go\\'" . go-ts-mode)))
   :config (zr-eww-mode 1))
 
 (use-package webjump
@@ -1807,12 +1818,16 @@ If no custom prefix matches, it calls the original function."
                  zr-display
                  zr-reply
                  zr-stitch
-                 zr-media
+                 zr-link
                  zr-completion
                  ,@erc-modules))
          (domain (auth-source-pick-first-password :host "mydomain" :user "main"))
          (libera-svr "irc.libera.chat")
          (libera-usr (plist-get (car (auth-source-search :host libera-svr)) :user))
+         (onebot-re "\\`\\(.+\\)-\\([0-9]+\\)/onebot\\'")
+         (archlinux-re (rx "[" (group (+ (or (not (any "[]"))
+                                             (seq "[" (* (not (any "]"))) "]"))))
+                           "]" (* (any " \t"))))
          (erc-sets
           `(((and (id . dadada) (not erc-server-process-alive))
              (erc-server ,(concat "icu." domain))
@@ -1830,36 +1845,39 @@ If no custom prefix matches, it calls the original function."
                   erc-channel-buffer-p)
              (zr-erc-display-rules
               (( :source sender
-                 :regexp "\\`\\(.+\\)-\\([0-9]+\\)/onebot\\'"
+                 :regexp ,onebot-re
                  :replace-sender "\\1")))
              (zr-erc-completion-rules
               (( :source sender
-                 :regexp "\\`\\(.+\\)-\\([0-9]+\\)/onebot\\'"
+                 :regexp ,onebot-re
                  :groups (1 2))))
              (zr-erc-stitch-rules
               (( :match (:sender "/onebot\\'")
                  :end " <clipped message>\\'")))
-             (zr-erc-media-rules
+             (zr-erc-link-rules
               (( :match (:body "\\[图片\\] ")
-                 :regexp "\\`https://multimedia\\.nt\\.qq\\.com\\.cn/download\\?.*\\'"
-                 :type image
-                 :auto-show nil :ffmpeg t
-                 :max-width 0.85 :max-height 0.6))))
+                 :regexp "https://multimedia\\.nt\\.qq\\.com\\.cn/download\\?[^[:space:]<>]+"
+                 :type image :auto-show nil :ffmpeg t
+                 :max-width 0.85 :max-height 0.6)
+               ( :match (:body "\\`\\[合并转发\\] ")
+                 :regexp "\\[查看合并转发：\\(/join #[^]\n]+\\)\\]"
+                 :replace "\\1"
+                 :type command))))
             ((and (network . Libera.Chat)
                   ,(rx bos "#archlinux-cn")
                   erc-channel-buffer-p)
              (zr-erc-display-rules
               (( :match (:sender ,(rx bos "nichi_bot" eos))
                  :source body
-                 :regexp ,(rx "[" (group (+ (not "]"))) "] ")
+                 :regexp ,archlinux-re
                  :replace-sender "\\1"
                  :replace-text "")))
              (zr-erc-completion-rules
               (( :match (:sender ,(rx bos "nichi_bot" eos))
                  :source body
-                 :regexp ,(rx "[" (group (+ (not "]"))) "]")
+                 :regexp ,archlinux-re
                  :groups (1))))
-             (zr-erc-media-rules
+             (zr-erc-link-rules
               (( :regexp "\\`https://matrix\\.nichi\\.co/_matrix/media/v1/download/nichi\\.co/.+"
                  :type image
                  :ffmpeg t
