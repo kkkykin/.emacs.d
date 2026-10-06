@@ -1810,6 +1810,7 @@ If no custom prefix matches, it calls the original function."
   (erc-sasl-mechanism 'plain)
   (erc-sasl-user :nick)
   (erc-prompt-for-password nil)
+  (erc-track-shorten-aggressively 'max)
   (erc-fill-wrap-merge nil)
   (zr-erc-media-max-age 1800)
   :config
@@ -1886,7 +1887,9 @@ If no custom prefix matches, it calls the original function."
         (progn
           (setopt erc-modules (cons 'settings mods))
           (setq erc-settings erc-sets))
-      (setopt erc-modules mods))))
+      (setopt erc-modules mods))
+    (setq erc-track-exclude-types (append '("JOIN" "PART")
+                                          erc-track-exclude-types))))
 
 (use-package remember
   :custom
@@ -3427,19 +3430,18 @@ If no custom prefix matches, it calls the original function."
 
 (use-package ghostel
   :if (package-installed-p 'ghostel)
-  :init
-  (add-hook 'eshell-load-hook #'ghostel-eshell-visual-command-mode)
-  (add-hook 'after-init-hook #'ghostel-compile-global-mode)
-  (add-hook 'after-init-hook #'ghostel-comint-global-mode)
   :bind
   ( :map project-prefix-map
     ("m" . ghostel-project)
     ("M" . ghostel-project-list-buffers))
+  :hook
+  ((eshell-load . ghostel-eshell-visual-command-mode))
   :custom
   (ghostel-module-directory (expand-file-name "~/.config/emacs/ghostel/"))
   :config
   (unless (display-graphic-p)
     (xterm-mouse-mode))
+  ;; (setq ghostel-github-release-url (zr-proxy-transform-url ghostel-github-release-url))
   (add-to-list 'project-switch-commands '(ghostel-project "Ghostel") t)
   (add-to-list 'project-switch-commands '(ghostel-project-list-buffers "Ghostel buffers") t))
 
