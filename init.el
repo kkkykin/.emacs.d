@@ -2152,7 +2152,10 @@ If no custom prefix matches, it calls the original function."
   (defalias 'eshell/import-bookmark #'zr-eshell-import-bookmarks)
   (defalias 'eshell/with-editor-maybe #'zr-eshell-set-editor)
   (require 'em-term)
-  (dolist (command '("ssh" "usql")) (add-to-list 'eshell-visual-commands command))
+  (dolist (command '("ssh"
+                     "usql"
+                     "gopass"))
+    (add-to-list 'eshell-visual-commands command))
   (add-to-list 'eshell-visual-subcommands '("xpra" "attach"))
   (when zr-sys-winnt-p
     (add-to-list 'eshell-visual-subcommands '("scoop.cmd" "update" "install"))
