@@ -1860,6 +1860,10 @@ If no custom prefix matches, it calls the original function."
                  :regexp "https://multimedia\\.nt\\.qq\\.com\\.cn/download\\?[^[:space:]<>]+"
                  :type image :auto-show nil :ffmpeg t
                  :max-width 0.85 :max-height 0.6)
+               ( :match (:body "\\[图片\\] ")
+                 :regexp "https://gchat\\.gpic\\.cn/gchatpic_new/[^[:space:]<>]+"
+                 :type image :auto-show nil :ffmpeg t
+                 :max-width 0.85 :max-height 0.6)
                ( :match (:body "\\`\\[合并转发\\] ")
                  :regexp "\\[查看合并转发：\\(/join #[^]\n]+\\)\\]"
                  :replace "\\1"
