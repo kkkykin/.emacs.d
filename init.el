@@ -1882,6 +1882,9 @@ If no custom prefix matches, it calls the original function."
                  :source body
                  :regexp ,archlinux-re
                  :groups (1))))
+             (zr-erc-stitch-rules
+              (( :match (:sender ,(rx bos "nichi_bot" eos))
+                 :end " <clipped message>\\'")))
              (zr-erc-link-rules
               (( :regexp "\\`https://matrix\\.nichi\\.co/_matrix/media/v1/download/nichi\\.co/.+"
                  :type image
