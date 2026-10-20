@@ -1342,7 +1342,10 @@ If no custom prefix matches, it calls the original function."
         (setq-local comment-start "-- ")))
    ((sql-mode sql-interactive-mode) . sql-indent-enable))
   :custom
-  (sql-input-ring-file-name (locate-user-emacs-file "sql-history.eld")))
+  (sql-input-ring-file-name (locate-user-emacs-file "sql-history.eld"))
+  :config
+  (when zr-sys-winnt-p
+    (setq sql-mysql-options '("-tfn" "--compression-algorithms=zstd"))))
 
 (use-package js
   :custom
