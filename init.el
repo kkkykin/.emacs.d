@@ -1828,10 +1828,6 @@ If no custom prefix matches, it calls the original function."
          (domain (auth-source-pick-first-password :host "mydomain" :user "main"))
          (libera-svr "irc.libera.chat")
          (libera-usr (plist-get (car (auth-source-search :host libera-svr)) :user))
-         (onebot-re "\\`\\(.+\\)-\\([0-9]+\\)/onebot\\'")
-         (archlinux-re (rx "[" (group (+ (or (not (any "[]"))
-                                             (seq "[" (* (not (any "]"))) "]"))))
-                           "]" (* (any " \t"))))
          (erc-sets
           `(((and (id . dadada) (not erc-server-process-alive))
              (erc-server ,(concat "icu." domain))
@@ -1849,26 +1845,29 @@ If no custom prefix matches, it calls the original function."
                   erc-channel-buffer-p)
              (zr-erc-display-rules
               (( :source sender
-                 :regexp ,onebot-re
-                 :replace-sender "\\1")))
+                 :regexp #1="\\`\\(.+\\)-\\([0-9]+\\)/onebot\\'"
+                 :replace-sender "\\1")
+               ( :match (:body "\\[图片\\] ")
+                 :regexp #2=,(rx (| (regexp "https://multimedia\\.nt\\.qq\\.com\\.cn/download\\?[^[:space:]<>]+")
+                                    (regexp "https://gchat\\.gpic\\.cn/gchatpic_new/[^[:space:]<>]+")))
+                 :replace-text "[看看]")
+               ( :match (:body "\\`\\[合并转发\\] ")
+                 :regexp #3="\\[查看合并转发：\\(/join #[^]\n]+\\)\\]"
+                 :replace-text "[查看合并转发]")))
              (zr-erc-completion-rules
               (( :source sender
-                 :regexp ,onebot-re
+                 :regexp #1#
                  :groups (1 2))))
              (zr-erc-stitch-rules
               (( :match (:sender "/onebot\\'")
                  :end " <clipped message>\\'")))
              (zr-erc-link-rules
               (( :match (:body "\\[图片\\] ")
-                 :regexp "https://multimedia\\.nt\\.qq\\.com\\.cn/download\\?[^[:space:]<>]+"
-                 :type image :auto-show nil :ffmpeg t
-                 :max-width 0.85 :max-height 0.6)
-               ( :match (:body "\\[图片\\] ")
-                 :regexp "https://gchat\\.gpic\\.cn/gchatpic_new/[^[:space:]<>]+"
+                 :regexp #2#
                  :type image :auto-show nil :ffmpeg t
                  :max-width 0.85 :max-height 0.6)
                ( :match (:body "\\`\\[合并转发\\] ")
-                 :regexp "\\[查看合并转发：\\(/join #[^]\n]+\\)\\]"
+                 :regexp #3#
                  :replace "\\1"
                  :type command))))
             ((and (network . Libera.Chat)
@@ -1877,19 +1876,25 @@ If no custom prefix matches, it calls the original function."
              (zr-erc-display-rules
               (( :match (:sender ,(rx bos "nichi_bot" eos))
                  :source body
-                 :regexp ,archlinux-re
+                 :regexp #4=,(rx "[" (group (+ (or (not (any "[]"))
+                                                   (seq "[" (* (not (any "]"))) "]"))))
+                                 "]" (* (any " \t")))
                  :replace-sender "\\1"
-                 :replace-text "")))
+                 :replace-text "")
+               ( :match (:sender ,(rx bos "nichi_bot" eos))
+                 :source body
+                 :regexp #5="\\`https://matrix\\.nichi\\.co/_matrix/media/v1/download/nichi\\.co/.+"
+                 :replace-text "[图片]")))
              (zr-erc-completion-rules
               (( :match (:sender ,(rx bos "nichi_bot" eos))
                  :source body
-                 :regexp ,archlinux-re
+                 :regexp #4#
                  :groups (1))))
              (zr-erc-stitch-rules
               (( :match (:sender ,(rx bos "nichi_bot" eos))
                  :end " <clipped message>\\'")))
              (zr-erc-link-rules
-              (( :regexp "\\`https://matrix\\.nichi\\.co/_matrix/media/v1/download/nichi\\.co/.+"
+              (( :regexp #5#
                  :type image
                  :ffmpeg t
                  :max-width 0.85 :max-height 0.6)))))))
