@@ -3374,7 +3374,7 @@ If no custom prefix matches, it calls the original function."
                   t)))))
 
 (use-package zr-org-srs-x
-  :if (find-library "zr-org-srs-x")
+  :if (locate-library "zr-org-srs-x")
   :custom
   (zr-org-srs-x-directory (expand-file-name "~/srs"))
   (zr-org-srs-x-model-alist
