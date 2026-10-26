@@ -1847,9 +1847,9 @@ If no custom prefix matches, it calls the original function."
               (( :source sender
                  :regexp #1="\\`\\(.+\\)-\\([0-9]+\\)/onebot\\'"
                  :replace-sender "\\1")
-               ( :match (:body "\\[图片\\] ")
-                 :regexp #2=,(rx (| (regexp "https://multimedia\\.nt\\.qq\\.com\\.cn/download\\?[^[:space:]<>]+")
-                                    (regexp "https://gchat\\.gpic\\.cn/gchatpic_new/[^[:space:]<>]+")))
+               ( :match (:body ,(rx "[" (| "图片" "视频") "] "))
+                 :regexp #2=,(rx (| (: "https://multimedia.nt.qq.com.cn/download?" (+ (not (or ?  ?< ?>))))
+                                    (: "https://gchat.gpic.cn/gchatpic_new/" (+ (not (or ?  ?< ?>))))))
                  :replace-text "[看看]")
                ( :match (:body "\\`\\[合并转发\\] ")
                  :regexp #3="\\[查看合并转发：\\(/join #[^]\n]+\\)\\]"
