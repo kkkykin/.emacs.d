@@ -3373,6 +3373,19 @@ If no custom prefix matches, it calls the original function."
                   (org-srs-item-confirm-command)
                   t)))))
 
+(use-package zr-org-srs-x
+  :if (find-library "zr-org-srs-x")
+  :custom
+  (zr-org-srs-x-directory (expand-file-name "~/srs"))
+  (zr-org-srs-x-model-alist
+   '((modelofluna
+      (name . "$.word")
+      (front . "$.example_sentence\n$.screenshot")
+      (back . "$.remarks\n\n$dictionary")))
+   (t . zr-org-srs-x-render-default-note))
+  :config
+  (put 'zr-org-srs-x-dictionaries 'safe-local-variable 'listp))
+
 (use-package ox-pandoc :defer 2
   :if (package-installed-p 'ox-pandoc)
   :after org
