@@ -3383,7 +3383,7 @@ If no custom prefix matches, it calls the original function."
       (front . "$.example_sentence\n$.screenshot")
       (back . "$.remarks\n\n$dictionary")))
    (t . zr-org-srs-x-render-default-note))
-  :config
+  :init
   (put 'zr-org-srs-x-dictionaries 'safe-local-variable 'listp))
 
 (use-package ox-pandoc :defer 2
