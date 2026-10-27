@@ -3364,7 +3364,7 @@ If no custom prefix matches, it calls the original function."
   (org-srs-item-confirm #'org-srs-item-confirm-command)
   :config
   (add-hook 'org-srs-review-continue-hook #'save-buffer)
-  (if zr-sys-android-p
+  (if zr-sys-android-gui-p
       (org-srs-ui-mode +1)
     (org-srs-ui-header-line-mode +1)
     (add-hook 'org-ctrl-c-ctrl-c-hook
