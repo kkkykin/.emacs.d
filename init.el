@@ -1540,6 +1540,12 @@ If no custom prefix matches, it calls the original function."
   :config
   (setq dictionary-port (+ 10000 (% dictionary-port 10000))))
 
+(use-package zr-dictionary
+  :if (locate-library "zr-dictionary")
+  :init
+  (define-key zr-menu [dictionary-search]
+              '(menu-item "dictionary-search" zr-dictionary-search)))
+
 (use-package epg
   :config
   (unless zr-sys-linux-p
@@ -3362,17 +3368,6 @@ If no custom prefix matches, it calls the original function."
     ("<f6>" . org-srs-review-rate-good)
     ("<f7>" . org-srs-review-rate-hard)
     ("<f8>" . org-srs-review-rate-again))
-  :init
-  (with-eval-after-load 'org-capture
-    (add-hook 'org-capture-mode-hook
-              (lambda ()
-                (when (looking-at (rx "\n\[\[dict:" (group (1+ anychar)) "]["))
-                  (insert (match-string 1)))))
-    (add-to-list 'org-capture-templates
-                 `("s" "SRS" entry
-                   (file+headline ,(expand-file-name "srs.org" org-directory) "Inbox")
-                   "*** %?\n%a\n%i"
-                   :before-finalize (org-srs-item-create))))
   :custom
   (org-srs-review-cram-strategy
    '(sort (ahead (+ due reviewing) (495966 52223)) interval))
@@ -3394,12 +3389,10 @@ If no custom prefix matches, it calls the original function."
   (zr-org-srs-x-directory (expand-file-name "~/srs"))
   (zr-org-srs-x-model-alist
    '((modelofluna
-      (name . "$.word")
-      (front . "$.example_sentence\n$.screenshot")
-      (back . "$.remarks\n\n$dictionary")))
-   (t . zr-org-srs-x-render-default-note))
-  :init
-  (put 'zr-org-srs-x-dictionaries 'safe-local-variable 'listp))
+      (name "%s" .word)
+      (front "%s\n%s" .example_sentence .screenshot)
+      (back "%s\n\n%s" .remarks dictionary))
+     (t . zr-org-srs-x-render-default-note))))
 
 (use-package ox-pandoc :defer 2
   :if (package-installed-p 'ox-pandoc)
