@@ -1533,12 +1533,13 @@ If no custom prefix matches, it calls the original function."
   (define-key zr-menu [dictionary-search]
               '(menu-item "dictionary-search" dictionary-search))
   :custom
-  (dictionary-server (or (auth-source-pick-first-password
-                          :host "dico-server" :user "default")
-                         "dict.tw"))
   (dictionary-use-single-buffer t)
   :config
-  (setq dictionary-port (+ 10000 (% dictionary-port 10000))))
+  (if-let* ((s (auth-source-pick-first-password
+                :host "dico-server" :user "default")))
+      (setq dictionary-server s
+            dictionary-port (+ 10000 (% dictionary-port 10000)))
+    (setq dictionary-server "dict.dyslexicfish.net")))
 
 (use-package zr-dictionary
   :if (locate-library "zr-dictionary")
