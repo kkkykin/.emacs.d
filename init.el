@@ -206,6 +206,20 @@
   :if (locate-library "zr-face")
   :demand t
   :config
+  (dolist (m '(tsdh-light
+               adwaita
+               dichromacy))
+    (push m zr-face-theme-disabled-list))
+  (setq zr-face-fonts-list
+        (cl-delete-if
+         (lambda (font)
+           (member (car font)
+                   '("小赖字体 等宽 SC"
+                     "小賴字體 等寬 SC"
+                     "Maple Mono NF CN"
+                     "UnifontExMono"
+                     "Unifont-JP")))
+         zr-face-fonts-list))
   (let ((func '(zr-face-font-find-available-font
                 zr-face-theme-list-update)))
     (dolist (f func) (add-hook 'server-after-make-frame-hook f))
