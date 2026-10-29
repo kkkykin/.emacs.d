@@ -3391,13 +3391,7 @@ If no custom prefix matches, it calls the original function."
 (use-package zr-org-srs-x
   :if (locate-library "zr-org-srs-x")
   :custom
-  (zr-org-srs-x-directory (expand-file-name "~/srs"))
-  (zr-org-srs-x-model-alist
-   '((modelofluna
-      (name "%s" .word)
-      (front "%s\n%s" .example_sentence .screenshot)
-      (back "%s\n\n%s" .remarks dictionary))
-     (t . zr-org-srs-x-render-default-note))))
+  (zr-org-srs-x-directory (expand-file-name "~/srs")))
 
 (use-package ox-pandoc :defer 2
   :if (package-installed-p 'ox-pandoc)
