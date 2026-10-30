@@ -1870,8 +1870,9 @@ If no custom prefix matches, it calls the original function."
                  :replace-sender "\\1")
                ( :match (:body ,(rx "[" (| "图片" "视频") "] "))
                  :regexp #2=,(rx (| "https://multimedia.nt.qq.com.cn/download?"
+                                    "https://gchat.qpic.cn/gchatpic_new/"
                                     "https://gchat.gpic.cn/gchatpic_new/")
-                                 (+ (not (or ?\n ?  ?< ?>))))
+                                 (+ (not (in "\n\s<>"))))
                  :replace-text "[看看]")
                ( :match (:body "\\`\\[合并转发\\] ")
                  :regexp #3="\\[查看合并转发：\\(/join #[^]\n]+\\)\\]"
