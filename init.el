@@ -1836,9 +1836,9 @@ If no custom prefix matches, it calls the original function."
   (erc-prompt-for-password nil)
   (erc-track-shorten-aggressively 'max)
   (erc-fill-wrap-merge nil)
-  (zr-erc-media-max-age 1800)
   :config
   (let* ((mods `(sasl
+                 notifications
                  fill-wrap              ; needed by zr-display
                  zr-display
                  zr-reply
@@ -1868,13 +1868,13 @@ If no custom prefix matches, it calls the original function."
               (( :source sender
                  :regexp #1="\\`\\(.+\\)-\\([0-9]+\\)/onebot\\'"
                  :replace-sender "\\1")
-               ( :match (:body ,(rx "[" (| "图片" "视频") "] "))
+               ( :selector (:body ,(rx "[" (| "图片" "视频") "] "))
                  :regexp #2=,(rx (| "https://multimedia.nt.qq.com.cn/download?"
                                     "https://gchat.qpic.cn/gchatpic_new/"
                                     "https://gchat.gpic.cn/gchatpic_new/")
                                  (+ (not (in "\n\s<>"))))
                  :replace-text "[看看]")
-               ( :match (:body "\\`\\[合并转发\\] ")
+               ( :selector (:body "\\`\\[合并转发\\] ")
                  :regexp #3="\\[查看合并转发：\\(/join #[^]\n]+\\)\\]"
                  :replace-text "[查看合并转发]")))
              (zr-erc-completion-rules
@@ -1882,14 +1882,14 @@ If no custom prefix matches, it calls the original function."
                  :regexp #1#
                  :groups (1 2))))
              (zr-erc-stitch-rules
-              (( :match (:sender "/onebot\\'")
+              (( :selector (:sender "/onebot\\'")
                  :end " <clipped message>\\'")))
              (zr-erc-link-rules
-              (( :match (:body "\\[图片\\] ")
+              (( :selector (:body "\\[图片\\] ")
                  :regexp #2#
                  :type image :auto-show nil :ffmpeg t
                  :max-width 0.85 :max-height 0.6)
-               ( :match (:body "\\`\\[合并转发\\] ")
+               ( :selector (:body "\\`\\[合并转发\\] ")
                  :regexp #3#
                  :replace "\\1"
                  :type command))))
@@ -1897,24 +1897,24 @@ If no custom prefix matches, it calls the original function."
                   ,(rx bos "#archlinux-cn")
                   erc-channel-buffer-p)
              (zr-erc-display-rules
-              (( :match (:sender ,(rx bos "nichi_bot" eos))
+              (( :selector (:sender ,(rx bos "nichi_bot" eos))
                  :source body
                  :regexp #4=,(rx "[" (group (+ (or (not (any "[]"))
                                                    (seq "[" (* (not (any "]"))) "]"))))
                                  "]" (* (any " \t")))
                  :replace-sender "\\1"
                  :replace-text "")
-               ( :match (:sender ,(rx bos "nichi_bot" eos))
+               ( :selector (:sender ,(rx bos "nichi_bot" eos))
                  :source body
                  :regexp #5="\\`https://matrix\\.nichi\\.co/_matrix/media/v1/download/nichi\\.co/.+"
                  :replace-text "[图片]")))
              (zr-erc-completion-rules
-              (( :match (:sender ,(rx bos "nichi_bot" eos))
+              (( :selector (:sender ,(rx bos "nichi_bot" eos))
                  :source body
                  :regexp #4#
                  :groups (1))))
              (zr-erc-stitch-rules
-              (( :match (:sender ,(rx bos "nichi_bot" eos))
+              (( :selector (:sender ,(rx bos "nichi_bot" eos))
                  :end " <clipped message>\\'")))
              (zr-erc-link-rules
               (( :regexp #5#
@@ -2449,6 +2449,9 @@ If no custom prefix matches, it calls the original function."
   :after appt :demand t
   :custom (appt-disp-window-function #'zr-notify-appointment)
   :config
+  (when (equal (getenv "TERM_PROGRAM") "WezTerm")
+    (setq zr-notify-function #'zr-notify-terminal))
+  (zr-notify-mode 1)
   (defun zr-personal-hydration-reminders ()
     (zr-notify-add-reminders
      (mapcar (lambda (hour) (list (format "%d:00" hour) "💧 Stay hydrated!" 0))
