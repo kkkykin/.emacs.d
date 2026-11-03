@@ -1833,6 +1833,7 @@ If no custom prefix matches, it calls the original function."
   (erc-sasl-auth-source-function #'erc-auth-source-search)
   (erc-sasl-mechanism 'plain)
   (erc-sasl-user :nick)
+  (erc-server-reconnect-attempts t)
   (erc-prompt-for-password nil)
   (erc-track-shorten-aggressively 'max)
   (erc-fill-wrap-merge nil)
