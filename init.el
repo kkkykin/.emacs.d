@@ -1838,9 +1838,10 @@ If no custom prefix matches, it calls the original function."
   (erc-fill-wrap-merge nil)
   :config
   (let* ((mods `(sasl
-                 notifications
+                 notifications          ; zr-notifications
                  fill-wrap              ; needed by zr-display
                  zr-display
+                 zr-notifications
                  zr-reply
                  zr-stitch
                  zr-link
@@ -1926,8 +1927,12 @@ If no custom prefix matches, it calls the original function."
           (setopt erc-modules (cons 'settings mods))
           (setq erc-settings erc-sets))
       (setopt erc-modules mods))
-    (setq erc-track-exclude-types (append '("JOIN" "PART")
-                                          erc-track-exclude-types))))
+    (dolist (type '("JOIN"
+                    "221"               ;user mode
+                    "324"               ;channel mode
+                    "329"               ;channel create time
+                    "PART"))
+      (add-to-list 'erc-track-exclude-types type))))
 
 (use-package remember
   :custom
@@ -2449,7 +2454,8 @@ If no custom prefix matches, it calls the original function."
   :after appt :demand t
   :custom (appt-disp-window-function #'zr-notify-appointment)
   :config
-  (when (equal (getenv "TERM_PROGRAM") "WezTerm")
+  (when (and (getenv "SSH_CONNECTION")
+             (equal (getenv "TERM_PROGRAM") "WezTerm"))
     (setq zr-notify-function #'zr-notify-terminal))
   (zr-notify-mode 1)
   (defun zr-personal-hydration-reminders ()
