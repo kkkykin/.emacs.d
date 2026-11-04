@@ -1999,6 +1999,9 @@ If no custom prefix matches, it calls the original function."
                 tab-bar-format
                 (remove 'tab-bar-format-global tab-bar-format))
       (add-to-list 'tab-bar-format 'tab-bar-format-global)
+      (setq mode-line-misc-info
+            (remove '(global-mode-string ("" global-mode-string))
+                    mode-line-misc-info))
       (setopt tab-bar-show t)))
   (zr-tab-bar-format-setup)
   (add-hook 'server-after-make-frame-hook #'zr-tab-bar-format-setup)
