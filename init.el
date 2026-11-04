@@ -3389,6 +3389,7 @@ If no custom prefix matches, it calls the original function."
     ("<f8>" . org-srs-review-rate-again))
   :custom
   (org-srs-review-cram-strategy
+  (org-srs-review-cache-p t)
    '(sort (ahead (+ due reviewing) (495966 52223)) interval))
   (org-srs-item-confirm #'org-srs-item-confirm-command)
   :config
