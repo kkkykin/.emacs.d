@@ -3403,8 +3403,8 @@ If no custom prefix matches, it calls the original function."
   :if (package-installed-p 'org-srs)
   :hook (org-mode . org-srs-embed-overlay-mode)
   :custom
-  (org-srs-review-cram-strategy
   (org-srs-review-cache-p t)
+  (org-srs-review-cram-strategy
    '(sort (ahead (+ due reviewing) (495966 52223)) interval))
   (org-srs-item-confirm #'org-srs-item-confirm-command)
   :config
