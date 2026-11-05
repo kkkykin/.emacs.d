@@ -1019,26 +1019,47 @@
   (vc-async-checkin t)
   (vc-display-status 'no-backend)
   (vc-handled-backends '(Git SVN))
-  (vc-command-messages 'log))
+  (vc-command-messages 'log)
+  :config
+  (with-eval-after-load 'vc-dit
+    (bind-keys
+     :map vc-dir-mode-map
+     ("b m" . vc-merge)))
+  (with-eval-after-load 'vc-git
+    (bind-keys
+     :map vc-prefix-map
+     :prefix "t"
+     :prefix-map zr-vc-git-map
+     ("s" . vc-git-stash-snapshot)
+     ("c" . vc-git-stash)
+     ("d" . vc-git-stash-delete)
+     ("v" . vc-git-stash-show)
+     ("a" . vc-git-stash-apply)
+     ("p" . vc-git-stash-pop)
+     ("g" . vc-git-grep)))
+  (with-eval-after-load 'log-view
+    (bind-keys
+     :map log-view-mode-map
+     ("P" . vc-push))))
 
 (use-package zr-vc
+  :if (locate-library "zr-vc")
+  :after vc :defer 1
   :hook ((log-edit . zr-vc-commit-setup)
-         (server-switch . zr-vc-server-commit-setup)
-         (server-switch . (lambda ()
-                            (when (and buffer-file-name
-                                       (equal (file-name-nondirectory buffer-file-name) "COMMIT_EDITMSG"))
-                              (local-set-key (kbd "C-c C-c") #'server-edit)
-                              (local-set-key (kbd "C-c C-k") #'zr-vc-abort-server-edit)))))
-  :bind (:map vc-dir-mode-map ("w" . zr-vc-copy-filenames) ("b m" . vc-merge))
-  :config
-  (with-eval-after-load 'log-view (keymap-set log-view-mode-map "P" #'vc-push))
-  (with-eval-after-load 'vc-git
-    (define-prefix-command 'zr-vc-git-map)
-    (keymap-set vc-prefix-map "t" zr-vc-git-map)
-    (dolist (entry '(("s" . vc-git-stash-snapshot) ("c" . vc-git-stash)
-                     ("d" . vc-git-stash-delete) ("v" . vc-git-stash-show)
-                     ("a" . vc-git-stash-apply) ("p" . vc-git-stash-pop) ("g" . vc-git-grep)))
-      (keymap-set zr-vc-git-map (car entry) (cdr entry)))))
+         (server-switch
+          . (lambda ()
+              (when (and buffer-file-name
+                         (string-suffix-p "/.git/COMMIT_EDITMSG" buffer-file-name))
+                (when (bound-and-true-p viper-mode)
+                  (viper-change-state-to-insert)
+                  (viper-add-local-keys
+                   'insert-state
+                   '(("\C-c\C-c" . server-edit)
+                     ("\C-c\C-k" . zr-vc-abort-server-edit))))
+                (zr-vc-server-commit-setup)))))
+  :bind
+  ( :map vc-dir-mode-map
+    ("w" . zr-vc-copy-filenames)))
 
 (use-package add-log
   :custom
