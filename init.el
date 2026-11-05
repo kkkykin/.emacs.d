@@ -3402,12 +3402,6 @@ If no custom prefix matches, it calls the original function."
 (use-package org-srs
   :if (package-installed-p 'org-srs)
   :hook (org-mode . org-srs-embed-overlay-mode)
-  :bind
-  ( :map org-mode-map
-    ("<f5>" . org-srs-review-rate-easy)
-    ("<f6>" . org-srs-review-rate-good)
-    ("<f7>" . org-srs-review-rate-hard)
-    ("<f8>" . org-srs-review-rate-again))
   :custom
   (org-srs-review-cram-strategy
   (org-srs-review-cache-p t)
@@ -3420,17 +3414,14 @@ If no custom prefix matches, it calls the original function."
               (call-interactively #'org-srs-stats-history-due-items)))
   (if zr-sys-android-gui-p
       (org-srs-ui-mode +1)
-    (org-srs-ui-header-line-mode +1)
-    (add-hook 'org-ctrl-c-ctrl-c-hook
-              (lambda ()
-                (when (org-srs-reviewing-p)
-                  (org-srs-item-confirm-command)
-                  t)))))
+    (when (require 'zr-org-srs-review nil t)
+      (zr-org-srs-review-menu-mode +1))
+    (org-srs-ui-header-line-mode +1)))
 
-(use-package zr-org-srs-x
-  :if (locate-library "zr-org-srs-x")
+(use-package zr-org-srs
+  :if (locate-library "zr-org-srs")
   :custom
-  (zr-org-srs-x-directory (expand-file-name "~/srs")))
+  (zr-org-srs-directory (expand-file-name "~/srs")))
 
 (use-package ox-pandoc :defer 2
   :if (package-installed-p 'ox-pandoc)
