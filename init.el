@@ -3412,10 +3412,17 @@ If no custom prefix matches, it calls the original function."
   (add-hook 'org-srs-review-finish-hook
             (lambda ()
               (call-interactively #'org-srs-stats-history-due-items)))
+  (when (require 'zr-org-srs-review nil t)
+    (add-hook 'org-srs-review-start-hook #'zr-org-srs-review-mode))
   (if zr-sys-android-gui-p
       (org-srs-ui-mode +1)
-    (when (require 'zr-org-srs-review nil t)
-      (zr-org-srs-review-menu-mode +1))
+    (when (featurep 'zr-org-srs-review)
+      (add-hook 'org-ctrl-c-ctrl-c-hook
+                (lambda ()
+                  (when (org-srs-reviewing-p)
+                    (zr-org-srs-review-menu)
+                    t)))
+      (add-hook 'org-srs-review-start-hook #'zr-org-srs-review-menu))
     (org-srs-ui-header-line-mode +1)))
 
 (use-package zr-org-srs
