@@ -1810,24 +1810,21 @@ If no custom prefix matches, it calls the original function."
 
 (use-package gnus
   :hook ((gnus-select-group . gnus-group-set-timestamp)
-         (gnus-summary-exit . gnus-summary-bubble-group)
-         (gnus-before-startup . (lambda ()
-                                  (tab-bar-history-back)
-                                  (tab-bar-switch-to-tab "*Gnus*")))
-         (gnus-before-resume . (lambda () (tab-bar-switch-to-tab "*Gnus*")))
-         (gnus-after-exiting-gnus . tab-bar-close-tab)
-         (gnus-configure-windows . gnus-tree-perhaps-minimize))
+         (gnus-summary-exit . gnus-summary-bubble-group))
   :custom
   (gnus-home-directory (expand-file-name "gnus/" user-emacs-directory))
   (gnus-directory (expand-file-name "News/" gnus-home-directory))
   (gnus-init-file (expand-file-name ".gnus.gpg" gnus-home-directory))
   (gnus-sieve-file (expand-file-name ".sieve" gnus-home-directory))
-  (gnus-use-full-window nil)
+  ;; (gnus-use-full-window nil)
   (gnus-inhibit-images t)
+  (gnus-large-newsgroup 10)
   (gnus-save-newsrc-file nil)
   (gnus-read-newsrc-file nil)
-  (gnus-use-trees t)
+  ;; (gnus-use-trees t)
   (gnus-asynchronous t)
+  (gnus-use-article-prefetch 5)
+  ;; (gnus-async-post-fetch-function #'gnus-html-prefetch-images)
   (gnus-thread-sort-functions '((not gnus-thread-sort-by-number)
                                 gnus-thread-sort-by-score))
   (gnus-refer-article-method '(current (nnweb "google" (nnweb-type google))))
@@ -1837,13 +1834,19 @@ If no custom prefix matches, it calls the original function."
   (gnus-blocked-images "ads")
   (nnmail-expiry-wait 'never)
   (nnmail-expiry-target "Deleted Messages")
-  (mm-inline-large-images t)
+  (gnus-widen-article-window t)
+  (gnus-notifications-use-google-contacts nil)
+  (gnus-notifications-use-gravatar nil)
+  ;; (mm-inline-large-images t)
   (mm-file-name-rewrite-functions
    '(mm-file-name-trim-whitespace
      mm-file-name-collapse-whitespace
      mm-file-name-replace-whitespace))
   :config
-  (autoload 'gnus-tree-perhaps-minimize "gnus-salt")
+  (require 'zr-nndoc-epub nil t)
+  (require 'gnus-notifications)
+  (add-hook 'gnus-after-getting-new-news-hook #'gnus-notifications)
+  (gnus-demon-add-handler #'gnus-demon-scan-news 15 3)
   (auto-image-file-mode)
   (gnus-delay-initialize))
 
