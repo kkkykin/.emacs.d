@@ -1564,7 +1564,9 @@ If no custom prefix matches, it calls the original function."
 
 (use-package zr-dictionary
   :if (locate-library "zr-dictionary")
+  :autoload zr-dictionary-dictionaries-p
   :init
+  (put 'zr-dictionary-dictionaries 'safe-local-variable #'zr-dictionary-dictionaries-p)
   (define-key zr-menu [dictionary-search]
               '(menu-item "dictionary-search" zr-dictionary-search)))
 
