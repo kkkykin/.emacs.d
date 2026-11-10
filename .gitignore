@@ -39,6 +39,7 @@
 /gnus/.nnmail-cache
 /gnus/.newsrc
 /gnus/mbox/
+/gnus/News/
 /gnus/.newsrc-dribble
 /.org-id-locations
 /org-clock-save.el
