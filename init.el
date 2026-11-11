@@ -1812,10 +1812,10 @@ If no custom prefix matches, it calls the original function."
   :hook ((gnus-select-group . gnus-group-set-timestamp)
          (gnus-summary-exit . gnus-summary-bubble-group))
   :custom
-  (gnus-home-directory (expand-file-name "gnus/" user-emacs-directory))
-  (gnus-directory (expand-file-name "News/" gnus-home-directory))
-  (gnus-init-file (expand-file-name ".gnus.gpg" gnus-home-directory))
-  (gnus-sieve-file (expand-file-name ".sieve" gnus-home-directory))
+  ;; (gnus-home-directory (expand-file-name "gnus/" user-emacs-directory))
+  ;; (gnus-directory (expand-file-name "News/" gnus-home-directory))
+  (gnus-init-file (locate-user-emacs-file "gnus/.gnus.gpg"))
+  ;; (gnus-sieve-file (expand-file-name ".sieve" gnus-home-directory))
   ;; (gnus-use-full-window nil)
   (gnus-inhibit-images t)
   (gnus-large-newsgroup 10)
@@ -1843,7 +1843,10 @@ If no custom prefix matches, it calls the original function."
      mm-file-name-collapse-whitespace
      mm-file-name-replace-whitespace))
   :config
-  (require 'zr-nndoc-epub nil t)
+  (with-eval-after-load 'nndoc
+    (require 'zr-nndoc-epub nil t))
+  (with-eval-after-load 'nnopds
+    (setq nnopds-request-timeout (* 60 10)))
   (require 'gnus-notifications)
   (add-hook 'gnus-after-getting-new-news-hook #'gnus-notifications)
   (gnus-demon-add-handler #'gnus-demon-scan-news 15 3)
