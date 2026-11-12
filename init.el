@@ -734,6 +734,7 @@
 
 (use-package auth-source
   :custom
+  (auth-source-cache-expiry (* 60 60 24))
   (auth-source-pass-extra-query-keywords t)
   (auth-source-pass-port-separator "#")
   :config
@@ -1810,6 +1811,7 @@ If no custom prefix matches, it calls the original function."
 
 (use-package gnus
   :hook ((gnus-select-group . gnus-group-set-timestamp)
+         (gnus-after-getting-new-news . gnus-notifications)
          (gnus-summary-exit . gnus-summary-bubble-group))
   :custom
   ;; (gnus-home-directory (expand-file-name "gnus/" user-emacs-directory))
@@ -1847,9 +1849,7 @@ If no custom prefix matches, it calls the original function."
     (require 'zr-nndoc-epub nil t))
   (with-eval-after-load 'nnopds
     (setq nnopds-request-timeout (* 60 10)))
-  (require 'gnus-notifications)
-  (add-hook 'gnus-after-getting-new-news-hook #'gnus-notifications)
-  (gnus-demon-add-handler #'gnus-demon-scan-news 15 3)
+  (add-hook 'gnus-started-hook #'gnus-demon-add-rescan)
   (auto-image-file-mode)
   (gnus-delay-initialize))
 
