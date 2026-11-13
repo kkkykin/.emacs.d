@@ -1887,6 +1887,9 @@ If no custom prefix matches, it calls the original function."
          (domain (auth-source-pick-first-password :host "mydomain" :user "main"))
          (libera-svr "irc.libera.chat")
          (libera-usr (plist-get (car (auth-source-search :host libera-svr)) :user))
+         (base-link-rules '(( :type image
+                              :auto-show nil
+                              :ffmpeg nil)))
          (erc-sets
           `(((and (id . dadada) (not erc-server-process-alive))
              (erc-server ,(concat "icu." domain))
@@ -1923,10 +1926,10 @@ If no custom prefix matches, it calls the original function."
               (( :selector (:sender "/onebot\\'")
                  :end " <clipped message>\\'")))
              (zr-erc-link-rules
-              (( :selector (:body "\\[图片\\] ")
+              (,@base-link-rules
+               ( :selector (:body "\\[图片\\] ")
                  :regexp #2#
-                 :type image :auto-show nil :ffmpeg t
-                 :max-width 0.85 :max-height 0.6)
+                 :type image)
                ( :selector (:body "\\`\\[合并转发\\] ")
                  :regexp #3#
                  :replace "\\1"
@@ -1955,10 +1958,9 @@ If no custom prefix matches, it calls the original function."
               (( :selector (:sender ,(rx bos "nichi_bot" eos))
                  :end " <clipped message>\\'")))
              (zr-erc-link-rules
-              (( :regexp #5#
-                 :type image
-                 :ffmpeg t
-                 :max-width 0.85 :max-height 0.6)))))))
+              (,@base-link-rules
+               ( :regexp #5#
+                 :type image)))))))
     (if (require 'erc-settings nil t)
         (progn
           (setopt erc-modules (cons 'settings mods))
