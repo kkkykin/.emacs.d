@@ -1879,6 +1879,7 @@ If no custom prefix matches, it calls the original function."
                  fill-wrap              ; needed by zr-display
                  zr-display
                  zr-notifications
+                 zr-upload
                  zr-reply
                  zr-stitch
                  zr-link
