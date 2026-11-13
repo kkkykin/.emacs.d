@@ -675,7 +675,14 @@
 
 (use-package grep
   :custom
-  (grep-use-headings t))
+  (grep-use-headings t)
+  :config
+  (when zr-sys-winnt-p
+    (when-let* ((sys32-path "C:/WINDOWS/system32")
+                ((member sys32-path exec-path))
+                (exec-path (remove sys32-path exec-path))
+                (find (executable-find "find")))
+      (setq find-program find))))
 
 (use-package xref
   :init
