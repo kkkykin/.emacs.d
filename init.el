@@ -1891,6 +1891,9 @@ If no custom prefix matches, it calls the original function."
          (base-link-rules '(( :type image
                               :auto-show nil
                               :ffmpeg nil)))
+         (upload-token (auth-source-pick-first-password
+                        :host (concat "mb." domain)
+                        :user "upload-token"))
          (erc-sets
           `(((and (id . dadada) (not erc-server-process-alive))
              (erc-server ,(concat "icu." domain))
@@ -1906,6 +1909,7 @@ If no custom prefix matches, it calls the original function."
                           "bridge-test")
                        eos)
                   erc-channel-buffer-p)
+             (zr-erc-upload-link-format ,(format "[%s](%%u)" upload-token))
              (zr-erc-display-rules
               (( :source sender
                  :regexp #1="\\`\\(.+\\)-\\([0-9]+\\)/onebot\\'"
