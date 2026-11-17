@@ -1889,18 +1889,26 @@ If no custom prefix matches, it calls the original function."
          (mb-domain (concat "mb." domain))
          (libera-svr "irc.libera.chat")
          (libera-usr (plist-get (car (auth-source-search :host libera-svr)) :user))
-         (upload-regexp (rx (| "https://litter.catbox.moe/"
-                               (: "https://" (literal mb-domain) "/"))
-                            (+ (not (in ")\n\s<>")))))
+         (upload-token (auth-source-pick-first-password
+                        :host mb-domain
+                        :user "upload-token"))
+         (upload-link-regexp (rx (| "https://litter.catbox.moe/"
+                                    (: "https://" (literal mb-domain) "/"))
+                                 (+ (not (in ")\n\s<>")))))
+         (upload-regexp
+          (rx "[" (literal upload-token)
+              (? (| ?: (: ?: (group-n 1 (+ (not "]"))))))
+              "](" (group-n 2 (regexp upload-link-regexp)) ")"))
          (base-link-rules `(( :type image
                               :auto-show nil
                               :ffmpeg nil)
                             ( :type image
+                              :selector (:body ,(regexp-quote upload-token))
+                              :regexp ,upload-regexp
+                              :replace "\\2")
+                            ( :type image
                               :selector (:body "http")
-                              :regexp ,upload-regexp)))
-         (upload-token (auth-source-pick-first-password
-                        :host mb-domain
-                        :user "upload-token"))
+                              :regexp ,upload-link-regexp)))
          (erc-sets
           `(((and (id . dadada) (not erc-server-process-alive))
              (erc-server ,(concat "icu." domain))
@@ -1929,9 +1937,7 @@ If no custom prefix matches, it calls the original function."
                                  (+ (not (in "\n\s<>"))))
                  :replace-text "[看看]")
                ( :selector (:body ,(regexp-quote upload-token))
-                 :regexp ,(rx "[" (literal upload-token)
-                              (? (| ?: (: ?: (group-n 1 (+ (not "]"))))))
-                              "](" (regexp upload-regexp) ")")
+                 :regexp ,upload-regexp
                  :replace-text "[看看 \\1]")
                ( :selector (:sender ,(rx bos "mb-bot" eos))
                  :source body
@@ -1956,6 +1962,10 @@ If no custom prefix matches, it calls the original function."
                ( :selector (:body "\\[图片\\] ")
                  :regexp #2#
                  :type image)
+               ( :type image
+                 :selector (:body ,(regexp-quote upload-token))
+                 :regexp ,upload-regexp
+                 :replace "\\2")
                ( :selector (:body "\\`\\[合并转发\\] ")
                  :regexp #3#
                  :replace "\\1"
