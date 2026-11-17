@@ -1886,13 +1886,20 @@ If no custom prefix matches, it calls the original function."
                  zr-completion
                  ,@erc-modules))
          (domain (auth-source-pick-first-password :host "mydomain" :user "main"))
+         (mb-domain (concat "mb." domain))
          (libera-svr "irc.libera.chat")
          (libera-usr (plist-get (car (auth-source-search :host libera-svr)) :user))
-         (base-link-rules '(( :type image
+         (upload-regexp (rx (| "https://litter.catbox.moe/"
+                               (: "https://" (literal mb-domain) "/"))
+                            (+ (not (in ")\n\s<>")))))
+         (base-link-rules `(( :type image
                               :auto-show nil
-                              :ffmpeg nil)))
+                              :ffmpeg nil)
+                            ( :type image
+                              :selector (:body "http")
+                              :regexp ,upload-regexp)))
          (upload-token (auth-source-pick-first-password
-                        :host (concat "mb." domain)
+                        :host mb-domain
                         :user "upload-token"))
          (erc-sets
           `(((and (id . dadada) (not erc-server-process-alive))
@@ -1906,6 +1913,7 @@ If no custom prefix matches, it calls the original function."
                   ,(rx bos ?#
                        (| "catcat"
                           "brmk"
+                          (: "mb-forward-" (+ anychar))
                           "bridge-test")
                        eos)
                   erc-channel-buffer-p)
@@ -1920,6 +1928,19 @@ If no custom prefix matches, it calls the original function."
                                     "https://gchat.gpic.cn/gchatpic_new/")
                                  (+ (not (in "\n\s<>"))))
                  :replace-text "[看看]")
+               ( :selector (:body ,(regexp-quote upload-token))
+                 :regexp ,(rx "[" (literal upload-token)
+                              (? (| ?: (: ?: (group-n 1 (+ (not "]"))))))
+                              "](" (regexp upload-regexp) ")")
+                 :replace-text "[看看 \\1]")
+               ( :selector (:sender ,(rx bos "mb-bot" eos))
+                 :source body
+                 :regexp ,(rx bos "<"
+                              (group (+ (or (not (any "<>"))
+                                            (: "<" (* (not (any ">"))) ">"))))
+                              ">" (* (any " \t")))
+                 :replace-sender "\\1"
+                 :replace-text "")
                ( :selector (:body "\\`\\[合并转发\\] ")
                  :regexp #3="\\[查看合并转发：\\(/join #[^]\n]+\\)\\]"
                  :replace-text "[查看合并转发]")))
