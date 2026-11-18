@@ -2221,10 +2221,6 @@ If no custom prefix matches, it calls the original function."
                   (tab-line-mode -1)
                   (setq mode-line-format nil)))))
 
-(use-package term/xterm
-  :custom
-  (xterm-extra-capabilities '(modifyOtherKeys setSelection)))
-
 (use-package esh-mode
   :init
   (define-key zr-menu [eshell]
@@ -3822,14 +3818,6 @@ If no custom prefix matches, it calls the original function."
   :config
   (add-hook 'atomic-chrome-edit-mode-hook
             (lambda () (when viper-mode (viper-mode))) 1))
-
-(use-package kkp
-  :if (package-installed-p 'kkp)
-  :hook
-  ((emacs-startup . global-kkp-mode)
-   (server-after-make-frame . kkp-enable-in-terminal))
-  :custom
-  (kkp-terminal-query-timeout 2))
 
 (use-package kitty-graphics
   :if (and (package-installed-p 'kitty-graphics)
