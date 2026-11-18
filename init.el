@@ -1698,13 +1698,16 @@ If no custom prefix matches, it calls the original function."
   ((diary-list-entries . diary-include-other-diary-files)
    (diary-mark-entries . diary-mark-included-diary-files)))
 
-(use-package image
+(use-package doc-view
   :custom
-  (image-dired-external-viewer "ffplay -fs -an -noborder")
-  (image-use-external-converter t)
-  (doc-view-scale-internally nil)
-  (doc-view-resolution 300)
+  ;; (doc-view-scale-internally nil)
+  (doc-view-resolution 300))
+
+(use-package image
   :config
+  (when (executable-find "ffmpeg")
+    (setq image-dired-external-viewer "ffplay -fs -an -noborder"
+          image-use-external-converter t))
   (add-to-list 'image-file-name-extensions "avif"))
 
 (use-package image-mode
@@ -1864,7 +1867,7 @@ If no custom prefix matches, it calls the original function."
   :bind
   ( :map erc-mode-map
     ("M-RET" . zr-erc-reply)
-    ("C-c C-v" . zr-erc-link-show))
+    ("C-c C-v" . zr-erc-link-open))
   :custom
   (erc-sasl-auth-source-function #'erc-auth-source-search)
   (erc-sasl-mechanism 'plain)
@@ -1899,14 +1902,11 @@ If no custom prefix matches, it calls the original function."
           (rx "[" (literal upload-token)
               (? (| ?: (: ?: (group-n 1 (+ (not "]"))))))
               "](" (group-n 2 (regexp upload-link-regexp)) ")"))
-         (base-link-rules `(( :type image
-                              :auto-show nil
-                              :ffmpeg nil)
-                            ( :type image
+         (base-link-rules `(( :type file
                               :selector (:body ,(regexp-quote upload-token))
                               :regexp ,upload-regexp
                               :replace "\\2")
-                            ( :type image
+                            ( :type file
                               :selector (:body "http")
                               :regexp ,upload-link-regexp)))
          (erc-sets
@@ -1961,8 +1961,8 @@ If no custom prefix matches, it calls the original function."
               (,@base-link-rules
                ( :selector (:body "\\[图片\\] ")
                  :regexp #2#
-                 :type image)
-               ( :type image
+                 :type file)
+               ( :type file
                  :selector (:body ,(regexp-quote upload-token))
                  :regexp ,upload-regexp
                  :replace "\\2")
@@ -1996,7 +1996,7 @@ If no custom prefix matches, it calls the original function."
              (zr-erc-link-rules
               (,@base-link-rules
                ( :regexp #5#
-                 :type image)))))))
+                 :type file)))))))
     (if (require 'erc-settings nil t)
         (progn
           (setopt erc-modules (cons 'settings mods))
