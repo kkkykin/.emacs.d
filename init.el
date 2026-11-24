@@ -463,7 +463,42 @@
 
 (use-package bookmark
   :custom
-  (bookmark-save-flag 1))
+  (bookmark-save-flag 1)
+  :config
+  (defun zr-bookmark-add-common ()
+    (let (mb bookmark-save-flag)
+      ;; eww
+      (pcase-dolist (`(,name . ,loc)
+                     '(("mpv" . "https://mpv.io/manual/master/")))
+        (let ((name (concat "eww/" name)))
+          (push (cons name `((location . ,loc)
+                             (handler . eww-bookmark-jump)))
+                mb)))
+      ;; webdav
+      (when (and (require 'zr-tramp-webdav nil t)
+                 (require 'auth-source-pass nil t))
+        (save-match-data
+          (dolist (auth (auth-source-pass-entries))
+            (when (string-match "^webdav/\\([^/]+\\)/\\([^/]+\\)$" auth)
+              (let* ((host (match-string 1 auth))
+                     (user (match-string 2 auth))
+                     (filename
+                      (format "/webdavs:%s@%s:%s"
+                              user
+                              host
+                              (cond
+                               ((member host '("cloud.disroot.org"))
+                                (format "/remote.php/dav/files/%s/" user))
+                               (t "/dav/")))))
+                (push (cons auth `((filename . ,filename)
+                                   (position . 1)))
+                      mb))))))
+      (pcase-dolist (`(,name . ,prop) mb)
+        (unless (assoc name bookmark-alist)
+          (bookmark-store name prop nil)))))
+  (add-hook 'bookmark-after-load-file-hook #'zr-bookmark-add-common)
+  (bookmark-maybe-load-default-file)
+  (zr-bookmark-add-common))
 
 (use-package cua-base
   :hook (emacs-startup . cua-mode)
@@ -666,7 +701,7 @@
 (use-package autorevert
   :custom
   (auto-revert-mode-text " AR")
-  (auto-revert-remote-files t))
+  (auto-revert-remote-files nil))
 
 (use-package diff
   :custom
@@ -1009,7 +1044,7 @@
 (use-package project
   :custom
   (project-vc-extra-root-markers '())
-  (project-mode-line t)
+  (project-mode-line 'non-remote)
   (project-files-relative-names t)
   (project-vc-include-untracked nil)
   (project-kill-buffers-display-buffer-list t))
