@@ -1862,6 +1862,7 @@ If no custom prefix matches, it calls the original function."
   ;; (gnus-home-directory (expand-file-name "gnus/" user-emacs-directory))
   ;; (gnus-directory (expand-file-name "News/" gnus-home-directory))
   (gnus-init-file (locate-user-emacs-file "gnus/.gnus.gpg"))
+  (gnus-select-method '(nntp "news.gmane.io"))
   ;; (gnus-sieve-file (expand-file-name ".sieve" gnus-home-directory))
   ;; (gnus-use-full-window nil)
   (gnus-inhibit-images t)
@@ -1931,6 +1932,9 @@ If no custom prefix matches, it calls the original function."
                         :host mb-domain
                         :user "upload-token"))
          (upload-link-regexp (rx (| "https://litter.catbox.moe/"
+                                    "https://tempfile.org/"
+                                    "https://tmp0.cc/"
+                                    (: "https://" (+ (not ?.)) ".beacon.host/")
                                     (: "https://" (literal mb-domain) "/"))
                                  (+ (not (in ")\n\s<>")))))
          (upload-regexp
