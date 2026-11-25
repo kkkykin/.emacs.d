@@ -1847,6 +1847,7 @@ If no custom prefix matches, it calls the original function."
 
 (use-package gnus
   :hook ((gnus-select-group . gnus-group-set-timestamp)
+         (gnus-group-mode . gnus-topic-mode)
          (gnus-after-getting-new-news . gnus-notifications)
          (gnus-summary-exit . gnus-summary-bubble-group))
   :custom
@@ -1863,6 +1864,7 @@ If no custom prefix matches, it calls the original function."
   ;; (gnus-use-trees t)
   (gnus-asynchronous t)
   (gnus-use-article-prefetch 5)
+  ;; (gnus-use-adaptive-scoring t)
   ;; (gnus-async-post-fetch-function #'gnus-html-prefetch-images)
   (gnus-thread-sort-functions '((not gnus-thread-sort-by-number)
                                 gnus-thread-sort-by-score))
@@ -1876,6 +1878,9 @@ If no custom prefix matches, it calls the original function."
   (gnus-widen-article-window t)
   (gnus-notifications-use-google-contacts nil)
   (gnus-notifications-use-gravatar nil)
+  (gnus-topic-display-empty-topics nil)
+  (gnus-cloud-synced-files
+   `((:directory ,gnus-directory :match ".*.SCORE\\'")))
   ;; (mm-inline-large-images t)
   (mm-file-name-rewrite-functions
    '(mm-file-name-trim-whitespace
