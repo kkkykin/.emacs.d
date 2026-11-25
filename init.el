@@ -38,7 +38,8 @@
                                     whitespace-mode
                                     which-key-mode
                                     abbrev-mode
-                                    hs-minor-mode))
+                                    hs-minor-mode
+                                    visual-line-mode))
   (mode-line-frame-identification nil)
   (mode-line-client nil)
   (mode-line-front-space nil)
@@ -281,7 +282,9 @@
     ("M-n" . minibuffer-next-completion)
     ("M-p" . minibuffer-previous-completion))
   :config
-  (advice-add 'completion-at-point :after #'minibuffer-hide-completions))
+  ;; Emacs 32 suppresses the extra Completions popup for icomplete-in-buffer.
+  (when (< emacs-major-version 32)
+    (advice-add 'completion-at-point :after #'minibuffer-hide-completions)))
 
 (use-package icomplete
   :hook
@@ -292,7 +295,6 @@
   (icomplete-in-buffer t))
 
 (use-package completion-preview
-  :if (package-installed-p 'completion-preview)
   :bind
   ( :map completion-preview-active-mode-map
     ("M-n" . completion-preview-next-candidate)
@@ -629,9 +631,7 @@
   (tmm-shortcut-inside-entry t)
   (tmm-completion-prompt nil)
   :config
-  (if (fboundp 'tmm-add-prompt)
-      (advice-add 'tmm-add-prompt :after #'minibuffer-hide-completions)
-    (add-to-list 'completion-category-defaults '(tmm (eager-display)))))
+  (setf (alist-get 'eager-display (alist-get 'tmm completion-category-overrides)) nil))
 
 (use-package tooltip
   :custom
@@ -733,8 +733,7 @@
     (setq xref-search-program 'ugrep)))
 
 (use-package etags-regen
-  :if (and (package-installed-p 'etags-regen)
-           (not zr-sys-android-p))
+  :unless zr-sys-android-p
   :custom
   (etags-regen-tags-file "_tags")
   (etags-regen-regexp-alist
@@ -755,7 +754,9 @@
 
 (use-package abbrev
   :custom
-  (abbrev-suggest t))
+  (abbrev-suggest t)
+  :config
+  (setf (cadr (assq 'abbrev-mode minor-mode-alist)) " A"))
 
 (use-package skeleton
   :custom
@@ -1050,7 +1051,6 @@
   (project-kill-buffers-display-buffer-list t))
 
 (use-package editorconfig
-  :if (package-installed-p 'editorconfig)
   :after project :defer 1
   :config
   (editorconfig-mode))
@@ -1436,7 +1436,7 @@ If no custom prefix matches, it calls the original function."
 
 (use-package json-ts-mode
   :custom
-  (json-ts-mode-indent-offset 4))
+  (json-ts-indent-offset 4))
 
 (use-package dired
   :custom
@@ -1791,23 +1791,10 @@ If no custom prefix matches, it calls the original function."
             (lambda () (setq-local project-mode-line (not (eglot-managed-p))))))
 
 (use-package smerge-mode
-  :bind
-  ( :repeat-map smerge-repeat-map
-    ("n" . smerge-next)
-    ("p" . smerge-prev)
-    ("r" . smerge-resolve)
-    ("a" . smerge-keep-all)
-    ("b" . smerge-keep-base)
-    ("l" . smerge-keep-lower)
-    ("u" . smerge-keep-upper)
-    ("C" . smerge-combine-with-next)
-    ("R" . smerge-refine)
-    ("C-m" . smerge-keep-current)
-    ("<" . smerge-diff-base-upper)
-    (">" . smerge-diff-base-lower)
-    ("=" . smerge-diff-upper-lower)
-    ;; ^^^ copy from 31.1
-    ("E" . smerge-ediff)))
+  :config
+  (bind-keys
+   :repeat-map smerge-repeat-map
+   ("E" . smerge-ediff)))
 
 (use-package ediff
   :custom
@@ -2139,6 +2126,7 @@ If no custom prefix matches, it calls the original function."
     ("C-<right>" . tab-line-switch-to-next-tab)
     ("M-<right>" . tab-line-move-tab-forward))
   :custom
+  (tab-line-define-keys nil)
   (tab-line-tabs-function 'tab-line-tabs-buffer-groups)
   (tab-line-exclude-modes
    '(completion-list-mode
@@ -2156,12 +2144,6 @@ If no custom prefix matches, it calls the original function."
      newsticker-treeview-list-mode
      newsticker-treeview-mode))
   :config
-  (when (and (boundp 'tab-line-mode-map)
-             (keymap-lookup tab-line-mode-map "C-x <left>"))
-    (bind-keys
-     :map tab-line-mode-map
-     ("C-x <left>" . nil)
-     ("C-x <right>" . nil)))
   (unless zr-sys-android-gui-p
     (setq tab-line-new-button-show nil
           tab-line-close-button-show nil)))
@@ -2258,7 +2240,7 @@ If no custom prefix matches, it calls the original function."
   :hook
   ((term-mode . (lambda ()
                   (tab-line-mode -1)
-                  (setq mode-line-format nil)))))
+                  (mode-line-invisible-mode 1)))))
 
 (use-package esh-mode
   :init
@@ -3076,7 +3058,7 @@ If no custom prefix matches, it calls the original function."
 
 (use-package html-ts-mode
   :init
-  (put 'html-ts-mode-indent-offset 'safe-local-variable #'natnump))
+  (put 'html-ts-indent-offset 'safe-local-variable #'natnump))
 
 (use-package lua-ts-mode
   :mode "\\.lua\\'"
@@ -3579,14 +3561,6 @@ If no custom prefix matches, it calls the original function."
                    (list (format "-o%s" (car args))))))
       (apply orig-fun args))))
 
-(use-package komga-reader
-  :if (package-installed-p 'komga-reader)
-  :vc (:url "https://github.com/kkkykin/komga-reader" :rev :newest)
-  :config
-  (when (fboundp #'mode-line-invisible-mode)
-    (add-hook 'komga-reader-reader-mode-hook
-              #'mode-line-invisible-mode)))
-
 (use-package fdroid
   :if (package-installed-p 'fdroid)
   :vc (:url "https://github.com/migalmoreno/fdroid.el"))
@@ -3813,20 +3787,6 @@ If no custom prefix matches, it calls the original function."
           undo-redo
           yank)))
 
-(use-package diminish
-  :if (package-installed-p 'diminish)
-  :init
-  (with-eval-after-load 'abbrev
-    (diminish 'abbrev-mode " A"))
-  (with-eval-after-load 'completion-preview
-    (diminish 'completion-preview-mode))
-  (with-eval-after-load 'hideshow
-    (diminish 'hs-minor-mode))
-  (with-eval-after-load 'subword
-    (diminish 'subword-mode))
-  :config
-  (diminish 'visual-line-mode))
-
 ;; https://www.ifarchive.org/indexes/if-archive/games/zcode/
 ;; https://ifdb.org/
 (use-package malyon)
@@ -3864,8 +3824,7 @@ If no custom prefix matches, it calls the original function."
   :vc (:url "https://github.com/cashmeredev/kitty-graphics.el" :rev :newest)
   :defer 2
   :config
-  (when (boundp 'mode-line-collapse-minor-modes)
-    (add-to-list 'mode-line-collapse-minor-modes 'kitty-graphics-mode))
+  (add-to-list 'mode-line-collapse-minor-modes 'kitty-graphics-mode)
   (kitty-graphics-mode 1))
 
 (use-package jq-mode
