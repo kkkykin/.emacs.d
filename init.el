@@ -1582,6 +1582,10 @@ If no custom prefix matches, it calls the original function."
   (unless zr-sys-winnt-p
     (setq find-ls-option '("-exec ls -ldh --quoting-style=literal {} +" . "-ldh"))))
 
+(use-package ffap
+  :custom
+  (ffap-prefer-remote-file t))
+
 (use-package zr-mpv
   :bind
   ( :map zr-dired-spc-prefix-map
@@ -2169,6 +2173,7 @@ If no custom prefix matches, it calls the original function."
 
 (use-package window
   :custom
+  (kill-buffer-quit-windows t)
   (even-window-sizes nil)
   (fit-window-to-buffer-horizontally t)
   (window-sides-slots '(0 2 1 2))
@@ -2265,6 +2270,7 @@ If no custom prefix matches, it calls the original function."
     :exit
     ("m" . eshell-copy-old-input))
   :custom
+  (eshell-lexical-binding t)
   (eshell-aliases-file nil)
   (eshell-pushd-dunique t)
   (eshell-pushd-dextract t)
