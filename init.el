@@ -1829,6 +1829,7 @@ If no custom prefix matches, it calls the original function."
   (message-kill-buffer-on-exit t)
   (message-confirm-send t)
   (message-signature nil)
+  (message-subscribed-address-functions '(gnus-find-subscribed-addresses))
   (message-mail-alias-type 'ecomplete)
   (ecomplete-auto-select t)
   (ecomplete-database-file (locate-user-emacs-file "_ecompleterc"))
@@ -1857,6 +1858,12 @@ If no custom prefix matches, it calls the original function."
   (gnus-select-method '(nntp "news.gmane.io"))
   ;; (gnus-sieve-file (expand-file-name ".sieve" gnus-home-directory))
   ;; (gnus-use-full-window nil)
+  (gnus-check-new-newsgroups nil)
+  (gnus-save-killed-list nil)
+  (gnus-use-dribble-file nil)
+  (gnus-keep-same-level t)
+  (gnus-group-sort-function #'gnus-group-sort-by-level)
+  (gnus-view-pseudo-asynchronously t)
   (gnus-inhibit-images t)
   (gnus-large-newsgroup 10)
   (gnus-save-newsrc-file nil)
@@ -1872,6 +1879,7 @@ If no custom prefix matches, it calls the original function."
   (gnus-single-article-buffer t)
   (gnus-message-archive-group nil)
   (gnus-suppress-duplicates t)
+  (gnus-save-duplicate-list t)
   (gnus-blocked-images "ads")
   (nnmail-expiry-wait 'never)
   (nnmail-expiry-target "Deleted Messages")
@@ -1890,6 +1898,13 @@ If no custom prefix matches, it calls the original function."
   (with-eval-after-load 'nndoc
     (require 'zr-nndoc-epub nil t))
   (with-eval-after-load 'nnopds
+    (add-to-list 'gnus-parameters
+                 '("\\`nnopds[:+]"
+                   (display . all)
+                   (gnus-summary-line-format "%U%R%z%N%I %s\n")
+                   (gnus-visible-headers nil)
+                   (gnus-ignored-headers ".*")
+                   (gnus-article-sort-functions '(gnus-article-sort-by-number))))
     (setq nnopds-request-timeout (* 60 10)))
   (add-hook 'gnus-started-hook #'gnus-demon-add-rescan)
   (auto-image-file-mode)
