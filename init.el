@@ -106,10 +106,6 @@
   (setenv "PYTHONIOENCODING" "utf-8")
   (set-charset-priority 'unicode))
 
-(use-package zr-bookmark
-  :after bookmark :demand t
-  :config (zr-bookmark-shared-mode 1))
-
 (use-package zr-process-menu
   :hook (process-menu-mode . zr-process-menu-mode)
   :custom
@@ -1873,8 +1869,7 @@ If no custom prefix matches, it calls the original function."
   (gnus-use-article-prefetch 5)
   ;; (gnus-use-adaptive-scoring t)
   ;; (gnus-async-post-fetch-function #'gnus-html-prefetch-images)
-  (gnus-thread-sort-functions '((not gnus-thread-sort-by-number)
-                                gnus-thread-sort-by-score))
+  (gnus-thread-sort-functions '((not gnus-thread-sort-by-number)))
   (gnus-refer-article-method '(current (nnweb "google" (nnweb-type google))))
   (gnus-single-article-buffer t)
   (gnus-message-archive-group nil)
@@ -1886,6 +1881,7 @@ If no custom prefix matches, it calls the original function."
   (gnus-widen-article-window t)
   (gnus-notifications-use-google-contacts nil)
   (gnus-notifications-use-gravatar nil)
+  (gnus-search-use-parsed-queries t)
   (gnus-topic-display-empty-topics nil)
   (gnus-cloud-synced-files
    `((:directory ,gnus-directory :match ".*.SCORE\\'")))
@@ -1895,6 +1891,10 @@ If no custom prefix matches, it calls the original function."
      mm-file-name-collapse-whitespace
      mm-file-name-replace-whitespace))
   :config
+  (add-to-list 'gnus-parameters
+               '("\\`nntp[:+]"
+                 (gnus-fetch-old-headers 'invisible)
+                 (gnus-build-sparse-threads 'some)))
   (with-eval-after-load 'nndoc
     (require 'zr-nndoc-epub nil t))
   (with-eval-after-load 'nnopds
@@ -1908,6 +1908,7 @@ If no custom prefix matches, it calls the original function."
     (setq nnopds-request-timeout (* 60 10)))
   (add-hook 'gnus-started-hook #'gnus-demon-add-rescan)
   (auto-image-file-mode)
+  (spam-initialize)
   (gnus-delay-initialize))
 
 (use-package erc
